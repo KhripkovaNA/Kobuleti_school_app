@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables" id="students-card">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Клиенты</h4>
+            </div>
+            <div class="card-content table-responsive">
+                {% if students %}
+                    <div class="scroll-table">
+                        <table class="table table-hover">
+                            <thead class="text-success">
+                                <th>Фамилия</th>
+                                <th>Имя</th>
+                                <th>Дата рождения</th>
+                                <th>Статус</th>
+                                <th width="13%">Занятия</th>
+                                <th>Родители</th>
+                                <th>Комментарий</th>
+                                <th width="7%">Изменить</th>
+                                <th width="7%">Удалить</th>
+                            </thead>
+                        </table>
+                        <div class="scroll-table-body">
+                            <table class="table table-hover">
+                                <tbody>
+                                    {% for student in students %}
+                                        <tr>
+                                            <td>
+                                                {% if student.last_name %}
+                                                    {{ student.last_name }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if student.first_name %}
+                                                    {{ student.first_name }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if student.dob %}
+                                                    {{ student.dob }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if student.status_info %}
+                                                    {{ student.status_info }}
+                                                {% endif %}
+                                            </td>
+                                            <td width="13%">
+                                                {% if student.subjects %}
+                                                    {% if student.status=="Лид"%}
+                                                        Интересуется:
+                                                        {% for subject in student.subjects %}
+                                                            {{ subject.name }}{{ "," if not loop.last }}
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        {% if student.subjects_with_subscriptions %}
+                                                            {% for subscription in student.subjects_with_subscriptions %}
+                                                                {{ subscription.subject_name }} ({{ subscription.lessons_left }}){{ "," if not loop.last }}{% if student.subjects_without_subscriptions %}, {% endif %}
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                        {% if student.subjects_without_subscriptions %}
+                                                            {% for subject in student.subjects_without_subscriptions %}
+                                                                {{ subject }}{{ "," if not loop.last }}
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if student.parents %}
+                                                    {% for parent in student.parents %}
+                                                        {{ parent.last_name }} {{ parent.first_name }}
+                                                        {% if parent.contacts %}
+                                                            {% if parent.contacts[0].telegram %}
+                                                                (Телеграм: {{ parent.contacts[0].telegram }})
+                                                            {% else %}
+                                                                {% if parent.contacts[0].phone %}
+                                                                    (Тел: {{ parent.contacts[0].phone }})
+                                                                {% endif %}
+                                                            {% endif %}
+                                                        {% endif %}
+                                                        {{ "," if not loop.last }}
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if student.comment %}
+                                                    {{ student.comment }}
+                                                {% endif %}
+                                            </td>
+                                            <td width="7%">
+                                                <button type="button" rel="tooltip" title="Edit" class="btn btn-success btn-simple btn-xs">
+                                                    <a href="">
+                                                        <i class="material-icons" style="color: purple;">edit</i>
+                                                    </a>
+                                                </button>
+                                            </td>
+                                            <td width="7%">
+                                                <button type="button" rel="tooltip" title="Delete" class="btn btn-danger btn-simple btn-xs">
+                                                  <a href="">
+                                                    <i class="material-icons" style="color: red;">delete_forever</i>
+                                                  </a>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>Клиентов пока нет</p>
+                {% endif %}
+                <button class="btn" style="background-color: #ff9800;" data-toggle="modal" data-target="#add-student-modal">
+                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
+                        <i class="material-icons">add_box</i>Добавить клиента
+                    </a>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
