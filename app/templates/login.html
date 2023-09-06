@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>School App</title>
+    <!-- Bootstrap core CSS     -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet" />
+    <!--  Login page CSS    -->
+    <link href="{{ url_for('static', filename='css/login.css') }}" rel="stylesheet" />
+    <!--     Fonts and icons     -->
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,700,300|Material+Icons' rel='stylesheet' type='text/css'>
+</head>
+
+
+<section class="login-block">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% if category == 'error' %}
+                        <div class="alert alert-danger alert-with-icon" data-notify="container">
+                    {% elif category == 'success' %}
+                        <div class="alert alert-success alert-with-icon" data-notify="container">
+                    {% else %}
+                        <div class="alert alert-info alert-with-icon" data-notify="container">
+                    {% endif %}
+                            <button type="button" aria-hidden="true" class="close" onclick="$('.alert').hide();">×</button>
+                            <i data-notify="icon" class="material-icons">add_alert</i>
+                            <span data-notify="message">
+                                <b> {{ message }} </b>
+                            </span>
+                        </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+  	    <div class="row">
+  		    <div class="col-md-4 login-sec">
+                <img class="logo" src="{{ url_for('static', filename='img/logo.jpg') }}">
+                <form class="login-form" action="" method="post">
+                    <div class="form-group">
+                        <label for="username" class="text-uppercase">Имя пользователя</label>
+                        <input type="text" name="username" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="text-uppercase">Пароль</label>
+                        <input type="password" name="password" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-login float-right">Войти</button>
+                </form>
+            </div>
+            <div class="col-md-8 banner-sec">
+                <div class="banner-text">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+</html>
