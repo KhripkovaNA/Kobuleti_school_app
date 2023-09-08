@@ -36,7 +36,7 @@
                                 <div class="row">
                                     <label class="control-label col-md-3">Дата рождения:</label>
                                     <div class="col-md-3">
-                                        <input type="date" name="dob" class="form-control">
+                                        <input type="text" name="dob" class="tcal" placeholder="дд.мм.гггг">
                                     </div>
                                 </div>
                                 <div class="row">
@@ -52,7 +52,7 @@
                                     <div id="pause-date" style="display: none;">
                                         <label class="control-label col-md-1">до:</label>
                                         <div class="col-md-3">
-                                            <input type="date" name="pause_until" class="form-control">
+                                            <input type="text" name="pause_until" class="tcal" placeholder="дд.мм.гггг">
                                         </div>
                                     </div>
                                 </div>
@@ -77,7 +77,7 @@
                                         <div class="row">
                                             <label class="control-label col-md-3">Контакт:</label>
                                             <div class="col-md-3">
-                                                <select name="relation_{{ contactCount }}" class="form-control contact-relation">
+                                                <select name="relation_1" class="form-control contact-relation">
                                                     <option value="Мама">Мама</option>
                                                     <option value="Папа">Папа</option>
                                                     <option value="Сам ребенок">Сам ребенок</option>
@@ -87,7 +87,7 @@
                                             <div class="col-md-3">
                                                 <label class="contact-radio-label">Основной контакт
                                                     <input type="radio" class="contact-radio" name="primary_contact"
-                                                           value="contact_{{ contactCount }}" required checked>
+                                                           value="contact_1" required checked>
                                                     <span class="custom-radio"></span>
                                                 </label>
                                             </div>
@@ -95,51 +95,51 @@
                                         <div class="row relation-other-row" style="display: none;">
                                             <label class="control-label col-md-3">Другое:</label>
                                             <div class="col-md-4">
-                                                <input type="text" name="relation_{{ contactCount }}" class="form-control">
+                                                <input type="text" name="other_relation_1" class="form-control">
                                             </div>
                                         </div>
                                         <div id="contact-info">
                                             <div class="row">
                                                 <label class="control-label col-md-3">Фамилия:</label>
                                                 <div class="col-md-5">
-                                                    <input type="text" name="parent_last_name_{{ contactCount }}" class="form-control" required>
+                                                    <input type="text" name="parent_last_name_1" class="form-control" required>
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Имя:</label>
                                                 <div class="col-md-5">
-                                                    <input type="text" name="parent_first_name_{{ contactCount }}" class="form-control" required>
+                                                    <input type="text" name="parent_first_name_1" class="form-control" required>
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Отчество:</label>
                                                 <div class="col-md-5">
-                                                    <input type="text" name="parent_patronym_{{ contactCount }}" class="form-control">
+                                                    <input type="text" name="parent_patronym_1" class="form-control">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Телеграм:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="telegram_{{ contactCount }}" class="form-control">
+                                                <input type="text" name="telegram_1" class="form-control">
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Телефон:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="phone_{{ contactCount }}" class="form-control">
+                                                <input type="text" name="phone_1" class="form-control">
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Другое:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="other_contact_{{ contactCount }}" class="form-control">
+                                                <input type="text" name="other_contact_1" class="form-control">
                                             </div>
                                         </div>
-                                        <input type="hidden" name="contactCount" value="{{ contactCount }}">
                                     </div>
                                 </div>
                             </div>
+                            <input type="hidden" name="contact_count" id="contact-count" value="">
                         </div>
                     </div>
                     <div class="row">
@@ -157,7 +157,7 @@
                     <div class="footer">
                         <div class="row">
                             <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Добавить клиента</button>
+                                <button type="submit" class="btn btn-login" id="submit-btn" style="background-color:#4BD1A0;">Добавить клиента</button>
                             </div>
                             <div class="col-md-3">
                                 <button type="button" class="btn btn-default" style="background-color:#ef5350;">Закрыть</button>
@@ -171,4 +171,3 @@
 </div>
 
 {% endblock %}
-

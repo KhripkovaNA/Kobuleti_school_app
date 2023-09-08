@@ -2,6 +2,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Contact, parent_child_table, Subject
 from app import app, db
+from datetime import datetime
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -33,9 +34,11 @@ def students():
     all_students = Person.query.filter_by(person_type="Ребенок").all()
 
     for student in all_students:
+        if student.dob:
+            student.birth_date = f"{student.dob.strftime('%d.%m.%Y')}"
         primary_contact = student.primary_contact
         if primary_contact:
-            if primary_contact.id == student.id:
+            if primary_contact == student.id:
                 if student.contacts[0].telegram:
                     student.contact = f"(Телеграм: {students.contacts[0].telegram}"
                 elif student.contacts[0].phone:
@@ -43,22 +46,23 @@ def students():
                 elif student.contacts[0].other_contact:
                     student.contact = students.contacts[0].other_contact
             else:
-                parent = db.session.query(parent_child_table.c.relationship).filter(
-                    parent_child_table.c.parent_id == primary_contact.id,
+                parent_type = db.session.query(parent_child_table.c.relation).filter(
+                    parent_child_table.c.parent_id == primary_contact,
                     parent_child_table.c.child_id == student.id).scalar()
-                parent_name = f"{primary_contact.last_name} {primary_contact.first_name}"
-                student.contact_name = f"{parent} - {parent_name}"
-                if primary_contact.contacts[0].telegram:
-                    student.contact = f"(Телеграм: {primary_contact.contacts[0].telegram}"
-                elif primary_contact.contacts[0].phone:
-                    student.contact = f"(Тел.: {primary_contact.contacts[0].phone}"
-                elif primary_contact.contacts[0].other_contact:
-                    student.contact = primary_contact.contacts[0].other_contact
+                parent = Person.query.filter_by(id=primary_contact).first()
+                parent_name = f"{parent.last_name} {parent.first_name}"
+                student.contact_name = f"{parent_type} - {parent_name}"
+                if parent.contacts[0].telegram:
+                    student.contact = f"(Телеграм: {parent.contacts[0].telegram}"
+                elif parent.contacts[0].phone:
+                    student.contact = f"(Тел.: {parent.contacts[0].phone}"
+                elif parent.contacts[0].other_contact:
+                    student.contact = parent.contacts[0].other_contact
 
         if student.status == "Закрыт":
             student.status_info = f"{student.status} причина: {student.leaving_reason}"
         elif student.status == "Пауза":
-            student.status_info = f"{student.status} до {student.pause_until.strftime('%Y-%m-%d')}"
+            student.status_info = f"{student.status} до {student.pause_until.strftime('%d.%m.%Y')}"
         else:
             student.status_info = student.status
 
@@ -86,9 +90,11 @@ def create_student(form):
     last_name = form.get('last_name')
     first_name = form.get('first_name')
     patronym = form.get('patronym')
-    dob = form.get('dob')
+    dob = datetime.strptime(form.get('dob'), '%d.%m.%Y').date() \
+        if form.get('dob') else None
     status = form.get('status')
-    pause_date = form.get('pause_until')
+    pause_date = datetime.strptime(form.get('pause_until'), '%d.%m.%Y').date() \
+        if form.get('pause_until') else None
     leaving_reason = form.get('leaving_reason')
 
     student = Person(
@@ -139,36 +145,38 @@ def handle_contact_info(form, student, i):
     relation_type = form.get(f'relation_{i}')
 
     if relation_type == "Сам ребенок":
-        student.contacts = contact
         db.session.add(contact)
         db.session.commit()
+
+        student.contacts.append(contact)
 
     else:
         parent = create_parent(form, i)
         db.session.add(parent)
-        student.parents.append(parent)
+        db.session.add(contact)
         db.session.commit()
 
-        parent.contacts = contact
-        db.session.add(contact)
-        assign_relation_type(form, student, parent)
-        db.session.commit()
+        student.parents.append(parent)
+        parent.contacts.append(contact)
+        assign_relation_type(form, student, parent, i)
 
     if form['primary_contact'] == f'contact_{i}':
         student.primary_contact = contact.person.id
-        db.session.commit()
+    db.session.commit()
 
 
-def assign_relation_type(form, student, parent):
+def assign_relation_type(form, student, parent, i):
     relation_type = form.get('relation_type')
 
-    if relation_type:
-        relation_entry = parent_child_table.insert().values(
-            parent_id=parent.id,
-            child_id=student.id,
-            relationship=relation_type
-        )
-        db.session.execute(relation_entry)
+    if relation_type == "Другое":
+        relation_type = form.get(f'other_relation_{i}')
+
+    relation_entry = parent_child_table.update().where(
+        (parent_child_table.c.parent_id == parent.id) &
+        (parent_child_table.c.child_id == student.id)
+    ).values(relation=relation_type)
+
+    db.session.execute(relation_entry)
 
 
 @app.route('/add-student', methods=['GET', 'POST'])
@@ -181,7 +189,7 @@ def add_student():
             db.session.add(student)
             db.session.commit()
 
-            contact_count = int(request.form.get('contactCount'))
+            contact_count = int(request.form['contact_count'])
             for i in range(1, contact_count + 1):
                 handle_contact_info(request.form, student, i)
 
