@@ -35,8 +35,8 @@
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Дата рождения:</label>
-                                    <div class="col-md-3">
-                                        <input type="text" name="dob" class="tcal" placeholder="дд.мм.гггг">
+                                    <div class="col-md-3 datepicker-container">
+                                        <input type="text" name="dob" class="form-control datepicker" placeholder="дд.мм.гггг">
                                     </div>
                                 </div>
                                 <div class="row">
@@ -52,7 +52,7 @@
                                     <div id="pause-date" style="display: none;">
                                         <label class="control-label col-md-1">до:</label>
                                         <div class="col-md-3">
-                                            <input type="text" name="pause_until" class="tcal" placeholder="дд.мм.гггг">
+                                            <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг">
                                         </div>
                                     </div>
                                 </div>
@@ -76,7 +76,7 @@
                                     <div class="form-group">
                                         <div class="row">
                                             <label class="control-label col-md-3">Контакт:</label>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <select name="relation_1" class="form-control contact-relation">
                                                     <option value="Мама">Мама</option>
                                                     <option value="Папа">Папа</option>
@@ -85,7 +85,7 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="contact-radio-label">Основной контакт
+                                                <label class="contact-radio-label" style="padding: 9px 25px">Основной контакт
                                                     <input type="radio" class="contact-radio" name="primary_contact"
                                                            value="contact_1" required checked>
                                                     <span class="custom-radio"></span>
@@ -98,7 +98,7 @@
                                                 <input type="text" name="other_relation_1" class="form-control">
                                             </div>
                                         </div>
-                                        <div id="contact-info">
+                                        <div class="contact-info">
                                             <div class="row">
                                                 <label class="control-label col-md-3">Фамилия:</label>
                                                 <div class="col-md-5">

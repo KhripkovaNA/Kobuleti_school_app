@@ -14,6 +14,18 @@ $(document).ready(function(){
         suppressScrollX: true
     });
 
+    $.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
+    $(".datepicker").datepicker({
+        dateFormat: "dd.mm.yy",
+        changeYear: true,
+    });
+
+    $(".main-panel").on("scroll", function() {
+        if ($(".datepicker").datepicker("widget").is(":visible")) {
+            $(".datepicker").datepicker("hide");
+        }
+    });
+
     $("#status-select").on("change", function () {
         const selectedStatus = $(this).val();
         const pauseDate = $("#pause-date");
@@ -33,14 +45,20 @@ $(document).ready(function(){
 
     var contactCount = 1;
     function addContactSection() {
+        contactCount++;
         var contactSection = $(".contact-section").first().clone();
         contactSection.find(".contact-radio").prop("checked", false);
-        contactCount++;
         contactSection.attr("id", "contact-section-" + contactCount);
+        contactSection.find(".contact-relation").val("Мама");
+        contactSection.find(".relation-other-row").hide();
+        contactSection.find(".contact-info").show();
         contactSection.find("select, input[type='text']").each(function() {
             var originalName = $(this).attr("name");
             var newName = originalName.replace("_1", "_" + contactCount);
-            $(this).attr("name", newName).val("");
+            $(this).attr("name", newName);
+            if ($(this).is("input[type='text']")) {
+                $(this).val("");
+            }
         });
         contactSection.find("input[type='radio']").each(function() {
             var originalValue = $(this).val();
@@ -55,27 +73,25 @@ $(document).ready(function(){
         newContactSection.appendTo("#contact-sections");
         if (contactCount >= 2) {
             $("#remove-contact").show();
-        console.log(contactCount);
         }
     });
 
-    $(".contact-section").each(function () {
-        const relationSelector = $(this).find(".contact-relation");
-        const otherRelationRow = $(this).find(".relation-other-row");
-        const contactInfoDiv = $("#contact-info");
+    $("#contact-sections").on("change", ".contact-relation", function () {
+        var relationSelector = $(this);
+        var contactSection = relationSelector.closest(".contact-section");
+        var otherRelationRow = contactSection.find(".relation-other-row");
+        var contactInfoDiv = contactSection.find(".contact-info");
 
-        relationSelector.on("change", function () {
-            if (relationSelector.val() === "Другое") {
-                otherRelationRow.show();
-                contactInfoDiv.show();
-            } else if (relationSelector.val() === "Сам ребенок") {
-                otherRelationRow.hide();
-                contactInfoDiv.hide();
-            } else {
-                otherRelationRow.hide();
-                contactInfoDiv.show();
-            }
-        });
+        if (relationSelector.val() === "Другое") {
+            otherRelationRow.show();
+            contactInfoDiv.show();
+        } else if (relationSelector.val() === "Сам ребенок") {
+            otherRelationRow.hide();
+            contactInfoDiv.hide();
+        } else {
+            otherRelationRow.hide();
+            contactInfoDiv.show();
+        }
     });
 
     $("#remove-contact").click(function() {
