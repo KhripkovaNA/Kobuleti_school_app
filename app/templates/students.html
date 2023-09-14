@@ -43,11 +43,7 @@
                                                     {{ student.birth_date }}
                                                 {% endif %}
                                             </td>
-                                            <td>
-                                                {% if student.status_info %}
-                                                    {{ student.status_info }}
-                                                {% endif %}
-                                            </td>
+                                            <td>{{ student.status_info }}</td>
                                             <td width="13%">
                                                 {% if student.subjects %}
                                                     {% if student.status=="Лид"%}
@@ -90,7 +86,7 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a href="">
+                                                            <a href="{{ url_for('show_student', student_id=student.id) }}">
                                                                 <i class="material-icons" style="color: purple;">info</i>Просмотр
                                                             </a>
                                                         </li>

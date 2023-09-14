@@ -206,14 +206,20 @@ def add_student():
     return render_template('add_student.html', subjects=subjects)
 
 
-@app.route('/student/<string:id>')
+@app.route('/student/<string:student_id>')
 @login_required
-def show_student(id):
-    student = Person.query.filter_by(id=id).first_or_404()
+def show_student(student_id):
+    student = Person.query.filter_by(id=student_id).first()
     if student:
+        if student.dob:
+            student.birth_date = f"{student.dob.strftime('%d.%m.%Y')}"
+        if student.status == "Закрыт":
+            student.status_info = f"{student.status} причина: {student.leaving_reason}"
+        elif student.status == "Пауза":
+            student.status_info = f"{student.status} до {student.pause_until.strftime('%d.%m.%Y')}"
+        else:
+            student.status_info = student.status
         return render_template('student.html', student=student)
     else:
         flash("Такого клиента нет")
-
-    return redirect(url_for('students'))
-
+        return redirect(url_for('students.html'))
