@@ -219,6 +219,25 @@ def show_student(student_id):
             student.status_info = f"{student.status} до {student.pause_until.strftime('%d.%m.%Y')}"
         else:
             student.status_info = student.status
+
+        student.main_contact = Person.query.filter_by(id=student.primary_contact).first()
+        contacts = []
+        if student.contacts:
+            if student.primary_contact == student.id:
+                student.main_contact = student
+            else:
+                contacts.append(student)
+        for parent in student.parents:
+            parent_type = db.session.query(parent_child_table.c.relation).filter(
+                parent_child_table.c.parent_id == parent.id,
+                parent_child_table.c.child_id == student.id).scalar()
+            parent.type = parent_type
+            if student.primary_contact == parent.id:
+                student.main_contact = parent
+            else:
+                contacts.append(parent)
+        student.additional_contacts = contacts
+
         return render_template('student.html', student=student)
     else:
         flash("Такого клиента нет")

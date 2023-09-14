@@ -93,11 +93,11 @@
                                 {% else %}
                                     <div class="alert alert-info alert-with-icon" data-notify="container"></div>
                                 {% endif %}
-                                    <button type="button" aria-hidden="true" class="close" onclick="$('.alert').hide();">×</button>
-                                    <i data-notify="icon" class="material-icons">add_alert</i>
-                                    <span data-notify="message">
-                                        <b> {{ message }} </b>
-                                    </span>
+                                <button type="button" aria-hidden="true" class="close" onclick="$('.alert').hide();">×</button>
+                                <i data-notify="icon" class="material-icons">add_alert</i>
+                                <span data-notify="message">
+                                    <b> {{ message }} </b>
+                                </span>
                             </div>
                         {% endfor %}
                     {% endif %}

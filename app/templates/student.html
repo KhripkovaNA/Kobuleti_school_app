@@ -15,19 +15,19 @@
                             <div class="row">
                                 <label class="control-label col-md-3">Фамилия:</label>
                                 <div class="col-md-5">
-                                    <p class="form-control">{{ student.last_name }}</p>
+                                    <p>{{ student.last_name }}</p>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Имя:</label>
                                 <div class="col-md-5">
-                                    <p class="form-control">{{ student.first_name }}</p>
+                                    <p>{{ student.first_name }}</p>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Отчество:</label>
                                 <div class="col-md-5">
-                                    <p class="form-control">
+                                    <p>
                                         {% if student.patronym %}
                                             {{ student.patronym }}
                                         {% endif %}
@@ -37,7 +37,7 @@
                             <div class="row">
                                 <label class="control-label col-md-3">Дата рождения:</label>
                                 <div class="col-md-3">
-                                    <p class="form-control">
+                                    <p>
                                         {% if student.birth_date %}
                                             {{ student.birth_date }}
                                         {% endif %}
@@ -47,10 +47,146 @@
                             <div class="row">
                                 <label class="control-label col-md-3">Статус:</label>
                                 <div class="col-md-3">
-                                    <p class="form-control">{{ student.status_info }}</p>
+                                    <p>{{ student.status_info }}</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-12">
+                        <h4 class="title">Kонтакты</h4>
+                        <h5 class="title" style="margin-left: 12px; margin-top: 12px; font-size: 1.1em;">Основной контакт</h5>
+                        <div class="form-group" style="margin-top: 12px;">
+                            {% if student.main_contact.id!=student.id %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Контакт:</label>
+                                    <div class="col-md-5">
+                                        <p>{{ student.main_contact.type }}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Фамилия:</label>
+                                    <div class="col-md-5">
+                                        <p>{{ student.main_contact.last_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Имя:</label>
+                                    <div class="col-md-5">
+                                        <p>{{ student.main_contact.first_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Отчество:</label>
+                                    <div class="col-md-5">
+                                        <p>
+                                            {% if student.main_contact.patronym %}
+                                                {{ student.main_contact.patronym }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="row">
+                                <label class="control-label col-md-3">Телеграм:</label>
+                                <div class="col-md-3">
+                                    <p>
+                                        {% if student.main_contact.contacts[0].telegram %}
+                                            {{ student.main_contact.contacts[0].telegram }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Телефон:</label>
+                                <div class="col-md-3">
+                                    <p>
+                                        {% if student.main_contact.contacts[0].phone %}
+                                            {{ student.main_contact.contacts[0].phone }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Другое:</label>
+                                <div class="col-md-3">
+                                    <p>
+                                        {% if student.main_contact.contacts[0].other_contact %}
+                                            {{ student.main_contact.contacts[0].other_contact }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% if student.additional_contacts %}
+                            {% for contact in student.additional_contacts %}
+                                <h5 class="title" style="margin-left: 12px; margin-top: 12px; font-size: 1.1em;">Дополнительные контакты</h5>
+                                <div class="form-group" style="margin-top: 12px;">
+                                    {% if contact.id!=student.id %}
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Контакт:</label>
+                                            <div class="col-md-5">
+                                                <p>{{ contact.type }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Фамилия:</label>
+                                            <div class="col-md-5">
+                                                <p>{{ contact.last_name }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Имя:</label>
+                                            <div class="col-md-5">
+                                                <p>{{ contact.first_name }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Отчество:</label>
+                                            <div class="col-md-5">
+                                                <p>
+                                                    {% if contact.patronym %}
+                                                        {{ contact.patronym }}
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Телеграм:</label>
+                                        <div class="col-md-3">
+                                            <p>
+                                                {% if contact.contacts[0].telegram %}
+                                                    {{ contact.contacts[0].telegram }}
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Телефон:</label>
+                                        <div class="col-md-3">
+                                            <p>
+                                                {% if contact.contacts[0].phone %}
+                                                    {{ contact.contacts[0].phone }}
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Другое:</label>
+                                        <div class="col-md-3">
+                                            <p>
+                                                {% if contact.contacts[0].other_contact %}
+                                                    {{ contact.contacts[0].other_contact }}
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
