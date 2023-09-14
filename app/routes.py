@@ -166,7 +166,7 @@ def handle_contact_info(form, student, i):
 
 
 def assign_relation_type(form, student, parent, i):
-    relation_type = form.get('relation_type')
+    relation_type = form.get(f'relation_{i}')
 
     if relation_type == "Другое":
         relation_type = form.get(f'other_relation_{i}')
