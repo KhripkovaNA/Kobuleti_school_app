@@ -26,7 +26,7 @@ $(document).ready(function(){
         }
     });
 
-    $("#status-select").on("change", function () {
+    function handleStatusChange() {
         const selectedStatus = $(this).val();
         const pauseDate = $("#pause-date");
         const leavingReason = $("#leaving-reason");
@@ -41,7 +41,13 @@ $(document).ready(function(){
             pauseDate.hide();
             leavingReason.hide();
         }
-    });
+    }
+
+    $("#status-select").on("change", handleStatusChange);
+
+    handleStatusChange.call($("#status-select")[0])
+
+
 
     var contactCount = 1;
     function addContactSection() {

@@ -39,12 +39,13 @@ def students():
         primary_contact = student.primary_contact
         if primary_contact:
             if primary_contact == student.id:
-                if student.contacts[0].telegram:
-                    student.contact = f"(Телеграм: {students.contacts[0].telegram}"
-                elif student.contacts[0].phone:
-                    student.contact = f"(Тел.: {students.contacts[0].phone}"
-                elif student.contacts[0].other_contact:
-                    student.contact = students.contacts[0].other_contact
+                if student.contacts:
+                    if student.contacts[0].telegram:
+                        student.contact = f"(Телеграм: {students.contacts[0].telegram}"
+                    elif student.contacts[0].phone:
+                        student.contact = f"(Тел.: {students.contacts[0].phone}"
+                    elif student.contacts[0].other_contact:
+                        student.contact = students.contacts[0].other_contact
             else:
                 parent_type = db.session.query(parent_child_table.c.relation).filter(
                     parent_child_table.c.parent_id == primary_contact,
@@ -158,6 +159,7 @@ def handle_contact_info(form, student, i):
 
         student.parents.append(parent)
         parent.contacts.append(contact)
+        parent.primary_contact = parent.id
         assign_relation_type(form, student, parent, i)
 
     if form['primary_contact'] == f'contact_{i}':
@@ -242,3 +244,38 @@ def show_student(student_id):
     else:
         flash("Такого клиента нет")
         return redirect(url_for('students.html'))
+
+
+@app.route('/edit-student/<string:student_id>', methods=['GET', 'POST'])
+@login_required
+def edit_student(student_id):
+    student = Person.query.filter_by(id=student_id).first()
+    if student:
+        if student.dob:
+            student.birth_date = f"{student.dob.strftime('%d.%m.%Y')}"
+        if student.pause_until:
+            student.pause_date = f"{student.pause_until.strftime('%d.%m.%Y')}"
+
+        student.main_contact = Person.query.filter_by(id=student.primary_contact).first()
+        contacts = []
+        if student.primary_contact == student.id:
+            student.main_contact = student
+            student.main_contact.type = "Сам ребенок"
+            if not student.contacts:
+                contact = Contact.query.filter_by(id=1).first()
+                student.contacts.append(contact)
+        else:
+            contacts.append(student)
+
+        for parent in student.parents:
+            parent_type = db.session.query(parent_child_table.c.relation).filter(
+                parent_child_table.c.parent_id == parent.id,
+                parent_child_table.c.child_id == student.id).scalar()
+            parent.type = parent_type
+            if student.primary_contact == parent.id:
+                student.main_contact = parent
+            else:
+                contacts.append(parent)
+        student.additional_contacts = contacts
+
+    return render_template('edit_student.html', student=student)

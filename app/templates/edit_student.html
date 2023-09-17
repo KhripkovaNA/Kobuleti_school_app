@@ -1,16 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="row">
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Новый клиент</h4>
+                <h4 class="title">Изменить данные о клиенте</h4>
             </div>
             <div class="card-content">
 
-                <form class="login-form" action="{{ url_for('add_student') }}" method="post">
+                <form class="login-form" action="{{ url_for('edit_student', student_id=student.id) }}" method="post">
                     <div class="row">
                         <div class="col-md-12">
                             <h4 class="title">Ребенок</h4>
@@ -18,25 +17,25 @@
                                 <div class="row">
                                     <label class="control-label col-md-3">Фамилия:</label>
                                     <div class="col-md-5">
-                                        <input type="text" name="last_name" class="form-control">
+                                        <input type="text" name="last_name" class="form-control" value="{{ student.last_name }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Имя:</label>
                                     <div class="col-md-5">
-                                        <input type="text" name="first_name" class="form-control">
+                                        <input type="text" name="first_name" class="form-control" value="{{ student.first_name }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Отчество:</label>
                                     <div class="col-md-5">
-                                        <input type="text" name="patronym" class="form-control">
+                                        <input type="text" name="patronym" class="form-control" value="{{ student.patronym }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Дата рождения:</label>
                                     <div class="col-md-3 datepicker-container">
-                                        <input type="text" name="dob" class="form-control datepicker" placeholder="дд.мм.гггг">
+                                        <input type="text" name="dob" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.birth_date }}">
                                     </div>
                                 </div>
                                 <div class="row">
@@ -49,10 +48,19 @@
                                             <option value="Закрыт">Закрыт</option>
                                         </select>
                                     </div>
+                                    <script type="text/javascript">
+                                        var studentStatus = "{{ student.status }}"
+                                        var statusSelect = document.getElementById("status-select");
+                                        if (studentStatus !== undefined && studentStatus !== null) {
+                                            statusSelect.value = studentStatus;
+                                        } else {
+                                            statusSelect.value = "Клиент";
+                                        }
+                                    </script>
                                     <div id="pause-date" style="display: none;">
                                         <label class="control-label col-md-1">до:</label>
                                         <div class="col-md-3">
-                                            <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг">
+                                            <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.pause_date }}">
                                         </div>
                                     </div>
                                 </div>
@@ -60,7 +68,7 @@
                                     <div id="leaving-reason" style="display: none;">
                                         <label class="control-label col-md-3">Причина:</label>
                                         <div class="col-md-5">
-                                            <textarea name="leaving_reason" class="form-control"></textarea>
+                                            <textarea name="leaving_reason" class="form-control">{{ student.leaving_reason }}</textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -68,6 +76,7 @@
                         </div>
                     </div>
                     <hr>
+
                     <div class="row">
                         <div class="col-md-12">
                             <h4 class="title">Контакты</h4>
@@ -77,17 +86,21 @@
                                         <div class="row">
                                             <label class="control-label col-md-3">Контакт:</label>
                                             <div class="col-md-3">
-                                                <select name="relation_1" class="form-control contact-relation">
+                                                <select name="relation_1" class="form-control contact-relation" id="relation-select-1">
                                                     <option value="Мама">Мама</option>
                                                     <option value="Папа">Папа</option>
                                                     <option value="Сам ребенок">Сам ребенок</option>
                                                     <option value="Другое">Другое</option>
                                                 </select>
                                             </div>
+                                            <script type="text/javascript">
+                                                var mainContactType = "{{ student.main_contact.type }}"
+                                                var relationSelect = document.getElementById("relation-select-1");
+                                                relationSelect.value = mainContactType;
+                                            </script>
                                             <div class="col-md-3">
                                                 <label class="contact-radio-label" style="padding: 9px 25px">Основной контакт
-                                                    <input type="radio" class="contact-radio" name="primary_contact"
-                                                           value="contact_1" required checked>
+                                                    <input type="radio" class="contact-radio" name="primary_contact" value="contact_1" checked required>
                                                     <span class="custom-radio"></span>
                                                 </label>
                                             </div>
@@ -95,69 +108,57 @@
                                         <div class="row relation-other-row" style="display: none;">
                                             <label class="control-label col-md-3">Другое:</label>
                                             <div class="col-md-4">
-                                                <input type="text" name="other_relation_1" class="form-control">
+                                                <input type="text" name="other_relation_1" class="form-control" value="{{ student.main_contact.type }}">
                                             </div>
                                         </div>
                                         <div class="contact-info">
                                             <div class="row">
                                                 <label class="control-label col-md-3">Фамилия:</label>
                                                 <div class="col-md-5">
-                                                    <input type="text" name="parent_last_name_1" class="form-control" required>
+                                                    <input type="text" name="parent_last_name_1" class="form-control" value="{{ student.main_contact.last_name }}">
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Имя:</label>
                                                 <div class="col-md-5">
-                                                    <input type="text" name="parent_first_name_1" class="form-control" required>
+                                                    <input type="text" name="parent_first_name_1" class="form-control" required value="{{ student.main_contact.first_name }}">
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Отчество:</label>
                                                 <div class="col-md-5">
-                                                    <input type="text" name="parent_patronym_1" class="form-control">
+                                                    <input type="text" name="parent_patronym_1" class="form-control" value="{{ student.main_contact.patronym }}">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Телеграм:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="telegram_1" class="form-control">
+                                                <input type="text" name="telegram_1" class="form-control" value="{{ student.main_contact.contacts[0].telegram }}">
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Телефон:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="phone_1" class="form-control">
+                                                <input type="text" name="phone_1" class="form-control" value="{{ student.main_contact.contacts[0].phone }}">
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Другое:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="other_contact_1" class="form-control">
+                                                <input type="text" name="other_contact_1" class="form-control" value="{{ student.main_contact.contacts[0].other_contact }}">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <input type="hidden" name="contact_count" id="contact-count" value="">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div id="add-contact">
-                            <div class="col-md-3">
-                                <button type="button" id="add-contact-btn" class="btn btn-default" style="background-color: #ff9800;;">Добавить контакт</button>
-                            </div>
-                        </div>
-                        <div id="remove-contact" style="display: none;">
-                            <div class="col-md-3">
-                                <button type="button" id="remove-contact-btn" class="btn btn-danger">Удалить контакт</button>
+
                             </div>
                         </div>
                     </div>
                     <div class="footer">
                         <div class="row">
                             <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" id="submit-btn" style="background-color:#4BD1A0;">Добавить клиента</button>
+                                <button type="submit" class="btn btn-login" id="submit-btn" style="background-color:#4BD1A0;">Изменить</button>
                             </div>
                             <div class="col-md-3">
                                 <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
@@ -169,5 +170,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}

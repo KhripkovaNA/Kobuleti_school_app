@@ -47,14 +47,14 @@ class Person(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     last_name = db.Column(db.String(50))
     first_name = db.Column(db.String(50))
-    patronym = db.Column(db.String(50))
+    patronym = db.Column(db.String(50), default="")
     dob = db.Column(db.Date)
     person_type = db.Column(db.String(16))
     status = db.Column(db.String(50))
     teacher = db.Column(db.Boolean, default=False)
-    leaving_reason = db.Column(db.String(120))
+    leaving_reason = db.Column(db.String(120), default="")
     pause_until = db.Column(db.Date)
-    comment = db.Column(db.String(120))
+    comment = db.Column(db.String(120), default="")
     primary_contact = db.Column(db.Integer, db.ForeignKey('persons.id'))
 
     subjects = db.relationship('Subject', secondary=student_subject_table,
@@ -76,9 +76,9 @@ class Contact(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'), unique=True)
-    telegram = db.Column(db.String(50))
-    phone = db.Column(db.String(50))
-    other_contact = db.Column(db.String(64))
+    telegram = db.Column(db.String(50), default="")
+    phone = db.Column(db.String(50), default="")
+    other_contact = db.Column(db.String(64), default="")
     person = db.relationship('Person', backref='contacts', uselist=False)
 
 
