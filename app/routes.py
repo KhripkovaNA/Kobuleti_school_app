@@ -279,3 +279,19 @@ def edit_student(student_id):
         student.additional_contacts = contacts
 
     return render_template('edit_student.html', student=student)
+
+
+@app.route('/teachers')
+@login_required
+def teachers():
+    all_teachers = Person.query.filter_by(teacher=True).all()
+
+    for teacher in all_teachers:
+        if teacher.contacts[0].telegram:
+            teacher.contact = f"Телеграм: {teacher.contacts[0].telegram}"
+        elif teacher.contacts[0].phone:
+            teacher.contact = f"Тел.: {teacher.contacts[0].phone}"
+        elif teacher.contacts[0].other_contact:
+            teacher.contact = teacher.contacts[0].other_contact
+
+    return render_template('teachers.html', teachers=all_teachers)

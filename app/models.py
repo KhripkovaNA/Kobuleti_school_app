@@ -17,6 +17,12 @@ student_subject_table = db.Table(
     db.Column('subject_id', db.Integer, db.ForeignKey('subjects.id'))
 )
 
+subscription_types_table = db.Table(
+    'subscription_types_table',
+    db.Column('subscription_types_id', db.Integer, db.ForeignKey('subscription_types.id')),
+    db.Column('subject_id', db.Integer, db.ForeignKey('subjects.id'))
+)
+
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -87,6 +93,9 @@ class Subject(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
+    description = db.Column(db.String(120), default="")
+    subscription_types = db.relationship('SubscriptionType', secondary=subscription_types_table,
+                                         backref='subjects', lazy='dynamic')
 
     def __repr__(self):
         return f"<Subject {self.id}: {self.name}>"
@@ -99,6 +108,13 @@ class Subscription(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
     lessons_left = db.Column(db.Integer, default=8)
-    subscription_type = db.Column(db.String(50))
+    subscription_type = db.Column(db.Integer, db.ForeignKey('subscription_types.id'))
 
-    subject = db.relationship('Subject', backref='subscription', uselist=False)
+
+class SubscriptionType(db.Model):
+    __tablename__ = 'subscription_types'
+
+    id = db.Column(db.Integer, primary_key=True)
+    lessons = db.Column(db.Integer)
+    duration = db.Column(db.Integer)
+    price = db.Column(db.Numeric(8, 2))

@@ -26,7 +26,7 @@ $(document).ready(function(){
         }
     });
 
-    function handleStatusChange() {
+    $("#status-select").on("change", function () {
         const selectedStatus = $(this).val();
         const pauseDate = $("#pause-date");
         const leavingReason = $("#leaving-reason");
@@ -41,13 +41,9 @@ $(document).ready(function(){
             pauseDate.hide();
             leavingReason.hide();
         }
-    }
+    });
 
-    $("#status-select").on("change", handleStatusChange);
-
-    handleStatusChange.call($("#status-select")[0])
-
-
+    $("#status-select").trigger("change");
 
     var contactCount = 1;
     function addContactSection() {
@@ -99,6 +95,8 @@ $(document).ready(function(){
             contactInfoDiv.show();
         }
     });
+
+    $(".contact-relation").trigger("change");
 
     $("#remove-contact").click(function() {
         $("#contact-sections .contact-section:last").remove();
