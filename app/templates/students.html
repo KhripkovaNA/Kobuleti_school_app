@@ -18,7 +18,7 @@
                                 <th>Дата рождения</th>
                                 <th>Статус</th>
                                 <th width="13%">Занятия</th>
-                                <th>Контакт</th>
+                                <th width="13%">Контакт</th>
                                 <th>Комментарий</th>
                                 <th width="13%">Действие</th>
                             </thead>
@@ -65,12 +65,12 @@
                                                     {% endif %}
                                                 {% endif %}
                                             </td>
-                                            <td>
+                                            <td width="13%">
                                                 {% if student.contact_name %}
                                                     {{ student.contact_name }}
                                                 {% endif %}
                                                 {% if student.contact %}
-                                                    {{ student.contact }})
+                                                    {{ student.contact }}
                                                 {% endif %}
                                             </td>
                                             <td>

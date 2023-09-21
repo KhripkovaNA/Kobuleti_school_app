@@ -96,6 +96,7 @@ class Subject(db.Model):
     description = db.Column(db.String(120), default="")
     subscription_types = db.relationship('SubscriptionType', secondary=subscription_types_table,
                                          backref='subjects', lazy='dynamic')
+    subscriptions = db.relationship('Subscription', backref='subject')
 
     def __repr__(self):
         return f"<Subject {self.id}: {self.name}>"
@@ -105,10 +106,10 @@ class Subscription(db.Model):
     __tablename__ = 'subscriptions'
 
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
+    student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    subscription_type_id = db.Column(db.Integer, db.ForeignKey('subscription_types.id'))
     lessons_left = db.Column(db.Integer, default=8)
-    subscription_type = db.Column(db.Integer, db.ForeignKey('subscription_types.id'))
 
 
 class SubscriptionType(db.Model):
@@ -118,3 +119,4 @@ class SubscriptionType(db.Model):
     lessons = db.Column(db.Integer)
     duration = db.Column(db.Integer)
     price = db.Column(db.Numeric(8, 2))
+    subscriptions = db.relationship('Subscription', backref='subscription_type')

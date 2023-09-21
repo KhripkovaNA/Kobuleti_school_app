@@ -41,11 +41,11 @@ def students():
             if primary_contact == student.id:
                 if student.contacts:
                     if student.contacts[0].telegram:
-                        student.contact = f"(Телеграм: {students.contacts[0].telegram}"
+                        student.contact = f"Телеграм: {student.contacts[0].telegram}"
                     elif student.contacts[0].phone:
-                        student.contact = f"(Тел.: {students.contacts[0].phone}"
+                        student.contact = f"Тел.: {student.contacts[0].phone}"
                     elif student.contacts[0].other_contact:
-                        student.contact = students.contacts[0].other_contact
+                        student.contact = student.contacts[0].other_contact
             else:
                 parent_type = db.session.query(parent_child_table.c.relation).filter(
                     parent_child_table.c.parent_id == primary_contact,
@@ -54,11 +54,11 @@ def students():
                 parent_name = f"{parent.last_name} {parent.first_name}"
                 student.contact_name = f"{parent_type} - {parent_name}"
                 if parent.contacts[0].telegram:
-                    student.contact = f"(Телеграм: {parent.contacts[0].telegram}"
+                    student.contact = f"(Телеграм: {parent.contacts[0].telegram})"
                 elif parent.contacts[0].phone:
-                    student.contact = f"(Тел.: {parent.contacts[0].phone}"
+                    student.contact = f"(Тел.: {parent.contacts[0].phone})"
                 elif parent.contacts[0].other_contact:
-                    student.contact = parent.contacts[0].other_contact
+                    student.contact = f"({parent.contacts[0].other_contact})"
 
         if student.status == "Закрыт":
             student.status_info = f"{student.status} причина: {student.leaving_reason}"
@@ -295,3 +295,9 @@ def teachers():
             teacher.contact = teacher.contacts[0].other_contact
 
     return render_template('teachers.html', teachers=all_teachers)
+
+
+@app.route('/timetable')
+@login_required
+def timetable():
+    return render_template('test_table.html')
