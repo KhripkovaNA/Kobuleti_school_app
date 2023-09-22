@@ -31,7 +31,7 @@ def logout():
 @app.route('/students')
 @login_required
 def students():
-    all_students = Person.query.filter_by(person_type="Ребенок").all()
+    all_students = Person.query.filter_by(person_type="Ребенок").order_by(Person.last_name).all()
 
     for student in all_students:
         if student.dob:
@@ -284,7 +284,7 @@ def edit_student(student_id):
 @app.route('/teachers')
 @login_required
 def teachers():
-    all_teachers = Person.query.filter_by(teacher=True).all()
+    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
 
     for teacher in all_teachers:
         if teacher.contacts[0].telegram:
@@ -295,6 +295,14 @@ def teachers():
             teacher.contact = teacher.contacts[0].other_contact
 
     return render_template('teachers.html', teachers=all_teachers)
+
+
+@app.route('/subjects')
+@login_required
+def subjects():
+    all_subjects = Subject.query.order_by(Subject.name).all()
+
+    return render_template('subjects.html', subjects=all_subjects)
 
 
 @app.route('/timetable')

@@ -17,7 +17,7 @@
                                 <th>Имя</th>
                                 <th>Дата рождения</th>
                                 <th>Статус</th>
-                                <th width="13%">Занятия</th>
+                                <th width="15%">Занятия</th>
                                 <th width="13%">Контакт</th>
                                 <th>Комментарий</th>
                                 <th width="13%">Действие</th>
@@ -44,7 +44,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>{{ student.status_info }}</td>
-                                            <td width="13%">
+                                            <td width="15%">
                                                 {% if student.subjects %}
                                                     {% if student.status=="Лид"%}
                                                         Интересуется:
@@ -54,7 +54,7 @@
                                                     {% else %}
                                                         {% if student.subjects_with_subscriptions %}
                                                             {% for subscription in student.subjects_with_subscriptions %}
-                                                                {{ subscription.subject_name }} ({{ subscription.lessons_left }}){{ "," if not loop.last }}{% if student.subjects_without_subscriptions %}, {% endif %}
+                                                                {{ subscription.subject_name }}({{ subscription.lessons_left }}){{ "," if not loop.last }}{{ "," if loop.last and student.subjects_without_subscriptions }}
                                                             {% endfor %}
                                                         {% endif %}
                                                         {% if student.subjects_without_subscriptions %}

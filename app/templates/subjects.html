@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables" id="students-card">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Занятия</h4>
+            </div>
+            <div class="card-content table-responsive">
+                {% if subjects %}
+                    <div class="scroll-table">
+                        <table class="table table-hover">
+                            <thead class="text-success">
+                                <th>Название</th>
+                                <th>Описание</th>
+                                <th>Тип абонемента</th>
+                                <th>Действие</th>
+                            </thead>
+                        </table>
+                        <div class="scroll-table-body">
+                            <table class="table table-hover">
+                                <tbody>
+                                    {% for subject in subjects %}
+                                        <tr>
+                                            <td>{{ subject.name }}</td>
+                                            <td>{{ subject.description }}</td>
+                                            <td></td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">
+                                                        <i class="material-icons" style="color: white;">toc</i>
+                                                        <span class="caret"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a href="">
+                                                                <i class="material-icons" style="color: purple;">edit</i>Изменить
+                                                            </a>
+                                                        </li>
+                                                        <li class="divider"></li>
+                                                        <li>
+                                                            <a href="">
+                                                                <i class="material-icons" style="color: red;">delete_forever</i>Удалить
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>Занятий пока нет</p>
+                {% endif %}
+                <button class="btn" style="background-color: #ff9800;">
+                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
+                        <i class="material-icons">add_box</i>Добавить занятие
+                    </a>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

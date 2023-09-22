@@ -2945,6 +2945,37 @@ select.form-control[multiple],
     vertical-align: middle;
 }
 
+.timetable td{
+    max-height: 10px;
+}
+
+.timetable thead,
+.timetable th,
+.timetable td {
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.timetable>thead>tr>th,
+.timetable>tbody>tr>th,
+.timetable>tfoot>tr>th,
+.timetable>thead>tr>td,
+.timetable>tbody>tr>td,
+.timetable>tfoot>tr>td {
+    padding: 3px;
+}
+
+.timetable td {
+    hyphens: auto;
+    font-size: 9px;
+    padding: 3px
+}
+
+.timetable>tbody>tr>th {
+    font-size: 1em;
+    font-weight: 300;
+}
+
 .table>thead>tr>th {
     padding-bottom: 4px;
 }
