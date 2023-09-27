@@ -16,6 +16,7 @@
                                 <th>Название</th>
                                 <th>Описание</th>
                                 <th>Тип абонемента</th>
+                                <th>Цена разового занятия</th>
                                 <th>Действие</th>
                             </thead>
                         </table>
@@ -26,7 +27,18 @@
                                         <tr>
                                             <td>{{ subject.name }}</td>
                                             <td>{{ subject.description }}</td>
-                                            <td></td>
+                                            <td>
+                                                {% if subject.types_of_subscription %}
+                                                    {% for type in subject.types_of_subscription %}
+                                                        {{ type }}{{ "," if not loop.last }}
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if subject.one_time_price %}
+                                                    {{ subject.one_time_price | round(0) }}
+                                                {% endif %}
+                                            </td>
                                             <td>
                                                 <div class="dropdown">
                                                     <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">

@@ -2968,12 +2968,14 @@ select.form-control[multiple],
 .timetable td {
     hyphens: auto;
     font-size: 9px;
-    padding: 3px
+    font-weight: 400;
+    padding: 3px;
 }
 
+.timetable>thead>tr>th,
 .timetable>tbody>tr>th {
     font-size: 1em;
-    font-weight: 300;
+    font-weight: 500;
 }
 
 .table>thead>tr>th {

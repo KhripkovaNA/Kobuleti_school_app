@@ -94,6 +94,7 @@ class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     description = db.Column(db.String(120), default="")
+    one_time_price = db.Column(db.Numeric(8, 2))
     subscription_types = db.relationship('SubscriptionType', secondary=subscription_types_table,
                                          backref='subjects', lazy='dynamic')
     subscriptions = db.relationship('Subscription', backref='subject')
@@ -117,6 +118,8 @@ class SubscriptionType(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     lessons = db.Column(db.Integer)
+    period = db.Column(db.String(50), default="")
     duration = db.Column(db.Integer)
     price = db.Column(db.Numeric(8, 2))
     subscriptions = db.relationship('Subscription', backref='subscription_type')
+

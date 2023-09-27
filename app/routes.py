@@ -301,6 +301,17 @@ def teachers():
 @login_required
 def subjects():
     all_subjects = Subject.query.order_by(Subject.name).all()
+    for subject in all_subjects:
+        subscription_types = []
+        for subscription_type in subject.subscription_types.all():
+            if subscription_type.lessons:
+                type_of_subscription = f"{subscription_type.lessons} занятий за {subscription_type.price:.0f} " \
+                                       f"({subscription_type.duration} дней)"
+                subscription_types.append(type_of_subscription)
+            elif subscription_type.period:
+                type_of_subscription2 = f"{subscription_type.price:.0f} за {subscription_type.period}"
+                subscription_types.append(type_of_subscription2)
+        subject.types_of_subscription = subscription_types
 
     return render_template('subjects.html', subjects=all_subjects)
 
