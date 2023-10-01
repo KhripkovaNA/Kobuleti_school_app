@@ -1,6 +1,7 @@
 from app import db, login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 
 parent_child_table = db.Table(
@@ -111,6 +112,7 @@ class Subscription(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     subscription_type_id = db.Column(db.Integer, db.ForeignKey('subscription_types.id'))
     lessons_left = db.Column(db.Integer, default=8)
+    purchase_date = db.Column(db.Date, default=datetime.today().date())
 
 
 class SubscriptionType(db.Model):

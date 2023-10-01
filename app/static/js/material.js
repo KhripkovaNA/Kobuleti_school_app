@@ -53,6 +53,8 @@ $(document).ready(function(){
         contactSection.attr("id", "contact-section-" + contactCount);
         contactSection.find(".contact-relation").val("Мама");
         contactSection.find(".relation-other-row").hide();
+        contactSection.find(".contact-select").val("Добавить");
+        contactSection.find(".contact-options-row").hide();
         contactSection.find(".contact-info").show();
         contactSection.find("select, input[type='text']").each(function() {
             var originalName = $(this).attr("name");
@@ -83,27 +85,47 @@ $(document).ready(function(){
         var contactSection = relationSelector.closest(".contact-section");
         var otherRelationRow = contactSection.find(".relation-other-row");
         var contactInfoDiv = contactSection.find(".contact-info");
+        var contactSelection = contactSection.find(".contact_selection")
 
         if (relationSelector.val() === "Другое") {
             otherRelationRow.show();
             contactInfoDiv.show();
+            contactSelection.show();
         } else if (relationSelector.val() === "Сам ребенок") {
             otherRelationRow.hide();
             contactInfoDiv.hide();
+            contactSelection.hide();
         } else {
             otherRelationRow.hide();
             contactInfoDiv.show();
+            contactSelection.show();
         }
     });
 
     $(".contact-relation").trigger("change");
+
+    $("#contact-sections").on("change", ".contact-select", function () {
+        var contactSelector = $(this);
+        var contactSection = contactSelector.closest(".contact-section");
+        var contactOptionsRow = contactSection.find(".contact-options-row");
+        var contactInformation = contactSection.find(".contact-information")
+
+        if (contactSelector.val() === "Добавить") {
+            contactInformation.show();
+            contactOptionsRow.hide();
+        } else {
+            contactInformation.hide();
+            contactOptionsRow.show();
+        }
+    });
+
+    $(".contact-select").trigger("change");
 
     $("#remove-contact").click(function() {
         $("#contact-sections .contact-section:last").remove();
         contactCount--;
         if (contactCount === 1) {
             $("#remove-contact").hide();
-        console.log(contactCount);
         }
     });
 

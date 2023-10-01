@@ -49,13 +49,9 @@
                                         </select>
                                     </div>
                                     <script type="text/javascript">
-                                        var studentStatus = "{{ student.status }}"
+                                        var studentStatus = "{{ student.status }}";
                                         var statusSelect = document.getElementById("status-select");
-                                        if (studentStatus !== undefined && studentStatus !== null) {
-                                            statusSelect.value = studentStatus;
-                                        } else {
-                                            statusSelect.value = "Клиент";
-                                        }
+                                        statusSelect.value = studentStatus;
                                     </script>
                                     <div id="pause-date" style="display: none;">
                                         <label class="control-label col-md-1">до:</label>
@@ -76,7 +72,6 @@
                         </div>
                     </div>
                     <hr>
-
                     <div class="row">
                         <div class="col-md-12">
                             <h4 class="title">Контакты</h4>
@@ -90,13 +85,17 @@
                                                     <option value="Мама">Мама</option>
                                                     <option value="Папа">Папа</option>
                                                     <option value="Сам ребенок">Сам ребенок</option>
-                                                    <option value="Другое">Другое</option>
+                                                    <option value="Другое">Другое контактное лицо</option>
                                                 </select>
                                             </div>
                                             <script type="text/javascript">
                                                 var mainContactType = "{{ student.main_contact.type }}"
                                                 var relationSelect = document.getElementById("relation-select-1");
-                                                relationSelect.value = mainContactType;
+                                                if (mainContactType !== "Мама" && mainContactType !== "Папа" && mainContactType !== "Сам ребенок") {
+                                                    relationSelect.value = "Другое";
+                                                } else {
+                                                    relationSelect.value = mainContactType;
+                                                }
                                             </script>
                                             <div class="col-md-3">
                                                 <label class="contact-radio-label" style="padding: 9px 25px">Основной контакт
@@ -106,7 +105,7 @@
                                             </div>
                                         </div>
                                         <div class="row relation-other-row" style="display: none;">
-                                            <label class="control-label col-md-3">Другое:</label>
+                                            <label class="control-label col-md-3">Контактное лицо:</label>
                                             <div class="col-md-4">
                                                 <input type="text" name="other_relation_1" class="form-control" value="{{ student.main_contact.type }}">
                                             </div>
@@ -151,6 +150,83 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                {% for contact in student.additional_contacts %}
+                                    <div class="contact-section">
+                                        <div class="form-group">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Контакт:</label>
+                                                <div class="col-md-3">
+                                                    <select name="relation_{{ loop.index + 1 }}" class="form-control contact-relation">
+                                                        <option value="Мама">Мама</option>
+                                                        <option value="Папа">Папа</option>
+                                                        <option value="Сам ребенок">Сам ребенок</option>
+                                                        <option value="Другое">Другое контактное лицо</option>
+                                                    </select>
+                                                </div>
+                                                <script type="text/javascript">
+                                                    var mainContactType = "{{ contact.type }}";
+                                                    var relationSelect = document.querySelector('[name="relation_{{ loop.index + 1 }}"]');
+                                                    if (mainContactType !== "Мама" && mainContactType !== "Папа" && mainContactType !== "Сам ребенок") {
+                                                        relationSelect.value = "Другое";
+                                                    } else {
+                                                        relationSelect.value = mainContactType;
+                                                    }
+                                                </script>
+                                                <div class="col-md-3">
+                                                    <label class="contact-radio-label" style="padding: 9px 25px">Основной контакт
+                                                        <input type="radio" class="contact-radio" name="primary_contact" value="contact_{{ loop.index + 1 }}">
+                                                        <span class="custom-radio"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="row relation-other-row" style="display: none;">
+                                                <label class="control-label col-md-3">Контактное лицо:</label>
+                                                <div class="col-md-4">
+                                                    <input type="text" name="other_relation_{{ loop.index + 1 }}" class="form-control" value="{{ contact.type }}">
+                                                </div>
+                                            </div>
+                                            <div class="contact-info">
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Фамилия:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_last_name_{{ loop.index + 1 }}" class="form-control" value="{{ contact.last_name }}">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Имя:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_first_name_{{ loop.index + 1 }}" class="form-control" required value="{{ contact.first_name }}">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Отчество:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_patronym_{{ loop.index + 1 }}" class="form-control" value="{{ contact.patronym }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Телеграм:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="telegram_{{ loop.index + 1 }}" class="form-control" value="{{ contact.contacts[0].telegram }}">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Телефон:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="phone_{{ loop.index + 1 }}" class="form-control" value="{{ contact.contacts[0].phone }}">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Другое:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="other_contact_{{ loop.index + 1 }}" class="form-control" value="{{ contact.contacts[0].other_contact }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
 
                             </div>
                         </div>

@@ -81,7 +81,7 @@
                                                     <option value="Мама">Мама</option>
                                                     <option value="Папа">Папа</option>
                                                     <option value="Сам ребенок">Сам ребенок</option>
-                                                    <option value="Другое">Другое</option>
+                                                    <option value="Другое">Другое контактное лицо</option>
                                                 </select>
                                             </div>
                                             <div class="col-md-3">
@@ -93,47 +93,68 @@
                                             </div>
                                         </div>
                                         <div class="row relation-other-row" style="display: none;">
-                                            <label class="control-label col-md-3">Другое:</label>
+                                            <label class="control-label col-md-3">Контактное лицо:</label>
                                             <div class="col-md-4">
                                                 <input type="text" name="other_relation_1" class="form-control">
                                             </div>
                                         </div>
-                                        <div class="contact-info">
-                                            <div class="row">
-                                                <label class="control-label col-md-3">Фамилия:</label>
-                                                <div class="col-md-5">
-                                                    <input type="text" name="parent_last_name_1" class="form-control">
+                                        <div class="row contact_selection">
+                                            <label class="control-label col-md-3">Данные контактного лица:</label>
+                                            <div class="col-md-3">
+                                                <select name="contact_select_1" class="form-control contact-select">
+                                                    <option value="Добавить">Добавить</option>
+                                                    <option value="Выбрать">Выбрать из списка</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row contact-options-row" style="display: none;">
+                                            <label class="control-label col-md-3">Контакты:</label>
+                                            <div class="col-md-3">
+                                                <select name="selected_contact_1" class="form-control">
+                                                    {% for client in clients %}
+                                                        <option value="{{ client }}">{{ client }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="contact-information" style="display: none;">
+                                            <div class="contact-info">
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Фамилия:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_last_name_1" class="form-control">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Имя:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_first_name_1" class="form-control">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Отчество:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_patronym_1" class="form-control">
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="row">
-                                                <label class="control-label col-md-3">Имя:</label>
+                                                <label class="control-label col-md-3">Телеграм:</label>
                                                 <div class="col-md-5">
-                                                    <input type="text" name="parent_first_name_1" class="form-control">
+                                                    <input type="text" name="telegram_1" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="row">
-                                                <label class="control-label col-md-3">Отчество:</label>
+                                                <label class="control-label col-md-3">Телефон:</label>
                                                 <div class="col-md-5">
-                                                    <input type="text" name="parent_patronym_1" class="form-control">
+                                                    <input type="text" name="phone_1" class="form-control">
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Телеграм:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="telegram_1" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Телефон:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="phone_1" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Другое:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="other_contact_1" class="form-control">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Другое:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="other_contact_1" class="form-control">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

@@ -203,9 +203,9 @@ def add_student():
             flash(f'Ошибка при добавлении ученика: {str(e)}', 'error')
             return redirect(url_for('add_student'))
 
-    all_subjects = Subject.query.all()
-    subjects = [subject.name for subject in all_subjects]
-    return render_template('add_student.html', subjects=subjects)
+    all_clients = Person.query.all()
+    clients = [f"{client.last_name} {client.first_name}" for client in all_clients]
+    return render_template('add_student.html', clients=clients)
 
 
 @app.route('/student/<string:student_id>')
@@ -256,16 +256,14 @@ def edit_student(student_id):
         if student.pause_until:
             student.pause_date = f"{student.pause_until.strftime('%d.%m.%Y')}"
 
-        student.main_contact = Person.query.filter_by(id=student.primary_contact).first()
         contacts = []
         if student.primary_contact == student.id:
             student.main_contact = student
             student.main_contact.type = "Сам ребенок"
-            if not student.contacts:
-                contact = Contact.query.filter_by(id=1).first()
-                student.contacts.append(contact)
         else:
-            contacts.append(student)
+            if student.contacts:
+                student.type = "Сам ребенок"
+                contacts.append(student)
 
         for parent in student.parents:
             parent_type = db.session.query(parent_child_table.c.relation).filter(
