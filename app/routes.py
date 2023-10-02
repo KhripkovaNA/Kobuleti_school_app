@@ -142,28 +142,37 @@ def create_parent(form, i):
 
 
 def handle_contact_info(form, student, i):
-    contact = create_contact(form, i)
+    contact_select = form.get(f'contact_select_{i}')
     relation_type = form.get(f'relation_{i}')
 
     if relation_type == "Сам ребенок":
+        contact = create_contact(form, i)
         db.session.add(contact)
         db.session.commit()
 
         student.contacts.append(contact)
 
     else:
-        parent = create_parent(form, i)
-        db.session.add(parent)
-        db.session.add(contact)
-        db.session.commit()
+        if contact_select == "Выбрать":
+            parent_id = int(form.get(f'selected_contact_{i}'))
+            parent = Person.query.filter_by(id=parent_id).first()
+            contact = Contact.query.filter_by(person_id=parent_id).first()
+
+        else:
+            contact = create_contact(form, i)
+            parent = create_parent(form, i)
+            db.session.add(parent)
+            db.session.add(contact)
+            db.session.commit()
+
+            parent.contacts.append(contact)
+            parent.primary_contact = parent.id
 
         student.parents.append(parent)
-        parent.contacts.append(contact)
-        parent.primary_contact = parent.id
         assign_relation_type(form, student, parent, i)
 
     if form['primary_contact'] == f'contact_{i}':
-        student.primary_contact = contact.person.id
+        student.primary_contact = contact.person_id
     db.session.commit()
 
 
@@ -204,7 +213,25 @@ def add_student():
             return redirect(url_for('add_student'))
 
     all_clients = Person.query.all()
-    clients = [f"{client.last_name} {client.first_name}" for client in all_clients]
+    clients = []
+    for client in all_clients:
+        client_data = {
+            "id": client.id,
+            "last_name": client.last_name,
+            "first_name": client.first_name,
+            "patronym": client.patronym
+        }
+        if client.contacts:
+            client_data["telegram"] = client.contacts[0].telegram
+            client_data["phone"] = client.contacts[0].phone
+            client_data["other_contact"] = client.contacts[0].other_contact
+        else:
+            client_data["telegram"] = ""
+            client_data["phone"] = ""
+            client_data["other_contact"] = ""
+
+        clients.append(client_data)
+
     return render_template('add_student.html', clients=clients)
 
 
@@ -275,8 +302,10 @@ def edit_student(student_id):
             else:
                 contacts.append(parent)
         student.additional_contacts = contacts
+        all_clients = Person.query.all()
+        clients = [f"{client.last_name} {client.first_name}" for client in all_clients]
 
-    return render_template('edit_student.html', student=student)
+    return render_template('edit_student.html', student=student, clients=clients)
 
 
 @app.route('/teachers')

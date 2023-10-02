@@ -107,14 +107,29 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="row contact-options-row" style="display: none;">
-                                            <label class="control-label col-md-3">Контакты:</label>
-                                            <div class="col-md-3">
-                                                <select name="selected_contact_1" class="form-control">
-                                                    {% for client in clients %}
-                                                        <option value="{{ client }}">{{ client }}</option>
-                                                    {% endfor %}
-                                                </select>
+                                        <div class="contact-options-row" style="display: none;">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Контакты:</label>
+                                                <div class="col-md-3">
+                                                    <select name="selected_contact_1" class="form-control contact-options">
+                                                        {% for client in clients %}
+                                                            <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <script type="text/javascript">
+                                                var clientsData = {{ clients | tojson | safe }};
+                                            </script>
+                                            <div class="client-information">
+                                                <div class="form-group" style="margin-top: 12px;">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-3">Фамилия:</label>
+                                                        <div class="col-md-5">
+                                                            <p></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="contact-information" style="display: none;">
