@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Contact, parent_child_table, Subject
 from app import app, db
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -241,7 +241,7 @@ def show_student(student_id):
     student = Person.query.filter_by(id=student_id).first()
     if student:
         if student.dob:
-            student.birth_date = f"{student.dob.strftime('%d.%m.%Y')}"
+            student.birth_date = student.dob.strftime('%d.%m.%Y')
         if student.status == "Закрыт":
             student.status_info = f"{student.status} причина: {student.leaving_reason}"
         elif student.status == "Пауза":
@@ -266,6 +266,20 @@ def show_student(student_id):
             else:
                 contacts.append(parent)
         student.additional_contacts = contacts
+
+        student_subscriptions = []
+        for subscription in student.subscriptions.all():
+            subject_name = subscription.subject.name
+            lessons_left = subscription.lessons_left
+            end_date = subscription.purchase_date + timedelta(days=subscription.subscription_type.duration)
+            subject_with_subscriptions = {
+                'subject_name': subject_name,
+                'lessons_left': lessons_left,
+                'end_date': end_date.strftime('%d.%m.%Y')
+            }
+            student_subscriptions.append(subject_with_subscriptions)
+
+        student.subscriptions_info = student_subscriptions
 
         return render_template('student.html', student=student)
     else:

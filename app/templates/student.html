@@ -53,9 +53,26 @@
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <button type="button" id="show-contacts-btn" class="btn btn-default" style="background-color: #ff9800;">
+                            <i class="material-icons">people</i> Контакты
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" id="show-subjects" class="btn btn-default" style="background-color: #ff9800;">
+                            <i class="material-icons">school</i> Занятия
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" id="show-subscriptions" class="btn btn-default" style="background-color: #ff9800;">
+                            <i class="material-icons">ballot</i> Абонементы
+                        </button>
+                    </div>
+                </div>
                 <hr>
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-md-12" style="display: none;">
                         <h4 class="title">Kонтакты</h4>
                         <h5 class="title" style="margin-left: 12px; margin-top: 12px; font-size: 1.1em;">Основной контакт</h5>
                         <div class="form-group" style="margin-top: 12px;">
@@ -171,6 +188,58 @@
                                 </div>
                             {% endfor %}
                         {% endif %}
+                    </div>
+                    <div class="col-md-12" style="display: none;">
+                        <h4 class="title">Занятия</h4>
+                        <div class="form-group" style="margin-top: 12px;">
+                            {% if student.subjects %}
+                                <div class="row">
+                                    {% if student.status=="Лид"%}
+                                        <label class="control-label col-md-3">Интересуется:</label>
+                                    {% else %}
+                                        <label class="control-label col-md-3">Посещал:</label>
+                                    {% endif %}
+                                    <div class="col-md-5">
+                                        {% for subject in student.subjects %}
+                                            <p style="padding: 12px 12px 0; margin: 0;">{{ subject.name }}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="row">
+                                    <p>Занятий пока нет</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <h4 class="title">Абонементы</h4>
+                        <div class="form-group" style="margin-top: 12px;">
+                            {% if student.subscriptions_info %}
+                                <div class="col-md-6">
+                                    <table class="table table-hover">
+                                        <thead class="text-success">
+                                            <th>Занятие</th>
+                                            <th>Остаток уроков</th>
+                                            <th>Срок действия</th>
+                                        </thead>
+                                        <tbody>
+                                            {% for subscription in student.subscriptions_info %}
+                                                <tr>
+                                                    <td>{{ subscription.subject_name }}</td>
+                                                    <td>{{ subscription.lessons_left }}</td>
+                                                    <td>{{ subscription.end_date }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="row">
+                                    <p>Абонементов пока нет</p>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>

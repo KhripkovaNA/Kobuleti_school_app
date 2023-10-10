@@ -73,56 +73,6 @@ $(document).ready(function(){
         return contactSection;
     }
 
-//    function addContactInfo() {
-//        $("#contact-sections").on("change", ".contact-options", function() {
-//            var contactOptionsSelector = $(this);
-//            var selectedClient = contactOptionsSelector.val();
-//            var clientInformation = contactOptionsSelector.closest(".client-information");
-//
-//            clientInformation.html(`
-//                <div class="form-group" style="margin-top: 12px;">
-//                    <div class="row">
-//                        <label class="control-label col-md-3">Фамилия:</label>
-//                        <div class="col-md-5">
-//                            <p>Hellow</p>
-//                        </div>
-//                    </div>
-//                    <div class="row">
-//                        <label class="control-label col-md-3">Имя:</label>
-//                        <div class="col-md-5">
-//                            <p>{{ selectedClient.first_name }}</p>
-//                        </div>
-//                    </div>
-//                    <div class="row">
-//                        <label class="control-label col-md-3">Отчество:</label>
-//                        <div class="col-md-5">
-//                            <p>{{ selectedClient.patronym }}</p>
-//                        </div>
-//                    </div>
-//                    <div class="row">
-//                        <label class="control-label col-md-3">Телеграм:</label>
-//                        <div class="col-md-3">
-//                            <p>{{ client.contacts[0].telegram }}</p>
-//                        </div>
-//                    </div>
-//                    <div class="row">
-//                        <label class="control-label col-md-3">Телефон:</label>
-//                        <div class="col-md-3">
-//                            <p>{{ contact.contacts[0].phone }}</p>
-//                        </div>
-//                    </div>
-//                    <div class="row">
-//                        <label class="control-label col-md-3">Другое:</label>
-//                        <div class="col-md-3">
-//                            <p>{{ contact.contacts[0].other_contact }}</p>
-//                        </div>
-//                    </div>
-//                </div>
-//            `);
-//        });
-//        $(".contact-options").trigger("change");
-//    }
-
     $("#contact-sections").on("change", ".contact-relation", function () {
         var relationSelector = $(this);
         var contactSection = relationSelector.closest(".contact-section");
@@ -200,8 +150,6 @@ $(document).ready(function(){
         `);
     });
 
-    $(".contact-options").trigger("change");
-
     $("#contact-sections").on("change", ".contact-select", function () {
         var contactSelector = $(this);
         var contactSection = contactSelector.closest(".contact-section");
@@ -217,6 +165,7 @@ $(document).ready(function(){
             contactInformation.hide();
             contactOptionsRow.show();
             clientInformation.show();
+            $(".contact-options").trigger("change");
         }
     });
 
