@@ -60,19 +60,19 @@
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button type="button" id="show-subjects" class="btn btn-default" style="background-color: #ff9800;">
+                        <button type="button" id="show-subjects-btn" class="btn btn-default" style="background-color: #ff9800;">
                             <i class="material-icons">school</i> Занятия
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button type="button" id="show-subscriptions" class="btn btn-default" style="background-color: #ff9800;">
+                        <button type="button" id="show-subscriptions-btn" class="btn btn-default" style="background-color: #ff9800;">
                             <i class="material-icons">ballot</i> Абонементы
                         </button>
                     </div>
                 </div>
                 <hr>
                 <div class="row">
-                    <div class="col-md-12" style="display: none;">
+                    <div class="col-md-12" id="show-contacts" style="display: none;">
                         <h4 class="title">Kонтакты</h4>
                         <h5 class="title" style="margin-left: 12px; margin-top: 12px; font-size: 1.1em;">Основной контакт</h5>
                         <div class="form-group" style="margin-top: 12px;">
@@ -98,48 +98,32 @@
                                 <div class="row">
                                     <label class="control-label col-md-3">Отчество:</label>
                                     <div class="col-md-5">
-                                        <p>
-                                            {% if student.main_contact.patronym %}
-                                                {{ student.main_contact.patronym }}
-                                            {% endif %}
-                                        </p>
+                                        <p>{{ student.main_contact.patronym }}</p>
                                     </div>
                                 </div>
                             {% endif %}
                             <div class="row">
                                 <label class="control-label col-md-3">Телеграм:</label>
                                 <div class="col-md-3">
-                                    <p>
-                                        {% if student.main_contact.contacts[0].telegram %}
-                                            {{ student.main_contact.contacts[0].telegram }}
-                                        {% endif %}
-                                    </p>
+                                    <p>{{ student.main_contact.contacts[0].telegram }}</p>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Телефон:</label>
                                 <div class="col-md-3">
-                                    <p>
-                                        {% if student.main_contact.contacts[0].phone %}
-                                            {{ student.main_contact.contacts[0].phone }}
-                                        {% endif %}
-                                    </p>
+                                    <p>{{ student.main_contact.contacts[0].phone }}</p>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Другое:</label>
                                 <div class="col-md-3">
-                                    <p>
-                                        {% if student.main_contact.contacts[0].other_contact %}
-                                            {{ student.main_contact.contacts[0].other_contact }}
-                                        {% endif %}
-                                    </p>
+                                    <p>{{ student.main_contact.contacts[0].other_contact }}</p>
                                 </div>
                             </div>
                         </div>
                         {% if student.additional_contacts %}
+                            <h5 class="title" style="margin-left: 12px; margin-top: 12px; font-size: 1.1em;">Дополнительные контакты</h5>
                             {% for contact in student.additional_contacts %}
-                                <h5 class="title" style="margin-left: 12px; margin-top: 12px; font-size: 1.1em;">Дополнительные контакты</h5>
                                 <div class="form-group" style="margin-top: 12px;">
                                     {% if contact.id!=student.id %}
                                         <div class="row">
@@ -189,7 +173,7 @@
                             {% endfor %}
                         {% endif %}
                     </div>
-                    <div class="col-md-12" style="display: none;">
+                    <div class="col-md-12" id="show-subjects" style="display: none;">
                         <h4 class="title">Занятия</h4>
                         <div class="form-group" style="margin-top: 12px;">
                             {% if student.subjects %}
@@ -212,7 +196,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-12" id="show-subscriptions" style="display: none;">
                         <h4 class="title">Абонементы</h4>
                         <div class="form-group" style="margin-top: 12px;">
                             {% if student.subscriptions_info %}

@@ -99,7 +99,6 @@ $(document).ready(function(){
         }
     });
 
-//    $(".contact-relation").trigger("change");
     $("#contact-sections").on("change", ".contact-options", function() {
         var contactOptionsSelector = $(this);
         var clientId = Number(contactOptionsSelector.val());
@@ -189,6 +188,21 @@ $(document).ready(function(){
 
     $("#submit-btn").click(function() {
         $('#contact-count').val(contactCount);
+    });
+
+    $('#show-contacts-btn').click(function () {
+        $('#show-subjects, #show-subscriptions').hide();
+        $('#show-contacts').show();
+    });
+
+    $('#show-subjects-btn').click(function () {
+        $('#show-contacts, #show-subscriptions').hide();
+        $('#show-subjects').show();
+    });
+
+    $('#show-subscriptions-btn').click(function () {
+        $('#show-subjects, #show-contacts').hide();
+        $('#show-subscriptions').show();
     });
 });
 
