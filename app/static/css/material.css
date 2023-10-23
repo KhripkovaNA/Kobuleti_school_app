@@ -2074,36 +2074,42 @@ output {
 }
 
 .contact-radio-label input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
 }
 
-.custom-radio {
+.custom-radio, .custom-checkbox {
     position: absolute;
     top: 11px;
     left: 0px;
     height: 15px;
     width: 15px;
     background-color: #eee;
+}
+
+.custom-radio {
     border-radius: 50%;
 }
 
-.contact-radio-label:hover input ~ .custom-radio {
-  background-color: #ccc;
+.contact-radio-label:hover input ~ .custom-radio,
+.contact-radio-label:hover input ~ .custom-checkbox {
+    background-color: #ccc;
 }
 
-.contact-radio-label input:checked ~ .custom-radio {
+.contact-radio-label input:checked ~ .custom-radio,
+.contact-radio-label input:checked ~ .custom-checkbox {
     background-color: #4BD1A0;
 }
 
-.custom-radio:after {
+.custom-radio:after, .custom-checkbox:after {
     content: "";
     position: absolute;
     display: none;
 }
 
-.contact-radio-label input:checked ~ .custom-radio:after {
+.contact-radio-label input:checked ~ .custom-radio:after,
+.contact-radio-label input:checked ~ .custom-checkbox:after{
     display: block;
 }
 
@@ -2115,6 +2121,19 @@ output {
 	border-radius: 50%;
 	background: white;
 }
+
+.contact-radio-label .custom-checkbox:after {
+    left: 5px;
+    top: 3px;
+    width: 5px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
 
 .form-control-static {
     padding-top: 8px;

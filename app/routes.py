@@ -129,4 +129,8 @@ def subjects():
 @app.route('/timetable')
 @login_required
 def timetable():
-    return render_template('test_table.html')
+    class_data = [
+        {"name": "Математика", "start_time": "10:00", "end_time": "11:00", "room": "каб 1"},
+        {"name": "Английский", "start_time": "11:00", "end_time": "12:00", "room": "каб 2"}
+    ]
+    return render_template('timetable_test.html', class_data=class_data)

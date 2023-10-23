@@ -204,5 +204,26 @@ $(document).ready(function(){
         $('#show-subjects, #show-contacts').hide();
         $('#show-subscriptions').show();
     });
+
+    $(".change_contact_btn").click(function() {
+        var containerNumber = $(this).closest(".form-group").attr("id").split("-").pop();
+        var containerId = "#contact-info-" + containerNumber;
+        var formId = "#contact-form-" + containerNumber;
+
+        $(containerId).hide();
+        $(formId).show();
+    });
+
+    $(".cancel_form_btn").click(function() {
+        event.preventDefault();
+
+        var containerNumber = $(this).closest(".login-form").attr("id").split("-").pop();
+        var formId = "#contact-form-" + containerNumber;
+        var containerId = "#contact-info-" + containerNumber;
+
+        $(formId).hide();
+        $(containerId).show();
+    });
+
 });
 
