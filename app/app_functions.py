@@ -1,4 +1,4 @@
-from app.models import Person, Contact, parent_child_table
+from app.models import Person, Contact, parent_child_table, Lesson
 from datetime import datetime, timedelta
 from app import db
 
@@ -213,3 +213,21 @@ def clients_data():
         clients.append(client_data)
 
         return clients
+
+
+def create_lesson(form):
+    lesson_date = datetime.strptime(form.get('lesson_date'), '%d.%m.%Y').date()
+    lesson_time = datetime.strptime(form.get('lesson_time'), '%H:%M').time()
+    subject_id = form.get('subject')
+    room_id = form.get('room')
+    teacher_id = form.get('teacher')
+
+    lesson = Lesson(
+        date=lesson_date,
+        time=lesson_time,
+        room_id=room_id,
+        subject_id=subject_id,
+        teacher_id=teacher_id
+    )
+
+    return lesson

@@ -1,9 +1,10 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Subject
+from app.models import User, Person, Subject, Room, Lesson
 from app.app_functions import create_student, handle_contact_info, \
-    basic_student_info, extensive_student_info, clients_data
+    basic_student_info, extensive_student_info, clients_data, create_lesson
 from app import app, db
+from datetime import datetime
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -126,11 +127,67 @@ def subjects():
     return render_template('subjects.html', subjects=all_subjects)
 
 
+def time_dif(str_time):
+    base_time = datetime.strptime("09:00", '%H:%M')
+    time_dif_in_mins = (datetime.strptime(str_time, '%H:%M') - base_time).total_seconds() / 60
+    return time_dif_in_mins
+
+
 @app.route('/timetable')
 @login_required
 def timetable():
-    class_data = [
-        {"name": "Математика", "start_time": "10:00", "end_time": "11:00", "room": "каб 1"},
-        {"name": "Английский", "start_time": "11:00", "end_time": "12:00", "room": "каб 2"}
-    ]
-    return render_template('timetable_test.html', class_data=class_data)
+    # rooms = Rooms.query.all()
+    days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+    rooms = ['каб 1', 'каб 2', 'каб 3', 'изо', 'каб 5', 'зал', 'игровая', 'кухня']
+    classes = {
+        "Понедельник":
+            {"каб 1":
+                [{"name": "Математика", "start": time_dif("10:00"), "end": time_dif("11:00")}],
+             "каб 2":
+                [{"name": "Английский", "start": time_dif("11:30"), "end": time_dif("12:30")}],
+             "зал":
+                 [{"name": "ОФП Дети", "start": time_dif("11:00"), "end": time_dif("12:00")}],
+             },
+        "Вторник":
+            {"каб 1":
+                 [{"name": "1 класс", "start": time_dif("9:00"), "end": time_dif("12:00")}],
+             "изо":
+                 [{"name": "Робототехника", "start": time_dif("9:30"), "end": time_dif("11:00")}]
+             },
+        "Среда":
+            {"каб 2":
+                 [{"name": "2 класс", "start": time_dif("10:45"), "end": time_dif("12:00")}],
+             "игровая":
+                 [{"name": "Продленка", "start": time_dif("10:00"), "end": time_dif("13:00")}]
+             },
+        "Четверг": {},
+        "Пятница": {},
+        "Суббота": {}
+        }
+
+    return render_template('time_table.html', days=days, rooms=rooms, classes=classes)
+
+
+@app.route('/add-lesson', methods=['GET', 'POST'])
+@login_required
+def add_lesson():
+    if request.method == 'POST':
+
+        try:
+            lesson = create_lesson(request.form)
+            db.session.add(lesson)
+            db.session.commit()
+
+            flash('Новый урок добавлен в расписание.', 'success')
+            return redirect(url_for('students'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении нового урока: {str(e)}', 'error')
+            return redirect(url_for('add_lesson'))
+
+    all_subjects = Subject.query.order_by(Subject.name).all()
+    all_rooms = Room.query.all()
+    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
+
+    return render_template('add_lesson.html', subjects=all_subjects, rooms=all_rooms, teachers=all_teachers)

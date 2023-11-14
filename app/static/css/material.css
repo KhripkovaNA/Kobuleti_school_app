@@ -1,152 +1,3 @@
-.ps-container.ps-active-x>.ps-scrollbar-x-rail,
-.ps-container.ps-active-y>.ps-scrollbar-y-rail {
-    display: block;
-    background-color: transparent;
-}
-
-.ps-container.ps-in-scrolling.ps-x>.ps-scrollbar-x-rail {
-    background-color: #eee;
-    opacity: 0.9;
-}
-
-.ps-container.ps-in-scrolling.ps-x>.ps-scrollbar-x-rail>.ps-scrollbar-x {
-    background-color: #999;
-    height: 11px;
-}
-
-.ps-container.ps-in-scrolling.ps-y>.ps-scrollbar-y-rail {
-    background-color: #eee;
-    opacity: 0.9;
-}
-
-.ps-container.ps-in-scrolling.ps-y>.ps-scrollbar-y-rail>.ps-scrollbar-y {
-    background-color: #999;
-    width: 11px;
-}
-
-.ps-container>.ps-scrollbar-x-rail {
-    display: none;
-    position: absolute;
-    /* please don't change 'position' */
-    opacity: 0;
-    -webkit-transition: background-color .2s linear, opacity .2s linear;
-    -o-transition: background-color .2s linear, opacity .2s linear;
-    -moz-transition: background-color .2s linear, opacity .2s linear;
-    transition: background-color .2s linear, opacity .2s linear;
-    bottom: 0px;
-    /* there must be 'bottom' for ps-scrollbar-x-rail */
-    height: 15px;
-}
-
-.ps-container>.ps-scrollbar-x-rail>.ps-scrollbar-x {
-    position: absolute;
-    /* please don't change 'position' */
-    background-color: #aaa;
-    -webkit-border-radius: 6px;
-    -moz-border-radius: 6px;
-    border-radius: 6px;
-    -webkit-transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, -webkit-border-radius .2s ease-in-out;
-    transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, -webkit-border-radius .2s ease-in-out;
-    -o-transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, border-radius .2s ease-in-out;
-    -moz-transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, border-radius .2s ease-in-out, -moz-border-radius .2s ease-in-out;
-    transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, border-radius .2s ease-in-out;
-    transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, border-radius .2s ease-in-out, -webkit-border-radius .2s ease-in-out, -moz-border-radius .2s ease-in-out;
-    bottom: 2px;
-    /* there must be 'bottom' for ps-scrollbar-x */
-    height: 6px;
-}
-
-.ps-container>.ps-scrollbar-x-rail:hover>.ps-scrollbar-x,
-.ps-container>.ps-scrollbar-x-rail:active>.ps-scrollbar-x {
-    height: 11px;
-}
-
-.ps-container>.ps-scrollbar-y-rail {
-    display: none;
-    position: absolute;
-    /* please don't change 'position' */
-    opacity: 0;
-    -webkit-transition: background-color .2s linear, opacity .2s linear;
-    -o-transition: background-color .2s linear, opacity .2s linear;
-    -moz-transition: background-color .2s linear, opacity .2s linear;
-    transition: background-color .2s linear, opacity .2s linear;
-    right: 0;
-    /* there must be 'right' for ps-scrollbar-y-rail */
-    width: 15px;
-}
-
-.ps-container>.ps-scrollbar-y-rail>.ps-scrollbar-y {
-    position: absolute;
-    /* please don't change 'position' */
-    background-color: #aaa;
-    -webkit-border-radius: 6px;
-    -moz-border-radius: 6px;
-    border-radius: 6px;
-    -webkit-transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, -webkit-border-radius .2s ease-in-out;
-    transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, -webkit-border-radius .2s ease-in-out;
-    -o-transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, border-radius .2s ease-in-out;
-    -moz-transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, border-radius .2s ease-in-out, -moz-border-radius .2s ease-in-out;
-    transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, border-radius .2s ease-in-out;
-    transition: background-color .2s linear, height .2s linear, width .2s ease-in-out, border-radius .2s ease-in-out, -webkit-border-radius .2s ease-in-out, -moz-border-radius .2s ease-in-out;
-    right: 2px;
-    /* there must be 'right' for ps-scrollbar-y */
-    width: 6px;
-}
-
-.ps-container>.ps-scrollbar-y-rail:hover>.ps-scrollbar-y,
-.ps-container>.ps-scrollbar-y-rail:active>.ps-scrollbar-y {
-    width: 11px;
-}
-
-.ps-container:hover.ps-in-scrolling.ps-x>.ps-scrollbar-x-rail {
-    background-color: #eee;
-    opacity: 0.9;
-}
-
-.ps-container:hover.ps-in-scrolling.ps-x>.ps-scrollbar-x-rail>.ps-scrollbar-x {
-    background-color: #999;
-    height: 11px;
-}
-
-.ps-container:hover.ps-in-scrolling.ps-y>.ps-scrollbar-y-rail {
-    background-color: #eee;
-    opacity: 0.9;
-}
-
-.ps-container:hover.ps-in-scrolling.ps-y>.ps-scrollbar-y-rail>.ps-scrollbar-y {
-    background-color: #999;
-    width: 11px;
-}
-
-.ps-container:hover>.ps-scrollbar-x-rail,
-.ps-container:hover>.ps-scrollbar-y-rail {
-    opacity: 0.6;
-}
-
-.ps-container:hover>.ps-scrollbar-x-rail:hover {
-    background-color: #eee;
-    opacity: 0.9;
-}
-
-.ps-container:hover>.ps-scrollbar-x-rail:hover>.ps-scrollbar-x {
-    background-color: #999;
-}
-
-.ps-container:hover>.ps-scrollbar-y-rail:hover {
-    background-color: #eee;
-    opacity: 0.9;
-}
-/*
-#datepicker {
-    position: absolute;
-    top: 100%;
-    left: 0;
-}
-*/
-.ps-container:hover>.ps-scrollbar-y-rail:hover>.ps-scrollbar-y {
-    background-color: #999;
-}
-
 h1,
 .h1 {
     font-size: 3.8em;
@@ -2921,23 +2772,64 @@ select.form-control[multiple],
 }
 
 .scroll-table {
+    position: relative;
     min-width: 800px;
     overflow-x: hidden;
 }
 
 .scroll-table-body {
+    position: relative;
     height: 300px;
     overflow: hidden;
 }
 
-.scroll-table table {
+.timetable {
+    min-width: 3500px;
+    width: 100%
+    overflow: hidden;
+}
+
+.scroll-table table, .scroll-timetable table {
     table-layout: fixed;
 }
 
 .table>thead>tr>th {
-    border-bottom-width: 1px;
     font-size: 1em;
     font-weight: 300;
+}
+
+.scroll-timetable .fixed-column {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: #f2f2f2;
+}
+
+.scroll-timetable thead {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #f2f2f2;
+}
+
+.timetable>thead:first-child>tr:first-child>th {
+    border-top: 1px solid #ddd;
+}
+
+.timetable tbody th {
+    width: 3%;
+}
+
+.scroll-timetable {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+}
+
+.scroll-timetable table {
+    border-collapse: separate;
 }
 
 .table .radio,
@@ -2964,8 +2856,8 @@ select.form-control[multiple],
     vertical-align: middle;
 }
 
-.timetable td{
-    max-height: 10px;
+.timetable tbody th {
+    height: 80px;
 }
 
 .timetable thead,
@@ -2977,18 +2869,24 @@ select.form-control[multiple],
 
 .timetable>thead>tr>th,
 .timetable>tbody>tr>th,
-.timetable>tfoot>tr>th,
+.timetable>tfoot>tr>th {
+    vertical-align: middle;
+    padding: 3px;
+    border: 1px solid #ddd;
+}
+
 .timetable>thead>tr>td,
 .timetable>tbody>tr>td,
 .timetable>tfoot>tr>td {
+    vertical-align: top;
     padding: 3px;
+    border: 1px solid #ddd;
 }
 
 .timetable td {
     hyphens: auto;
     font-size: 9px;
     font-weight: 400;
-    padding: 3px;
 }
 
 .timetable>thead>tr>th,
@@ -3012,6 +2910,16 @@ select.form-control[multiple],
 
 .table>tbody>tr {
     position: relative;
+}
+
+.class-box {
+    position: relative;
+    background-color: #007bff;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 5px;
+    box-sizing: border-box;
 }
 
 .checkbox label {
@@ -4722,4 +4630,118 @@ footer .btn {
 
 ul {
     list-style: none;
+}
+
+.wickedpicker {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    box-shadow: 0 0 0 1px rgba(14, 41, 57, 0.12), 0 2px 5px rgba(14, 41, 57, 0.44), inset 0 -1px 2px rgba(14, 41, 57, 0.15);
+    background: #fefefe;
+    margin: 0 auto;
+    border-radius: 0.1px;
+    width: 200px;
+    height: 130px;
+    font-size: 14px;
+    display: none;
+}
+
+.wickedpicker__title {
+    background-image: -webkit-linear-gradient(top, #ffffff 0%, #f2f2f2 100%);
+    background-image: linear-gradient(to bottom, #ffffff 0%, #f2f2f2 100%);
+    position: relative;
+    background: #f2f2f2;
+    margin: 0 auto;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 12px 11px 10px 15px;
+    color: #4C4C4C;
+    font-size: inherit;
+}
+
+.wickedpicker__close {
+    -webkit-transform: translateY(-25%);
+    -moz-transform: translateY(-25%);
+    -ms-transform: translateY(-25%);
+    -o-transform: translateY(-25%);
+    transform: translateY(-25%);
+    position: absolute;
+    top: 25%;
+    right: 10px;
+    color: #34495e;
+    cursor: pointer;
+}
+
+.wickedpicker__close:before {
+    content: '\00d7';
+}
+
+.wickedpicker__controls {
+    padding: 10px 0;
+    line-height: normal;
+    margin: 0;
+}
+
+.wickedpicker__controls__control, .wickedpicker__controls__control--separator {
+    vertical-align: middle;
+    display: inline-block;
+    font-size: inherit;
+    margin: 0 auto;
+    width: 35px;
+    letter-spacing: 1.3px;
+}
+
+.wickedpicker__controls__control-up, .wickedpicker__controls__control-down {
+    color: #34495e;
+    position: relative;
+    display: block;
+    margin: 3px auto;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.wickedpicker__controls__control-up:before {
+    content: '\e800';
+}
+
+.wickedpicker__controls__control-down:after {
+    content: '\e801';
+}
+
+.wickedpicker__controls__control--separator {
+    width: 5px;
+}
+
+.text-center, .wickedpicker__title, .wickedpicker__controls, .wickedpicker__controls__control, .wickedpicker__controls__control--separator, .wickedpicker__controls__control-up, .wickedpicker__controls__control-down {
+    text-align: center;
+}
+
+.hover-state {
+    color: #3498db;
+}
+
+@font-face {
+    font-family: 'fontello';
+    src: url("../fonts/fontello.eot?52602240");
+    src: url("../fonts/fontello.eot?52602240#iefix") format("embedded-opentype"), url("../fonts/fontello.woff?52602240") format("woff"), url("../fonts/fontello.ttf?52602240") format("truetype"), url("../fonts/fontello.svg?52602240#fontello") format("svg");
+    font-weight: normal;
+    font-style: normal;
+}
+
+.fontello:before, .wickedpicker__controls__control-up:before, .fontello-after:after, .wickedpicker__controls__control-down:after {
+    font-family: 'fontello';
+    font-style: normal;
+    font-weight: normal;
+    speak: none;
+    display: inline-block;
+    text-decoration: inherit;
+    width: 1em;
+    margin-right: .2em;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    margin-left: .2em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }

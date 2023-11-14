@@ -32,7 +32,7 @@ datepicker.regional.ru = {
 	firstDay: 1,
 	isRTL: false,
 	showMonthAfterYear: false,
-	yearRange: '-80:+0',
+	yearRange: '-80:+3',
 	yearSuffix: "" };
 datepicker.setDefaults( datepicker.regional.ru );
 

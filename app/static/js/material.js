@@ -9,7 +9,7 @@ $(document).ready(function(){
       }
     });
 
-    $('.sidebar .sidebar-wrapper, .main-panel, .scroll-table').perfectScrollbar();
+    $('.sidebar .sidebar-wrapper, .main-panel, .scroll-table, .scroll-timetable').perfectScrollbar();
     $('.scroll-table-body').perfectScrollbar({
         suppressScrollX: true
     });
@@ -20,9 +20,14 @@ $(document).ready(function(){
         changeYear: true,
     });
 
+    $('.timepicker').wickedpicker();
+
     $(".main-panel").on("scroll", function() {
         if ($(".datepicker").datepicker("widget").is(":visible")) {
             $(".datepicker").datepicker("hide");
+        }
+        if ($(".timepicker").wickedpicker("widget").is(":visible")) {
+            $(".timepicker").wickedpicker("hide");
         }
     });
 

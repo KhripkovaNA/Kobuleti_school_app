@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Расписание</h4>
+            </div>
+            <div class="card-content">
+                <div class="scroll-timetable">
+                    <table class="table timetable">
+                        <thead class="text-success">
+                            <tr>
+                                <th rowspan="3" width="3%" class="fixed-column">Время</th>
+                                {% for day in days %}
+                                    <th colspan="8">{{ day }}</th>
+                                {% endfor %}
+                            </tr>
+                            <tr style="color: green;">
+                                {% for day in days %}
+                                    <th colspan="8">{{ days.index(day) + 6 }}.11</th>
+                                {% endfor %}
+                            </tr>
+                            <tr style="color: green; font-size: 80%;">
+                                {% for day in days %}
+                                    {% for room in rooms %}
+                                        <th>{{ room }}</th>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th class="fixed-column">9:00 - 10:00</th>
+                                {% for day in days %}
+                                    {% for room in rooms %}
+                                        <td rowspan="11">
+                                            {% if classes[day][room] %}
+                                                {% for scheduled_class in classes[day][room] %}
+                                                    <div class="class-box" style="top: {{ scheduled_class.start/0.75 - 2 }}px; height: {{ (scheduled_class.end - scheduled_class.start)/0.75 - 1 }}px;">
+                                                        {{ scheduled_class.name }}
+                                                    </div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tr>
+                            {% for hour in range(10, 20) %}
+                                <tr>
+                                    <th class="fixed-column">{{ hour }}:00 - {{ hour + 1 }}:00</th>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

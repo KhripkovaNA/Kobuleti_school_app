@@ -18,10 +18,30 @@ student_subject_table = db.Table(
     db.Column('subject_id', db.Integer, db.ForeignKey('subjects.id'))
 )
 
+
+teacher_subject_table = db.Table(
+    'teacher_subject_table',
+    db.Column('teacher_id', db.Integer, db.ForeignKey('persons.id')),
+    db.Column('subject_id', db.Integer, db.ForeignKey('subjects.id'))
+)
+
+
 subscription_types_table = db.Table(
     'subscription_types_table',
     db.Column('subscription_types_id', db.Integer, db.ForeignKey('subscription_types.id')),
     db.Column('subject_id', db.Integer, db.ForeignKey('subjects.id'))
+)
+
+student_lesson_registered_table = db.Table(
+    'student_lesson_registered_table',
+    db.Column('student_id', db.Integer, db.ForeignKey('persons.id')),
+    db.Column('lesson_id', db.Integer, db.ForeignKey('lessons.id'))
+)
+
+student_lesson_attended_table = db.Table(
+    'student_lesson_attended_table',
+    db.Column('student_id', db.Integer, db.ForeignKey('persons.id')),
+    db.Column('lesson_id', db.Integer, db.ForeignKey('lessons.id'))
 )
 
 
@@ -66,13 +86,15 @@ class Person(db.Model):
 
     subjects = db.relationship('Subject', secondary=student_subject_table,
                                backref='students', lazy='dynamic')
-
+    subjects_taught = db.relationship('Subject', secondary=teacher_subject_table,
+                                      backref='teachers', lazy='dynamic')
     subscriptions = db.relationship('Subscription', backref='student', lazy='dynamic')
 
     parents = db.relationship('Person', secondary=parent_child_table,
                               primaryjoin=(parent_child_table.c.child_id == id),
                               secondaryjoin=(parent_child_table.c.parent_id == id),
                               backref=db.backref('children', lazy='dynamic'), lazy='dynamic')
+    balance = db.Column(db.Numeric(8, 2))
 
     def __repr__(self):
         return f"<Person {self.id}: {self.last_name} {self.first_name}>"
@@ -94,11 +116,14 @@ class Subject(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
+    short_name = db.Column(db.String(50))
     description = db.Column(db.String(120), default="")
     one_time_price = db.Column(db.Numeric(8, 2))
+    school_price = db.Column(db.Numeric(8, 2))
     subscription_types = db.relationship('SubscriptionType', secondary=subscription_types_table,
                                          backref='subjects', lazy='dynamic')
     subscriptions = db.relationship('Subscription', backref='subject')
+    color = db.Column(db.Integer, db.ForeignKey('colors.id'))
 
     def __repr__(self):
         return f"<Subject {self.id}: {self.name}>"
@@ -125,3 +150,42 @@ class SubscriptionType(db.Model):
     price = db.Column(db.Numeric(8, 2))
     subscriptions = db.relationship('Subscription', backref='subscription_type')
 
+
+class Room(db.Model):
+    __tablename__ = 'rooms'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    description = db.Column(db.String(120), default="")
+
+    def __repr__(self):
+        return f"<Room {self.id}: {self.name}>"
+
+
+class Color(db.Model):
+    __tablename__ = 'colors'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+
+
+class Lesson(db.Model):
+    __tablename__ = 'lessons'
+
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date)
+    start_time = db.Column(db.Time)
+    end_time = db.Column(db.Time)
+
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
+    teacher_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+
+    room = db.relationship('Room', backref='lessons')
+    subject = db.relationship('Subject', backref='lessons')
+    teacher = db.relationship('Person', backref='lessons')
+
+    students_registered = db.relationship('Person', secondary=student_lesson_registered_table,
+                                          backref='lessons_registered', lazy='dynamic')
+    students_attended = db.relationship('Person', secondary=student_lesson_attended_table,
+                                        backref='lessons_attended', lazy='dynamic')
