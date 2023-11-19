@@ -1,8 +1,8 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson
-from app.app_functions import create_student, handle_contact_info, \
-    basic_student_info, extensive_student_info, clients_data, create_lesson
+from app.app_functions import create_student, handle_contact_info, basic_student_info, \
+    extensive_student_info, clients_data, create_lesson, week_lessons_dict
 from app import app, db
 from datetime import datetime
 
@@ -136,36 +136,11 @@ def time_dif(str_time):
 @app.route('/timetable')
 @login_required
 def timetable():
-    # rooms = Rooms.query.all()
-    days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
-    rooms = ['каб 1', 'каб 2', 'каб 3', 'изо', 'каб 5', 'зал', 'игровая', 'кухня']
-    classes = {
-        "Понедельник":
-            {"каб 1":
-                [{"name": "Математика", "start": time_dif("10:00"), "end": time_dif("11:00")}],
-             "каб 2":
-                [{"name": "Английский", "start": time_dif("11:30"), "end": time_dif("12:30")}],
-             "зал":
-                 [{"name": "ОФП Дети", "start": time_dif("11:00"), "end": time_dif("12:00")}],
-             },
-        "Вторник":
-            {"каб 1":
-                 [{"name": "1 класс", "start": time_dif("9:00"), "end": time_dif("12:00")}],
-             "изо":
-                 [{"name": "Робототехника", "start": time_dif("9:30"), "end": time_dif("11:00")}]
-             },
-        "Среда":
-            {"каб 2":
-                 [{"name": "2 класс", "start": time_dif("10:45"), "end": time_dif("12:00")}],
-             "игровая":
-                 [{"name": "Продленка", "start": time_dif("10:00"), "end": time_dif("13:00")}]
-             },
-        "Четверг": {},
-        "Пятница": {},
-        "Суббота": {}
-        }
+    rooms = Room.query.all()
+    days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+    current_week_lessons = week_lessons_dict(0, rooms, days_of_week)
 
-    return render_template('time_table.html', days=days, rooms=rooms, classes=classes)
+    return render_template('time_table.html', days=days_of_week, rooms=rooms, classes=current_week_lessons)
 
 
 @app.route('/add-lesson', methods=['GET', 'POST'])

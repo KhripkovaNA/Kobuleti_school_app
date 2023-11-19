@@ -1,3 +1,8 @@
+.ps-container.ps-active-x>.ps-scrollbar-x-rail,
+.ps-container.ps-active-y>.ps-scrollbar-y-rail {
+    z-index: 2;
+}
+
 h1,
 .h1 {
     font-size: 3.8em;
@@ -2785,8 +2790,7 @@ select.form-control[multiple],
 
 .timetable {
     min-width: 3500px;
-    width: 100%
-    overflow: hidden;
+    width: 100%;
 }
 
 .scroll-table table, .scroll-timetable table {
@@ -2810,7 +2814,7 @@ select.form-control[multiple],
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 1;
     background-color: #f2f2f2;
 }
 
@@ -2857,7 +2861,7 @@ select.form-control[multiple],
 }
 
 .timetable tbody th {
-    height: 80px;
+    height: 100px;
 }
 
 .timetable thead,
@@ -2913,13 +2917,17 @@ select.form-control[multiple],
 }
 
 .class-box {
-    position: relative;
+    position: absolute;
     background-color: #007bff;
     color: #fff;
     text-align: center;
-    padding: 10px 0;
+    padding: 5px;
     border-radius: 5px;
     box-sizing: border-box;
+}
+
+.class-box p {
+    margin: 0
 }
 
 .checkbox label {

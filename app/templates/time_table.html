@@ -20,13 +20,13 @@
                             </tr>
                             <tr style="color: green;">
                                 {% for day in days %}
-                                    <th colspan="8">{{ days.index(day) + 6 }}.11</th>
+                                    <th colspan="8">{{ classes[day][0] }}</th>
                                 {% endfor %}
                             </tr>
                             <tr style="color: green; font-size: 80%;">
                                 {% for day in days %}
                                     {% for room in rooms %}
-                                        <th>{{ room }}</th>
+                                        <th>{{ room.name }}</th>
                                     {% endfor %}
                                 {% endfor %}
                             </tr>
@@ -37,10 +37,17 @@
                                 {% for day in days %}
                                     {% for room in rooms %}
                                         <td rowspan="11">
-                                            {% if classes[day][room] %}
-                                                {% for scheduled_class in classes[day][room] %}
-                                                    <div class="class-box" style="top: {{ scheduled_class.start/0.75 - 2 }}px; height: {{ (scheduled_class.end - scheduled_class.start)/0.75 - 1 }}px;">
-                                                        {{ scheduled_class.name }}
+                                            {% if classes[day][1][room.name] %}
+                                                {% for lesson in classes[day][1][room.name] %}
+                                                    <div class="class-box" style="top: {{ lesson.start_time/0.6 - 2 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;">
+                                                        <p>{{ lesson.time }}</p>
+                                                        {% if lesson.lesson_type %}
+                                                            <p>{{ lesson.lesson_type }}</p>
+                                                        {% endif %}
+                                                        {% for subject in lesson.subject %}
+                                                            <p>{{ subject }}</p>
+                                                        {% endfor %}
+                                                        <p>{{ lesson.teacher }}</p>
                                                     </div>
                                                 {% endfor %}
                                             {% endif %}

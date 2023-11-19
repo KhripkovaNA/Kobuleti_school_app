@@ -1,4 +1,4 @@
-from app.models import Person, Contact, parent_child_table, Lesson
+from app.models import Person, Contact, parent_child_table, Lesson, Room
 from datetime import datetime, timedelta
 from app import db
 
@@ -231,3 +231,70 @@ def create_lesson(form):
     )
 
     return lesson
+
+
+def create_lesson_dict(lesson):
+    start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
+    end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
+
+    if lesson.lesson_type == 'school':
+        lesson_type = '-'.join([str(cl.school_class) for cl in lesson.school_classes.all()]) + ' класс'
+    elif lesson.lesson_type == 'individual':
+        lesson_type = 'индив'
+    else:
+        lesson_type = ''
+
+    return {
+        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'start_time': start_time,
+        'end_time': end_time,
+        'subject': lesson.subject_names,
+        'teacher': lesson.teacher.first_name,
+        'lesson_type': lesson_type,
+    }
+
+
+def day_lessons_list(day_room_lessons):
+    lessons_for_day = []
+    current_lesson = day_room_lessons[0]
+    current_lesson.subject_names = [current_lesson.subject.short_name]
+
+    for next_lesson in day_room_lessons[1:]:
+        if (
+            current_lesson.teacher.id == next_lesson.teacher.id
+            and current_lesson.school_classes.all() == next_lesson.school_classes.all()
+        ):
+            current_lesson.subject_names.append(next_lesson.subject.short_name)
+            current_lesson.end_time = next_lesson.end_time
+        else:
+            lessons_for_day.append(create_lesson_dict(current_lesson))
+            next_lesson.subject_names = [next_lesson.subject.short_name]
+            current_lesson = next_lesson
+
+    lessons_for_day.append(create_lesson_dict(current_lesson))
+
+    return lessons_for_day
+
+
+def get_date(week, day_of_week):
+    today = datetime.now().date()
+    day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week*timedelta(days=7)
+    return day_of_week_date
+
+
+def week_lessons_dict(week, rooms, days_of_week):
+    week_lessons = {}
+
+    for day, weekday in enumerate(days_of_week):
+        lessons_date = get_date(week, day)
+        lessons_date_str = lessons_date.strftime('%d.%m')
+        day_lessons = {}
+        for room in rooms:
+            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).order_by(Lesson.start_time).all()
+            day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
+
+        week_lessons[weekday] = (lessons_date_str, day_lessons)
+
+    return week_lessons
+
+

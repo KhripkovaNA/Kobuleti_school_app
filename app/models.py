@@ -44,6 +44,12 @@ student_lesson_attended_table = db.Table(
     db.Column('lesson_id', db.Integer, db.ForeignKey('lessons.id'))
 )
 
+class_lesson_table = db.Table(
+    'class_lesson_table',
+    db.Column('class_id', db.Integer, db.ForeignKey('school_classes.id')),
+    db.Column('lesson_id', db.Integer, db.ForeignKey('lessons.id'))
+)
+
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -176,6 +182,7 @@ class Lesson(db.Model):
     date = db.Column(db.Date)
     start_time = db.Column(db.Time)
     end_time = db.Column(db.Time)
+    lesson_type = db.Column(db.String(50))
 
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
@@ -185,7 +192,17 @@ class Lesson(db.Model):
     subject = db.relationship('Subject', backref='lessons')
     teacher = db.relationship('Person', backref='lessons')
 
+    school_classes = db.relationship('SchoolClass', secondary=class_lesson_table,
+                                     backref='class_lessons', lazy='dynamic')
+
     students_registered = db.relationship('Person', secondary=student_lesson_registered_table,
                                           backref='lessons_registered', lazy='dynamic')
     students_attended = db.relationship('Person', secondary=student_lesson_attended_table,
                                         backref='lessons_attended', lazy='dynamic')
+
+
+class SchoolClass(db.Model):
+    __tablename__ = 'school_classes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    school_class = db.Column(db.Integer)
