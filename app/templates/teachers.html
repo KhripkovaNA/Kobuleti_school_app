@@ -31,8 +31,8 @@
                                             <td>{{ teacher.first_name }}</td>
                                             <td>{{ teacher.patronym }}</td>
                                             <td width="13%">
-                                                {% if teacher.subjects %}
-                                                    {% for subject in teacher.subjects %}
+                                                {% if teacher.subjects_taught %}
+                                                    {% for subject in teacher.subjects_taught %}
                                                         {{ subject.name }}{{ "," if not loop.last }}
                                                     {% endfor %}
                                                 {% endif %}

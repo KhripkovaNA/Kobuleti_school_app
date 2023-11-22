@@ -85,6 +85,7 @@ class Person(db.Model):
     person_type = db.Column(db.String(16))
     status = db.Column(db.String(50))
     teacher = db.Column(db.Boolean, default=False)
+    color = db.Column(db.String(16))
     leaving_reason = db.Column(db.String(120), default="")
     pause_until = db.Column(db.Date)
     comment = db.Column(db.String(120), default="")
@@ -129,7 +130,6 @@ class Subject(db.Model):
     subscription_types = db.relationship('SubscriptionType', secondary=subscription_types_table,
                                          backref='subjects', lazy='dynamic')
     subscriptions = db.relationship('Subscription', backref='subject')
-    color = db.Column(db.Integer, db.ForeignKey('colors.id'))
 
     def __repr__(self):
         return f"<Subject {self.id}: {self.name}>"
@@ -166,13 +166,6 @@ class Room(db.Model):
 
     def __repr__(self):
         return f"<Room {self.id}: {self.name}>"
-
-
-class Color(db.Model):
-    __tablename__ = 'colors'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
 
 
 class Lesson(db.Model):

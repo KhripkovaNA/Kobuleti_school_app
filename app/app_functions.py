@@ -250,6 +250,7 @@ def create_lesson_dict(lesson):
         'end_time': end_time,
         'subject': lesson.subject_names,
         'teacher': lesson.teacher.first_name,
+        'color': lesson.teacher.color,
         'lesson_type': lesson_type,
     }
 
@@ -264,7 +265,8 @@ def day_lessons_list(day_room_lessons):
             current_lesson.teacher.id == next_lesson.teacher.id
             and current_lesson.school_classes.all() == next_lesson.school_classes.all()
         ):
-            current_lesson.subject_names.append(next_lesson.subject.short_name)
+            if current_lesson.subject_names[-1] != next_lesson.subject.short_name:
+                current_lesson.subject_names.append(next_lesson.subject.short_name)
             current_lesson.end_time = next_lesson.end_time
         else:
             lessons_for_day.append(create_lesson_dict(current_lesson))
@@ -296,5 +298,4 @@ def week_lessons_dict(week, rooms, days_of_week):
         week_lessons[weekday] = (lessons_date_str, day_lessons)
 
     return week_lessons
-
 

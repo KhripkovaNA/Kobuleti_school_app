@@ -39,15 +39,15 @@
                                         <td rowspan="11">
                                             {% if classes[day][1][room.name] %}
                                                 {% for lesson in classes[day][1][room.name] %}
-                                                    <div class="class-box" style="top: {{ lesson.start_time/0.6 - 2 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;">
-                                                        <p>{{ lesson.time }}</p>
+                                                    <div class="class-box" style="background-color: {{ lesson.color }}; top: {{ lesson.start_time/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;">
+                                                        <p style="color: #660000;">{{ lesson.time }}</p>
                                                         {% if lesson.lesson_type %}
-                                                            <p>{{ lesson.lesson_type }}</p>
+                                                            <p style="color: #003300;">{{ lesson.lesson_type }}</p>
                                                         {% endif %}
                                                         {% for subject in lesson.subject %}
-                                                            <p>{{ subject }}</p>
+                                                            <p style="color: #003366;">{{ subject }}</p>
                                                         {% endfor %}
-                                                        <p>{{ lesson.teacher }}</p>
+                                                        <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                     </div>
                                                 {% endfor %}
                                             {% endif %}
@@ -63,6 +63,16 @@
                         </tbody>
                     </table>
                 </div>
+                <button class="btn" style="background-color: #ff9800;">
+                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week - 1) }}">
+                        <i class="material-icons">navigate_before</i>Предыдущая неделя
+                    </a>
+                </button>
+                <button class="btn" style="background-color: #ff9800;">
+                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week + 1) }}">
+                        Следующая неделя<i class="material-icons">navigate_next</i>
+                    </a>
+                </button>
             </div>
         </div>
     </div>

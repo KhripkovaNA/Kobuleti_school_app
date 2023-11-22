@@ -127,20 +127,16 @@ def subjects():
     return render_template('subjects.html', subjects=all_subjects)
 
 
-def time_dif(str_time):
-    base_time = datetime.strptime("09:00", '%H:%M')
-    time_dif_in_mins = (datetime.strptime(str_time, '%H:%M') - base_time).total_seconds() / 60
-    return time_dif_in_mins
-
-
-@app.route('/timetable')
+@app.route('/timetable/<string:week>')
 @login_required
-def timetable():
+def timetable(week):
+    week = int(week)
     rooms = Room.query.all()
     days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
-    current_week_lessons = week_lessons_dict(0, rooms, days_of_week)
+    current_week_lessons = week_lessons_dict(week, rooms, days_of_week)
 
-    return render_template('time_table.html', days=days_of_week, rooms=rooms, classes=current_week_lessons)
+    return render_template('time_table.html', days=days_of_week, rooms=rooms,
+                           classes=current_week_lessons, week=week)
 
 
 @app.route('/add-lesson', methods=['GET', 'POST'])
