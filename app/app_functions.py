@@ -192,7 +192,7 @@ def extensive_student_info(student):
 
 
 def clients_data():
-    all_clients = Person.query.all()
+    all_clients = Person.query.order_by(Person.last_name).all()
     clients = []
     for client in all_clients:
         client_data = {
@@ -237,10 +237,20 @@ def create_lesson_dict(lesson):
     start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
     end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
 
-    if lesson.lesson_type == 'school':
-        lesson_type = '-'.join([str(cl.school_class) for cl in lesson.school_classes.all()]) + ' класс'
-    elif lesson.lesson_type == 'individual':
+    if lesson.lesson_type.name == 'school':
+        num_classes = [cl.school_name for cl in lesson.school_classes if cl.school_class]
+        classes = [cl.school_name for cl in lesson.school_classes if not cl.school_class]
+        lesson_type = (
+            f"{'-'.join(num_classes)} класс, {', '.join(classes)}"
+            if (classes and num_classes)
+            else f"{'-'.join(num_classes)} класс"
+            if num_classes
+            else f"{', '.join(classes)}"
+        )
+    elif lesson.lesson_type.name == 'individual':
         lesson_type = 'индив'
+    elif lesson.lesson_type.name == 'group':
+        lesson_type = 'груп'
     else:
         lesson_type = ''
 
@@ -264,6 +274,8 @@ def day_lessons_list(day_room_lessons):
         if (
             current_lesson.teacher.id == next_lesson.teacher.id
             and current_lesson.school_classes.all() == next_lesson.school_classes.all()
+            and current_lesson.lesson_type.name == 'school'
+            and current_lesson.lesson_type.name == 'school'
         ):
             if current_lesson.subject_names[-1] != next_lesson.subject.short_name:
                 current_lesson.subject_names.append(next_lesson.subject.short_name)
@@ -278,21 +290,21 @@ def day_lessons_list(day_room_lessons):
     return lessons_for_day
 
 
-def get_date(week, day_of_week):
+def get_date(day_of_week, week=0):
     today = datetime.now().date()
-    day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week*timedelta(days=7)
+    day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week*timedelta(weeks=1)
     return day_of_week_date
 
 
 def week_lessons_dict(week, rooms, days_of_week):
     week_lessons = {}
-
     for day, weekday in enumerate(days_of_week):
-        lessons_date = get_date(week, day)
+        lessons_date = get_date(day, week)
         lessons_date_str = lessons_date.strftime('%d.%m')
         day_lessons = {}
         for room in rooms:
-            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).order_by(Lesson.start_time).all()
+            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).\
+                order_by(Lesson.start_time).all()
             day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
 
         week_lessons[weekday] = (lessons_date_str, day_lessons)

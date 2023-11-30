@@ -4,7 +4,7 @@ from app.models import User, Person, Subject, Room, Lesson
 from app.app_functions import create_student, handle_contact_info, basic_student_info, \
     extensive_student_info, clients_data, create_lesson, week_lessons_dict
 from app import app, db
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -111,7 +111,7 @@ def teachers():
 @app.route('/subjects')
 @login_required
 def subjects():
-    all_subjects = Subject.query.order_by(Subject.name).all()
+    all_subjects = Subject.query.filter(~Subject.subject_types.any(name='school')).all()
     for subject in all_subjects:
         subscription_types = []
         for subscription_type in subject.subscription_types.all():
@@ -139,14 +139,77 @@ def timetable(week):
                            classes=current_week_lessons, week=week)
 
 
+@app.route('/lesson/<string:subject_id>/<string:param>', methods=['GET', 'POST'])
+@login_required
+def lesson(subject_id, param):
+    if request.method == 'POST':
+        lesson_subject = Subject.query.filter_by(id=subject_id).first()
+        subject_lesson_id = int(request.form['subject_lesson_id'])
+        subject_lesson = Lesson.query.filter_by(id=subject_lesson_id).first()
+        if 'del_client_btn' in request.form:
+            del_client_id = int(request.form['del_client_btn'])
+            del_client = Person.query.filter_by(id=del_client_id).first()
+            lesson_subject.students.remove(del_client)
+            db.session.commit()
+        if 'add_client_btn' in request.form:
+            new_client_id = int(request.form['added_client_id'])
+            new_client = Person.query.filter_by(id=new_client_id).first()
+            lesson_subject.students.append(new_client)
+            db.session.commit()
+        if 'registered_btn' in request.form:
+            for client in lesson_subject.students:
+                if (
+                        client not in subject_lesson.students_registered
+                        and request.form.get(f'registered_{client.id}') == 'on'
+                ):
+                    subject_lesson.students_registered.append(client)
+                    db.session.commit()
+                elif (
+                        client in subject_lesson.students_registered
+                        and not request.form.get(f'registered_{client.id}')
+                ):
+                    subject_lesson.students_registered.remove(client)
+                    db.session.commit()
+
+        if 'attended_btn' in request.form:
+            for key in request.form.keys():
+                if key.startswith('attending_status_'):
+                    client_id = int(key[len('attending_status_'):])
+                    attending_client = Person.query.filter_by(id=client_id).first()
+                    if request.form[key] == 'attend':
+                        subject_lesson.students_attended.append(attending_client)
+                        db.session.commit()
+        return redirect(url_for('lesson', subject_id=subject_id, param=param))
+
+    param = int(param)
+    today = datetime.now().date()
+
+    lesson_subject = Subject.query.filter_by(id=subject_id).first()
+    if param < 0:
+        subject_lessons = Lesson.query.filter(Lesson.date < today,
+                                              Lesson.subject_id == lesson_subject.id).\
+            order_by(Lesson.date.desc(), Lesson.start_time.desc()).all()
+        order_param = abs(param) - 1
+    else:
+        subject_lessons = Lesson.query.filter(Lesson.date >= today,
+                                              Lesson.subject_id == lesson_subject.id).\
+            order_by(Lesson.date, Lesson.start_time).all()
+        order_param = param
+    subject_lesson = subject_lessons[order_param] if order_param < len(subject_lessons) else None
+    all_clients = Person.query.filter(Person.status.in_(["Клиент", "Лид"])).order_by(Person.last_name).all()
+    possible_clients = [client for client in all_clients if client not in lesson_subject.students]
+
+    return render_template('lesson.html', subject_lesson=subject_lesson, clients=possible_clients,
+                           lesson_subject=lesson_subject, param=param)
+
+
 @app.route('/add-lesson', methods=['GET', 'POST'])
 @login_required
 def add_lesson():
     if request.method == 'POST':
-
         try:
-            lesson = create_lesson(request.form)
-            db.session.add(lesson)
+            new_lesson = create_lesson(request.form)
+            db.session.add(new_lesson)
             db.session.commit()
 
             flash('Новый урок добавлен в расписание.', 'success')

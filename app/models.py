@@ -50,6 +50,12 @@ class_lesson_table = db.Table(
     db.Column('lesson_id', db.Integer, db.ForeignKey('lessons.id'))
 )
 
+subject_types_table = db.Table(
+    'subject_types_table',
+    db.Column('subject_type_id', db.Integer, db.ForeignKey('subject_types.id')),
+    db.Column('subject_id', db.Integer, db.ForeignKey('subjects.id'))
+)
+
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -129,6 +135,8 @@ class Subject(db.Model):
     school_price = db.Column(db.Numeric(8, 2))
     subscription_types = db.relationship('SubscriptionType', secondary=subscription_types_table,
                                          backref='subjects', lazy='dynamic')
+    subject_types = db.relationship('SubjectType', secondary=subject_types_table,
+                                    backref='subjects', lazy='dynamic')
     subscriptions = db.relationship('Subscription', backref='subject')
 
     def __repr__(self):
@@ -175,15 +183,17 @@ class Lesson(db.Model):
     date = db.Column(db.Date)
     start_time = db.Column(db.Time)
     end_time = db.Column(db.Time)
-    lesson_type = db.Column(db.String(50))
+    lesson_completed = db.Column(db.Boolean, default=False)
 
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
     teacher_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    lesson_type_id = db.Column(db.Integer, db.ForeignKey('subject_types.id'))
 
     room = db.relationship('Room', backref='lessons')
     subject = db.relationship('Subject', backref='lessons')
     teacher = db.relationship('Person', backref='lessons')
+    lesson_type = db.relationship('SubjectType', backref='lessons')
 
     school_classes = db.relationship('SchoolClass', secondary=class_lesson_table,
                                      backref='class_lessons', lazy='dynamic')
@@ -199,3 +209,11 @@ class SchoolClass(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     school_class = db.Column(db.Integer)
+    school_name = db.Column(db.String(50))
+
+
+class SubjectType(db.Model):
+    __tablename__ = 'subject_types'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))

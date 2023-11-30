@@ -230,5 +230,14 @@ $(document).ready(function(){
         $(containerId).show();
     });
 
+    $("#add-client-btn").click(function() {
+        $("#clientSelector").show();
+        $("#add-client-btn").hide();
+    });
+    $("#cancel-add-client-btn").click(function() {
+        $("#add-client-btn").show();
+        $("#clientSelector").hide();
+    });
+
 });
 

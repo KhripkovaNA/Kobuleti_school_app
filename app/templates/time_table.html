@@ -15,12 +15,12 @@
                             <tr>
                                 <th rowspan="3" width="3%" class="fixed-column">Время</th>
                                 {% for day in days %}
-                                    <th colspan="8">{{ day }}</th>
+                                    <th colspan="{{ rooms|length }}">{{ day }}</th>
                                 {% endfor %}
                             </tr>
                             <tr style="color: green;">
                                 {% for day in days %}
-                                    <th colspan="8">{{ classes[day][0] }}</th>
+                                    <th colspan="{{ rooms|length }}">{{ classes[day][0] }}</th>
                                 {% endfor %}
                             </tr>
                             <tr style="color: green; font-size: 80%;">
@@ -39,7 +39,7 @@
                                         <td rowspan="11">
                                             {% if classes[day][1][room.name] %}
                                                 {% for lesson in classes[day][1][room.name] %}
-                                                    <div class="class-box" style="background-color: {{ lesson.color }}; top: {{ lesson.start_time/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;">
+                                                    <div class="class-box" style="background-color: {{ lesson.color }}; top: {{ lesson.start_time/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px; width: {{ 566 / rooms|length - 6 }}px;">
                                                         <p style="color: #660000;">{{ lesson.time }}</p>
                                                         {% if lesson.lesson_type %}
                                                             <p style="color: #003300;">{{ lesson.lesson_type }}</p>
@@ -63,16 +63,28 @@
                         </tbody>
                     </table>
                 </div>
-                <button class="btn" style="background-color: #ff9800;">
-                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week - 1) }}">
-                        <i class="material-icons">navigate_before</i>Предыдущая неделя
-                    </a>
-                </button>
-                <button class="btn" style="background-color: #ff9800;">
-                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week + 1) }}">
-                        Следующая неделя<i class="material-icons">navigate_next</i>
-                    </a>
-                </button>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week - 1) }}">
+                                <i class="material-icons">navigate_before</i>Предыдущая неделя
+                            </a>
+                        </button>
+                        <button class="btn" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week + 1) }}">
+                                Следующая неделя<i class="material-icons">navigate_next</i>
+                            </a>
+                        </button>
+                    </div>
+                    <div class="col-md-3"></div>
+                    <div class="col-md-3">
+                        {% if week >= 0 %}
+                            <button class="btn" style="background-color: #4bd1a0;">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="">Составить расписание</a>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

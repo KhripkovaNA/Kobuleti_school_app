@@ -1944,6 +1944,11 @@ output {
     background-color: #eee;
 }
 
+.custom-checkbox {
+    border-radius: 5%;
+    border: 1px solid #ddd;
+}
+
 .custom-radio {
     border-radius: 50%;
 }
@@ -1979,8 +1984,8 @@ output {
 }
 
 .contact-radio-label .custom-checkbox:after {
-    left: 5px;
-    top: 3px;
+    left: 4.5px;
+    top: 2px;
     width: 5px;
     height: 8px;
     border: solid white;
@@ -2918,8 +2923,6 @@ select.form-control[multiple],
 
 .class-box {
     position: absolute;
-    background-color: #007bff;
-    color: #fff;
     text-align: center;
     padding: 5px;
     border-radius: 5px;
