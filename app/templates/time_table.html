@@ -39,7 +39,9 @@
                                         <td rowspan="11">
                                             {% if classes[day][1][room.name] %}
                                                 {% for lesson in classes[day][1][room.name] %}
-                                                    <div class="class-box" style="background-color: {{ lesson.color }}; top: {{ lesson.start_time/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px; width: {{ 566 / rooms|length - 6 }}px;">
+                                                    <div class="class-box" id="class-box-{{ lesson.id }}"
+                                                         style="background-color: {{ lesson.color }}; top: {{ lesson.start_time/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px; width: {{ 566 / rooms|length - 6 }}px;"
+                                                         onclick="showDropdown({{ lesson.id }}, event)">
                                                         <p style="color: #660000;">{{ lesson.time }}</p>
                                                         {% if lesson.lesson_type %}
                                                             <p style="color: #003300;">{{ lesson.lesson_type }}</p>
@@ -48,6 +50,14 @@
                                                             <p style="color: #003366;">{{ subject }}</p>
                                                         {% endfor %}
                                                         <p style="color: #330033;">{{ lesson.teacher }}</p>
+                                                        <div class="dropdown open dropdown-content" id="dropdown-{{ lesson.id }}">
+                                                            <ul class="dropdown-menu">
+                                                                <li><a href="{{ url_for('students') }}">Просмотр</a></li>
+                                                                <li><a href="{{ url_for('students') }}">Изменить</a></li>
+                                                                <li class="divider"></li>
+                                                                <li><a href="{{ url_for('students') }}">Удалить</a></li>
+                                                            </ul>
+                                                        </div>
                                                     </div>
                                                 {% endfor %}
                                             {% endif %}

@@ -1,6 +1,6 @@
 from app import app, db
-from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, parent_child_table, Room, Lesson, \
-    SchoolClass, SubjectType
+from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, parent_child_table, Room, \
+    Lesson, SchoolClass, SubjectType
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
@@ -365,29 +365,37 @@ def add_lesson(lesson_info):
 
 days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 
-# existing_subjects = [f'{subject.id}\t{subject.name}\t{subject.short_name}' for subject in Subject.query.all()]
-# print(*existing_subjects, sep='\n')
-#
-#
-# existing_rooms = [str(room.id) + '\t' + room.name for room in Room.query.all()]
-# print(*existing_rooms, sep='\n')
+
+def print_subjects():
+    existing_subjects = [f'{subject.id}\t{subject.name}\t{subject.short_name}' for subject in Subject.query.all()]
+    print(*existing_subjects, sep='\n')
 
 
-# existing_teachers = []
-# for teacher in Person.query.filter_by(teacher=True).order_by(Person.last_name).all():
-#     teacher_name = teacher.last_name + ' ' + teacher.first_name
-#     teacher_subjects = ', '.join([subject.name for subject in teacher.subjects_taught.all()])
-#     existing_teacher = str(teacher.id) + '\t' + teacher_name + '\t' + teacher_subjects
-#     existing_teachers.append(existing_teacher)
-#
-# print(*existing_teachers, sep='\n')
+def print_rooms():
+    existing_rooms = [str(room.id) + '\t' + room.name for room in Room.query.all()]
+    print(*existing_rooms, sep='\n')
 
-# existing_subjects_types = [f'{subj_type.id}\t{subj_type.name}\t{subj_type.description}' for subj_type in SubjectType.query.all()]
-# print(*existing_subjects_types, sep='\n')
-#
-#
-# existing_classes = [str(cl.id) + '\t' + cl.school_name for cl in SchoolClass.query.all()]
-# print(*existing_classes, sep='\n')
+
+def print_teachers():
+    existing_teachers = []
+    for teacher in Person.query.filter_by(teacher=True).order_by(Person.last_name).all():
+        teacher_name = teacher.last_name + ' ' + teacher.first_name
+        teacher_subjects = ', '.join([subject.name for subject in teacher.subjects_taught.all()])
+        existing_teacher = str(teacher.id) + '\t' + teacher_name + '\t' + teacher_subjects
+        existing_teachers.append(existing_teacher)
+
+    print(*existing_teachers, sep='\n')
+
+
+def print_subjects_types():
+    existing_subjects_types = [f'{subj_type.id}\t{subj_type.name}\t{subj_type.description}' for subj_type in SubjectType.query.all()]
+    print(*existing_subjects_types, sep='\n')
+
+
+def print_classes():
+    existing_classes = [str(cl.id) + '\t' + cl.school_name for cl in SchoolClass.query.all()]
+    print(*existing_classes, sep='\n')
+
 
 new_student_info = {
     "student": {

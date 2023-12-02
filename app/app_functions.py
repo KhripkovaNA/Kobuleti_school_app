@@ -238,6 +238,7 @@ def create_lesson_dict(lesson):
         lesson_type = ''
 
     return {
+        'id': lesson.id,
         'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
         'start_time': start_time,
         'end_time': end_time,

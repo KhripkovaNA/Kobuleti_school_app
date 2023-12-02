@@ -2927,10 +2927,22 @@ select.form-control[multiple],
     padding: 5px;
     border-radius: 5px;
     box-sizing: border-box;
+    cursor: pointer;
+}
+
+.class-box:hover {
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
 .class-box p {
     margin: 0
+}
+
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    z-index: 1;
 }
 
 .checkbox label {

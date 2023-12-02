@@ -240,6 +240,19 @@ $(document).ready(function(){
         $("#clientSelector").hide();
     });
 
+    window.showDropdown = function(lessonId, event) {
+        $('.dropdown-content').hide();
+        $(`#dropdown-${lessonId}`).toggle().css({
+            top: event.offsetY,
+            left: event.offsetX
+        });
+        event.stopPropagation();
+    }
+
+    $(document).on('click', function () {
+        $('.dropdown-content').hide();
+    });
+
     $("#subject-type-select").on("change", function () {
         const selectedType = $(this).val();
         const classSelect = $("select[name='school_classes']");
@@ -249,7 +262,7 @@ $(document).ready(function(){
             classSelectRow.show();
         } else {
             classSelectRow.hide();
-            classSelect.val("all");
+            classSelect.val(null);
         }
     });
 
