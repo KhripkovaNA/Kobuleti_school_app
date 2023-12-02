@@ -1,10 +1,13 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Subject, Room, Lesson
+from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
 from app.app_functions import create_student, handle_contact_info, basic_student_info, \
-    extensive_student_info, clients_data, create_lesson, week_lessons_dict
+    extensive_student_info, clients_data, week_lessons_dict, filter_lessons, copy_lessons
 from app import app, db
 from datetime import datetime, timedelta
+
+
+DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -132,10 +135,9 @@ def subjects():
 def timetable(week):
     week = int(week)
     rooms = Room.query.all()
-    days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
-    current_week_lessons = week_lessons_dict(week, rooms, days_of_week)
+    current_week_lessons = week_lessons_dict(week, rooms, DAYS_OF_WEEK)
 
-    return render_template('time_table.html', days=days_of_week, rooms=rooms,
+    return render_template('time_table.html', days=DAYS_OF_WEEK, rooms=rooms,
                            classes=current_week_lessons, week=week)
 
 
@@ -203,25 +205,53 @@ def lesson(subject_id, param):
                            lesson_subject=lesson_subject, param=param)
 
 
-@app.route('/add-lesson', methods=['GET', 'POST'])
+@app.route('/add-lessons', methods=['GET', 'POST'])
 @login_required
-def add_lesson():
+def add_lessons():
     if request.method == 'POST':
         try:
-            new_lesson = create_lesson(request.form)
-            db.session.add(new_lesson)
+            filtered_lessons, new_week = filter_lessons(request.form)
+            new_lessons, conflicts = copy_lessons(filtered_lessons, new_week)
+            db.session.add_all(new_lessons)
             db.session.commit()
-
-            flash('Новый урок добавлен в расписание.', 'success')
-            return redirect(url_for('students'))
+            if conflicts == 0:
+                flash('Все занятия добавлены в расписание.', 'success')
+            elif not new_lessons:
+                flash(f'Занятия не добавлены, т.к. есть занятия в это же время.', 'error')
+            else:
+                flash(f'Добавлено занятий: {len(new_lessons)}', 'success')
+                flash(f'Не добавлено занятий: {conflicts}, т.к. есть занятия в это же время', 'error')
+            return redirect(url_for('timetable', week=new_week))
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Ошибка при добавлении нового урока: {str(e)}', 'error')
-            return redirect(url_for('add_lesson'))
+            flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
+            return redirect(url_for('timetable', week=0))
 
-    all_subjects = Subject.query.order_by(Subject.name).all()
-    all_rooms = Room.query.all()
+    subject_types = SubjectType.query.all()
+    rooms = Room.query.all()
+    school_classes = SchoolClass.query.order_by(SchoolClass.school_name).all()
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
+    return render_template('add_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types,
+                           rooms=rooms, school_classes=school_classes, teachers=all_teachers)
 
-    return render_template('add_lesson.html', subjects=all_subjects, rooms=all_rooms, teachers=all_teachers)
+
+#     if request.method == 'POST':
+#         try:
+#             new_lesson = create_lesson(request.form)
+#             db.session.add(new_lesson)
+#             db.session.commit()
+#
+#             flash('Новый урок добавлен в расписание.', 'success')
+#             return redirect(url_for('students'))
+#
+#         except Exception as e:
+#             db.session.rollback()
+#             flash(f'Ошибка при добавлении нового урока: {str(e)}', 'error')
+#             return redirect(url_for('add_lesson'))
+#
+#     all_subjects = Subject.query.order_by(Subject.name).all()
+#     all_rooms = Room.query.all()
+#     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
+#
+#     return render_template('add_lesson.html', subjects=all_subjects, rooms=all_rooms, teachers=all_teachers)

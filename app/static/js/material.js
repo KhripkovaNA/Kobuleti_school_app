@@ -234,9 +234,23 @@ $(document).ready(function(){
         $("#clientSelector").show();
         $("#add-client-btn").hide();
     });
+
     $("#cancel-add-client-btn").click(function() {
         $("#add-client-btn").show();
         $("#clientSelector").hide();
+    });
+
+    $("#subject-type-select").on("change", function () {
+        const selectedType = $(this).val();
+        const classSelect = $("select[name='school_classes']");
+        const classSelectRow = $("#school-class-row");
+
+        if (selectedType === "1") {
+            classSelectRow.show();
+        } else {
+            classSelectRow.hide();
+            classSelect.val("all");
+        }
     });
 
 });

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Новое расписание</h4>
+            </div>
+            <div class="card-content">
+                <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
+                    <div class="form-group">
+                        <div class="row">
+                            <label class="control-label col-md-3">День:</label>
+                            <div class="col-md-3">
+                                <select name="lessons_day" class="form-control">
+                                    <option value="all">Вся неделя</option>
+                                    {% for day in days %}
+                                        <option value="{{ loop.index0 }}">{{ day }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-md-3">Перенести</label>
+                            <div class="col-md-3">
+                                <select name="lessons_week" class="form-control">
+                                    <option value="0">С этой недели</option>
+                                    <option value="-1">С предыдущей недели</option>
+                                    <option value="-2">С предпредыдущей недели</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="next_lessons_week" class="form-control">
+                                    <option value="1">На следующую неделю</option>
+                                    <option value="0">На эту неделю</option>
+                                    <option value="2">Через неделю</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-md-3">Занятия:</label>
+                            <div class="col-md-3">
+                                <select id="subject-type-select" name="subject_type" class="form-control">
+                                    <option value="all">Все занятия</option>
+                                    {% for subject_type in subject_types %}
+                                        <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div id="school-class-row" class="row" style="display: none;">
+                            <label class="control-label col-md-3">Класс:</label>
+                            <div class="col-md-5">
+                                <select name="school_classes" class="form-control" multiple>
+                                    <option value="all">Все классы</option>
+                                    {% for school_class in school_classes %}
+                                        <option value="{{ school_class.id }}">{{ school_class.school_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-md-3">Кабинет:</label>
+                            <div class="col-md-5">
+                                <select name="room" class="form-control">
+                                    <option value="all">Все кабинеты</option>
+                                    {% for room in rooms %}
+                                        <option value="{{ room.id }}">{{ room.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-md-3">Учитель:</label>
+                            <div class="col-md-5">
+                                <select name="teacher" class="form-control">
+                                    <option value="all">Все учителя</option>
+                                    {% for teacher in teachers %}
+                                        <option value="{{ teacher.id }}">{{ teacher.last_name }} {{ teacher.first_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-login" id="submit-btn" style="background-color:#4BD1A0;">Заполнить расписание</button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url_for('timetable', week=0) }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

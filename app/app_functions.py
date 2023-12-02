@@ -1,6 +1,7 @@
-from app.models import Person, Contact, parent_child_table, Lesson, Room
+from app.models import Person, Contact, parent_child_table, Lesson, SchoolClass
 from datetime import datetime, timedelta
 from app import db
+from sqlalchemy import and_, or_
 
 
 def create_student(form):
@@ -215,30 +216,12 @@ def clients_data():
         return clients
 
 
-def create_lesson(form):
-    lesson_date = datetime.strptime(form.get('lesson_date'), '%d.%m.%Y').date()
-    lesson_time = datetime.strptime(form.get('lesson_time'), '%H:%M').time()
-    subject_id = form.get('subject')
-    room_id = form.get('room')
-    teacher_id = form.get('teacher')
-
-    lesson = Lesson(
-        date=lesson_date,
-        time=lesson_time,
-        room_id=room_id,
-        subject_id=subject_id,
-        teacher_id=teacher_id
-    )
-
-    return lesson
-
-
 def create_lesson_dict(lesson):
     start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
     end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
 
     if lesson.lesson_type.name == 'school':
-        num_classes = [cl.school_name for cl in lesson.school_classes if cl.school_class]
+        num_classes = [str(cl.school_class) for cl in lesson.school_classes if cl.school_class]
         classes = [cl.school_name for cl in lesson.school_classes if not cl.school_class]
         lesson_type = (
             f"{'-'.join(num_classes)} класс, {', '.join(classes)}"
@@ -310,4 +293,98 @@ def week_lessons_dict(week, rooms, days_of_week):
         week_lessons[weekday] = (lessons_date_str, day_lessons)
 
     return week_lessons
+
+
+def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher):
+    conflicting_lessons = Lesson.query.filter(
+        and_(
+            Lesson.date == date,
+            or_(
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.room_id == room
+                ),
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.teacher_id == teacher
+                ),
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.school_classes.any(SchoolClass.id.in_(classes))
+                )
+            )
+        )
+    ).all()
+
+    return conflicting_lessons
+
+
+def filter_lessons(form):
+    weekday = form.get('lessons_day')
+    week = int(form.get('lessons_week'))
+    new_week = int(form.get('next_lessons_week'))
+    subject_type = form.get('subject_type')
+    school_classes = form.getlist('school_classes') if form.getlist('school_classes') else ["all"]
+    room = form.get('room')
+    teacher = form.get('teacher')
+
+    if weekday == "all":
+        start_date = get_date(0, week)
+        end_date = get_date(6, week)
+        query = Lesson.query.filter(
+            Lesson.date >= start_date,
+            Lesson.date <= end_date)
+    else:
+        lessons_date = get_date(int(weekday), week)
+        query = Lesson.query.filter(Lesson.date == lessons_date)
+
+    if room != "all":
+        query = query.filter(Lesson.room_id == int(room))
+    if subject_type != "all":
+        query = query.filter(Lesson.lesson_type_id == int(subject_type))
+    if 'all' not in school_classes:
+        classes = [int(cl) for cl in school_classes]
+        query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(classes)))
+    if teacher != "all":
+        query = query.filter(Lesson.teacher_id == int(teacher))
+
+    filtered_lessons = query.all()
+
+    return filtered_lessons, new_week
+
+
+def copy_lessons(filtered_lessons, new_week):
+    copied_lessons = []
+    conflicts = 0
+    for lesson in filtered_lessons:
+        date = lesson.date + timedelta(weeks=new_week)
+        start_time = lesson.start_time
+        end_time = lesson.end_time
+        classes = [cl.id for cl in lesson.school_classes]
+        room = lesson.room_id
+        teacher = lesson.teacher_id
+
+        conflicting_lessons = check_conflicting_lessons(date, start_time, end_time, classes, room, teacher)
+
+        if not conflicting_lessons:
+            new_lesson = Lesson(
+                date=date,
+                start_time=start_time,
+                end_time=end_time,
+                room_id=room,
+                subject_id=lesson.subject_id,
+                teacher_id=teacher,
+                lesson_type_id=lesson.lesson_type_id
+            )
+            new_lesson.school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
+            copied_lessons.append(new_lesson)
+
+        else:
+            conflicts += 1
+
+    return copied_lessons, conflicts
+
 
