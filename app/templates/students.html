@@ -73,10 +73,19 @@
                                                     {{ student.contact }}
                                                 {% endif %}
                                             </td>
-                                            <td>
-                                                {% if student.comment %}
-                                                    {{ student.comment }}
-                                                {% endif %}
+                                            <td class="comment-cell"  style="cursor:pointer;">
+                                                <div class="comment-container">
+                                                    {% if student.comment %}
+                                                        {{ student.comment }}
+                                                    {% endif %}
+                                                </div>
+                                                <div class="comment-form-container" style="display:none;">
+                                                    <form class="comment-form" method="post" data-person-id="{{ student.id }}">
+                                                        <label>Комментарий:</label>
+                                                        <textarea name="comment" rows="4" cols="12">{{ student.comment }}</textarea><br>
+                                                        <button type="submit">Добавить</button>
+                                                    </form>
+                                                </div>
                                             </td>
                                             <td width="13%">
                                                 <div class="dropdown">

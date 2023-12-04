@@ -14,6 +14,52 @@ $(document).ready(function(){
         suppressScrollX: true
     });
 
+    $(document).on("click", ".comment-cell", function () {
+        $(".comment-form-container").hide();
+        $(".comment-container").show();
+        var commentFormContainer = $(this).find(".comment-form-container");
+        var commentContainer = $(this).find(".comment-container");
+        commentFormContainer.show();
+        commentContainer.hide();
+    });
+
+    $(document).mouseup(function (e) {
+        var container = $(".comment-form-container");
+        var commentContainer = $(".comment-container")
+        if (!container.is(e.target) && container.has(e.target).length === 0) {
+            container.hide();
+            commentContainer.show();
+        }
+    });
+
+    $(document).on("submit", ".comment-form", function (e) {
+        e.preventDefault();
+
+        var personId = $(this).data("person-id");
+        var commentText = $(this).find("textarea[name='comment']").val();
+        var commentContainer = $(this).closest(".comment-cell").find(".comment-container");
+        var commentFormContainer = $(this).closest(".comment-cell").find(".comment-form-container");
+
+        $.ajax({
+            type: "POST",
+            url: "/add-comment",
+            data: {
+                person_id: personId,
+                comment: commentText
+            },
+            success: function (response) {
+                commentContainer.text(response);
+            },
+            error: function (error) {
+                alert('Ошибка при добавлении комментария');
+                console.error(error);
+            }
+        });
+
+        commentContainer.show();
+        commentFormContainer.hide();
+    });
+
     $.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
     $(".datepicker").datepicker({
         dateFormat: "dd.mm.yy",
@@ -240,9 +286,9 @@ $(document).ready(function(){
         $("#clientSelector").hide();
     });
 
-    window.showDropdown = function(lessonId, event) {
+    window.showDropdown = function(objectId, event) {
         $('.dropdown-content').hide();
-        $(`#dropdown-${lessonId}`).toggle().css({
+        $(`#dropdown-${objectId}`).toggle().css({
             top: event.offsetY,
             left: event.offsetX
         });

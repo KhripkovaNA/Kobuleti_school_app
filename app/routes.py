@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
 from app.app_functions import create_student, handle_contact_info, basic_student_info, \
@@ -42,6 +42,18 @@ def students():
         basic_student_info(student)
 
     return render_template('students.html', students=all_students)
+
+
+@app.route('/add-comment', methods=['POST'])
+@login_required
+def add_comment():
+    person_id = int(request.form.get('person_id'))
+    comment = request.form.get('comment')
+    person = Person.query.filter_by(id=person_id).first()
+    person.comment = comment
+    db.session.commit()
+
+    return comment
 
 
 @app.route('/add-student', methods=['GET', 'POST'])
