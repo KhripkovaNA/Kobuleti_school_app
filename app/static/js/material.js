@@ -15,20 +15,25 @@ $(document).ready(function(){
     });
 
     $(document).on("click", ".comment-cell", function () {
-        $(".comment-form-container").hide();
-        $(".comment-container").show();
         var commentFormContainer = $(this).find(".comment-form-container");
         var commentContainer = $(this).find(".comment-container");
         commentFormContainer.show();
         commentContainer.hide();
+        if (!commentFormContainer.data("filled")) {
+            var commentText = commentContainer.text();
+            commentFormContainer.find("textarea[name='comment']").val(commentText.trim());
+            commentFormContainer.data("filled", true);
+    }
+
     });
 
     $(document).mouseup(function (e) {
         var container = $(".comment-form-container");
-        var commentContainer = $(".comment-container")
+
         if (!container.is(e.target) && container.has(e.target).length === 0) {
             container.hide();
-            commentContainer.show();
+            container.closest(".comment-cell").find(".comment-container").show();
+            container.data("filled", false);
         }
     });
 
