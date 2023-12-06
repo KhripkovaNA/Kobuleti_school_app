@@ -1,4 +1,4 @@
-from app.models import Person, Contact, parent_child_table, Lesson, SchoolClass
+from app.models import Person, Contact, parent_child_table, Lesson, SchoolClass, Room
 from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
@@ -221,8 +221,10 @@ def create_lesson_dict(lesson):
     end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
 
     if lesson.lesson_type.name == 'school':
-        num_classes = [str(cl.school_class) for cl in lesson.school_classes if cl.school_class]
-        classes = [cl.school_name for cl in lesson.school_classes if not cl.school_class]
+        num_classes = [cl.school_name[:2].strip() for cl in lesson.school_classes
+                       if (cl.school_name[0].isdigit() or cl.school_name[:2].isdigit())]
+        classes = [cl.school_name for cl in lesson.school_classes
+                   if not (cl.school_name[0].isdigit() or cl.school_name[:2].isdigit())]
         lesson_type = (
             f"{'-'.join(num_classes)} класс, {', '.join(classes)}"
             if (classes and num_classes)
@@ -232,8 +234,6 @@ def create_lesson_dict(lesson):
         )
     elif lesson.lesson_type.name == 'individual':
         lesson_type = 'индив'
-    elif lesson.lesson_type.name == 'group':
-        lesson_type = 'груп'
     else:
         lesson_type = ''
 
@@ -246,6 +246,21 @@ def create_lesson_dict(lesson):
         'teacher': lesson.teacher.first_name,
         'color': lesson.teacher.color,
         'lesson_type': lesson_type,
+    }
+
+
+def create_school_lesson_dict(lesson):
+    start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
+    end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
+    return {
+        'id': lesson.id,
+        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'start_time': start_time,
+        'end_time': end_time,
+        'subject': lesson.subject.short_name,
+        'teacher': lesson.teacher.first_name,
+        'room': lesson.room.name,
+        'room_color': lesson.room.color
     }
 
 
@@ -290,6 +305,26 @@ def week_lessons_dict(week, rooms, days_of_week):
             lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).\
                 order_by(Lesson.start_time).all()
             day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
+
+        week_lessons[weekday] = (lessons_date_str, day_lessons)
+
+    return week_lessons
+
+
+def week_school_lessons_dict(week, school_classes, days_of_week):
+    week_lessons = {}
+    for day, weekday in enumerate(days_of_week):
+        lessons_date = get_date(day, week)
+        lessons_date_str = lessons_date.strftime('%d.%m')
+        day_lessons = {}
+        for school_class in school_classes:
+            lessons_filtered = Lesson.query.filter(
+                Lesson.lesson_type_id == 1,
+                Lesson.date == lessons_date,
+                Lesson.school_classes.any(SchoolClass.id == school_class.id)
+            ).order_by(Lesson.start_time).all()
+            day_lessons[school_class.school_name] = [create_school_lesson_dict(school_lesson)
+                                                     for school_lesson in lessons_filtered]
 
         week_lessons[weekday] = (lessons_date_str, day_lessons)
 

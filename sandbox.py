@@ -1,11 +1,13 @@
 from app import app, db
-from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, parent_child_table, Room, \
-    Lesson, SchoolClass, SubjectType
+from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, \
+    parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
 
 app.app_context().push()
+
+days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 
 
 def print_table(table_model):
@@ -348,24 +350,6 @@ def add_lesson(lesson_info):
         print(f'Ошибка при добавлении урока: {str(e)}')
 
 
-# rooms = ["каб 1", "каб 2", "каб 3", "изо", "каб 5", "зал", "игровая", "кухня"]
-#
-# for room in rooms:
-#     try:
-#         new_room = Room(name=room)
-#         db.session.add(new_room)
-#         db.session.commit()
-#
-#         print('Новый кабинет добавлен в систему.')
-#
-#     except Exception as e:
-#         db.session.rollback()
-#         print(f'Ошибка при добавлении кабинета: {str(e)}')
-
-
-days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
-
-
 def print_subjects():
     existing_subjects = [f'{subject.id}\t{subject.name}\t{subject.short_name}' for subject in Subject.query.all()]
     print(*existing_subjects, sep='\n')
@@ -395,6 +379,110 @@ def print_subjects_types():
 def print_classes():
     existing_classes = [str(cl.id) + '\t' + cl.school_name for cl in SchoolClass.query.all()]
     print(*existing_classes, sep='\n')
+
+
+def create_lesson_dict(lesson):
+    start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
+    end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
+
+    if lesson.lesson_type == 'school':
+        lesson_type = '-'.join([str(cl.school_class) for cl in lesson.school_classes.all()]) + ' класс'
+    elif lesson.lesson_type == 'individual':
+        lesson_type = 'индив'
+    else:
+        lesson_type = ''
+
+    return {
+        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'start_time': start_time,
+        'end_time': end_time,
+        'subject': lesson.subject_names,
+        'teacher': lesson.teacher.first_name,
+        'lesson_type': lesson_type,
+    }
+
+
+def create_school_lesson_dict(lesson):
+    start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
+    end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
+    return {
+        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'start_time': start_time,
+        'end_time': end_time,
+        'subject': lesson.subject.short_name,
+        'teacher': lesson.teacher.first_name,
+        'room': lesson.room.name,
+        'room_color': lesson.room.color
+    }
+
+
+def get_date(day_of_week, week=0):
+    today = datetime.now().date()
+    day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week * timedelta(weeks=1)
+    return day_of_week_date
+
+
+def day_lessons_list(day_room_lessons):
+    lessons_for_day = []
+    current_lesson = day_room_lessons[0]
+    current_lesson.subject_names = [current_lesson.subject.short_name]
+
+    for next_lesson in day_room_lessons[1:]:
+        if (
+                current_lesson.teacher.id == next_lesson.teacher.id
+                and current_lesson.school_classes.all() == next_lesson.school_classes.all()
+        ):
+            current_lesson.subject_names.append(next_lesson.subject.short_name)
+            current_lesson.end_time = next_lesson.end_time
+        else:
+            lessons_for_day.append(create_lesson_dict(current_lesson))
+            next_lesson.subject_names = [next_lesson.subject.short_name]
+            current_lesson = next_lesson
+
+    lessons_for_day.append(create_lesson_dict(current_lesson))
+
+    return lessons_for_day
+
+
+def week_lessons_dict(week):
+    rooms = Room.query.all()
+    days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+    week_lessons = {}
+
+    for day, weekday in enumerate(days_of_week):
+        lessons_date = get_date(week, day)
+        lessons_date_str = lessons_date.strftime('%d.%m')
+        day_lessons = {}
+        for room in rooms:
+            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).order_by(
+                Lesson.start_time).all()
+            day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
+
+        week_lessons[weekday] = (lessons_date_str, day_lessons)
+
+    return week_lessons
+
+
+def week_school_lessons_dict(week):
+    school_classes = SchoolClass.query.all()
+    days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]
+    week_lessons = {}
+    for day, weekday in enumerate(days_of_week):
+        lessons_date = get_date(day, week)
+        lessons_date_str = lessons_date.strftime('%d.%m')
+        day_lessons = {}
+        for school_class in school_classes:
+            lessons_filtered = Lesson.query.filter(
+                Lesson.lesson_type_id == 1,
+                Lesson.date == lessons_date,
+                Lesson.school_classes.any(SchoolClass.id == school_class.id)
+            ).order_by(Lesson.start_time).all()
+            day_lessons[school_class.school_name] = [create_school_lesson_dict(school_lesson)
+                                                     for school_lesson in lessons_filtered]
+
+        week_lessons[weekday] = (lessons_date_str, day_lessons)
+
+    return week_lessons
 
 
 new_student_info = {
@@ -446,76 +534,6 @@ new_teacher_info = {
     },
     "subjects": ['3 класс']
 }
-
-
-def create_lesson_dict(lesson):
-    start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
-    end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
-
-    if lesson.lesson_type == 'school':
-        lesson_type = '-'.join([str(cl.school_class) for cl in lesson.school_classes.all()]) + ' класс'
-    elif lesson.lesson_type == 'individual':
-        lesson_type = 'индив'
-    else:
-        lesson_type = ''
-
-    return {
-        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
-        'start_time': start_time,
-        'end_time': end_time,
-        'subject': lesson.subject_names,
-        'teacher': lesson.teacher.first_name,
-        'lesson_type': lesson_type,
-    }
-
-
-def get_date(day_of_week, week=0):
-    today = datetime.now().date()
-    day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week * timedelta(weeks=1)
-    return day_of_week_date
-
-
-def day_lessons_list(day_room_lessons):
-    lessons_for_day = []
-    current_lesson = day_room_lessons[0]
-    current_lesson.subject_names = [current_lesson.subject.short_name]
-
-    for next_lesson in day_room_lessons[1:]:
-        if (
-                current_lesson.teacher.id == next_lesson.teacher.id
-                and current_lesson.school_classes.all() == next_lesson.school_classes.all()
-        ):
-            current_lesson.subject_names.append(next_lesson.subject.short_name)
-            current_lesson.end_time = next_lesson.end_time
-        else:
-            lessons_for_day.append(create_lesson_dict(current_lesson))
-            next_lesson.subject_names = [next_lesson.subject.short_name]
-            current_lesson = next_lesson
-
-    lessons_for_day.append(create_lesson_dict(current_lesson))
-
-    return lessons_for_day
-
-
-def week_lessons_dict(week):
-    rooms = Room.query.all()
-    days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
-    week_lessons = {}
-
-    for day, weekday in enumerate(days_of_week):
-        lessons_date = get_date(week, day)
-        lessons_date_str = lessons_date.strftime('%d.%m')
-        day_lessons = {}
-        for room in rooms:
-            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).order_by(
-                Lesson.start_time).all()
-            day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
-
-        week_lessons[weekday] = (lessons_date_str, day_lessons)
-
-    return week_lessons
-
-
 # unique_rooms = Lesson.query.filter(Lesson.date == today).with_entities(Lesson.room_id).distinct().all()
 # unique_rooms = [room[0] for room in unique_rooms]
 # first_date = today - timedelta(days=2)
@@ -668,7 +686,7 @@ copy_inform = {
     'lessons_day': "all",
     'lessons_week': "0",
     'next_lessons_week': "1",
-    'subject_type': "all",
+    'subject_type': "1",
     'school_classes': "all",
     'room': "all",
     'teacher': "all"
@@ -682,10 +700,10 @@ first_grade_list = [
     {'student': {'last_name': 'Москаленко', 'first_name': 'Лев', 'patronym': 'Юльевич', 'dob': None, 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Москаленко', 'first_name': 'Мария', 'patronym': 'Семеновна'}, 2: {'last_name': 'Москаленко', 'first_name': 'Юлий', 'patronym': 'Владимирович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 555 561 384', 'other_contact': '7 916 707 45 93'}, 2: {'telegram': '', 'phone': '9 995 555 560 183', 'other_contact': '7 916 507 19 71'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
     {'student': {'last_name': 'Авдеев', 'first_name': 'Дмитрий', 'patronym': 'Иванович', 'dob': '24.04.2017', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Авдеева', 'first_name': 'Ольга', 'patronym': 'Юрьевна'}, 2: {'last_name': 'Авдеев', 'first_name': 'Иван', 'patronym': 'Дмитриевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 551 026 306', 'other_contact': ''}, 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
     {'student': {'last_name': 'Трифонов', 'first_name': 'Матвей', 'patronym': '', 'dob': '23.05.2017', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Ковалева', 'first_name': 'Ирина', 'patronym': 'Андреевна'}, 2: {'last_name': 'Трифонов', 'first_name': 'Никита', 'patronym': 'Сергеевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995595022159', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995599120475', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Гришин', 'first_name': 'Алексей', 'patronym': 'Сергеевич', 'dob': None, 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Гришин', 'first_name': 'Сергей', 'patronym': 'Сергеевич'}, 2: {'last_name': 'гришина', 'first_name': 'Екатерина', 'patronym': 'Сергеевна'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
+    {'student': {'last_name': 'Гришин', 'first_name': 'Алексей', 'patronym': 'Сергеевич', 'dob': None, 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Гришин', 'first_name': 'Сергей', 'patronym': 'Сергеевич'}, 2: {'last_name': 'гришина', 'first_name': 'Екатерина', 'patronym': 'Сергеевна'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Шаповалова', 'first_name': 'Алина', 'patronym': 'Олеговна', 'dob': '12.11.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Хрипкова', 'first_name': 'Наталья', 'patronym': 'Александровна'}, 2: {'last_name': 'Шаповалов', 'first_name': 'Олег', 'patronym': 'Вячеславович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '7 916 295 62 74', 'other_contact': ''}, 2: {'telegram': '', 'phone': '7 916 903 97 42', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
 ]
 
-first_grade_existed = {'student': {'last_name': 'Шаповалова', 'first_name': 'Алина', 'patronym': 'Олеговна', 'dob': '12.11.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Хрипкова', 'first_name': 'Наталья', 'patronym': 'Александровна'}, 2: {'last_name': 'Шаповалов', 'first_name': 'Олег', 'patronym': 'Вячеславович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '7 916 295 62 74', 'other_contact': ''}, 2: {'telegram': '', 'phone': '7 916 903 97 42', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
 
 second_grade_list = [
     {'student': {'last_name': 'Зайцева', 'first_name': 'Кира', 'patronym': 'Владимировна', 'dob': '18.03.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Зайцева', 'first_name': 'Елена', 'patronym': 'Владиславовна'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '599012840', 'other_contact': ''}}, 'relation': {1: 'Мама'}, 'primary_contact': 1},
@@ -750,12 +768,38 @@ def check_parent(student, i):
         print(student['student']['last_name'], student['student']['first_name'], new_parent.last_name, new_parent.first_name, *[person.id for person in matching_persons])
 
 
-# for student in ninth_grade_list:
-#     for i in range(1, len(student['parent']) + 1):
-#         check_parent(student, i)
+# school_class = SchoolClass.query.filter_by(school_name='Андрей').first()
+# last_name, first_name = andrew['student']['last_name'], andrew['student']['first_name']
+# student_db = Person.query.filter_by(last_name=last_name, first_name=first_name).first()
+# print(school_class.school_name + ': ', student_db.id, student_db.last_name, student_db.first_name)
 
 
-# print_table(Person)
+# school_class = SchoolClass.query.filter_by(school_name='Андрей').first()
+# last_name, first_name = andrew['student']['last_name'], andrew['student']['first_name']
+# student_db = Person.query.filter_by(last_name=last_name, first_name=first_name).first()
+# school_class.school_students.append(student_db)
+# db.session.commit()
+
+# print(school_class.school_name + ': ', *[stu.first_name for stu in school_class.school_students])
+
+# print_table(SchoolClass)
+# all_mamas = db.session.query(parent_child_table.c.parent_id).filter(parent_child_table.c.relation == 'Мама').all()
+# for mama in all_mamas:
+#     mama_parent = Person.query.filter_by(id=mama[0]).first()
+#     print(mama_parent.last_name, mama_parent.first_name)
+
+# school_lessons = week_school_lessons_dict(0)
+#
+# unique_rooms = set()
+# week_days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]
+#
+# for day in week_days:
+#     for sc_cl in SchoolClass.query.all():
+#         for lesson in school_lessons[day][1][sc_cl.school_name]:
+#             unique_rooms.add(lesson['room'])
+#
+# print(unique_rooms)
 
 
+# prod = Subject.query.filter_by(name='Продленка').first()
 

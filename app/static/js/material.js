@@ -1,17 +1,40 @@
 $(document).ready(function(){
+    adjustClassBoxWidth();
+
     $("#toggle-sidebar").click(function(){
-      if ($(".sidebar").is(":visible")) {
-        $(".sidebar").hide();
-        $(".main-panel").css("width", "100%");
-      } else {
-        $(".sidebar").show();
-        $(".main-panel").css("width", "calc(100% - 260px)");
-      }
+        if ($(".sidebar").is(":visible")) {
+            $(".sidebar").hide();
+            $(".main-panel").css("width", "100%");
+            adjustClassBoxWidth();
+        } else {
+            $(".sidebar").show();
+            $(".main-panel").css("width", "calc(100% - 260px)");
+            adjustClassBoxWidth();
+        }
     });
 
     $('.sidebar .sidebar-wrapper, .main-panel, .scroll-table, .scroll-timetable').perfectScrollbar();
     $('.scroll-table-body').perfectScrollbar({
         suppressScrollX: true
+    });
+
+    $(window).resize(function () {
+        adjustClassBoxWidth();
+    });
+
+    function adjustClassBoxWidth() {
+        var tdWidth = $('.table td').width();
+        var classBoxWidth = tdWidth - 10;
+        $('.class-box').width(classBoxWidth);
+        console.log(classBoxWidth);
+    }
+
+    $('.day-button').on('click', function() {
+        $('.day-button').removeClass('btn-success');
+        $(this).addClass('btn-success');
+        $('.scroll-timetable').hide();
+        var targetDay = $(this).data('target');
+        $('#' + targetDay).show();
     });
 
     $(document).on("click", ".comment-cell", function () {
@@ -23,8 +46,7 @@ $(document).ready(function(){
             var commentText = commentContainer.text();
             commentFormContainer.find("textarea[name='comment']").val(commentText.trim());
             commentFormContainer.data("filled", true);
-    }
-
+        }
     });
 
     $(document).mouseup(function (e) {

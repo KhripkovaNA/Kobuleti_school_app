@@ -2,7 +2,8 @@ from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
 from app.app_functions import create_student, handle_contact_info, basic_student_info, \
-    extensive_student_info, clients_data, week_lessons_dict, filter_lessons, copy_lessons
+    extensive_student_info, clients_data, week_lessons_dict, filter_lessons, copy_lessons, \
+    week_school_lessons_dict
 from app import app, db
 from datetime import datetime, timedelta
 
@@ -147,10 +148,20 @@ def subjects():
 def timetable(week):
     week = int(week)
     rooms = Room.query.all()
-    current_week_lessons = week_lessons_dict(week, rooms, DAYS_OF_WEEK)
+    week_lessons = week_lessons_dict(week, rooms, DAYS_OF_WEEK)
 
     return render_template('time_table.html', days=DAYS_OF_WEEK, rooms=rooms,
-                           classes=current_week_lessons, week=week)
+                           classes=week_lessons, week=week)
+
+
+@app.route('/school-timetable/<string:week>')
+@login_required
+def school_timetable(week):
+    week = int(week)
+    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+    week_school_lessons = week_school_lessons_dict(week, school_classes, DAYS_OF_WEEK)
+    return render_template('school_time_table.html', days=DAYS_OF_WEEK, school_classes=school_classes,
+                           classes=week_school_lessons, week=week, week_day=DAYS_OF_WEEK[0])
 
 
 @app.route('/lesson/<string:subject_id>/<string:param>', methods=['GET', 'POST'])

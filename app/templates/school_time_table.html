@@ -6,49 +6,44 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Расписание</h4>
+                <h4 class="title">Школьное расписание</h4>
             </div>
             <div class="card-content">
-                <div class="scroll-timetable">
-                    <table class="table timetable">
-                        <thead class="text-success">
-                            <tr>
-                                <th rowspan="3" width="3%" class="fixed-column">Время</th>
-                                {% for day in days %}
-                                    <th colspan="{{ rooms|length }}">{{ day }}</th>
-                                {% endfor %}
-                            </tr>
-                            <tr style="color: green;">
-                                {% for day in days %}
-                                    <th colspan="{{ rooms|length }}">{{ classes[day][0] }}</th>
-                                {% endfor %}
-                            </tr>
-                            <tr style="color: green; font-size: 80%;">
-                                {% for day in days %}
-                                    {% for room in rooms %}
-                                        <th>{{ room.name }}</th>
+                <div class="row">
+                    {% for day in days %}
+                        <div class="col-md-2">
+                            <button type="button"
+                                    class="btn btn-sm day-button {{ 'btn-success' if loop.index == 1 else '' }}"
+                                    style="width:130px; padding: 5px 5px;"
+                                    data-target="table-{{ loop.index }}">
+                                {{ day }}, {{ classes[day][0] }}
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% for day in days %}
+                    <div class="scroll-timetable" id="table-{{ loop.index }}" style="{{ 'display:block' if loop.index == 1 else 'display:none' }}; height: 330px;">
+                        <table class="table school-timetable">
+                            <thead class="text-success">
+                                <tr>
+                                    <th>Время</th>
+                                    {% for school_class in school_classes %}
+                                        <th>{{ school_class.school_name }}</th>
                                     {% endfor %}
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th class="fixed-column">9:00 - 10:00</th>
-                                {% for day in days %}
-                                    {% for room in rooms %}
-                                        <td rowspan="11">
-                                            {% if classes[day][1][room.name] %}
-                                                {% for lesson in classes[day][1][room.name] %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>9:00 - 10:00</th>
+                                    {% for school_class in school_classes %}
+                                        <td rowspan="9">
+                                            {% if classes[day][1][school_class.school_name] %}
+                                                {% for lesson in classes[day][1][school_class.school_name] %}
                                                     <div class="class-box" id="class-box-{{ lesson.id }}"
-                                                         style="background-color: {{ lesson.color }}; top: {{ lesson.start_time/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;"
+                                                         style="background-color: {{ lesson.room_color }}; top: {{ lesson.start_time/0.75 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.75 - 1 }}px; width: {{ 900 / (school_classes|length + 1) - 6 }}px;"
                                                          onclick="showDropdown({{ lesson.id }}, event)">
                                                         <p style="color: #660000;">{{ lesson.time }}</p>
-                                                        {% if lesson.lesson_type %}
-                                                            <p style="color: #003300;">{{ lesson.lesson_type }}</p>
-                                                        {% endif %}
-                                                        {% for subject in lesson.subject %}
-                                                            <p style="color: #003366;">{{ subject }}</p>
-                                                        {% endfor %}
+                                                        <p style="color: #003366;">{{ lesson.subject }}</p>
                                                         <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                         <div class="dropdown open dropdown-content" id="dropdown-{{ lesson.id }}">
                                                             <ul class="dropdown-menu">
@@ -63,16 +58,16 @@
                                             {% endif %}
                                         </td>
                                     {% endfor %}
-                                {% endfor %}
-                            </tr>
-                            {% for hour in range(10, 20) %}
-                                <tr>
-                                    <th class="fixed-column">{{ hour }}:00 - {{ hour + 1 }}:00</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                {% for hour in range(10, 18) %}
+                                    <tr>
+                                        <th>{{ hour }}:00 - {{ hour + 1 }}:00</th>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endfor %}
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn" style="background-color: #ff9800;">
