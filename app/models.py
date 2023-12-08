@@ -58,12 +58,6 @@ teacher_class_table = db.Table(
     db.Column('main_teacher', db.Boolean, default=False)
 )
 
-subject_types_table = db.Table(
-    'subject_types_table',
-    db.Column('subject_type_id', db.Integer, db.ForeignKey('subject_types.id')),
-    db.Column('subject_id', db.Integer, db.ForeignKey('subjects.id'))
-)
-
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -116,7 +110,7 @@ class Person(db.Model):
                               primaryjoin=(parent_child_table.c.child_id == id),
                               secondaryjoin=(parent_child_table.c.parent_id == id),
                               backref=db.backref('children', lazy='dynamic'), lazy='dynamic')
-    balance = db.Column(db.Numeric(8, 2))
+    balance = db.Column(db.Numeric(8, 2), default=0)
 
     def __repr__(self):
         return f"<Person {self.id}: {self.last_name} {self.first_name}>"
@@ -144,8 +138,8 @@ class Subject(db.Model):
     school_price = db.Column(db.Numeric(8, 2))
     subscription_types = db.relationship('SubscriptionType', secondary=subscription_types_table,
                                          backref='subjects', lazy='dynamic')
-    subject_types = db.relationship('SubjectType', secondary=subject_types_table,
-                                    backref='subjects', lazy='dynamic')
+    subject_type_id = db.Column(db.Integer, db.ForeignKey('subject_types.id'))
+    subject_type = db.relationship('SubjectType', backref='subjects')
     subscriptions = db.relationship('Subscription', backref='subject')
 
     def __repr__(self):
@@ -230,3 +224,4 @@ class SubjectType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     description = db.Column(db.String(50))
+

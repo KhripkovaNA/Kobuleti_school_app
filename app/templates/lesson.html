@@ -30,10 +30,10 @@
                                                             <button type="submit" name="del_client_btn" value="{{ client.id }}" class="btn btn-danger" style="padding: 1px 4px; font-size: 7px;">x</button>
                                                             {{ client.last_name }} {{ client.first_name }}
                                                         </td>
-                                                        <td>{{ client.id }}</td>
+                                                        <td>{{ client.subscription_info }}</td>
                                                         {% if subject_lesson.lesson_completed == False %}
                                                             {% if client in subject_lesson.students_registered %}
-                                                                <td>
+                                                                <td style="padding-left:20px;">
                                                                     <label class="contact-radio-label">
                                                                         <input type="checkbox" name="registered_{{ client.id }}" checked="checked">
                                                                         <span class="custom-checkbox"></span>
@@ -49,7 +49,7 @@
                                                                     </div>
                                                                 </td>
                                                             {% else %}
-                                                                <td>
+                                                                <td style="padding-left:20px;">
                                                                     <label class="contact-radio-label">
                                                                         <input type="checkbox" name="registered_{{ client.id }}">
                                                                         <span class="custom-checkbox"></span>
@@ -64,7 +64,7 @@
                                                                 </td>
                                                             {% endif %}
                                                         {% elif subject_lesson.lesson_completed == True %}
-                                                            <td>
+                                                            <td style="padding-left:20px;">
                                                                 {% if client in subject_lesson.students_registered %}
                                                                     <label class="contact-radio-label">
                                                                         <input type="checkbox" name="registered_{{ client.id }}" checked="checked" disabled>
@@ -78,16 +78,12 @@
                                                                 {% endif %}
                                                             </td>
                                                             <td>
-                                                                {% if client in subject_lesson.students_attended %}
-                                                                    <label class="contact-radio-label">
-                                                                        <input type="checkbox" name="attended_{{ client.id }}" checked="checked" disabled>
-                                                                        <span class="custom-checkbox"></span>
-                                                                    </label>
+                                                                {% if client.attended == 'not_attend' %}
+                                                                    Не посетил
+                                                                {% elif client.attended == 'attend' %}
+                                                                    Посетил
                                                                 {% else %}
-                                                                    <label class="contact-radio-label">
-                                                                        <input type="checkbox" name="attended_{{ client.id }}" disabled>
-                                                                        <span class="custom-checkbox"></span>
-                                                                    </label>
+                                                                    Не посетил (не ув прич)
                                                                 {% endif %}
                                                             </td>
                                                         {% endif %}

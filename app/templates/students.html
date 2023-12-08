@@ -13,14 +13,13 @@
                     <div class="scroll-table">
                         <table class="table table-hover">
                             <thead class="text-success">
-                                <th>Фамилия</th>
-                                <th>Имя</th>
+                                <th>Фамилия, Имя</th>
                                 <th>Дата рождения</th>
                                 <th>Статус</th>
-                                <th width="15%">Занятия</th>
-                                <th width="13%">Контакт</th>
+                                <th>Занятия</th>
+                                <th>Контакт</th>
                                 <th>Комментарий</th>
-                                <th width="13%">Действие</th>
+                                <th>Действия</th>
                             </thead>
                         </table>
                         <div class="scroll-table-body">
@@ -28,23 +27,14 @@
                                 <tbody>
                                     {% for student in students %}
                                         <tr>
-                                            <td>
-                                                {% if student.last_name %}
-                                                    {{ student.last_name }}
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if student.first_name %}
-                                                    {{ student.first_name }}
-                                                {% endif %}
-                                            </td>
+                                            <td>{{ student.last_name }} {{ student.first_name }}</td>
                                             <td>
                                                 {% if student.birth_date %}
                                                     {{ student.birth_date }}
                                                 {% endif %}
                                             </td>
                                             <td>{{ student.status_info }}</td>
-                                            <td width="15%">
+                                            <td>
                                                 {% if student.subjects %}
                                                     {% if student.status=="Лид"%}
                                                         Интересуется:
@@ -65,7 +55,7 @@
                                                     {% endif %}
                                                 {% endif %}
                                             </td>
-                                            <td width="13%">
+                                            <td>
                                                 {% if student.contact_name %}
                                                     {{ student.contact_name }}
                                                 {% endif %}
@@ -86,7 +76,7 @@
                                                     </form>
                                                 </div>
                                             </td>
-                                            <td width="13%">
+                                            <td>
                                                 <div class="dropdown">
                                                     <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">
                                                         <i class="material-icons" style="color: white;">toc</i>
@@ -113,6 +103,11 @@
                                                                 <i class="material-icons" style="color: purple;">addchart</i>Абонемент
                                                             </a>
                                                         </li>
+                                                        <li>
+                                                            <a href="" data-toggle="modal" data-target="#deposit-{{ student.id }}-modal">
+                                                                <i class="material-icons" style="color: purple;">money</i>Пополнить
+                                                            </a>
+                                                        </li>
                                                         <li class="divider"></li>
                                                         <li>
                                                             <a href="">
@@ -120,6 +115,34 @@
                                                             </a>
                                                         </li>
                                                     </ul>
+                                                </div>
+                                                <div class="modal fade" id="deposit-{{ student.id }}-modal" role="dialog">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                                <h4 class="modal-title">Пополнение</h4>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                                    <div class="row">
+                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
+                                                                        <div class="col-md-4">
+                                                                            <input type="number" class="form-control" name="deposit" step="10" min="10" max="1000" required>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <button type="submit" class="btn btn-login float-right" data-background-color="main" style="margin:0;">
+                                                                                Внести
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Отмена</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>

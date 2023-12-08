@@ -1,6 +1,7 @@
 from app import app, db
 from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, \
-    parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table
+    parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
+    student_lesson_attended_table
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
@@ -33,8 +34,8 @@ def print_table(table_model):
         print(f"Error fetching data: {str(e)}")
 
 
-def print_parent_child_table():
-    query = db.session.query(parent_child_table)
+def print_association_table(table):
+    query = db.session.query(table)
     rows = query.all()
 
     for row in rows:
@@ -229,14 +230,14 @@ def add_subject(subject):
         subject_short_name = subject["short_name"]
         one_time_price = subject["one_time_price"]
         school_price = subject["school_price"]
-        subject_type = subject["subject_type"]
+        subject_type_id = subject["subject_type_id"]
 
         new_subject = Subject(
             name=subject_name,
             short_name=subject_short_name,
             one_time_price=one_time_price,
             school_price=school_price,
-            subject_type=subject_type
+            subject_type_id=subject_type_id
         )
 
         db.session.add(new_subject)
@@ -534,71 +535,14 @@ new_teacher_info = {
     },
     "subjects": ['3 класс']
 }
-# unique_rooms = Lesson.query.filter(Lesson.date == today).with_entities(Lesson.room_id).distinct().all()
-# unique_rooms = [room[0] for room in unique_rooms]
-# first_date = today - timedelta(days=2)
-# last_date = today + timedelta(days=2)
-# unique_rooms = (
-#     db.session.query(Lesson.room_id)
-#     .filter(Lesson.date >= first_date, Lesson.date <= last_date)
-#     .distinct().all()
-# )
-# print([room[0] for room in unique_rooms])
-# school_subjects = Subject.query.filter(~Subject.subject_types.any(name='school')).all()
-# print(school_subjects)
 
-
-def show_lesson(lesson):
-    lesson_dict = {
-        'id': lesson.id,
-        'date': lesson.date.strftime("%d.%m"),
-        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
-        'room': Room.query.filter_by(id=lesson.room_id).first().name,
-        'subject': Subject.query.filter_by(id=lesson.subject_id).first().name,
-        'teacher': Person.query.filter_by(id=lesson.teacher_id).first().first_name,
-        'lesson_type': SubjectType.query.filter_by(id=lesson.lesson_type_id).first().name,
-        'classes': ', '.join([cl.school_name for cl in lesson.school_classes])
-    }
-    return lesson_dict
-
-
-# new_lessons = copy_lessons(3, 'all', 1, 1, 'all', 0, 1)
-# print(*[show_lesson(lesson) for lesson in new_lessons], sep='\n')
-
-
-# Assuming new_date, start_time, end_time, room_id, teacher_id, lesson_type_id are defined
-
-# Check if there are any lessons with the same date, overlapping time, and either the same room or the same teacher
-def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher):
-    conflicting_lessons = Lesson.query.filter(
-        and_(
-            Lesson.date == date,
-            or_(
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.room_id == room
-                ),
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.teacher_id == teacher
-                ),
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.school_classes.any(SchoolClass.id.in_(classes))
-                )
-            )
-        )
-    ).all()
-
-    return conflicting_lessons
-
-
-#
-# lesson = Lesson.query.filter_by(id=310).first()
-# print(show_lesson(lesson))
+new_subject = {
+    "name": "Музыка",
+    "short_name": "Музыка",
+    "one_time_price": 50,
+    "school_price": None,
+    "subject_type_id": 3
+}
 
 new_lesson = {
     'date': datetime.strptime('27.11.2023', '%d.%m.%Y').date(),
@@ -608,79 +552,6 @@ new_lesson = {
     'room_id': 1,
     'teacher_id': 23
 }
-
-# check_conflicting_lessons(new_lesson)
-# some_lesson = Lesson.query.filter_by(id=7).first()
-# print([cl.id for cl in some_lesson.school_classes])
-# classes = [6, 7, 8, 9]
-# filtered_lessons = Lesson.query.filter(Lesson.school_classes.any(SchoolClass.id.in_(classes))).all()
-# print(*[show_lesson(lesson) for lesson in filtered_lessons], sep='\n')
-
-
-def filter_lessons(copy_info):
-    weekday = copy_info['lessons_day']
-    week = int(copy_info['lessons_week'])
-    new_week = int(copy_info['next_lessons_week'])
-    subject_type = copy_info['subject_type']
-    school_classes = copy_info['school_classes']
-    room = copy_info['room']
-    teacher = copy_info['teacher']
-
-    if weekday == "all":
-        start_date = get_date(0, week)
-        end_date = get_date(6, week)
-        query = Lesson.query.filter(
-            Lesson.date >= start_date,
-            Lesson.date <= end_date)
-    else:
-        lessons_date = get_date(int(weekday), week)
-        query = Lesson.query.filter(Lesson.date == lessons_date)
-
-    if room != "all":
-        query = query.filter(Lesson.room_id == int(room))
-    if subject_type != "all":
-        query = query.filter(Lesson.lesson_type_id == int(subject_type))
-    if 'all' not in school_classes:
-        classes = [int(cl) for cl in school_classes]
-        query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(classes)))
-    if teacher != "all":
-        query = query.filter(Lesson.teacher_id == int(teacher))
-
-    filtered_lessons = query.all()
-
-    return filtered_lessons, new_week
-
-
-def copy_lessons(filtered_lessons, new_week):
-    copied_lessons = []
-    conflicts = 0
-    for lesson in filtered_lessons:
-        date = lesson.date + timedelta(weeks=new_week)
-        start_time = lesson.start_time
-        end_time = lesson.end_time
-        classes = [cl.id for cl in lesson.school_classes]
-        room = lesson.room_id
-        teacher = lesson.teacher_id
-
-        conflicting_lessons = check_conflicting_lessons(date, start_time, end_time, classes, room, teacher)
-
-        if not conflicting_lessons:
-            new_lesson = Lesson(
-                date=date,
-                start_time=start_time,
-                end_time=end_time,
-                room_id=room,
-                subject_id=lesson.subject_id,
-                teacher_id=teacher,
-                lesson_type_id=lesson.lesson_type_id
-            )
-            new_lesson.school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
-            copied_lessons.append(new_lesson)
-        else:
-            conflicts += 1
-
-    return copied_lessons, conflicts
-
 
 copy_inform = {
     'lessons_day': "all",
@@ -758,6 +629,124 @@ ninth_grade_list = [
     {'student': {'last_name': 'Ляшкевич', 'first_name': 'Алексей', 'patronym': 'Константинович', 'dob': '15.07.2008', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Ляшкевич', 'first_name': 'Евгения', 'patronym': 'Валерьевна'}, 2: {'last_name': 'Ляшкевич', 'first_name': 'Константин', 'patronym': 'Владимирович'}}, 'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '110', 2: '111'}, 'contact': {1: {'telegram': '', 'phone': '995 571 051 683', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995 568 81 97 06', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
     {'student': {'last_name': 'Данилова', 'first_name': 'Александра', 'patronym': 'Алексеевна', 'dob': '14.01.2008', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Глазырина', 'first_name': 'Мария', 'patronym': 'Александровна'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '79162163460,', 'other_contact': '995591756793'}}, 'relation': {1: 'Мама'}, 'primary_contact': 1}
 ]
+# unique_rooms = Lesson.query.filter(Lesson.date == today).with_entities(Lesson.room_id).distinct().all()
+# unique_rooms = [room[0] for room in unique_rooms]
+# first_date = today - timedelta(days=2)
+# last_date = today + timedelta(days=2)
+# unique_rooms = (
+#     db.session.query(Lesson.room_id)
+#     .filter(Lesson.date >= first_date, Lesson.date <= last_date)
+#     .distinct().all()
+# )
+# print([room[0] for room in unique_rooms])
+# school_subjects = Subject.query.filter(~Subject.subject_types.any(name='school')).all()
+# print(school_subjects)
+
+
+def show_lesson(lesson):
+    lesson_dict = {
+        'id': lesson.id,
+        'date': lesson.date.strftime("%d.%m"),
+        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'room': Room.query.filter_by(id=lesson.room_id).first().name,
+        'subject': Subject.query.filter_by(id=lesson.subject_id).first().name,
+        'teacher': Person.query.filter_by(id=lesson.teacher_id).first().first_name,
+        'lesson_type': SubjectType.query.filter_by(id=lesson.lesson_type_id).first().name,
+        'classes': ', '.join([cl.school_name for cl in lesson.school_classes])
+    }
+    return lesson_dict
+
+
+def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher):
+    conflicting_lessons = Lesson.query.filter(
+        and_(
+            Lesson.date == date,
+            or_(
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.room_id == room
+                ),
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.teacher_id == teacher
+                ),
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.school_classes.any(SchoolClass.id.in_(classes))
+                )
+            )
+        )
+    ).all()
+
+    return conflicting_lessons
+
+
+def filter_lessons(copy_info):
+    weekday = copy_info['lessons_day']
+    week = int(copy_info['lessons_week'])
+    new_week = int(copy_info['next_lessons_week'])
+    subject_type = copy_info['subject_type']
+    school_classes = copy_info['school_classes']
+    room = copy_info['room']
+    teacher = copy_info['teacher']
+
+    if weekday == "all":
+        start_date = get_date(0, week)
+        end_date = get_date(6, week)
+        query = Lesson.query.filter(
+            Lesson.date >= start_date,
+            Lesson.date <= end_date)
+    else:
+        lessons_date = get_date(int(weekday), week)
+        query = Lesson.query.filter(Lesson.date == lessons_date)
+
+    if room != "all":
+        query = query.filter(Lesson.room_id == int(room))
+    if subject_type != "all":
+        query = query.filter(Lesson.lesson_type_id == int(subject_type))
+    if 'all' not in school_classes:
+        classes = [int(cl) for cl in school_classes]
+        query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(classes)))
+    if teacher != "all":
+        query = query.filter(Lesson.teacher_id == int(teacher))
+
+    filtered_lessons = query.all()
+
+    return filtered_lessons, new_week
+
+
+def copy_lessons(filtered_lessons, new_week):
+    copied_lessons = []
+    conflicts = 0
+    for lesson in filtered_lessons:
+        date = lesson.date + timedelta(weeks=new_week)
+        start_time = lesson.start_time
+        end_time = lesson.end_time
+        classes = [cl.id for cl in lesson.school_classes]
+        room = lesson.room_id
+        teacher = lesson.teacher_id
+
+        conflicting_lessons = check_conflicting_lessons(date, start_time, end_time, classes, room, teacher)
+
+        if not conflicting_lessons:
+            new_lesson = Lesson(
+                date=date,
+                start_time=start_time,
+                end_time=end_time,
+                room_id=room,
+                subject_id=lesson.subject_id,
+                teacher_id=teacher,
+                lesson_type_id=lesson.lesson_type_id
+            )
+            new_lesson.school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
+            copied_lessons.append(new_lesson)
+        else:
+            conflicts += 1
+
+    return copied_lessons, conflicts
 
 
 def check_parent(student, i):
@@ -788,18 +777,92 @@ def check_parent(student, i):
 #     mama_parent = Person.query.filter_by(id=mama[0]).first()
 #     print(mama_parent.last_name, mama_parent.first_name)
 
-# school_lessons = week_school_lessons_dict(0)
-#
-# unique_rooms = set()
-# week_days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]
-#
-# for day in week_days:
-#     for sc_cl in SchoolClass.query.all():
-#         for lesson in school_lessons[day][1][sc_cl.school_name]:
-#             unique_rooms.add(lesson['room'])
-#
-# print(unique_rooms)
+# if 'change_btn' in request.form:
+def check_payment_option(student, subject_id):
+    today = datetime.now().date()
+    first_of_month = today.replace(day=1)
+    after_school = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
+    subscription = Subscription.query.filter_by(student_id=student.id,
+                                                subject_id=subject_id)\
+        .order_by(Subscription.purchase_date).first()
+    after_school_sub = Subscription.query.filter(Subscription.student_id == student.id,
+                                                 Subscription.subject_id == after_school.id,
+                                                 Subscription.purchase_date == first_of_month).all()
+    student_balance = round(student.balance, 1)
+    payment_option = {'balance': student_balance}
+    if subscription and subject_id != after_school.id:
+        exp_date = (subscription.purchase_date +
+                    timedelta(days=subscription.subscription_type.duration)).strftime('%d.%m')
+        payment_option['type'] = 'Абонемент'
+        payment_option['exp_date'] = exp_date
+        payment_option['lessons'] = subscription.lessons_left
+    elif after_school_sub:
+        payment_option['type'] = 'Продленка'
+    else:
+        payment_option['type'] = 'Разовое'
+
+    return payment_option
 
 
-# prod = Subject.query.filter_by(name='Продленка').first()
+def carry_out_lesson(form, subject, lesson):
+    for key in form.keys():
+        if key.startswith('attending_status_'):
+            client_id = int(key[len('attending_status_'):])
+            attending_client = Person.query.filter_by(id=client_id).first()
+            payment_option = check_payment_option(attending_client, subject.id)
+            lesson_price = subject.one_time_price
+            lesson_school_price = subject.school_price if subject.school_price else lesson_price
 
+            if form[key] != 'not_attend':
+                if payment_option['type'] == 'Абонемент':
+                    subscription = Subscription.query.filter_by(student_id=client_id,
+                                                                subject_id=subject.id) \
+                        .order_by(Subscription.purchase_date).first()
+                    subscription.lessons_left -= 1
+                else:
+                    attending_client.balance -= lesson_school_price if payment_option['type'] == 'Продленка' \
+                        else lesson_price
+                lesson.students_attended.append(attending_client)
+                attendance = student_lesson_attended_table.update().where(
+                    (student_lesson_attended_table.c.student_id == attending_client.id) &
+                    (student_lesson_attended_table.c.lesson_id == lesson.id)
+                ).values(attending_status=form[key])
+                db.session.execute(attendance)
+        lesson.lesson_completed = True
+        db.session.commit()
+
+
+def undo_lesson(form, subject, lesson):
+    for key in form.keys():
+        if key.startswith('attendance_status_'):
+            client_id = int(key[len('undo_attendance_status_'):])
+            attending_client = Person.query.filter_by(id=client_id).first()
+            payment_option = check_payment_option(attending_client, subject.id)
+            lesson_price = subject.one_time_price
+            lesson_school_price = subject.school_price if subject.school_price else lesson_price
+
+            attending_status = db.session.query(student_lesson_attended_table.c.attending_status).filter(
+                student_lesson_attended_table.c.student_id == attending_client.id,
+                student_lesson_attended_table.c.lesson_id == lesson.id).scalar()
+
+            if attending_status:
+                if payment_option['type'] == 'Абонемент':
+                    subscription = Subscription.query.filter_by(student_id=client_id,
+                                                                subject_id=subject.id) \
+                        .order_by(Subscription.purchase_date).first()
+                    subscription.lessons_left += 1
+                else:
+                    attending_client.balance += lesson_school_price if payment_option['type'] == 'Продленка' \
+                        else lesson_price
+
+            lesson.students_attended.clear()
+            lesson.lesson_completed = False
+            db.session.commit()
+
+
+today = datetime.today().date()
+stu = Person.query.filter_by(last_name="Ефименко", first_name="Иван").first()
+
+subs = Subscription.query.filter_by(student_id=stu.id, subject_id=11).order_by(Subscription.purchase_date).first()
+
+print(stu.balance)

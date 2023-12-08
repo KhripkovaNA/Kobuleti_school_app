@@ -1,4 +1,5 @@
-from app.models import Person, Contact, parent_child_table, Lesson, SchoolClass, Room
+from app.models import Person, Contact, parent_child_table, Subject, Subscription, \
+    Lesson, SchoolClass, Room, SubjectType, student_lesson_attended_table
 from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
@@ -165,15 +166,16 @@ def format_subjects_and_subscriptions(student):
     subscriptions_set = set()
 
     for subscription in student.subscriptions.all():
-        subject_name = subscription.subject.name
-        end_date = subscription.purchase_date + timedelta(days=subscription.subscription_type.duration)
-        subscription_dict = {
-            'subject_name': subject_name,
-            'lessons_left': subscription.lessons_left,
-            'end_date': end_date.strftime('%d.%m.%Y')
-        }
-        subscriptions.append(subscription_dict)
-        subscriptions_set.add(subject_name)
+        subject = subscription.subject
+        if subject.subject_type_id != SubjectType.query.filter_by(name='after_school').first().id:
+            end_date = subscription.purchase_date + timedelta(days=subscription.subscription_type.duration)
+            subscription_dict = {
+                'subject_name': subject.name,
+                'lessons_left': subscription.lessons_left,
+                'end_date': end_date.strftime('%d.%m.%Y')
+            }
+            subscriptions.append(subscription_dict)
+            subscriptions_set.add(subject.name)
 
     student.subjects_info = [subject.name for subject in student.subjects.all()
                              if subject.name not in subscriptions_set]
@@ -190,6 +192,114 @@ def extensive_student_info(student):
     format_student_info(student)
     format_all_contacts(student)
     format_subjects_and_subscriptions(student)
+
+
+def check_payment_option(student, subject_id):
+    today = datetime.now().date()
+    first_of_month = today.replace(day=1)
+    after_school = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
+    subscription = Subscription.query.filter_by(student_id=student.id,
+                                                subject_id=subject_id)\
+        .order_by(Subscription.purchase_date).first()
+    after_school_sub = Subscription.query.filter(Subscription.student_id == student.id,
+                                                 Subscription.subject_id == after_school.id,
+                                                 Subscription.purchase_date == first_of_month).all()
+    student_balance = round(student.balance, 1)
+    payment_option = {'balance': student_balance}
+    if subscription and subject_id != after_school.id:
+        exp_date = (subscription.purchase_date +
+                    timedelta(days=subscription.subscription_type.duration)).strftime('%d.%m')
+        payment_option['type'] = 'Абонемент'
+        payment_option['exp_date'] = exp_date
+        payment_option['lessons'] = subscription.lessons_left
+    elif after_school_sub:
+        payment_option['type'] = 'Продленка'
+    else:
+        payment_option['type'] = 'Разовое'
+
+    return payment_option
+
+
+def carry_out_lesson(form, subject, lesson):
+    for key in form.keys():
+        if key.startswith('attending_status_'):
+            client_id = int(key[len('attending_status_'):])
+            attending_client = Person.query.filter_by(id=client_id).first()
+            payment_option = check_payment_option(attending_client, subject.id)
+            lesson_price = subject.one_time_price
+            lesson_school_price = subject.school_price if subject.school_price else lesson_price
+
+            if form[key] != 'not_attend':
+                if payment_option['type'] == 'Абонемент':
+                    subscription = Subscription.query.filter_by(student_id=client_id,
+                                                                subject_id=subject.id) \
+                        .order_by(Subscription.purchase_date).first()
+                    subscription.lessons_left -= 1
+                else:
+                    attending_client.balance -= lesson_school_price if payment_option['type'] == 'Продленка' \
+                        else lesson_price
+                lesson.students_attended.append(attending_client)
+                attendance = student_lesson_attended_table.update().where(
+                    (student_lesson_attended_table.c.student_id == attending_client.id) &
+                    (student_lesson_attended_table.c.lesson_id == lesson.id)
+                ).values(attending_status=form[key])
+                db.session.execute(attendance)
+        lesson.lesson_completed = True
+        db.session.commit()
+
+
+def undo_lesson(form, subject, lesson):
+    for client in lesson.students_attended:
+        payment_option = check_payment_option(client, subject.id)
+        lesson_price = subject.one_time_price
+        lesson_school_price = subject.school_price if subject.school_price else lesson_price
+
+        attending_status = db.session.query(student_lesson_attended_table.c.attending_status).filter(
+            student_lesson_attended_table.c.student_id == client.id,
+            student_lesson_attended_table.c.lesson_id == lesson.id).scalar()
+
+        if attending_status:
+            if payment_option['type'] == 'Абонемент':
+                subscription = Subscription.query.filter_by(student_id=client.id,
+                                                            subject_id=subject.id) \
+                    .order_by(Subscription.purchase_date).first()
+                subscription.lessons_left += 1
+            else:
+                client.balance += lesson_school_price if payment_option['type'] == 'Продленка' else lesson_price
+            lesson.students_attended.remove(client)
+
+    lesson.lesson_completed = False
+    db.session.commit()
+
+
+def show_lesson(subject, param):
+    today = datetime.now().date()
+    if param < 0:
+        subject_lessons = Lesson.query.filter(Lesson.date < today,
+                                              Lesson.subject_id == subject.id). \
+            order_by(Lesson.date.desc(), Lesson.start_time.desc()).all()
+        order_param = abs(param) - 1
+    else:
+        subject_lessons = Lesson.query.filter(Lesson.date >= today,
+                                              Lesson.subject_id == subject.id). \
+            order_by(Lesson.date, Lesson.start_time).all()
+        order_param = param
+
+    subject_lesson = subject_lessons[order_param] if order_param < len(subject_lessons) else None
+    if subject.students:
+        for student in subject.students:
+            payment_option = check_payment_option(student, subject.id)
+            if payment_option['type'] == 'Абонемент':
+                student.subscription_info = f'{payment_option["type"]}: {payment_option["lessons"]} ' \
+                                            f'(до {payment_option["exp_date"]})'
+            else:
+                student.subscription_info = f'{payment_option["type"]}: {payment_option["balance"]}'
+            if subject_lesson and subject_lesson.lesson_completed:
+                attendance = db.session.query(student_lesson_attended_table.c.attending_status).filter(
+                    student_lesson_attended_table.c.student_id == student.id,
+                    student_lesson_attended_table.c.lesson_id == subject_lesson.id).scalar()
+                student.attended = attendance if attendance else 'not_attend'
+    return subject_lesson
 
 
 def clients_data():

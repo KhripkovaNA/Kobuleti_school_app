@@ -26,7 +26,6 @@ $(document).ready(function(){
         var tdWidth = $('.table td').width();
         var classBoxWidth = tdWidth - 10;
         $('.class-box').width(classBoxWidth);
-        console.log(classBoxWidth);
     }
 
     $('.day-button').on('click', function() {

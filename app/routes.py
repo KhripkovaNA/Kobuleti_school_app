@@ -1,9 +1,9 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
+from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass, Subscription
 from app.app_functions import create_student, handle_contact_info, basic_student_info, \
     extensive_student_info, clients_data, week_lessons_dict, filter_lessons, copy_lessons, \
-    week_school_lessons_dict
+    week_school_lessons_dict, show_lesson, carry_out_lesson, undo_lesson
 from app import app, db
 from datetime import datetime, timedelta
 
@@ -55,6 +55,23 @@ def add_comment():
     db.session.commit()
 
     return comment
+
+
+@app.route('/deposit/<string:student_id>', methods=['POST'])
+@login_required
+def deposit(student_id):
+    try:
+        deposit = int(request.form.get('deposit'))
+        student = Person.query.filter_by(id=student_id).first()
+        student.balance += deposit
+        db.session.commit()
+        flash('Депозит внесен на счет.', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при внесении депозита: {str(e)}', 'error')
+
+    return redirect(url_for('students'))
 
 
 @app.route('/add-student', methods=['GET', 'POST'])
@@ -127,7 +144,8 @@ def teachers():
 @app.route('/subjects')
 @login_required
 def subjects():
-    all_subjects = Subject.query.filter(~Subject.subject_types.any(name='school')).all()
+    school = SubjectType.query.filter_by(name='school').first()
+    all_subjects = Subject.query.filter(Subject.subject_type_id != school.id).order_by(Subject.name).all()
     for subject in all_subjects:
         subscription_types = []
         for subscription_type in subject.subscription_types.all():
@@ -167,8 +185,10 @@ def school_timetable(week):
 @app.route('/lesson/<string:subject_id>/<string:param>', methods=['GET', 'POST'])
 @login_required
 def lesson(subject_id, param):
+    lesson_subject = Subject.query.filter_by(id=subject_id).first()
+    param = int(param)
+
     if request.method == 'POST':
-        lesson_subject = Subject.query.filter_by(id=subject_id).first()
         subject_lesson_id = int(request.form['subject_lesson_id'])
         subject_lesson = Lesson.query.filter_by(id=subject_lesson_id).first()
         if 'del_client_btn' in request.form:
@@ -197,30 +217,15 @@ def lesson(subject_id, param):
                     db.session.commit()
 
         if 'attended_btn' in request.form:
-            for key in request.form.keys():
-                if key.startswith('attending_status_'):
-                    client_id = int(key[len('attending_status_'):])
-                    attending_client = Person.query.filter_by(id=client_id).first()
-                    if request.form[key] == 'attend':
-                        subject_lesson.students_attended.append(attending_client)
-                        db.session.commit()
+            carry_out_lesson(request.form, lesson_subject, subject_lesson)
+
+        if 'change_btn' in request.form:
+            undo_lesson(request.form, lesson_subject, subject_lesson)
+
         return redirect(url_for('lesson', subject_id=subject_id, param=param))
 
-    param = int(param)
-    today = datetime.now().date()
+    subject_lesson = show_lesson(lesson_subject, param)
 
-    lesson_subject = Subject.query.filter_by(id=subject_id).first()
-    if param < 0:
-        subject_lessons = Lesson.query.filter(Lesson.date < today,
-                                              Lesson.subject_id == lesson_subject.id).\
-            order_by(Lesson.date.desc(), Lesson.start_time.desc()).all()
-        order_param = abs(param) - 1
-    else:
-        subject_lessons = Lesson.query.filter(Lesson.date >= today,
-                                              Lesson.subject_id == lesson_subject.id).\
-            order_by(Lesson.date, Lesson.start_time).all()
-        order_param = param
-    subject_lesson = subject_lessons[order_param] if order_param < len(subject_lessons) else None
     all_clients = Person.query.filter(Person.status.in_(["Клиент", "Лид"])).order_by(Person.last_name).all()
     possible_clients = [client for client in all_clients if client not in lesson_subject.students]
 

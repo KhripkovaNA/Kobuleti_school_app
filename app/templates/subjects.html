@@ -15,7 +15,7 @@
                             <thead class="text-success">
                                 <th>Название</th>
                                 <th>Описание</th>
-                                <th>Тип абонемента</th>
+                                <th>Абонементы</th>
                                 <th>Цена разового занятия</th>
                                 <th>Действие</th>
                             </thead>
@@ -26,7 +26,7 @@
                                     {% for subject in subjects %}
                                         <tr>
                                             <td>{{ subject.name }}</td>
-                                            <td>{{ subject.description }}</td>
+                                            <td>{{ subject.subject_type.description }}</td>
                                             <td>
                                                 {% if subject.types_of_subscription %}
                                                     {% for type in subject.types_of_subscription %}
@@ -34,9 +34,12 @@
                                                     {% endfor %}
                                                 {% endif %}
                                             </td>
-                                            <td>
+                                            <td style="padding-left:40px;">
                                                 {% if subject.one_time_price %}
-                                                    {{ subject.one_time_price | round(0) }}
+                                                    <p>{{ subject.one_time_price | round(0) }}</p>
+                                                {% endif %}
+                                                {% if subject.school_price %}
+                                                    <p>{{ subject.school_price | round(0) }} (Продленка)</p>
                                                 {% endif %}
                                             </td>
                                             <td>
