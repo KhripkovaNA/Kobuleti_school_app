@@ -12,9 +12,9 @@
                 <div class="row">
                     <div class="col-md-12">
                         {% if subject_lesson %}
-                            <h4 class="title" style="margin-left: 80px;">Дата: {{ subject_lesson.date.strftime('%d.%m') }}, время: {{ subject_lesson.start_time.strftime('%H:%M')}}</h4>
+                            <h4 class="title" style="margin-left: 80px;">Дата: {{ subject_lesson.date.strftime('%d.%m') }}, время: {{ subject_lesson.start_time.strftime('%H:%M') }}, учитель: {{ subject_lesson.teacher.last_name }} {{ subject_lesson.teacher.first_name }}</h4>
                             <div class="form-group" style="margin-left: 80px;">
-                                <form action="{{ url_for('lesson', subject_id=lesson_subject.id, param=param) }}" method="post">
+                                <form action="{{ url_for('lesson', subject_id=lesson_subject.id, lesson_id=subject_lesson.id) }}" method="post">
                                     <div class="col-md-10">
                                         <table class="table table-hover">
                                             <thead class="text-success">
@@ -24,24 +24,61 @@
                                                 <th>Посещение</th>
                                             </thead>
                                             <tbody>
-                                                {% for client in lesson_subject.students %}
+                                                {% if subject_lesson.lesson_completed %}
+                                                    {% for student in subject_lesson.students %}
+                                                        <tr>
+                                                            <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                                            <td>{{ student.subscription_info }}</td>
+                                                            <td style="padding-left:20px;">
+                                                                {% if student in subject_lesson.students_registered %}
+                                                                    <label class="contact-radio-label">
+                                                                        <input type="checkbox" name="registered_{{ student.id }}" checked="checked" disabled>
+                                                                        <span class="custom-checkbox"></span>
+                                                                    </label>
+                                                                {% else %}
+                                                                    <label class="contact-radio-label">
+                                                                        <input type="checkbox" name="registered_{{ student.id }}" disabled>
+                                                                        <span class="custom-checkbox"></span>
+                                                                    </label>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% if student.attended == 'not_attend' %}
+                                                                    Не посетил
+                                                                {% elif student.attended == 'attend' %}
+                                                                    Посетил
+                                                                {% else %}
+                                                                    Не посетил (не ув прич)
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
                                                     <tr>
+                                                        <td></td>
+                                                        <td></td>
+                                                        <td></td>
                                                         <td>
-                                                            <button type="submit" name="del_client_btn" value="{{ client.id }}" class="btn btn-danger" style="padding: 1px 4px; font-size: 7px;">x</button>
-                                                            {{ client.last_name }} {{ client.first_name }}
+                                                            <button type="submit" name="change_btn" class="btn btn-xs" style="background-color: #ff9800;">Изменить</button>
                                                         </td>
-                                                        <td>{{ client.subscription_info }}</td>
-                                                        {% if subject_lesson.lesson_completed == False %}
-                                                            {% if client in subject_lesson.students_registered %}
+                                                    </tr>
+                                                {% else %}
+                                                    {% for student in subject_lesson.students %}
+                                                        <tr>
+                                                            <td>
+                                                                <button type="submit" name="del_client_btn" value="{{ student.id }}" class="btn btn-danger" style="padding: 1px 4px; font-size: 7px;">x</button>
+                                                                {{ student.last_name }} {{ student.first_name }}
+                                                            </td>
+                                                            <td>{{ student.subscription_info }}</td>
+                                                            {% if student in subject_lesson.students_registered %}
                                                                 <td style="padding-left:20px;">
                                                                     <label class="contact-radio-label">
-                                                                        <input type="checkbox" name="registered_{{ client.id }}" checked="checked">
+                                                                        <input type="checkbox" name="registered_{{ student.id }}" checked="checked">
                                                                         <span class="custom-checkbox"></span>
                                                                     </label>
                                                                 </td>
                                                                 <td>
                                                                     <div class="dropdown">
-                                                                        <select name="attending_status_{{ client.id }}" class="form-control">
+                                                                        <select name="attending_status_{{ student.id }}" class="form-control">
                                                                             <option value="attend">Посетил</option>
                                                                             <option value="not_attend">Не посетил (ув прич)</option>
                                                                             <option value="unreasonable">Не посетил (не ув прич)</option>
@@ -51,81 +88,50 @@
                                                             {% else %}
                                                                 <td style="padding-left:20px;">
                                                                     <label class="contact-radio-label">
-                                                                        <input type="checkbox" name="registered_{{ client.id }}">
+                                                                        <input type="checkbox" name="registered_{{ student.id }}">
                                                                         <span class="custom-checkbox"></span>
                                                                     </label>
                                                                 </td>
                                                                 <td>
                                                                     <div class="dropdown">
-                                                                        <select name="attending_status_{{ client.id }}" class="form-control" disabled>
+                                                                        <select name="attending_status_{{ student.id }}" class="form-control" disabled>
                                                                             <option value="not_attend">Не посетил</option>
                                                                         </select>
                                                                     </div>
                                                                 </td>
                                                             {% endif %}
-                                                        {% elif subject_lesson.lesson_completed == True %}
-                                                            <td style="padding-left:20px;">
-                                                                {% if client in subject_lesson.students_registered %}
-                                                                    <label class="contact-radio-label">
-                                                                        <input type="checkbox" name="registered_{{ client.id }}" checked="checked" disabled>
-                                                                        <span class="custom-checkbox"></span>
-                                                                    </label>
-                                                                {% else %}
-                                                                    <label class="contact-radio-label">
-                                                                        <input type="checkbox" name="registered_{{ client.id }}" disabled>
-                                                                        <span class="custom-checkbox"></span>
-                                                                    </label>
-                                                                {% endif %}
-                                                            </td>
-                                                            <td>
-                                                                {% if client.attended == 'not_attend' %}
-                                                                    Не посетил
-                                                                {% elif client.attended == 'attend' %}
-                                                                    Посетил
-                                                                {% else %}
-                                                                    Не посетил (не ув прич)
-                                                                {% endif %}
-                                                            </td>
-                                                        {% endif %}
-                                                    </tr>
-                                                {% endfor %}
-                                                <tr>
-                                                    <td>
-                                                        <button type="button" id="add-client-btn" class="btn btn-sm" style="background-color: #ff9800;">Добавить клиента</button>
-                                                        <div id="clientSelector" style="display: none;">
-                                                            <select name="added_client_id">
-                                                                {% for client in clients %}
-                                                                    <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                            <br>
-                                                            <button type="submit" name="add_client_btn" class="btn btn-xs" style="background-color: #ff9800;">Добавить</button>
-                                                            <button type="button" id="cancel-add-client-btn" class="btn btn-danger btn-xs">Отменить</button>
-                                                        </div>
-                                                    </td>
-                                                    <td></td>
-                                                    {% if not lesson_subject.students %}
+                                                        </tr>
+                                                    {% endfor %}
+                                                    <tr>
+                                                        <td>
+                                                            <button type="button" id="add-client-btn" class="btn btn-sm" style="background-color: #ff9800;">Добавить клиента</button>
+                                                            <div id="clientSelector" style="display: none;">
+                                                                <select name="added_client_id">
+                                                                    {% for client in clients %}
+                                                                        <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                                <br>
+                                                                <button type="submit" name="add_client_btn" class="btn btn-xs" style="background-color: #ff9800;">Добавить</button>
+                                                                <button type="button" id="cancel-add-client-btn" class="btn btn-danger btn-xs">Отменить</button>
+                                                            </div>
+                                                        </td>
                                                         <td></td>
-                                                        <td></td>
-                                                    {% else %}
-                                                        {% if subject_lesson.lesson_completed == False %}
+                                                        {% if not subject_lesson.students %}
+                                                            <td></td>
+                                                            <td></td>
+                                                        {% else %}
                                                             <td>
                                                                 <button type="submit" name="registered_btn" class="btn btn-xs" style="background-color: #ff9800;">Записать</button>
                                                             </td>
                                                             <td>
                                                                 <button type="submit" name="attended_btn" class="btn btn-xs" style="background-color: #ff9800;">Провести</button>
                                                             </td>
-                                                        {% elif subject_lesson.lesson_completed == True %}
-                                                            <td></td>
-                                                            <td>
-                                                                <button type="submit" name="change_btn" class="btn btn-xs" style="background-color: #ff9800;">Изменить</button>
-                                                            </td>
                                                         {% endif %}
-                                                    {% endif %}
-                                                </tr>
+                                                    </tr>
+                                                {% endif %}
                                             </tbody>
                                         </table>
-                                        <input type="hidden" name="subject_lesson_id" value="{{ subject_lesson.id }}">
                                     </div>
                                 </form>
                             </div>
@@ -136,16 +142,20 @@
                         {% endif %}
                         <div class="row">
                             <div class="col-md-6">
-                                <button class="btn" style="background-color: #ff9800;">
-                                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', subject_id=lesson_subject.id, param=param - 1) }}">
-                                        <i class="material-icons">navigate_before</i>Предыдущee занятие
-                                    </a>
-                                </button>
-                                <button class="btn" style="background-color: #ff9800;">
-                                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', subject_id=lesson_subject.id, param=param + 1) }}">
-                                        Следующее занятие<i class="material-icons">navigate_next</i>
-                                    </a>
-                                </button>
+                                {% if subject_lesson.prev %}
+                                    <button class="btn" style="background-color: #ff9800;">
+                                        <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', subject_id=lesson_subject.id, lesson_id=subject_lesson.prev) }}">
+                                            <i class="material-icons">navigate_before</i>Предыдущee занятие
+                                        </a>
+                                    </button>
+                                {% endif %}
+                                {% if subject_lesson.next %}
+                                    <button class="btn" style="background-color: #ff9800;">
+                                        <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', subject_id=lesson_subject.id, lesson_id=subject_lesson.next) }}">
+                                            Следующее занятие<i class="material-icons">navigate_next</i>
+                                        </a>
+                                    </button>
+                                {% endif %}
                             </div>
                             <div class="col-md-2"></div>
                             <div class="col-md-4">
@@ -155,7 +165,7 @@
                                         <span class="caret"></span>
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><a href="{{ url_for('lesson', subject_id=12, param=0) }}">Подготовка</a></li>
+                                        <li><a href="{{ url_for('lesson', subject_id=12, lesson_id=0) }}">Подготовка</a></li>
                                     </ul>
                                 </div>
                             </div>

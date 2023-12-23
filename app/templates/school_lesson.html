@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">{{ school_lesson.subject.name }}. {{ school_lesson.classes }}</h4>
+            </div>
+            <div class="card-content">
+                <div class="row">
+                    <div class="col-md-12">
+                        {% if school_lesson %}
+                            <h4 class="title" style="margin-left: 80px;">{{ days_dict[school_lesson.date.weekday()]}}, {{ school_lesson.date.strftime('%d.%m') }}</h4>
+                            <div class="form-group" style="margin-left: 80px;">
+                                <form action="" method="post">
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <label class="control-label col-md-2">Тема урока:</label>
+                                            <div class="col-md-7">
+                                                <input type="text" name="lesson_topic" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <table class="table table-hover">
+                                            <thead class="text-success">
+                                                <th>Ученик</th>
+                                                <th>Посещение</th>
+                                                <th>Оценка</th>
+                                                <th>Комментарий</th>
+                                            </thead>
+                                            <tbody>
+                                                {% for student in lesson_students %}
+                                                    <tr>
+                                                        <td>
+                                                            <button type="submit" name="del_client_btn" value="{{ student.id }}" class="btn btn-danger" style="padding: 1px 4px; font-size: 7px;">x</button>
+                                                            {{ student.last_name }} {{ student.first_name }}
+                                                        </td>
+                                                        {% if school_lesson.lesson_completed == False %}
+                                                            <td style="padding-left:20px;">
+                                                                <label class="contact-radio-label">
+                                                                    <input type="checkbox" name="attended_{{ student.id }}" checked="checked">
+                                                                    <span class="custom-checkbox"></span>
+                                                                </label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="number" name="school_grade" value="{{ student.grade }}" min="1" max="5">
+                                                            </td>
+                                                            <td>
+                                                                <input type="text" name="school_comment" value="{{ student.school_comment }}">
+                                                            </td>
+                                                        {% else %}
+                                                            <td>
+                                                                {% if student.attended == 'not_attend' %}
+                                                                    Н/б
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% if student.grade %}
+                                                                    {{ student.grade }}
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {{ student.school_comment }}
+                                                            </td>
+                                                        {% endif %}
+                                                    </tr>
+                                                {% endfor %}
+                                                <tr>
+                                                    <td>
+                                                        <button type="button" id="add-client-btn" class="btn btn-sm" style="background-color: #ff9800;">Добавить ученика</button>
+                                                        <div id="clientSelector" style="display: none;">
+                                                            <select name="added_client_id">
+                                                                {% for student in school_students %}
+                                                                    <option value="{{ student.id }}">{{ student.last_name }} {{ student.first_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br>
+                                                            <button type="submit" name="add_client_btn" class="btn btn-xs" style="background-color: #ff9800;">Добавить</button>
+                                                            <button type="button" id="cancel-add-client-btn" class="btn btn-danger btn-xs">Отменить</button>
+                                                        </div>
+                                                    </td>
+                                                    <td></td>
+                                                    {% if not lesson_students %}
+                                                        <td></td>
+                                                        <td></td>
+                                                    {% else %}
+                                                        {% if school_lesson.lesson_completed == False %}
+                                                            <td></td>
+                                                            <td>
+                                                                <button type="submit" name="attended_btn" class="btn btn-sm" style="background-color: #ff9800; float: right;">Заполнить журнал</button>
+                                                            </td>
+                                                        {% elif school_lesson.lesson_completed == True %}
+                                                            <td></td>
+                                                            <td>
+                                                                <button type="submit" name="change_btn" class="btn btn-xs" style="background-color: #ff9800;">Изменить</button>
+                                                            </td>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="row">
+                                <p style="margin-left: 80px;">Запланированных занятий нет</p>
+                            </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn" style="background-color: #ff9800;">
+                                    <a style="cursor:pointer; color: #FFFFFF;" href="">
+                                        <i class="material-icons">navigate_before</i>Предыдущee занятие
+                                    </a>
+                                </button>
+                                <button class="btn" style="background-color: #ff9800;">
+                                    <a style="cursor:pointer; color: #FFFFFF;" href="">
+                                        Следующее занятие<i class="material-icons">navigate_next</i>
+                                    </a>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

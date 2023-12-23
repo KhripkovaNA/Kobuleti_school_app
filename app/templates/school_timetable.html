@@ -9,20 +9,18 @@
                 <h4 class="title">Школьное расписание</h4>
             </div>
             <div class="card-content">
-                <div class="row">
+                <div class="row" style="margin-left:30px;">
                     {% for day in days %}
-                        <div class="col-md-2">
-                            <button type="button"
-                                    class="btn btn-sm day-button {{ 'btn-success' if loop.index == 1 else '' }}"
-                                    style="width:130px; padding: 5px 5px;"
-                                    data-target="table-{{ loop.index }}">
-                                {{ day }}, {{ classes[day][0] }}
-                            </button>
-                        </div>
+                        <button type="button"
+                                class="btn btn-sm switch-button {{ 'btn-success' if loop.index == 1 else '' }}"
+                                style="width:130px; padding: 5px 5px;"
+                                data-target="table-{{ loop.index }}">
+                            {{ day }}, {{ classes[day][0] }}
+                        </button>
                     {% endfor %}
                 </div>
                 {% for day in days %}
-                    <div class="scroll-timetable" id="table-{{ loop.index }}" style="{{ 'display:block' if loop.index == 1 else 'display:none' }}; height: 330px;">
+                    <div class="scroll-timetable target-table" id="table-{{ loop.index }}" style="{{ 'display:block' if loop.index == 1 else 'display:none' }}; height: 330px;">
                         <table class="table school-timetable">
                             <thead class="text-success">
                                 <tr>
@@ -71,12 +69,12 @@
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn" style="background-color: #ff9800;">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week - 1) }}">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week = week - 1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущая неделя
                             </a>
                         </button>
                         <button class="btn" style="background-color: #ff9800;">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week + 1) }}">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week = week + 1) }}">
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
                         </button>

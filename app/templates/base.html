@@ -36,13 +36,13 @@
                 <ul class="nav">
                     <li id="menu-students">
                         <a style="cursor:pointer" href="{{ url_for('students') }}">
-                            <i class="material-icons">group</i>
+                            <i class="material-icons">diversity_3</i>
                             <p>Ученики</p>
                         </a>
                     </li>
                     <li id="menu-teachers">
                         <a style="cursor:pointer" href="{{ url_for('teachers') }}">
-                            <i class="material-icons">school</i>
+                            <i class="material-icons">group</i>
                             <p>Учителя</p>
                         </a>
                     </li>
@@ -50,6 +50,12 @@
                         <a style="cursor:pointer" href="{{ url_for('subjects') }}">
                             <i class="material-icons">library_books</i>
                             <p>Занятия</p>
+                        </a>
+                    </li>
+                    <li id="menu-school">
+                        <a style="cursor:pointer" href="{{ url_for('school_students') }}">
+                            <i class="material-icons">school</i>
+                           <p>Школа</p>
                         </a>
                     </li>
                     <li id="menu-timetable">

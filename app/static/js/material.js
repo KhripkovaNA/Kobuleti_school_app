@@ -28,12 +28,12 @@ $(document).ready(function(){
         $('.class-box').width(classBoxWidth);
     }
 
-    $('.day-button').on('click', function() {
-        $('.day-button').removeClass('btn-success');
+    $('.switch-button').on('click', function() {
+        $('.switch-button').removeClass('btn-success');
         $(this).addClass('btn-success');
-        $('.scroll-timetable').hide();
-        var targetDay = $(this).data('target');
-        $('#' + targetDay).show();
+        $('.target-table').hide();
+        var targetTable = $(this).data('target');
+        $('#' + targetTable).show();
     });
 
     $(document).on("click", ".comment-cell", function () {

@@ -6,17 +6,25 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables" id="students-card">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Клиенты</h4>
+                <h4 class="title">Школа</h4>
             </div>
             <div class="card-content table-responsive">
-                {% if students %}
-                    <div class="scroll-table">
+                <div class="row" style="margin-left:30px;">
+                    {% for school_class in school_classes %}
+                        <button type="button"
+                                class="btn btn-sm switch-button {{ 'btn-success' if loop.index == 1 else '' }}"
+                                style="width:80px; padding: 5px 5px;"
+                                data-target="table-{{ loop.index }}">
+                            {{ school_class.school_name }}
+                        </button>
+                    {% endfor %}
+                </div>
+                {% for school_class in school_classes %}
+                    <div class="scroll-table target-table" id="table-{{ loop.index }}" style="{{ 'display:block' if loop.index == 1 else 'display:none' }}; height: 330px;">
                         <table class="table table-hover">
                             <thead class="text-success">
                                 <th>Фамилия, Имя</th>
                                 <th>Дата рождения</th>
-                                <th>Статус</th>
-                                <th>Занятия</th>
                                 <th>Контакт</th>
                                 <th>Комментарий</th>
                                 <th>Действия</th>
@@ -25,39 +33,12 @@
                         <div class="scroll-table-body">
                             <table class="table table-hover">
                                 <tbody>
-                                    {% for student in students %}
+                                    {% for student in class_students[school_class.school_name] %}
                                         <tr>
                                             <td>{{ student.last_name }} {{ student.first_name }}</td>
                                             <td>
                                                 {% if student.birth_date %}
                                                     {{ student.birth_date }}
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ student.status_info }}</td>
-                                            <td>
-                                                {% if student.subjects %}
-                                                    {% if student.status=="Лид"%}
-                                                        Интересуется:
-                                                        {% for subject in student.subjects %}
-                                                            {{ subject.name }}{{ "," if not loop.last }}
-                                                        {% endfor %}
-                                                    {% else %}
-                                                        {% if student.school_info %}
-                                                            {% for info in student.school_info %}
-                                                                {{ info }}{{ "," if not loop.last }}{{ "," if loop.last and (student.subscriptions_info or student.subjects_info) }}
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                        {% if student.subscriptions_info %}
-                                                            {% for subscription in student.subscriptions_info %}
-                                                                {{ subscription.subject_name }}({{ subscription.lessons_left }}){{ "," if not loop.last }}{{ "," if loop.last and student.subjects_info }}
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                        {% if student.subjects_info %}
-                                                            {% for subject in student.subjects_info %}
-                                                                {{ subject }}{{ "," if not loop.last }}
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    {% endif %}
                                                 {% endif %}
                                             </td>
                                             <td>
@@ -156,12 +137,15 @@
                             </table>
                         </div>
                     </div>
-                {% else %}
-                    <p>Клиентов пока нет</p>
-                {% endif %}
+                {% endfor %}
                 <button class="btn" style="background-color: #ff9800;">
                     <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
-                        <i class="material-icons">add_box</i>Добавить клиента
+                        <i class="material-icons">add_box</i>Добавить ученика
+                    </a>
+                </button>
+                <button class="btn" style="background-color: #ff9800;">
+                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week=0) }}">
+                        <i class="material-icons">add_box</i>Расписание
                     </a>
                 </button>
             </div>
