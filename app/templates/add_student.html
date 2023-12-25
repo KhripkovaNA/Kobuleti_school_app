@@ -9,8 +9,11 @@
                 <h4 class="title">Новый клиент</h4>
             </div>
             <div class="card-content">
-
-                <form class="login-form" action="{{ url_for('add_student') }}" method="post">
+                <div class="row" style="margin-left:10px;">
+                    <button type="button" class="btn btn-default switch-button btn-success }}" data-target="form-1">Ребенок</button>
+                    <button type="button" class="btn btn-default switch-button }}" data-target="form-2">Взрослый</button>
+                </div>
+                <form class="login-form target-table" id="form-1" action="{{ url_for('add_student') }}" method="post">
                     <div class="row">
                         <div class="col-md-12">
                             <h4 class="title">Ребенок</h4>
@@ -118,19 +121,8 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <script type="text/javascript">
-                                                var clientsData = {{ clients | tojson | safe }};
-                                            </script>
-                                            <div class="client-information">
-                                                <div class="form-group" style="margin-top: 12px;">
-                                                    <div class="row">
-                                                        <label class="control-label col-md-3">Фамилия:</label>
-                                                        <div class="col-md-5">
-                                                            <p></p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <div class="client-information client-info-basic"></div>
+                                            <div class="client-information client-info-contacts"></div>
                                         </div>
                                         <div class="contact-information" style="display: none;">
                                             <div class="contact-info">
@@ -193,7 +185,126 @@
                     <div class="footer">
                         <div class="row">
                             <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" id="submit-btn" style="background-color:#4BD1A0;">Добавить клиента</button>
+                                <button type="submit" name="add_child_btn" class="btn btn-login" id="submit-btn" style="background-color:#4BD1A0;">Добавить клиента</button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <form class="login-form target-table" id="form-2" action="{{ url_for('add_student') }}" method="post" style="display: none;">
+                    <div class="client-section">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4 class="title">Взрослый</h4>
+                                <div class="form-group">
+                                    <div class="row contact_selection">
+                                        <label class="control-label col-md-3">Данные клиента:</label>
+                                        <div class="col-md-3">
+                                            <select name="client_select" class="form-control client-select">
+                                                <option value="Добавить">Добавить</option>
+                                                <option value="Выбрать">Выбрать из списка</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="client-options-row" style="display: none;">
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Контакты:</label>
+                                            <div class="col-md-3">
+                                                <select name="selected_client" class="form-control client-options">
+                                                    {% for client in possible_clients %}
+                                                        <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="client-information client-info-basic"></div>
+                                    </div>
+                                    <div class="client-input" style="display: none;">
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Фамилия:</label>
+                                            <div class="col-md-5">
+                                                <input type="text" name="last_name" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Имя:</label>
+                                            <div class="col-md-5">
+                                                <input type="text" name="first_name" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Отчество:</label>
+                                            <div class="col-md-5">
+                                                <input type="text" name="patronym" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="client-status">
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Статус:</label>
+                                            <div class="col-md-3">
+                                                <select name="status" class="form-control" id="status-select-adult">
+                                                    <option value="Клиент">Клиент</option>
+                                                    <option value="Лид">Лид</option>
+                                                    <option value="Пауза">Пауза</option>
+                                                    <option value="Закрыт">Закрыт</option>
+                                                </select>
+                                            </div>
+                                            <div id="pause-date-adult" style="display: none;">
+                                                <label class="control-label col-md-1">до:</label>
+                                                <div class="col-md-3">
+                                                    <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div id="leaving-reason-adult" style="display: none;">
+                                                <label class="control-label col-md-3">Причина:</label>
+                                                <div class="col-md-5">
+                                                    <textarea name="leaving_reason" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="client-information client-info-contacts" style="display: none;"></div>
+                        <div class="client-input" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h4 class="title">Контакты</h4>
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Телеграм:</label>
+                                            <div class="col-md-5">
+                                                <input type="text" name="telegram_" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Телефон:</label>
+                                            <div class="col-md-5">
+                                                <input type="text" name="phone_" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Другое:</label>
+                                            <div class="col-md-5">
+                                                <input type="text" name="other_contact_" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button type="submit" name="add_adult_btn" class="btn btn-login" style="background-color:#4BD1A0;">Добавить клиента</button>
                             </div>
                             <div class="col-md-3">
                                 <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
@@ -205,5 +316,7 @@
         </div>
     </div>
 </div>
-
+<script type="text/javascript">
+    var clientsData = {{ clients | tojson | safe }};
+</script>
 {% endblock %}

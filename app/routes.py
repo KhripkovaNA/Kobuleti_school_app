@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
-from app.app_functions import create_student, handle_contact_info, basic_student_info, \
+from app.app_functions import add_child, add_adult, basic_student_info, \
     extensive_student_info, clients_data, week_lessons_dict, filter_lessons, copy_lessons, \
     week_school_lessons_dict, show_lesson, handle_lesson, class_students_info
 from app import app, db
@@ -37,7 +37,7 @@ def logout():
 @app.route('/students')
 @login_required
 def students():
-    all_students = Person.query.filter_by(person_type="Ребенок").order_by(Person.last_name).all()
+    all_students = Person.query.filter(Person.status.isnot(None)).order_by(Person.last_name, Person.first_name).all()
 
     for student in all_students:
         basic_student_info(student)
@@ -78,27 +78,28 @@ def deposit(student_id):
 @login_required
 def add_student():
     if request.method == 'POST':
-
         try:
-            student = create_student(request.form)
-            db.session.add(student)
-            db.session.commit()
+            if 'add_child_btn' in request.form:
+                student = add_child(request.form)
 
-            contact_count = int(request.form['contact_count'])
-            for i in range(1, contact_count + 1):
-                handle_contact_info(request.form, student, i)
+                flash('Новый клиент добавлен в систему.', 'success')
+                return redirect(url_for('show_student', student_id=student.id))
 
-            flash('Новый ученик добавлен в систему.', 'success')
-            return redirect(url_for('students'))
+            if 'add_adult_btn' in request.form:
+                client = add_adult(request.form)
+
+                flash('Новый клиент добавлен в систему.', 'success')
+                return redirect(url_for('show_student', student_id=client.id))
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Ошибка при добавлении ученика: {str(e)}', 'error')
+            flash(f'Ошибка при добавлении киента: {str(e)}', 'error')
             return redirect(url_for('add_student'))
 
-    clients = clients_data()
+    clients = clients_data('child')
+    possible_clients = clients_data('adult')
 
-    return render_template('add_student.html', clients=clients)
+    return render_template('add_student.html', clients=clients, possible_clients=possible_clients)
 
 
 @app.route('/student/<string:student_id>')
@@ -110,7 +111,7 @@ def show_student(student_id):
 
         return render_template('student.html', student=student)
     else:
-        flash("Такого клиента нет")
+        flash("Такого клиента нет", 'error')
         return redirect(url_for('students.html'))
 
 

@@ -5,7 +5,7 @@ from app import db
 from sqlalchemy import and_, or_
 
 
-def create_student(form):
+def create_student(form, student_type):
     last_name = form.get('last_name')
     first_name = form.get('first_name')
     patronym = form.get('patronym')
@@ -15,13 +15,14 @@ def create_student(form):
     pause_date = datetime.strptime(form.get('pause_until'), '%d.%m.%Y').date() \
         if form.get('pause_until') else None
     leaving_reason = form.get('leaving_reason')
+    person_type = "Ребенок" if student_type == 'child' else "Взрослый"
 
     student = Person(
         last_name=last_name,
         first_name=first_name,
         patronym=patronym,
         dob=dob,
-        person_type="Ребенок",
+        person_type=person_type,
         status=status,
         pause_until=pause_date,
         leaving_reason=leaving_reason
@@ -89,7 +90,7 @@ def handle_contact_info(form, student, i):
         student.parents.append(parent)
         assign_relation_type(form, student, parent, i)
 
-    if form['primary_contact'] == f'contact_{i}':
+    if form.get('primary_contact') == f'contact_{i}':
         student.primary_contact = contact.person_id
     db.session.commit()
 
@@ -108,11 +109,74 @@ def assign_relation_type(form, student, parent, i):
     db.session.execute(relation_entry)
 
 
+def add_child(form):
+    student = create_student(form, 'child')
+    db.session.add(student)
+    db.session.commit()
+
+    contact_count = int(form.get('contact_count'))
+    for i in range(1, contact_count + 1):
+        handle_contact_info(form, student, i)
+
+    return student
+
+
+def add_adult(form):
+    client_select = form.get('client_select')
+    if client_select == "Выбрать":
+        client_id = int(form.get('selected_client'))
+        client = Person.query.filter_by(id=client_id).first()
+        client.status = form.get('status')
+        client.pause_date = datetime.strptime(form.get('pause_until'), '%d.%m.%Y').date() \
+            if form.get('pause_until') else None
+        client.leaving_reason = form.get('leaving_reason')
+
+    else:
+        client = create_student(form, 'adult')
+        contact = create_contact(form, '')
+        db.session.add(client)
+        db.session.add(contact)
+        db.session.commit()
+        client.contacts.append(contact)
+        client.primary_contact = client.id
+
+    db.session.commit()
+
+    return client
+
+
+def clients_data(student_type):
+    if student_type == 'child':
+        all_clients = Person.query.order_by(Person.last_name, Person.first_name).all()
+    else:
+        all_clients = Person.query.filter(Person.status.is_(None)).order_by(Person.last_name, Person.first_name).all()
+    clients = []
+    for client in all_clients:
+        client_data = {
+            "id": client.id,
+            "last_name": client.last_name,
+            "first_name": client.first_name,
+            "patronym": client.patronym
+        }
+        if client.contacts:
+            client_data["telegram"] = client.contacts[0].telegram
+            client_data["phone"] = client.contacts[0].phone
+            client_data["other_contact"] = client.contacts[0].other_contact
+        else:
+            client_data["telegram"] = ""
+            client_data["phone"] = ""
+            client_data["other_contact"] = ""
+
+        clients.append(client_data)
+
+    return clients
+
+
 def format_student_info(student):
     if student.dob:
         student.birth_date = student.dob.strftime('%d.%m.%Y')
     if student.pause_until:
-        student.pause_date = student.pause_until.strftime('%d.%m.%Y')
+        student.pause_date = student.pause_until.strftime('%d.%m.%y')
 
     if student.status == "Закрыт":
         student.status_info = f"{student.status} причина: {student.leaving_reason}"
@@ -120,6 +184,10 @@ def format_student_info(student):
         student.status_info = f"{student.status} до {student.pause_date}"
     else:
         student.status_info = student.status
+        if student.balance > 0:
+            student.balance_plus = round(student.balance, 1)
+        elif student.balance < 0:
+            student.balance_minus = round(student.balance, 1)
 
 
 def format_main_contact(student):
@@ -144,9 +212,9 @@ def format_all_contacts(student):
     if student.contacts:
         if student.primary_contact == student.id:
             student.main_contact = student
-            student.main_contact.type = "Сам ребенок"
+            student.main_contact.type = "Сам клиент"
         else:
-            student.type = "Сам ребенок"
+            student.type = "Сам клиент"
             contacts.append(student)
 
     for parent in student.parents.all():
@@ -390,30 +458,6 @@ def show_lesson(subject, lesson_id):
     return subject_lesson
 
 
-def clients_data():
-    all_clients = Person.query.order_by(Person.last_name).all()
-    clients = []
-    for client in all_clients:
-        client_data = {
-            "id": client.id,
-            "last_name": client.last_name,
-            "first_name": client.first_name,
-            "patronym": client.patronym
-        }
-        if client.contacts:
-            client_data["telegram"] = client.contacts[0].telegram
-            client_data["phone"] = client.contacts[0].phone
-            client_data["other_contact"] = client.contacts[0].other_contact
-        else:
-            client_data["telegram"] = ""
-            client_data["phone"] = ""
-            client_data["other_contact"] = ""
-
-        clients.append(client_data)
-
-        return clients
-
-
 def create_lesson_dict(lesson):
     start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
     end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
@@ -559,7 +603,7 @@ def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher
 def filter_lessons(form):
     weekday = form.get('lessons_day')
     week = int(form.get('lessons_week'))
-    new_week = int(form.get('next_lessons_week'))
+    new_week = int(form.get('next_lessons_week')) - week
     subject_type = form.get('subject_type')
     school_classes = form.getlist('school_classes') if form.getlist('school_classes') else ["all"]
     room = form.get('room')

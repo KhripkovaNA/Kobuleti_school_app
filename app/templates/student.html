@@ -10,7 +10,7 @@
             <div class="card-content">
                 <div class="row">
                     <div class="col-md-12">
-                        <h4 class="title">Ребенок</h4>
+                        <h4 class="title">{{ student.person_type }}</h4>
                         <div class="form-group">
                             <div class="row">
                                 <label class="control-label col-md-3">Фамилия:</label>
@@ -34,16 +34,18 @@
                                     </p>
                                 </div>
                             </div>
-                            <div class="row">
-                                <label class="control-label col-md-3">Дата рождения:</label>
-                                <div class="col-md-3">
-                                    <p>
-                                        {% if student.birth_date %}
-                                            {{ student.birth_date }}
-                                        {% endif %}
-                                    </p>
+                            {% if student.person_type == 'Ребенок' %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Дата рождения:</label>
+                                    <div class="col-md-3">
+                                        <p>
+                                            {% if student.birth_date %}
+                                                {{ student.birth_date }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
+                            {% endif %}
                             <div class="row">
                                 <label class="control-label col-md-3">Статус:</label>
                                 <div class="col-md-3">

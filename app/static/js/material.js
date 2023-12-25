@@ -120,6 +120,23 @@ $(document).ready(function(){
         }
     });
 
+    $("#status-select-adult").on("change", function () {
+        const selectedStatus = $(this).val();
+        const pauseDate = $("#pause-date-adult");
+        const leavingReason = $("#leaving-reason-adult");
+
+        if (selectedStatus === "Пауза") {
+            pauseDate.show();
+            leavingReason.hide();
+        } else if (selectedStatus === "Закрыт") {
+            pauseDate.hide();
+            leavingReason.show();
+        } else {
+            pauseDate.hide();
+            leavingReason.hide();
+        }
+    });
+
     $("#status-select").trigger("change");
 
 //    var contactCount = $(".contact-section").length;
@@ -176,15 +193,14 @@ $(document).ready(function(){
         }
     });
 
-    $("#contact-sections").on("change", ".contact-options", function() {
-        var contactOptionsSelector = $(this);
-        var clientId = Number(contactOptionsSelector.val());
+    function updateClientInformation(selector, section) {
+        var clientId = Number(selector.val());
         var selectedClient = clientsData.filter(function(client) {
             return client.id === clientId;
         });
-        var contactSection = contactOptionsSelector.closest(".contact-section");
+        var selectedSection = selector.closest(section); //".contact-section"
 
-        contactSection.find(".client-information").html(`
+        selectedSection.find(".client-info-basic").html(`
             <div class="form-group" style="margin-top: 12px;">
                 <div class="row">
                     <label class="control-label col-md-3">Фамилия:</label>
@@ -204,6 +220,10 @@ $(document).ready(function(){
                         <p>${selectedClient[0].patronym}</p>
                     </div>
                 </div>
+            </div>
+        `);
+        selectedSection.find(".client-info-contacts").html(`
+            <div class="form-group" style="margin-top: 12px;">
                 <div class="row">
                     <label class="control-label col-md-3">Телеграм:</label>
                     <div class="col-md-3">
@@ -224,6 +244,10 @@ $(document).ready(function(){
                 </div>
             </div>
         `);
+    }
+
+    $("#contact-sections").on("change", ".contact-options", function() {
+        updateClientInformation($(this), ".contact-section");
     });
 
     $("#contact-sections").on("change", ".contact-select", function () {
@@ -245,7 +269,32 @@ $(document).ready(function(){
         }
     });
 
-//    $(".contact-select").trigger("change");
+    $(".contact-select").trigger("change");
+
+    $(".client-section").on("change", ".client-options", function() {
+        updateClientInformation($(this), ".client-section");
+    });
+
+    $(".client-section").on("change", ".client-select", function () {
+        var clientSelector = $(this);
+        var clientSection = clientSelector.closest(".client-section");
+        var clientOptionsRow = clientSection.find(".client-options-row");
+        var clientInput = clientSection.find(".client-input");
+        var clientInformation = clientSection.find(".client-information");
+
+        if (clientSelector.val() === "Добавить") {
+            clientInput.show();
+            clientOptionsRow.hide();
+            clientInformation.hide();
+        } else {
+            clientInput.hide();
+            clientOptionsRow.show();
+            clientInformation.show();
+            $(".client-options").trigger("change");
+        }
+    });
+
+    $(".client-select").trigger("change");
 
     $("#add-contact-btn").click(function() {
         var newContactSection = addContactSection();
