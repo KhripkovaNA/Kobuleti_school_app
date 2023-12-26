@@ -97,13 +97,8 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a href="{{ url_for('show_student', student_id=student.id) }}">
+                                                            <a href="{{ url_for('show_edit_student', student_id=student.id) }}">
                                                                 <i class="material-icons" style="color: purple;">info</i>Просмотр
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="{{ url_for('edit_student', student_id=student.id) }}">
-                                                                <i class="material-icons" style="color: purple;">edit</i>Изменить
                                                             </a>
                                                         </li>
                                                         <li>

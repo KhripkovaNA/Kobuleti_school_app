@@ -729,5 +729,6 @@ def check_parent(student, i):
 
 # if 'change_btn' in request.form:
 
-
+adult_client = Person.query.filter_by(person_type='Взрослый', status='Клиент').first()
+print(adult_client)
 

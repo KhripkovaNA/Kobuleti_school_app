@@ -104,7 +104,7 @@ def add_student():
 
 @app.route('/student/<string:student_id>')
 @login_required
-def show_student(student_id):
+def show_edit_student(student_id):
     student = Person.query.filter_by(id=student_id).first()
     if student:
         extensive_student_info(student)

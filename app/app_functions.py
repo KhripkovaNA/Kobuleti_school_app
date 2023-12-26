@@ -212,9 +212,9 @@ def format_all_contacts(student):
     if student.contacts:
         if student.primary_contact == student.id:
             student.main_contact = student
-            student.main_contact.type = "Сам клиент"
+            student.main_contact.type = "Сам ребенок"
         else:
-            student.type = "Сам клиент"
+            student.type = "Сам ребенок"
             contacts.append(student)
 
     for parent in student.parents.all():

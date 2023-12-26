@@ -1,6 +1,7 @@
 $(document).ready(function(){
     adjustClassBoxWidth();
 
+    // Toggle the sidebar visibility and adjust widths accordingly
     $("#toggle-sidebar").click(function(){
         if ($(".sidebar").is(":visible")) {
             $(".sidebar").hide();
@@ -13,6 +14,7 @@ $(document).ready(function(){
         }
     });
 
+    // Initialize perfectScrollbar for various elements
     $('.sidebar .sidebar-wrapper, .main-panel, .scroll-table, .scroll-timetable').perfectScrollbar();
     $('.scroll-table-body').perfectScrollbar({
         suppressScrollX: true
@@ -22,12 +24,14 @@ $(document).ready(function(){
         adjustClassBoxWidth();
     });
 
+    // Adjust the width of class boxes based on the width of table cells
     function adjustClassBoxWidth() {
         var tdWidth = $('.table td').width();
         var classBoxWidth = tdWidth - 10;
         $('.class-box').width(classBoxWidth);
     }
 
+    // Switch between sections
     $('.switch-button').on('click', function() {
         $('.switch-button').removeClass('btn-success');
         $(this).addClass('btn-success');
@@ -36,6 +40,18 @@ $(document).ready(function(){
         $('#' + targetTable).show();
     });
 
+    // Switch between sections and forms
+    function toggleSectionAndForm() {
+        $(document).on('click', '.section-form-btn', function() {
+            var parent = $(this).closest('.section, .form');
+            var target = parent.data('target');
+            $('.section-' + target + ', .form-' + target).toggle();
+        });
+    }
+
+    toggleSectionAndForm();
+
+    // Open comment cell
     $(document).on("click", ".comment-cell", function () {
         var commentFormContainer = $(this).find(".comment-form-container");
         var commentContainer = $(this).find(".comment-container");
@@ -48,6 +64,7 @@ $(document).ready(function(){
         }
     });
 
+    // Close comment cell by clicking anywhere
     $(document).mouseup(function (e) {
         var container = $(".comment-form-container");
 
@@ -58,6 +75,7 @@ $(document).ready(function(){
         }
     });
 
+    // Comment submitting to the database
     $(document).on("submit", ".comment-form", function (e) {
         e.preventDefault();
 
@@ -86,6 +104,7 @@ $(document).ready(function(){
         commentFormContainer.hide();
     });
 
+    // Date and time pickers settings
     $.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
     $(".datepicker").datepicker({
         dateFormat: "dd.mm.yy",
@@ -103,10 +122,11 @@ $(document).ready(function(){
         }
     });
 
-    $("#status-select").on("change", function () {
-        const selectedStatus = $(this).val();
-        const pauseDate = $("#pause-date");
-        const leavingReason = $("#leaving-reason");
+    // Handle the change event for the status select dropdown when adding or editing a new client
+    function handleStatusChange(statusSelect, pauseDateId, leavingReasonId) {
+        const selectedStatus = statusSelect.val();
+        const pauseDate = $(pauseDateId);
+        const leavingReason = $(leavingReasonId);
 
         if (selectedStatus === "Пауза") {
             pauseDate.show();
@@ -118,28 +138,20 @@ $(document).ready(function(){
             pauseDate.hide();
             leavingReason.hide();
         }
+    }
+
+    $("#status-select").on("change", function () {
+        handleStatusChange($(this), "#pause-date", "#leaving-reason");
     });
 
     $("#status-select-adult").on("change", function () {
-        const selectedStatus = $(this).val();
-        const pauseDate = $("#pause-date-adult");
-        const leavingReason = $("#leaving-reason-adult");
-
-        if (selectedStatus === "Пауза") {
-            pauseDate.show();
-            leavingReason.hide();
-        } else if (selectedStatus === "Закрыт") {
-            pauseDate.hide();
-            leavingReason.show();
-        } else {
-            pauseDate.hide();
-            leavingReason.hide();
-        }
+        handleStatusChange($(this), "#pause-date-adult", "#leaving-reason-adult");
     });
 
     $("#status-select").trigger("change");
 
-//    var contactCount = $(".contact-section").length;
+    //  ------  var contactCount = $(".contact-section").length; -----  //
+    // Function to add a new contact section
     var contactCount = 1
     function addContactSection() {
         contactCount++;
@@ -167,14 +179,12 @@ $(document).ready(function(){
         return contactSection;
     }
 
-    $("#contact-sections").on("change", ".contact-relation", function () {
+    $("#contact-sections, #show-contacts").on("change", ".contact-relation", function () {
         var relationSelector = $(this);
         var contactSection = relationSelector.closest(".contact-section");
         var otherRelationRow = contactSection.find(".relation-other-row");
         var contactInfoDiv = contactSection.find(".contact-info");
         var contactSelection = contactSection.find(".contact_selection")
-        var contactInformation = contactSection.find(".contact-information");
-        var clientInformation = contactSection.find(".client-information");
 
         if (relationSelector.val() === "Другое") {
             otherRelationRow.show();
@@ -184,8 +194,6 @@ $(document).ready(function(){
             otherRelationRow.hide();
             contactInfoDiv.hide();
             contactSelection.hide();
-            contactInformation.hide();
-            clientInformation.hide();
         } else {
             otherRelationRow.hide();
             contactInfoDiv.show();
@@ -198,7 +206,7 @@ $(document).ready(function(){
         var selectedClient = clientsData.filter(function(client) {
             return client.id === clientId;
         });
-        var selectedSection = selector.closest(section); //".contact-section"
+        var selectedSection = selector.closest(section);
 
         selectedSection.find(".client-info-basic").html(`
             <div class="form-group" style="margin-top: 12px;">
