@@ -97,67 +97,39 @@ def create_parent(student_info, i):
     return new_parent
 
 
-def handle_contact_info(student_info, student, i):
-    contact_select = student_info["contact_select"][i]
-    relation_type = student_info["relation"][i]
-
-    if relation_type == "Сам ребенок":
-        contact = create_contact(student_info, i)
-        db.session.add(contact)
-        db.session.commit()
-
-        student.contacts.append(contact)
-
-    else:
-        if contact_select == "Выбрать":
-            parent_id = int(student_info["selected_contact"][i])
-            parent = Person.query.filter_by(id=parent_id).first()
-            contact = Contact.query.filter_by(person_id=parent_id).first()
-
-        else:
-            contact = create_contact(student_info, i)
-            parent = create_parent(student_info, i)
-            db.session.add(parent)
-            db.session.add(contact)
-            db.session.commit()
-
-            parent.contacts.append(contact)
-            parent.primary_contact = parent.id
-
-        student.parents.append(parent)
-        assign_relation_type(student_info, student, parent, i)
-
-    if student_info['primary_contact'] == i:
-        student.primary_contact = contact.person_id
-    db.session.commit()
-
-
-def assign_relation_type(student_info, student, parent, i):
-    relation_type = student_info["relation"][i]
-
-    if relation_type:
-        relation_entry = parent_child_table.update().where(
-            (parent_child_table.c.parent_id == parent.id) &
-            (parent_child_table.c.child_id == student.id)
-        ).values(relation=relation_type)
-
-        db.session.execute(relation_entry)
-
-
-def add_student(student_info):
-    try:
-        student = create_student(student_info)
-        db.session.add(student)
-        db.session.commit()
-
-        contact_count = len(student_info["contact_select"])
-        for i in range(1, contact_count + 1):
-            handle_contact_info(student_info, student, i)
-        print('Новый ученик добавлен в систему.')
-
-    except Exception as e:
-        db.session.rollback()
-        print(f'Ошибка при добавлении ученика: {str(e)}')
+# def handle_contact_info(student_info, student, i):
+#     contact_select = student_info["contact_select"][i]
+#     relation_type = student_info["relation"][i]
+#
+#     if relation_type == "Сам ребенок":
+#         contact = create_contact(student_info, i)
+#         db.session.add(contact)
+#         db.session.commit()
+#
+#         student.contacts.append(contact)
+#
+#     else:
+#         if contact_select == "Выбрать":
+#             parent_id = int(student_info["selected_contact"][i])
+#             parent = Person.query.filter_by(id=parent_id).first()
+#             contact = Contact.query.filter_by(person_id=parent_id).first()
+#
+#         else:
+#             contact = create_contact(student_info, i)
+#             parent = create_parent(student_info, i)
+#             db.session.add(parent)
+#             db.session.add(contact)
+#             db.session.commit()
+#
+#             parent.contacts.append(contact)
+#             parent.primary_contact = parent.id
+#
+#         student.parents.append(parent)
+#         assign_relation_type(student_info, student, parent, i)
+#
+#     if student_info['primary_contact'] == i:
+#         student.primary_contact = contact.person_id
+#     db.session.commit()
 
 
 def delete_record(table_model, record_id):
@@ -707,28 +679,5 @@ def check_parent(student, i):
         print(student['student']['last_name'], student['student']['first_name'], new_parent.last_name, new_parent.first_name, *[person.id for person in matching_persons])
 
 
-# school_class = SchoolClass.query.filter_by(school_name='Андрей').first()
-# last_name, first_name = andrew['student']['last_name'], andrew['student']['first_name']
-# student_db = Person.query.filter_by(last_name=last_name, first_name=first_name).first()
-# print(school_class.school_name + ': ', student_db.id, student_db.last_name, student_db.first_name)
-
-
-# school_class = SchoolClass.query.filter_by(school_name='Андрей').first()
-# last_name, first_name = andrew['student']['last_name'], andrew['student']['first_name']
-# student_db = Person.query.filter_by(last_name=last_name, first_name=first_name).first()
-# school_class.school_students.append(student_db)
-# db.session.commit()
-
-# print(school_class.school_name + ': ', *[stu.first_name for stu in school_class.school_students])
-
-# print_table(SchoolClass)
-# all_mamas = db.session.query(parent_child_table.c.parent_id).filter(parent_child_table.c.relation == 'Мама').all()
-# for mama in all_mamas:
-#     mama_parent = Person.query.filter_by(id=mama[0]).first()
-#     print(mama_parent.last_name, mama_parent.first_name)
-
-# if 'change_btn' in request.form:
-
-adult_client = Person.query.filter_by(person_type='Взрослый', status='Клиент').first()
-print(adult_client)
-
+test_student = Person.query.filter_by(id=141).first()
+print(bool(test_student.subjects.all()))

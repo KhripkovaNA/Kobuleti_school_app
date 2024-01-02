@@ -254,11 +254,11 @@ $(document).ready(function(){
         `);
     }
 
-    $("#contact-sections").on("change", ".contact-options", function() {
+    $("#contact-sections, #show-contacts").on("change", ".contact-options", function() {
         updateClientInformation($(this), ".contact-section");
     });
 
-    $("#contact-sections").on("change", ".contact-select", function () {
+    $("#contact-sections, #show-contacts").on("change", ".contact-select", function () {
         var contactSelector = $(this);
         var contactSection = contactSelector.closest(".contact-section");
         var contactOptionsRow = contactSection.find(".contact-options-row");
@@ -337,6 +337,10 @@ $(document).ready(function(){
     $('#show-subscriptions-btn').click(function () {
         $('#show-subjects, #show-contacts').hide();
         $('#show-subscriptions').show();
+    });
+
+    $('#show-new-contact-btn, #hide-new-contact-btn').click(function () {
+        $('#show-new-contact, #new-contact-form').toggle();
     });
 
     $(".change_contact_btn").click(function() {

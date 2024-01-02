@@ -64,14 +64,14 @@ def handle_contact_info(form, student, i):
     contact_select = form.get(f'contact_select_{i}')
     relation_type = form.get(f'relation_{i}')
 
-    if relation_type == "Сам ребенок":
+    if relation_type == "Сам ребенок" and not student.contacts:
         contact = create_contact(form, i)
         db.session.add(contact)
         db.session.commit()
 
         student.contacts.append(contact)
 
-    else:
+    elif relation_type != "Сам ребенок":
         if contact_select == "Выбрать":
             parent_id = int(form.get(f'selected_contact_{i}'))
             parent = Person.query.filter_by(id=parent_id).first()
@@ -89,6 +89,8 @@ def handle_contact_info(form, student, i):
 
         student.parents.append(parent)
         assign_relation_type(form, student, parent, i)
+    else:
+        return
 
     if form.get('primary_contact') == f'contact_{i}':
         student.primary_contact = contact.person_id
@@ -236,29 +238,33 @@ def format_subjects_and_subscriptions(student):
     school = []
 
     if student.school_class:
-        school.append(student.school_class.school_name)
+        school.append((student.school_class.school_name, 0))
 
     for subscription in student.subscriptions:
         if subscription.active:
             subject = subscription.subject
             if subject.subject_type.name != "after_school":
-                end_date = subscription.purchase_date + timedelta(days=subscription.subscription_type.duration)
                 subscription_dict = {
+                    'subscription_id': subscription.id,
                     'subject_name': subject.name,
                     'lessons_left': subscription.lessons_left,
-                    'end_date': end_date.strftime('%d.%m')
+                    'end_date': subscription.end_date.strftime('%d.%m.%Y')
                 }
                 subscriptions.append(subscription_dict)
             else:
-                school.append(subject.name)
+                school.append((subject.name, subject.id))
             subscriptions_set.add(subject.name)
 
-    student.school_info = school
+    student.extra_subjects = sorted([subject.name for subject in student.subjects
+                                     if subject.name not in subscriptions_set and
+                                     subject.subject_type.name != "school"])
 
-    student.subjects_info = [subject.name for subject in student.subjects
-                             if subject.name not in subscriptions_set and
-                             subject.subject_type.name != "school"]
+    student.subjects_info = [sc[0] for sc in school] + student.extra_subjects
+
     student.subscriptions_info = subscriptions
+
+    student.all_subjects = school + sorted([(subject.name, subject.id) for subject in student.subjects
+                                            if subject.subject_type.name not in ["after_school", "school"]])
 
 
 def basic_student_info(student):
@@ -273,6 +279,63 @@ def extensive_student_info(student):
     format_subjects_and_subscriptions(student)
 
 
+def handle_student_edit(form, student):
+    if 'form_student_submit' in form:
+        student.last_name = form.get('last_name')
+        student.first_name = form.get('first_name')
+        student.patronym = form.get('patronym')
+        student.dob = datetime.strptime(form.get('dob'), '%d.%m.%Y').date() \
+            if form.get('dob') else None
+        student.status = form.get('status')
+        if student.status == "Закрыт":
+            student.subjects = []
+            student.subscriptions = []
+        student.pause_date = datetime.strptime(form.get('pause_until'), '%d.%m.%Y').date() \
+            if form.get('pause_until') else None
+        student.leaving_reason = form.get('leaving_reason')
+        db.session.commit()
+
+    if 'form_main_contact_submit' in form:
+        main_contact = student.main_contact
+        main_contact.contacts[0].telegram = form.get('telegram_main')
+        main_contact.contacts[0].phone = form.get('phone_main')
+        main_contact.contacts[0].other_contact = form.get('other_contact_main')
+        if main_contact.id != student.id:
+            main_contact.last_name = form.get('parent_last_name_main')
+            main_contact.first_name = form.get('parent_first_name_main')
+            main_contact.patronym = form.get('parent_patronym_main')
+        db.session.commit()
+
+    for i, contact in enumerate(student.additional_contacts, 1):
+        if f'form_cont_{i}_submit' in form:
+            contact.contacts[0].telegram = form.get(f'telegram_{i}')
+            contact.contacts[0].phone = form.get(f'phone_{i}')
+            contact.contacts[0].other_conta = form.get(f'other_contact_{i}')
+            if contact.id != student.id:
+                contact.last_name = form.get(f'parent_last_name_{i}')
+                contact.first_name = form.get(f'parent_first_name_{i}')
+                contact.patronym = form.get(f'parent_patronym_{i}')
+            if form.get(f'primary_contact_{i}') == 'on':
+                student.primary_contact = contact.id
+            db.session.commit()
+
+    if 'form_cont_new_submit' in form:
+        handle_contact_info(form, student, 'new')
+
+    if 'del_subject_btn' in form:
+        del_subject_id = int(form.get('del_subject_btn'))
+        del_subject = Subject.query.filter_by(id=del_subject_id).first()
+        if del_subject in student.subjects:
+            student.subjects.remove(del_subject)
+            db.session.commit()
+
+    if 'form_subscriptions_submit' in form:
+        for subscription in student.subscriptions:
+            subscription.lessons_left = form.get(f'subscription_{subscription.id}_lessons')
+            subscription.end_date = form.get(f'subscription_{subscription.id}_end_date')
+        db.session.commit()
+
+
 def check_subscription(student):
     today = datetime.today().date()
     for subscription in student.subscriptions:
@@ -280,9 +343,8 @@ def check_subscription(student):
             subscription.active = True if subscription.purchase_date.month == today.month else False
             db.session.commit()
         else:
-            subscription_expired = subscription.purchase_date + timedelta(days=subscription.subscription_type.duration)
             cond1 = subscription.purchase_date > today
-            cond2 = subscription_expired < today
+            cond2 = subscription.end_date < today
             cond3 = subscription.lessons_left <= 0
             subscription.active = False if (cond1 or cond2 or cond3) else True
             db.session.commit()
@@ -300,10 +362,8 @@ def check_payment_option(student, subject_id):
     student_balance = round(student.balance, 1)
     payment_option = {'balance': student_balance}
     if subscription and subject_id != after_school.id:
-        exp_date = (subscription.purchase_date +
-                    timedelta(days=subscription.subscription_type.duration)).strftime('%d.%m')
         payment_option['type'] = 'Абонемент'
-        payment_option['exp_date'] = exp_date
+        payment_option['exp_date'] = subscription.end_date.strftime('%d.%m')
         payment_option['lessons'] = subscription.lessons_left
     elif after_school_sub:
         payment_option['type'] = 'Продленка'

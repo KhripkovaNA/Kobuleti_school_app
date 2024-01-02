@@ -50,19 +50,14 @@
                                                             {{ subject.name }}{{ "," if not loop.last }}
                                                         {% endfor %}
                                                     {% else %}
-                                                        {% if student.school_info %}
-                                                            {% for info in student.school_info %}
-                                                                {{ info }}{{ "," if not loop.last }}{{ "," if loop.last and (student.subscriptions_info or student.subjects_info) }}
+                                                        {% if student.subjects_info %}
+                                                            {% for subject in student.subjects_info %}
+                                                                {{ subject }}{{ "," if not loop.last }}{{ "," if loop.last and student.subscriptions_info }}
                                                             {% endfor %}
                                                         {% endif %}
                                                         {% if student.subscriptions_info %}
                                                             {% for subscription in student.subscriptions_info %}
-                                                                {{ subscription.subject_name }}({{ subscription.lessons_left }}){{ "," if not loop.last }}{{ "," if loop.last and student.subjects_info }}
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                        {% if student.subjects_info %}
-                                                            {% for subject in student.subjects_info %}
-                                                                {{ subject }}{{ "," if not loop.last }}
+                                                                {{ subscription.subject_name }}({{ subscription.lessons_left }}){{ "," if not loop.last }}
                                                             {% endfor %}
                                                         {% endif %}
                                                     {% endif %}

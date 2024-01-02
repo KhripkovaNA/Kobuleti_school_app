@@ -155,6 +155,7 @@ class Subscription(db.Model):
     subscription_type_id = db.Column(db.Integer, db.ForeignKey('subscription_types.id'))
     lessons_left = db.Column(db.Integer)
     purchase_date = db.Column(db.Date, default=datetime.today().date())
+    end_date = db.Column(db.Date)
     active = db.Column(db.Boolean, default=False)
 
 

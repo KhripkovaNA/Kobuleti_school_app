@@ -1,8 +1,8 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
-from app.app_functions import add_child, add_adult, basic_student_info, \
-    extensive_student_info, clients_data, week_lessons_dict, filter_lessons, copy_lessons, \
+from app.app_functions import add_child, add_adult, basic_student_info, extensive_student_info, \
+    handle_student_edit, clients_data, week_lessons_dict, filter_lessons, copy_lessons, \
     week_school_lessons_dict, show_lesson, handle_lesson, class_students_info
 from app import app, db
 from datetime import datetime, timedelta
@@ -89,7 +89,7 @@ def add_student():
                 client = add_adult(request.form)
 
                 flash('Новый клиент добавлен в систему.', 'success')
-                return redirect(url_for('show_student', student_id=client.id))
+                return redirect(url_for('show_edit_student', student_id=client.id))
 
         except Exception as e:
             db.session.rollback()
@@ -102,28 +102,39 @@ def add_student():
     return render_template('add_student.html', clients=clients, possible_clients=possible_clients)
 
 
-@app.route('/student/<string:student_id>')
+@app.route('/student/<string:student_id>', methods=['GET', 'POST'])
 @login_required
 def show_edit_student(student_id):
     student = Person.query.filter_by(id=student_id).first()
     if student:
         extensive_student_info(student)
+        clients = clients_data('child')
 
-        return render_template('student.html', student=student)
+        if request.method == 'POST':
+            try:
+                handle_student_edit(request.form, student)
+                flash('Изменения внесены.', 'success')
+                return redirect(url_for('show_edit_student', student_id=student.id))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+                return redirect(url_for('show_edit_student', student_id=student.id))
+
+        return render_template('student.html', student=student, clients=clients)
     else:
         flash("Такого клиента нет", 'error')
         return redirect(url_for('students.html'))
 
 
-@app.route('/edit-student/<string:student_id>', methods=['GET', 'POST'])
-@login_required
-def edit_student(student_id):
-    student = Person.query.filter_by(id=student_id).first()
-    if student:
-        extensive_student_info(student)
-    clients = clients_data()
-
-    return render_template('edit_student.html', student=student, clients=clients)
+# @app.route('/edit-student/<string:student_id>', methods=['GET', 'POST'])
+# @login_required
+# def edit_student(student_id):
+#     student = Person.query.filter_by(id=student_id).first()
+#     if student:
+#         extensive_student_info(student)
+#     clients = clients_data()
+#
+#     return render_template('edit_student.html', student=student, clients=clients)
 
 
 @app.route('/teachers')
