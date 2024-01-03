@@ -1,5 +1,18 @@
 $(document).ready(function(){
+
+    // Adjust the width of class boxes based on the width of table cells
+    function adjustClassBoxWidth() {
+        var tdWidth = $('.table td').width();
+        var classBoxWidth = tdWidth - 10;
+        $('.class-box').width(classBoxWidth);
+    }
+
     adjustClassBoxWidth();
+
+    // Adjust the width of class boxes when resizing window
+    $(window).resize(function () {
+        adjustClassBoxWidth();
+    });
 
     // Toggle the sidebar visibility and adjust widths accordingly
     $("#toggle-sidebar").click(function(){
@@ -19,17 +32,6 @@ $(document).ready(function(){
     $('.scroll-table-body').perfectScrollbar({
         suppressScrollX: true
     });
-
-    $(window).resize(function () {
-        adjustClassBoxWidth();
-    });
-
-    // Adjust the width of class boxes based on the width of table cells
-    function adjustClassBoxWidth() {
-        var tdWidth = $('.table td').width();
-        var classBoxWidth = tdWidth - 10;
-        $('.class-box').width(classBoxWidth);
-    }
 
     // Switch between sections
     $('.switch-button').on('click', function() {
@@ -75,7 +77,7 @@ $(document).ready(function(){
         }
     });
 
-    // Comment submitting to the database
+    // Comment submission to the database
     $(document).on("submit", ".comment-form", function (e) {
         e.preventDefault();
 
@@ -113,6 +115,7 @@ $(document).ready(function(){
 
     $('.timepicker').wickedpicker();
 
+    // Hide date and time pickers when scrolling
     $(".main-panel").on("scroll", function() {
         if ($(".datepicker").datepicker("widget").is(":visible")) {
             $(".datepicker").datepicker("hide");
@@ -140,19 +143,20 @@ $(document).ready(function(){
         }
     }
 
+    // Handle status select changing for children
     $("#status-select").on("change", function () {
         handleStatusChange($(this), "#pause-date", "#leaving-reason");
     });
 
+    // Handle status select changing for adults
     $("#status-select-adult").on("change", function () {
         handleStatusChange($(this), "#pause-date-adult", "#leaving-reason-adult");
     });
 
     $("#status-select").trigger("change");
 
-    //  ------  var contactCount = $(".contact-section").length; -----  //
-    // Function to add a new contact section
     var contactCount = 1
+    // Function to add a new contact section dynamically
     function addContactSection() {
         contactCount++;
         var contactSection = $(".contact-section").first().clone();
@@ -179,6 +183,7 @@ $(document).ready(function(){
         return contactSection;
     }
 
+    // Handle the change event for the relation select dropdown when adding or editing a new client
     $("#contact-sections, #show-contacts").on("change", ".contact-relation", function () {
         var relationSelector = $(this);
         var contactSection = relationSelector.closest(".contact-section");
@@ -201,6 +206,7 @@ $(document).ready(function(){
         }
     });
 
+    // Function to update client information when adding or editing a new client
     function updateClientInformation(selector, section) {
         var clientId = Number(selector.val());
         var selectedClient = clientsData.filter(function(client) {
@@ -254,10 +260,12 @@ $(document).ready(function(){
         `);
     }
 
+    // Update contact information based on selected person
     $("#contact-sections, #show-contacts").on("change", ".contact-options", function() {
         updateClientInformation($(this), ".contact-section");
     });
 
+    // Handle the change event for selection between adding a new contact and choosing existing
     $("#contact-sections, #show-contacts").on("change", ".contact-select", function () {
         var contactSelector = $(this);
         var contactSection = contactSelector.closest(".contact-section");
@@ -279,10 +287,12 @@ $(document).ready(function(){
 
     $(".contact-select").trigger("change");
 
+    // Update client information based on selected person
     $(".client-section").on("change", ".client-options", function() {
         updateClientInformation($(this), ".client-section");
     });
 
+    // Handle the change event for selection between adding a new client and choosing existing
     $(".client-section").on("change", ".client-select", function () {
         var clientSelector = $(this);
         var clientSection = clientSelector.closest(".client-section");
@@ -304,6 +314,7 @@ $(document).ready(function(){
 
     $(".client-select").trigger("change");
 
+    // Add a new contact form when adding a new client
     $("#add-contact-btn").click(function() {
         var newContactSection = addContactSection();
         newContactSection.appendTo("#contact-sections");
@@ -312,6 +323,7 @@ $(document).ready(function(){
         }
     });
 
+    // Remove a contact form when adding a new client
     $("#remove-contact").click(function() {
         $("#contact-sections .contact-section:last").remove();
         contactCount--;
@@ -320,59 +332,59 @@ $(document).ready(function(){
         }
     });
 
+    // Pass contact count information when submitting a new client
     $("#submit-btn").click(function() {
         $('#contact-count').val(contactCount);
     });
 
-    $('#show-contacts-btn').click(function () {
-        $('#show-subjects, #show-subscriptions').hide();
-        $('#show-contacts').show();
+    // Function to switch between different sections based on button clicks
+    function handleTabButtonClick(buttonId) {
+        var targetId = '#' + buttonId.replace('-btn', '');
+        $('#show-subjects, #show-contacts, #show-subscriptions').hide();
+        $(targetId).show();
+    }
+
+    // Show different sections based on button clicks
+    $('#show-contacts-btn, #show-subjects-btn, #show-subscriptions-btn').click(function () {
+        handleTabButtonClick(this.id);
     });
 
-    $('#show-subjects-btn').click(function () {
-        $('#show-contacts, #show-subscriptions').hide();
-        $('#show-subjects').show();
-    });
+//    $('#show-contacts-btn').click(function () {
+//        $('#show-subjects, #show-subscriptions').hide();
+//        $('#show-contacts').show();
+//    });
+//
+//    $('#show-subjects-btn').click(function () {
+//        $('#show-contacts, #show-subscriptions').hide();
+//        $('#show-subjects').show();
+//    });
+//
+//    $('#show-subscriptions-btn').click(function () {
+//        $('#show-subjects, #show-contacts').hide();
+//        $('#show-subscriptions').show();
+//    });
 
-    $('#show-subscriptions-btn').click(function () {
-        $('#show-subjects, #show-contacts').hide();
-        $('#show-subscriptions').show();
-    });
-
+    // Toggle new contact form when editing a client
     $('#show-new-contact-btn, #hide-new-contact-btn').click(function () {
         $('#show-new-contact, #new-contact-form').toggle();
     });
 
-    $(".change_contact_btn").click(function() {
-        var containerNumber = $(this).closest(".form-group").attr("id").split("-").pop();
-        var containerId = "#contact-info-" + containerNumber;
-        var formId = "#contact-form-" + containerNumber;
-
-        $(containerId).hide();
-        $(formId).show();
+    // Toggle client selector based on button clicks
+    $("#add-client-btn, #cancel-add-client-btn").click(function() {
+        $("#clientSelector, #add-client-btn").toggle();
     });
 
-    $(".cancel_form_btn").click(function() {
-        event.preventDefault();
+//    $("#add-client-btn").click(function() {
+//        $("#clientSelector").show();
+//        $("#add-client-btn").hide();
+//    });
+//
+//    $("#cancel-add-client-btn").click(function() {
+//        $("#add-client-btn").show();
+//        $("#clientSelector").hide();
+//    });
 
-        var containerNumber = $(this).closest(".login-form").attr("id").split("-").pop();
-        var formId = "#contact-form-" + containerNumber;
-        var containerId = "#contact-info-" + containerNumber;
-
-        $(formId).hide();
-        $(containerId).show();
-    });
-
-    $("#add-client-btn").click(function() {
-        $("#clientSelector").show();
-        $("#add-client-btn").hide();
-    });
-
-    $("#cancel-add-client-btn").click(function() {
-        $("#add-client-btn").show();
-        $("#clientSelector").hide();
-    });
-
+    // Show dropdown by clicking on a specific object
     window.showDropdown = function(objectId, event) {
         $('.dropdown-content').hide();
         $(`#dropdown-${objectId}`).toggle().css({
@@ -382,10 +394,12 @@ $(document).ready(function(){
         event.stopPropagation();
     }
 
+    // Hide dropdown when clicking anywhere
     $(document).on('click', function () {
         $('.dropdown-content').hide();
     });
 
+    // Handle the change event for subject types selector
     $("#subject-type-select").on("change", function () {
         const selectedType = $(this).val();
         const classSelect = $("select[name='school_classes']");
@@ -398,6 +412,33 @@ $(document).ready(function(){
             classSelect.val(null);
         }
     });
+
+    // Handle the change event for subscription subject selector
+    $('.subscription-subject-select').change(function () {
+        var subjectId = Number($(this).val());
+        console.log(subjectId)
+        var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
+            return subject.id === subjectId;
+        });
+        console.log(selectedSubject[0].id)
+        const subscriptionTypeSelector = $('.subscription-type-select');
+
+        subscriptionTypeSelector.empty();
+
+        $.each(selectedSubject[0].subscription_types_info, function (index, subscriptionType) {
+            subscriptionTypeSelector.append(`<option value="${index}">${subscriptionType}</option>`);
+        });
+
+        subscriptionTypeSelector.change(function () {
+            var subscriptionType = $(this).val();
+            const priceDisplay = $('#price-display');
+            priceDisplay.html(`<b>${selectedSubject[0].price_info[subscriptionType]}</b>`);
+        });
+
+        subscriptionTypeSelector.trigger("change");
+    });
+
+    $('.subscription-subject-select').trigger("change");
 
 });
 

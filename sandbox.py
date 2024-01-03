@@ -325,7 +325,9 @@ def add_lesson(lesson_info):
 
 
 def print_subjects():
-    existing_subjects = [f'{subject.id}\t{subject.name}\t{subject.short_name}' for subject in Subject.query.all()]
+    existing_subjects = [f'{subject.id}\t{subject.name}\t{subject.short_name}\t{subject.subject_type.description}' +
+                         '\tабонемент ' + ('+' if subject.subscription_types.all() else '-')
+                         for subject in Subject.query.all()]
     print(*existing_subjects, sep='\n')
 
 
@@ -679,5 +681,42 @@ def check_parent(student, i):
         print(student['student']['last_name'], student['student']['first_name'], new_parent.last_name, new_parent.first_name, *[person.id for person in matching_persons])
 
 
-test_student = Person.query.filter_by(id=141).first()
-print(bool(test_student.subjects.all()))
+def subscription_subjects_data():
+    filtered_subjects = Subject.query.filter(Subject.subscription_types.any(SubscriptionType.id.isnot(None)),
+                                             Subject.subject_type.has(SubjectType.name.isnot("after_school"))).all()
+    subscription_subjects = []
+    for subject in filtered_subjects:
+        subject_data = {
+            "id": subject.id,
+            "price_info": {subscription_type.id: f"{subscription_type.price:.0f}"
+                           for subscription_type in subject.subscription_types},
+            "subscription_types_info": {
+                subscription_type.id: f"кол-во занятий: {subscription_type.lessons}, " +
+                                      f"срок действия: {subscription_type.duration} дней"
+                for subscription_type in subject.subscription_types
+            }
+        }
+        subscription_subjects.append(subject_data)
+
+    return subscription_subjects
+
+
+def conjugate_lessons(number):
+    last_digit = number % 10
+    last_two_digits = number % 100
+
+    if 10 <= last_two_digits <= 20:
+        return f"{number} занятий"
+    elif last_digit == 1:
+        return f"{number} занятие"
+    elif 2 <= last_digit <= 4:
+        return f"{number} занятия"
+    else:
+        return f"{number} занятий"
+
+
+# Example usage:
+number_of_lessons = 4
+result = conjugate_lessons(number_of_lessons)
+print(result)
+

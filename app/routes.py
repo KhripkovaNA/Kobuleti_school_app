@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
 from app.app_functions import add_child, add_adult, basic_student_info, extensive_student_info, \
     handle_student_edit, clients_data, week_lessons_dict, filter_lessons, copy_lessons, \
-    week_school_lessons_dict, show_lesson, handle_lesson, class_students_info
+    week_school_lessons_dict, show_lesson, handle_lesson, class_students_info, subscription_subjects_data
 from app import app, db
 from datetime import datetime, timedelta
 
@@ -41,8 +41,11 @@ def students():
 
     for student in all_students:
         basic_student_info(student)
+    subscription_subjects = subscription_subjects_data()
+    today = datetime.now().date().strftime("%d.%m.%Y")
 
-    return render_template('students.html', students=all_students)
+    return render_template('students.html', students=all_students,
+                           subscription_subjects=subscription_subjects, today=today)
 
 
 @app.route('/add-comment', methods=['POST'])
