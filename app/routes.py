@@ -3,7 +3,8 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
 from app.app_functions import add_child, add_adult, basic_student_info, extensive_student_info, \
     handle_student_edit, clients_data, week_lessons_dict, filter_lessons, copy_lessons, \
-    week_school_lessons_dict, show_lesson, handle_lesson, class_students_info, subscription_subjects_data
+    week_school_lessons_dict, show_lesson, handle_lesson, class_students_info, subscription_subjects_data, \
+    purchase_subscription, lesson_subjects_data
 from app import app, db
 from datetime import datetime, timedelta
 
@@ -43,9 +44,11 @@ def students():
         basic_student_info(student)
     subscription_subjects = subscription_subjects_data()
     today = datetime.now().date().strftime("%d.%m.%Y")
+    lesson_subjects = lesson_subjects_data()
 
     return render_template('students.html', students=all_students,
-                           subscription_subjects=subscription_subjects, today=today)
+                           subscription_subjects=subscription_subjects, today=today,
+                           lesson_subjects=lesson_subjects)
 
 
 @app.route('/add-comment', methods=['POST'])
@@ -75,6 +78,22 @@ def deposit(student_id):
         flash(f'Ошибка при внесении депозита: {str(e)}', 'error')
 
     return redirect(url_for('students'))
+
+
+@app.route('/subscription/<string:student_id>', methods=['POST'])
+@login_required
+def subscription(student_id):
+    try:
+        new_subscription = purchase_subscription(request.form, student_id)
+        db.session.add(new_subscription)
+        db.session.commit()
+        flash('Новый абонемент добавлен в систему.', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении абонемента: {str(e)}', 'error')
+
+    return redirect(url_for('student, student_id=student_id'))
 
 
 @app.route('/add-student', methods=['GET', 'POST'])

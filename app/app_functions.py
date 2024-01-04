@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
 
+DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+
 
 def create_student(form, student_type):
     last_name = form.get('last_name')
@@ -313,6 +315,59 @@ def subscription_subjects_data():
         subscription_subjects.append(subject_data)
 
     return subscription_subjects
+
+
+def lesson_subjects_data():
+    today = datetime.now().date()
+    now = datetime.now().time()
+    filtered_subjects = Subject.query.filter(
+        Subject.subject_type.has(SubjectType.name.notin_(["school", "after_school"]))
+    ).order_by(Subject.name).all()
+
+    lesson_subjects = []
+    for subject in filtered_subjects:
+        future_lessons = Lesson.query.filter(
+            and_(
+                Lesson.subject_id == subject.id,
+                or_(
+                    and_(
+                        Lesson.date == today,
+                        Lesson.start_time > now
+                    ),
+                    Lesson.date > today
+                )
+            )
+        ).order_by(Lesson.date, Lesson.start_time).all()
+        if future_lessons:
+            lessons_list = {lesson.id: f"{DAYS_OF_WEEK[lesson.date.weekday()]} " +
+                                       f"{lesson.date.strftime('%d.%m')} " +
+                                       f"в {lesson.start_time.strftime('%H:%M')}"
+                            for lesson in future_lessons}
+            subject_data = {
+                "id": subject.id,
+                "name": subject.name,
+                "lessons": lessons_list
+            }
+            lesson_subjects.append(subject_data)
+    return lesson_subjects
+
+
+def purchase_subscription(form, student_id):
+    subject_id = int(form.get('selected_subject'))
+    subscription_type_id = int(form.get('subscription_type'))
+    subscription_type = SubscriptionType.query.filter_by(id=subscription_type_id).first()
+    purchase_date = datetime.strptime(form.get('purchase_date'), '%d.%m.%Y').date()
+    end_date = purchase_date + timedelta(subscription_type.duration)
+
+    new_subscription = Subscription(
+        subject_id=subject_id,
+        student_id=student_id,
+        subscription_type_id=subscription_type_id,
+        lessons_left=subscription_type.lessons,
+        purchase_date=purchase_date,
+        end_date=end_date
+    )
+    return new_subscription
 
 
 def handle_student_edit(form, student):

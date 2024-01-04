@@ -416,11 +416,9 @@ $(document).ready(function(){
     // Handle the change event for subscription subject selector
     $('.subscription-subject-select').change(function () {
         var subjectId = Number($(this).val());
-        console.log(subjectId)
         var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
             return subject.id === subjectId;
         });
-        console.log(selectedSubject[0].id)
         const subscriptionTypeSelector = $('.subscription-type-select');
 
         subscriptionTypeSelector.empty();
@@ -439,6 +437,23 @@ $(document).ready(function(){
     });
 
     $('.subscription-subject-select').trigger("change");
+
+    // Handle the change event for lesson subject selector
+    $('.lesson-subject-select').change(function () {
+        var subjectId = Number($(this).val());
+        var selectedSubject = lessonSubjectsData.filter(function(subject) {
+            return subject.id === subjectId;
+        });
+        const lessonSelector = $('.lesson-select');
+
+        lessonSelector.empty();
+
+        $.each(selectedSubject[0].lessons, function (index, lesson) {
+            lessonSelector.append(`<option value="${index}">${lesson}</option>`);
+        });
+    });
+
+    $('.lesson-subject-select').trigger("change");
 
 });
 

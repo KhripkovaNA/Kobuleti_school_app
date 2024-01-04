@@ -6,6 +6,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
+from app.app_functions import lesson_subjects_data
 
 app.app_context().push()
 
@@ -701,22 +702,40 @@ def subscription_subjects_data():
     return subscription_subjects
 
 
-def conjugate_lessons(number):
-    last_digit = number % 10
-    last_two_digits = number % 100
+# def lesson_subjects_data():
+#     today = datetime.now().date()
+#     now = datetime.now().time()
+#     filtered_subjects = Subject.query.filter(
+#         Subject.subject_type.has(SubjectType.name.notin_(["school", "after_school"]))
+#     ).order_by(Subject.name).all()
+#
+#     lesson_subjects = []
+#     for subject in filtered_subjects:
+#         future_lessons = Lesson.query.filter(
+#             and_(
+#                 Lesson.subject_id == subject.id,
+#                 or_(
+#                     and_(
+#                         Lesson.date == today,
+#                         Lesson.start_time > now
+#                     ),
+#                     Lesson.date > today
+#                 )
+#             )
+#         ).order_by(Lesson.date, Lesson.start_time).all()
+#         if future_lessons:
+#             lessons_list = [{lesson.id: f"{days[lesson.date.weekday()]} " +
+#                                         f"{lesson.date.strftime('%d.%m')} " +
+#                                         f"в {lesson.start_time.strftime('%H:%M')}"}
+#                             for lesson in future_lessons]
+#             subject_data = {
+#                 "id": subject.id,
+#                 "subject_name": subject.name,
+#                 "lessons": lessons_list
+#             }
+#             lesson_subjects.append(subject_data)
+#     return lesson_subjects
 
-    if 10 <= last_two_digits <= 20:
-        return f"{number} занятий"
-    elif last_digit == 1:
-        return f"{number} занятие"
-    elif 2 <= last_digit <= 4:
-        return f"{number} занятия"
-    else:
-        return f"{number} занятий"
 
-
-# Example usage:
-number_of_lessons = 4
-result = conjugate_lessons(number_of_lessons)
-print(result)
+print(lesson_subjects_data())
 

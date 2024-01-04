@@ -97,7 +97,7 @@
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="">
+                                                            <a href="" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
                                                                 <i class="material-icons" style="color: purple;">date_range</i>Записать
                                                             </a>
                                                         </li>
@@ -120,32 +120,46 @@
                                                     </ul>
                                                 </div>
 
-                                            <!-- *-*-*-*-*-*-*-*-*-* Student balance replenishment *-*-*-*-*-*-*-*-*-* -->
+                                            <!-- *-*-*-*-*-*-*-*-*-* Student register for a lesson *-*-*-*-*-*-*-*-*-* -->
 
-                                                <div class="modal fade" id="deposit-{{ student.id }}-modal" role="dialog">
+                                                <div class="modal fade" id="lesson-{{ student.id }}-modal" role="dialog">
                                                     <div class="modal-dialog">
                                                         <div class="modal-content">
                                                             <div class="modal-header">
                                                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}</h4>
+                                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Запись на занятие</h4>
                                                             </div>
                                                             <div class="modal-body">
                                                                 <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
                                                                     <div class="row">
-                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
-                                                                        <div class="col-md-4">
-                                                                            <input type="number" class="form-control" name="deposit" step="10" min="10" max="1000" required>
+                                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
+                                                                        <div class="col-md-7">
+                                                                            <select name="selected_subject" class="form-control lesson-subject-select">
+                                                                                {% for subject in lesson_subjects %}
+                                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                                                                {% endfor %}
+                                                                            </select>
                                                                         </div>
-                                                                        <div class="col-md-4">
-                                                                            <button type="submit" class="btn btn-login float-right" data-background-color="main" style="margin:0;">
-                                                                                Внести
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата и время занятия:</label>
+                                                                        <div class="col-md-7">
+                                                                            <select name="lesson" class="form-control lesson-select"></select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <div class="col-md-3 col-md-offset-3">
+                                                                            <button type="submit" class="btn btn-login" data-background-color="main">
+                                                                                Записать
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
+                                                                                Отмена
                                                                             </button>
                                                                         </div>
                                                                     </div>
                                                                 </form>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Отмена</button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -158,10 +172,10 @@
                                                         <div class="modal-content">
                                                             <div class="modal-header">
                                                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}</h4>
+                                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                                <form class="login-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                                         <div class="col-md-7">
@@ -207,6 +221,38 @@
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                            <!-- *-*-*-*-*-*-*-*-*-* Student balance replenishment *-*-*-*-*-*-*-*-*-* -->
+
+                                                <div class="modal fade" id="deposit-{{ student.id }}-modal" role="dialog">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Пополнение депозита</h4>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                                    <div class="row">
+                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
+                                                                        <div class="col-md-4">
+                                                                            <input type="number" class="form-control" name="deposit" step="10" min="10" max="1000" required>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <button type="submit" class="btn btn-login float-right" data-background-color="main" style="margin:0;">
+                                                                                Внести
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Отмена</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -228,5 +274,6 @@
 </div>
 <script type="text/javascript">
     var subscriptionSubjectsData = {{ subscription_subjects | tojson | safe }};
+    var lessonSubjectsData = {{ lesson_subjects | tojson | safe }}
 </script>
 {% endblock %}
