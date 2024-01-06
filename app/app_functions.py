@@ -6,14 +6,14 @@ from sqlalchemy import and_, or_
 
 
 DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
-MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль",
-          "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
+MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
+          "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
 CHILD = "Ребенок"
 ADULT = "Взрослый"
 CHILD_SELF = "Сам ребенок"
 CHOOSE = "Выбрать"
 OTHER = "Другое"
-# after_school
+
 
 def create_student(form, student_type):
     last_name = form.get('last_name')
@@ -501,27 +501,41 @@ def check_subscription(student, lesson, subject_id):
             db.session.commit()
 
 
-def check_payment_option(student, subject_id, lesson):
+def get_payment_options(student, subject_id, lesson):
     check_subscription(student, lesson, subject_id)
     after_school_sub = Subscription.query.filter_by(student_id=student.id,
                                                     subject_id=after_school_subject().id,
                                                     active=True).first()
-    subscription = Subscription.query.filter_by(student_id=student.id,
-                                                subject_id=subject_id,
-                                                active=True)\
-        .order_by(Subscription.purchase_date).first()
+    subscriptions = Subscription.query.filter_by(student_id=student.id,
+                                                 subject_id=subject_id,
+                                                 active=True)\
+        .order_by(Subscription.purchase_date.desc()).all()
     student_balance = round(student.balance, 1)
-    payment_option = {'balance': student_balance}
-    if subscription and subject_id != after_school_subject().id:
-        payment_option['type'] = 'Абонемент'
-        payment_option['exp_date'] = subscription.end_date.strftime('%d.%m')
-        payment_option['lessons'] = subscription.lessons_left
-    elif after_school_sub:
-        payment_option['type'] = 'Продленка'
-    else:
-        payment_option['type'] = 'Разовое'
 
-    return payment_option
+    payment_options = []
+    if subscriptions:
+        for subscription in subscriptions:
+            payment_option = {
+                'value': f'subscription_{subscription.id}',
+                'type': 'Абонемент',
+                'info': f'{subscription.lessons_left} (до {subscription.end_date.strftime("%d.%m")})'
+            }
+            payment_options.append(payment_option)
+    if after_school_sub:
+        payment_option = {
+            'value': 'after_school',
+            'type': 'Продленка',
+            'info': f'Баланс: {student_balance}'
+        }
+        payment_options.append(payment_option)
+    else:
+        payment_option = {
+            'value': 'one_time',
+            'type': 'Разовое',
+            'info': f'Баланс: {student_balance}'
+        }
+        payment_options.append(payment_option)
+    return payment_options
 
 
 def carry_out_lesson(form, subject, lesson):
@@ -529,14 +543,16 @@ def carry_out_lesson(form, subject, lesson):
     lesson_school_price = subject.school_price if subject.school_price else lesson_price
     for student in lesson.students:
         if form.get(f'attending_status_{student.id}') in ['attend', 'unreasonable']:
-            if student.payment_option == 'Абонемент':
-                subscription = Subscription.query.filter_by(student_id=student.id,
-                                                            subject_id=subject.id,
-                                                            active=True)\
-                    .order_by(Subscription.purchase_date).first()
-                subscription.lessons_left -= 1
+            payment_option = form.get(f'payment_option_{student.id}')
+            if payment_option.startswith('subscription'):
+                subscription_id = int(payment_option[len('subscription_'):])
+                subscription = Subscription.query.filter_by(id=subscription_id).first()
+                if subscription.lessons_left > 0:
+                    subscription.lessons_left -= 1
+                else:
+                    student.balance -= lesson_price
             else:
-                student.balance -= lesson_school_price if student.payment_option == 'Продленка' \
+                student.balance -= lesson_school_price if payment_option == 'after_school' \
                     else lesson_price
 
             attendance = student_lesson_attended_table.insert().values(
@@ -549,7 +565,7 @@ def carry_out_lesson(form, subject, lesson):
     db.session.commit()
 
 
-def undo_lesson(subject, lesson):
+def undo_lesson(form, subject, lesson):
     lesson_price = subject.one_time_price
     lesson_school_price = subject.school_price if subject.school_price else lesson_price
     for student in lesson.students:
@@ -558,14 +574,13 @@ def undo_lesson(subject, lesson):
             student_lesson_attended_table.c.lesson_id == lesson.id).scalar()
 
         if attending_status:
-            if student.payment_option == 'Абонемент':
-                subscription = Subscription.query.filter_by(student_id=student.id,
-                                                            subject_id=subject.id,
-                                                            active=True)\
-                    .order_by(Subscription.purchase_date).first()
+            payment_option = form.get(f'payment_option_{student.id}')
+            if payment_option.startswith('subscription'):
+                subscription_id = int(payment_option[len('subscription_'):])
+                subscription = Subscription.query.filter_by(id=subscription_id).first()
                 subscription.lessons_left += 1
             else:
-                student.balance += lesson_school_price if student.payment_option == 'Продленка' else lesson_price
+                student.balance += lesson_school_price if payment_option == 'after_school' else lesson_price
             lesson.students_attended.remove(student)
 
     lesson.lesson_completed = False
@@ -605,7 +620,7 @@ def handle_lesson(form, subject, lesson):
         carry_out_lesson(form, subject, lesson)
 
     if 'change_btn' in form:
-        undo_lesson(subject, lesson)
+        undo_lesson(form, subject, lesson)
 
 
 def get_lesson_students(lesson):
@@ -613,13 +628,7 @@ def get_lesson_students(lesson):
         list(set(lesson.students_registered.all() + lesson.subject.students))
     if lesson_students:
         for student in lesson_students:
-            payment_option = check_payment_option(student, lesson.subject_id, lesson)
-            student.payment_option = payment_option['type']
-            if payment_option['type'] == 'Абонемент':
-                student.subscription_info = f'{payment_option["type"]}: {payment_option["lessons"]} ' \
-                                            f'(до {payment_option["exp_date"]})'
-            else:
-                student.subscription_info = f'{payment_option["type"]}: {payment_option["balance"]}'
+            student.payment_options = get_payment_options(student, lesson.subject_id, lesson)
             if lesson.lesson_completed:
                 attendance = db.session.query(student_lesson_attended_table.c.attending_status).filter(
                     student_lesson_attended_table.c.student_id == student.id,

@@ -694,8 +694,4 @@ def check_subscription(student, subject, lesson, after_school_subject):
             db.session.commit()
 
 
-school = {}
-subjects = ['math', 'english']
-subjects_list = [{'subject_name': extra_subject} for extra_subject in subjects]
-all_subjects = ([school] if school else []) + subjects_list
-print(all_subjects)
+print_table(Subscription)

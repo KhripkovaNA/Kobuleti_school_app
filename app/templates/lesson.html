@@ -12,14 +12,14 @@
                 <div class="row">
                     <div class="col-md-12">
                         {% if subject_lesson %}
-                            <h4 class="title" style="margin-left: 80px;">Дата: {{ subject_lesson.date.strftime('%d.%m') }}, время: {{ subject_lesson.start_time.strftime('%H:%M') }}, учитель: {{ subject_lesson.teacher.last_name }} {{ subject_lesson.teacher.first_name }}</h4>
-                            <div class="form-group" style="margin-left: 80px;">
+                            <h4 class="title" style="margin: 0 40px;">Дата: {{ subject_lesson.date.strftime('%d.%m') }}, время: {{ subject_lesson.start_time.strftime('%H:%M') }}, учитель: {{ subject_lesson.teacher.last_name }} {{ subject_lesson.teacher.first_name }}</h4>
+                            <div class="form-group" style="margin: 0 40px;">
                                 <form action="{{ url_for('lesson', subject_id=lesson_subject.id, lesson_id=subject_lesson.id) }}" method="post">
-                                    <div class="col-md-10">
+                                    <div class="col-md-12">
                                         <table class="table table-hover">
                                             <thead class="text-success">
                                                 <th>Клиент</th>
-                                                <th>Остаток</th>
+                                                <th>Способ оплаты</th>
                                                 <th>Запись</th>
                                                 <th>Посещение</th>
                                             </thead>
@@ -28,7 +28,15 @@
                                                     {% for student in subject_lesson.students %}
                                                         <tr>
                                                             <td>{{ student.last_name }} {{ student.first_name }}</td>
-                                                            <td>{{ student.subscription_info }}</td>
+                                                            <td>
+                                                                <div class="dropdown">
+                                                                    <select name="payment_option_{{ student.id }}" class="form-control">
+                                                                        {% for payment_option in student.payment_options %}
+                                                                            <option value="{{ payment_option.value }}">{{ payment_option.type }}. {{ payment_option.info }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                            </td>
                                                             <td style="padding-left:20px;">
                                                                 {% if student in subject_lesson.students_registered %}
                                                                     <label class="contact-radio-label">
@@ -68,12 +76,20 @@
                                                                 <button type="submit" name="del_client_btn" value="{{ student.id }}" class="btn btn-danger" style="padding: 1px 4px; font-size: 7px;">x</button>
                                                                 {{ student.last_name }} {{ student.first_name }}
                                                             </td>
-                                                            <td>{{ student.subscription_info }}</td>
+                                                            <td>
+                                                                <div class="dropdown">
+                                                                    <select name="payment_option_{{ student.id }}" class="form-control">
+                                                                        {% for payment_option in student.payment_options %}
+                                                                            <option value="{{ payment_option.value }}">{{ payment_option.type }}. {{ payment_option.info }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                            </td>
                                                             {% if student in subject_lesson.students_registered %}
                                                                 <td style="padding-left:20px;">
-                                                                    <label class="contact-radio-label">
+                                                                    <label class="contact-radio-label" style="padding:9px 20px; color:#555; font-weight:300;">
                                                                         <input type="checkbox" name="registered_{{ student.id }}" checked="checked">
-                                                                        <span class="custom-checkbox"></span>
+                                                                        <span class="custom-checkbox"></span>Записан
                                                                     </label>
                                                                 </td>
                                                                 <td>
@@ -87,9 +103,9 @@
                                                                 </td>
                                                             {% else %}
                                                                 <td style="padding-left:20px;">
-                                                                    <label class="contact-radio-label">
+                                                                    <label class="contact-radio-label" style="padding:9px 20px; color:#555; font-weight:300;">
                                                                         <input type="checkbox" name="registered_{{ student.id }}">
-                                                                        <span class="custom-checkbox"></span>
+                                                                        <span class="custom-checkbox"></span>Не записан
                                                                     </label>
                                                                 </td>
                                                                 <td><p class="form-control">Не посетил</p></td>
@@ -115,7 +131,7 @@
                                                             <td></td>
                                                             <td></td>
                                                         {% else %}
-                                                            <td>
+                                                            <td style="padding-left:30px;">
                                                                 <button type="submit" name="registered_btn" class="btn btn-xs" style="background-color: #ff9800;">Записать</button>
                                                             </td>
                                                             <td>
