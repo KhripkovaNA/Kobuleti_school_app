@@ -2297,7 +2297,7 @@ fieldset[disabled] .form-group .form-control {
 }
 
 .form-group p {
-    padding: 12px;
+    padding: 8px 12px;
 }
 
 .form-group textarea~.form-control-highlight {
@@ -3417,6 +3417,10 @@ fieldset[disabled] .form-group.is-focused .togglebutton label {
     padding-right: 24px;
     padding-bottom: 16px;
     padding-left: 24px;
+}
+
+.modal-body .row {
+    margin-top: 10px; /* Adjust the value as needed */
 }
 
 .modal-content .modal-footer {

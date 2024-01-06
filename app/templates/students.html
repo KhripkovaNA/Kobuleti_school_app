@@ -52,12 +52,11 @@
                                                     {% else %}
                                                         {% if student.subjects_info %}
                                                             {% for subject in student.subjects_info %}
-                                                                {{ subject }}{{ "," if not loop.last }}{{ "," if loop.last and student.subscriptions_info }}
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                        {% if student.subscriptions_info %}
-                                                            {% for subscription in student.subscriptions_info %}
-                                                                {{ subscription.subject_name }}({{ subscription.lessons_left }}){{ "," if not loop.last }}
+                                                                {{ subject.subject_name -}}
+                                                                {%- if subject.lessons_left %}
+                                                                    ({{ subject.lessons_left }})
+                                                                {%- endif -%}
+                                                                {{- "," if not loop.last }}
                                                             {% endfor %}
                                                         {% endif %}
                                                     {% endif %}
@@ -97,12 +96,12 @@
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
+                                                            <a href="" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal" data-student="{{ student.id }}">
                                                                 <i class="material-icons" style="color: purple;">date_range</i>Записать
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="" data-toggle="modal" data-target="#subscription-{{ student.id }}-modal">
+                                                            <a href="" class="subscription-modal-trigger" data-toggle="modal" data-target="#subscription-{{ student.id }}-modal">
                                                                 <i class="material-icons" style="color: purple;">addchart</i>Абонемент
                                                             </a>
                                                         </li>
@@ -130,7 +129,7 @@
                                                                 <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Запись на занятие</h4>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                                <form class="login-form" action="{{ url_for('lesson_register', student_id=student.id) }}" method="post">
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                                         <div class="col-md-7">
@@ -201,7 +200,7 @@
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
                                                                         <div class="col-md-7">
-                                                                            <p class="form-control" style="color:green" id="price-display"></p>
+                                                                            <p class="form-control price-display" style="color:green"></p>
                                                                         </div>
                                                                     </div>
                                                                     <div class="row">

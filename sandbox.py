@@ -6,7 +6,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-from app.app_functions import lesson_subjects_data
+from app.app_functions import format_subjects_and_subscriptions
 
 app.app_context().push()
 
@@ -674,68 +674,28 @@ def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher
     return conflicting_lessons
 
 
-def check_parent(student, i):
-    new_parent = create_parent(student, i)
-    matching_persons = Person.query.filter_by(last_name=new_parent.last_name,
-                                              first_name=new_parent.first_name).all()
-    if matching_persons:
-        print(student['student']['last_name'], student['student']['first_name'], new_parent.last_name, new_parent.first_name, *[person.id for person in matching_persons])
+def check_subscription(student, subject, lesson, after_school_subject):
+    if lesson == 0:
+        date = datetime.today().date()
+    else:
+        date = lesson.date
+    if subject == 'all':
+        subscriptions = student.subscriptions
+    else:
+        subscriptions = Subscription.query.filter_by(subject_id=subject, student_id=student.id).all()
+    for subscription in student.subscriptions:
+        if subscription.subject == after_school_subject:
+            subscription.active = True if subscription.purchase_date.month == date.month else False
+            db.session.commit()
+        else:
+            cond1 = subscription.end_date < date
+            cond2 = subscription.lessons_left <= 0
+            subscription.active = False if (cond1 or cond2) else True
+            db.session.commit()
 
 
-def subscription_subjects_data():
-    filtered_subjects = Subject.query.filter(Subject.subscription_types.any(SubscriptionType.id.isnot(None)),
-                                             Subject.subject_type.has(SubjectType.name.isnot("after_school"))).all()
-    subscription_subjects = []
-    for subject in filtered_subjects:
-        subject_data = {
-            "id": subject.id,
-            "price_info": {subscription_type.id: f"{subscription_type.price:.0f}"
-                           for subscription_type in subject.subscription_types},
-            "subscription_types_info": {
-                subscription_type.id: f"кол-во занятий: {subscription_type.lessons}, " +
-                                      f"срок действия: {subscription_type.duration} дней"
-                for subscription_type in subject.subscription_types
-            }
-        }
-        subscription_subjects.append(subject_data)
-
-    return subscription_subjects
-
-
-# def lesson_subjects_data():
-#     today = datetime.now().date()
-#     now = datetime.now().time()
-#     filtered_subjects = Subject.query.filter(
-#         Subject.subject_type.has(SubjectType.name.notin_(["school", "after_school"]))
-#     ).order_by(Subject.name).all()
-#
-#     lesson_subjects = []
-#     for subject in filtered_subjects:
-#         future_lessons = Lesson.query.filter(
-#             and_(
-#                 Lesson.subject_id == subject.id,
-#                 or_(
-#                     and_(
-#                         Lesson.date == today,
-#                         Lesson.start_time > now
-#                     ),
-#                     Lesson.date > today
-#                 )
-#             )
-#         ).order_by(Lesson.date, Lesson.start_time).all()
-#         if future_lessons:
-#             lessons_list = [{lesson.id: f"{days[lesson.date.weekday()]} " +
-#                                         f"{lesson.date.strftime('%d.%m')} " +
-#                                         f"в {lesson.start_time.strftime('%H:%M')}"}
-#                             for lesson in future_lessons]
-#             subject_data = {
-#                 "id": subject.id,
-#                 "subject_name": subject.name,
-#                 "lessons": lessons_list
-#             }
-#             lesson_subjects.append(subject_data)
-#     return lesson_subjects
-
-
-print(lesson_subjects_data())
-
+school = {}
+subjects = ['math', 'english']
+subjects_list = [{'subject_name': extra_subject} for extra_subject in subjects]
+all_subjects = ([school] if school else []) + subjects_list
+print(all_subjects)

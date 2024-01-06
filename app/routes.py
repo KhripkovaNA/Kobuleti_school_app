@@ -1,12 +1,13 @@
-from flask import render_template, flash, redirect, url_for, request, jsonify
+from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
-from app.app_functions import add_child, add_adult, basic_student_info, extensive_student_info, \
-    handle_student_edit, clients_data, week_lessons_dict, filter_lessons, copy_lessons, \
-    week_school_lessons_dict, show_lesson, handle_lesson, class_students_info, subscription_subjects_data, \
-    purchase_subscription, lesson_subjects_data
+from app.app_functions import basic_student_info, extensive_student_info, lesson_subjects_data, \
+    subscription_subjects_data, student_lesson_register, purchase_subscription, add_child, add_adult, \
+    handle_student_edit, clients_data, week_lessons_dict, filter_lessons, copy_lessons, show_lesson, \
+    handle_lesson, week_school_lessons_dict, class_students_info
+
 from app import app, db
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
@@ -63,6 +64,40 @@ def add_comment():
     return comment
 
 
+@app.route('/lesson-register/<string:student_id>', methods=['POST'])
+@login_required
+def lesson_register(student_id):
+    try:
+        subject_id, lesson_id = student_lesson_register(request.form, student_id)
+        flash('Клиент записан на занятие.', 'success')
+
+        return redirect(url_for('lesson', subject_id=subject_id, lesson_id=lesson_id))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при записи клиента: {str(e)}', 'error')
+
+        return redirect(url_for('students'))
+
+
+@app.route('/subscription/<string:student_id>', methods=['POST'])
+@login_required
+def subscription(student_id):
+    try:
+        new_subscription = purchase_subscription(request.form, student_id)
+        db.session.add(new_subscription)
+        db.session.commit()
+        flash('Новый абонемент добавлен в систему.', 'success')
+
+        return redirect(url_for('show_edit_student', student_id=student_id))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении абонемента: {str(e)}', 'error')
+
+        return redirect(url_for('students'))
+
+
 @app.route('/deposit/<string:student_id>', methods=['POST'])
 @login_required
 def deposit(student_id):
@@ -80,22 +115,6 @@ def deposit(student_id):
     return redirect(url_for('students'))
 
 
-@app.route('/subscription/<string:student_id>', methods=['POST'])
-@login_required
-def subscription(student_id):
-    try:
-        new_subscription = purchase_subscription(request.form, student_id)
-        db.session.add(new_subscription)
-        db.session.commit()
-        flash('Новый абонемент добавлен в систему.', 'success')
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Ошибка при добавлении абонемента: {str(e)}', 'error')
-
-    return redirect(url_for('student, student_id=student_id'))
-
-
 @app.route('/add-student', methods=['GET', 'POST'])
 @login_required
 def add_student():
@@ -105,7 +124,7 @@ def add_student():
                 student = add_child(request.form)
 
                 flash('Новый клиент добавлен в систему.', 'success')
-                return redirect(url_for('show_student', student_id=student.id))
+                return redirect(url_for('show_edit_student', student_id=student.id))
 
             if 'add_adult_btn' in request.form:
                 client = add_adult(request.form)
@@ -146,17 +165,6 @@ def show_edit_student(student_id):
     else:
         flash("Такого клиента нет", 'error')
         return redirect(url_for('students.html'))
-
-
-# @app.route('/edit-student/<string:student_id>', methods=['GET', 'POST'])
-# @login_required
-# def edit_student(student_id):
-#     student = Person.query.filter_by(id=student_id).first()
-#     if student:
-#         extensive_student_info(student)
-#     clients = clients_data()
-#
-#     return render_template('edit_student.html', student=student, clients=clients)
 
 
 @app.route('/teachers')
@@ -200,7 +208,7 @@ def subjects():
 def timetable(week):
     week = int(week)
     rooms = Room.query.all()
-    week_lessons = week_lessons_dict(week, rooms, DAYS_OF_WEEK)
+    week_lessons = week_lessons_dict(week, rooms)
 
     return render_template('timetable.html', days=DAYS_OF_WEEK, rooms=rooms,
                            classes=week_lessons, week=week)

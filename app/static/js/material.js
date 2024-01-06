@@ -413,14 +413,41 @@ $(document).ready(function(){
         }
     });
 
+    // Handle the change event for lesson subject selector
+    $('.lesson-subject-select').change(function () {
+        var subjectId = Number($(this).val());
+        var selectedSubject = lessonSubjectsData.filter(function(subject) {
+            return subject.id === subjectId;
+        });
+
+        const lessonSelector = $('.lesson-select');
+        lessonSelector.empty();
+
+        $.each(selectedSubject[0].lessons, function (index, lesson) {
+            lessonSelector.append(`<option value="${index}">${lesson}</option>`);
+        });
+
+    });
+
+    // Trigger selector change when lesson modal is shown
+    $('.lesson-modal-trigger').on('click', function () {
+        var lessonModalId = $(this).data('target');
+        var lessonModal = $(lessonModalId);
+        lessonModal.on('shown.bs.modal', function () {
+            var lessonSubjectSelector = $(this).find('.lesson-subject-select');
+            lessonSubjectSelector.trigger("change");
+        });
+
+    });
+
     // Handle the change event for subscription subject selector
     $('.subscription-subject-select').change(function () {
         var subjectId = Number($(this).val());
         var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
             return subject.id === subjectId;
         });
-        const subscriptionTypeSelector = $('.subscription-type-select');
 
+        const subscriptionTypeSelector = $('.subscription-type-select');
         subscriptionTypeSelector.empty();
 
         $.each(selectedSubject[0].subscription_types_info, function (index, subscriptionType) {
@@ -429,31 +456,19 @@ $(document).ready(function(){
 
         subscriptionTypeSelector.change(function () {
             var subscriptionType = $(this).val();
-            const priceDisplay = $('#price-display');
+            const priceDisplay = $('.price-display');
             priceDisplay.html(`<b>${selectedSubject[0].price_info[subscriptionType]}</b>`);
         });
 
         subscriptionTypeSelector.trigger("change");
     });
 
-    $('.subscription-subject-select').trigger("change");
-
-    // Handle the change event for lesson subject selector
-    $('.lesson-subject-select').change(function () {
-        var subjectId = Number($(this).val());
-        var selectedSubject = lessonSubjectsData.filter(function(subject) {
-            return subject.id === subjectId;
-        });
-        const lessonSelector = $('.lesson-select');
-
-        lessonSelector.empty();
-
-        $.each(selectedSubject[0].lessons, function (index, lesson) {
-            lessonSelector.append(`<option value="${index}">${lesson}</option>`);
-        });
+    // Trigger selectors change when subscription modal is shown
+    $('.subscription-modal-trigger').on('click', function () {
+        var subscriptionModalId = $(this).data('target');
+        var subscriptionModal = $(subscriptionModalId);
+        var subscriptionSubjectSelector = subscriptionModal.find('.subscription-subject-select');
+        subscriptionSubjectSelector.trigger("change");
     });
 
-    $('.lesson-subject-select').trigger("change");
-
 });
-

@@ -44,11 +44,11 @@
                                                             </td>
                                                             <td>
                                                                 {% if student.attended == 'not_attend' %}
-                                                                    Не посетил
+                                                                    <p class="form-control">Не посетил</p>
                                                                 {% elif student.attended == 'attend' %}
-                                                                    Посетил
+                                                                    <p class="form-control">Посетил</p>
                                                                 {% else %}
-                                                                    Не посетил (не ув прич)
+                                                                    <p class="form-control">Не посетил (не ув прич)</p>
                                                                 {% endif %}
                                                             </td>
                                                         </tr>
@@ -92,13 +92,7 @@
                                                                         <span class="custom-checkbox"></span>
                                                                     </label>
                                                                 </td>
-                                                                <td>
-                                                                    <div class="dropdown">
-                                                                        <select name="attending_status_{{ student.id }}" class="form-control" disabled>
-                                                                            <option value="not_attend">Не посетил</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </td>
+                                                                <td><p class="form-control">Не посетил</p></td>
                                                             {% endif %}
                                                         </tr>
                                                     {% endfor %}
