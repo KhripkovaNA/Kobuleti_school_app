@@ -228,3 +228,11 @@ class SubjectType(db.Model):
     name = db.Column(db.String(50))
     description = db.Column(db.String(50))
 
+
+class Employee(db.Model):
+    __tablename__ = 'employees'
+
+    id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(db.String(50))
+    person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    person = db.relationship('Person', backref='roles')

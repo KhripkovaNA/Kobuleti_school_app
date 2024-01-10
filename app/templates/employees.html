@@ -4,42 +4,51 @@
 
 <div class="row">
     <div class="col-lg-12 col-md-12">
-        <div class="card data-tables" id="students-card">
+        <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Учителя</h4>
+                <h4 class="title">Сотрудники</h4>
             </div>
             <div class="card-content table-responsive">
-                {% if teachers %}
+                {% if employees %}
                     <div class="scroll-table">
+                        <input type="text" id="search" placeholder="Поиск в таблице">
                         <table class="table table-hover">
                             <thead class="text-success">
-                                <th>Фамилия</th>
-                                <th>Имя</th>
-                                <th>Отчество</th>
-                                <th width="13%">Предметы</th>
+                                <th width="20%">Фамилия, Имя, Отчество</th>
+                                <th>Должность</th>
+                                <th>Предметы</th>
                                 <th>Контакт</th>
                                 <th>Комментарий</th>
-                                <th width="13%">Действие</th>
+                                <th>Действие</th>
                             </thead>
                         </table>
                         <div class="scroll-table-body">
                             <table class="table table-hover">
                                 <tbody>
-                                    {% for teacher in teachers %}
+                                    {% for employee in employees %}
                                         <tr>
-                                            <td>{{ teacher.last_name }}</td>
-                                            <td>{{ teacher.first_name }}</td>
-                                            <td>{{ teacher.patronym }}</td>
-                                            <td width="13%">
-                                                {% if teacher.subjects_taught %}
-                                                    {% for subject in teacher.subjects_taught %}
-                                                        {{ subject.name }}{{ "," if not loop.last }}
-                                                    {% endfor %}
-                                                {% endif %}
+                                            <td width="20%">
+                                                {{ employee.last_name }} {{ employee.first_name }} {{ employee.patronym if employee.patronym }}
                                             </td>
-                                            <td>{{ teacher.contact }}</td>
-                                            <td>{{ teacher.comment }}</td>
-                                            <td width="13%">
+                                            <td>
+                                                {% for role in employee.roles %}
+                                                    {{ role.role }}{{ "," if not loop.last }}
+                                                {% endfor %}
+                                                </td>
+                                            <td>{{ employee.all_subjects if employee.all_subjects }}</td>
+                                            <td>{{ employee.contact }}</td>
+                                            <td class="comment-cell"  style="cursor:pointer;">
+                                                <div class="comment-container">
+                                                        {{ employee.comment if employee.comment }}
+                                                </div>
+                                                <div class="comment-form-container" style="display:none;">
+                                                    <form class="comment-form" method="post" data-person-id="{{ employee.id }}">
+                                                        <textarea name="comment" rows="4" cols="10"></textarea><br>
+                                                        <button type="submit">Добавить</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                            <td>
                                                 <div class="dropdown">
                                                     <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">
                                                         <i class="material-icons" style="color: white;">toc</i>
@@ -72,11 +81,11 @@
                         </div>
                     </div>
                 {% else %}
-                    <p>Учителей пока нет</p>
+                    <p>Сотрудников пока нет</p>
                 {% endif %}
                 <button class="btn" style="background-color: #ff9800;">
-                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
-                        <i class="material-icons">add_box</i>Добавить учителя
+                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_employee') }}">
+                        <i class="material-icons">add_box</i>Добавить сотрудника
                     </a>
                 </button>
             </div>

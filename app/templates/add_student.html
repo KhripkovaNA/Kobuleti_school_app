@@ -96,23 +96,23 @@
                                             </div>
                                         </div>
                                         <div class="row relation-other-row" style="display: none;">
-                                            <label class="control-label col-md-3">Контактное лицо:</label>
+                                            <label class="control-label col-md-3"></label>
                                             <div class="col-md-4">
                                                 <input type="text" name="other_relation_1" class="form-control">
                                             </div>
                                         </div>
-                                        <div class="row contact_selection">
-                                            <label class="control-label col-md-3">Данные контактного лица:</label>
-                                            <div class="col-md-3">
-                                                <select name="contact_select_1" class="form-control contact-select">
-                                                    <option value="Добавить">Добавить</option>
-                                                    <option value="Выбрать">Выбрать из списка</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="contact-options-row" style="display: none;">
+                                        <div class="contact_selection">
                                             <div class="row">
-                                                <label class="control-label col-md-3">Контакты:</label>
+                                                <label class="control-label col-md-3">Данные контактного лица:</label>
+                                                <div class="col-md-3">
+                                                    <select name="contact_select_1" class="form-control contact-select">
+                                                        <option value="Добавить">Добавить</option>
+                                                        <option value="Выбрать">Выбрать из списка</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row contact-options-row" style="display: none;">
+                                                <label class="control-label col-md-3"></label>
                                                 <div class="col-md-3">
                                                     <select name="selected_contact_1" class="form-control contact-options">
                                                         {% for client in clients %}
@@ -121,10 +121,10 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="client-information client-info-basic"></div>
-                                            <div class="client-information client-info-contacts"></div>
+                                            <div class="contact-information person-info-basic"></div>
+                                            <div class="contact-information person-info-contacts"></div>
                                         </div>
-                                        <div class="contact-information" style="display: none;">
+                                        <div class="contact-input" style="display: none;">
                                             <div class="contact-info">
                                                 <div class="row">
                                                     <label class="control-label col-md-3">Фамилия:</label>
@@ -210,7 +210,7 @@
                                     </div>
                                     <div class="client-options-row" style="display: none;">
                                         <div class="row">
-                                            <label class="control-label col-md-3">Контакты:</label>
+                                            <label class="control-label col-md-3"></label>
                                             <div class="col-md-3">
                                                 <select name="selected_client" class="form-control client-options">
                                                     {% for client in possible_clients %}
@@ -219,7 +219,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="client-information client-info-basic"></div>
+                                        <div class="client-information person-info-basic"></div>
                                     </div>
                                     <div class="client-input" style="display: none;">
                                         <div class="row">
@@ -272,7 +272,7 @@
                             </div>
                         </div>
                         <hr>
-                        <div class="client-information client-info-contacts" style="display: none;"></div>
+                        <div class="client-information person-info-contacts" style="display: none;"></div>
                         <div class="client-input" style="display: none;">
                             <div class="row">
                                 <div class="col-md-12">

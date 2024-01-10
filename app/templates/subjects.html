@@ -4,13 +4,14 @@
 
 <div class="row">
     <div class="col-lg-12 col-md-12">
-        <div class="card data-tables" id="students-card">
+        <div class="card data-tables">
             <div class="card-header" data-background-color="main">
                 <h4 class="title">Все занятия</h4>
             </div>
             <div class="card-content table-responsive">
                 {% if subjects %}
                     <div class="scroll-table">
+                        <input type="text" id="search" placeholder="Поиск в таблице">
                         <table class="table table-hover">
                             <thead class="text-success">
                                 <th>Название</th>

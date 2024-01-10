@@ -9,6 +9,7 @@ $(document).ready(function(){
 
     adjustClassBoxWidth();
 
+
     // Adjust the width of class boxes when resizing window
     $(window).resize(function () {
         adjustClassBoxWidth();
@@ -28,7 +29,7 @@ $(document).ready(function(){
     });
 
     // Initialize perfectScrollbar for various elements
-    $('.sidebar .sidebar-wrapper, .main-panel, .scroll-table, .scroll-timetable').perfectScrollbar();
+    $('.sidebar .sidebar-wrapper, .main-panel, .scroll-table, .scroll-timetable, .dropdown-menu').perfectScrollbar();
     $('.scroll-table-body').perfectScrollbar({
         suppressScrollX: true
     });
@@ -52,6 +53,7 @@ $(document).ready(function(){
     }
 
     toggleSectionAndForm();
+
 
     // Open comment cell
     $(document).on("click", ".comment-cell", function () {
@@ -115,6 +117,7 @@ $(document).ready(function(){
 
     $('.timepicker').wickedpicker();
 
+
     // Hide date and time pickers when scrolling
     $(".main-panel").on("scroll", function() {
         if ($(".datepicker").datepicker("widget").is(":visible")) {
@@ -125,7 +128,7 @@ $(document).ready(function(){
         }
     });
 
-    // Handle the change event for the status select dropdown when adding or editing a new client
+    // function to handle the change event for the status select dropdown
     function handleStatusChange(statusSelect, pauseDateId, leavingReasonId) {
         const selectedStatus = statusSelect.val();
         const pauseDate = $(pauseDateId);
@@ -148,12 +151,138 @@ $(document).ready(function(){
         handleStatusChange($(this), "#pause-date", "#leaving-reason");
     });
 
+    $("#status-select").trigger("change");
+
+
     // Handle status select changing for adults
     $("#status-select-adult").on("change", function () {
         handleStatusChange($(this), "#pause-date-adult", "#leaving-reason-adult");
     });
 
-    $("#status-select").trigger("change");
+    // Handle the change event for the relation select dropdown when adding or editing a new client
+    $("#contact-sections, #show-contacts").on("change", ".contact-relation", function () {
+        var relationSelector = $(this);
+        var contactSection = relationSelector.closest(".contact-section");
+        var otherRelationRow = contactSection.find(".relation-other-row");
+        var contactInfo = contactSection.find(".contact-info");
+        var contactSelection = contactSection.find(".contact_selection");
+
+        if (relationSelector.val() === "Другое") {
+            otherRelationRow.show();
+            contactInfo.show();
+            contactSelection.show();
+        } else if (relationSelector.val() === "Сам ребенок") {
+            otherRelationRow.hide();
+            contactInfo.hide();
+            contactSelection.hide();
+        } else {
+            otherRelationRow.hide();
+            contactInfo.show();
+            contactSelection.show();
+        }
+    });
+
+    // Function to update client information when adding or editing a new client
+    function updatePersonInformation(selector, section) {
+        var personId = Number(selector.val());
+        var selectedPerson = clientsData.filter(function(person) {
+            return person.id === personId;
+        });
+        var selectedSection = selector.closest(section);
+
+        selectedSection.find(".person-info-basic").html(`
+            <div class="form-group" style="margin-top: 12px;">
+                <div class="row">
+                    <label class="control-label col-md-3">Фамилия:</label>
+                    <div class="col-md-5">
+                        <p>${selectedPerson[0].last_name}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Имя:</label>
+                    <div class="col-md-5">
+                        <p>${selectedPerson[0].first_name}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Отчество:</label>
+                    <div class="col-md-5">
+                        <p>${selectedPerson[0].patronym}</p>
+                    </div>
+                </div>
+            </div>
+        `);
+
+        selectedSection.find(".person-info-contacts").html(`
+            <div class="form-group" style="margin-top: 12px;">
+                <div class="row">
+                    <label class="control-label col-md-3">Телеграм:</label>
+                    <div class="col-md-3">
+                        <p>${selectedPerson[0].telegram}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Телефон:</label>
+                    <div class="col-md-3">
+                        <p>${selectedPerson[0].phone}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Другое:</label>
+                    <div class="col-md-3">
+                        <p>${selectedPerson[0].other_contact}</p>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+
+    // Function to handle the change event for selection between adding a new person and choosing existing
+    function personSelectChange(selector, personSection) {
+        var selectorVal = selector.val();
+        var prefix = personSection.replace("-section", "-");
+        var parentSection = selector.closest(personSection);
+        var personOptionsRow = parentSection.find(prefix + "options-row");
+        var personInput = parentSection.find(prefix + "input");
+        var personInformation = parentSection.find(prefix + "information");
+
+        if (selectorVal === "Добавить") {
+            personInput.show();
+            personOptionsRow.hide();
+            personInformation.hide();
+        } else {
+            personInput.hide();
+            personOptionsRow.show();
+            personInformation.show();
+            $(prefix + "options").trigger("change");
+        }
+    }
+
+    // Handle the change event for contact selection
+    $("#contact-sections, #new-contact-form").on("change", ".contact-select", function () {
+        personSelectChange($(this), ".contact-section");
+    });
+
+    $(".contact-select").trigger("change");
+
+
+    // Update contact information based on selected person
+    $("#contact-sections, #new-contact-form").on("change", ".contact-options", function() {
+        updatePersonInformation($(this), ".contact-section");
+    });
+
+    // Handle the change event for client selection
+    $(".client-section").on("change", ".client-select", function () {
+         personSelectChange($(this), ".client-section");
+    });
+
+    $(".client-select").trigger("change");
+
+
+    // Update client information based on selected person
+    $(".client-section").on("change", ".client-options", function() {
+        updatePersonInformation($(this), ".client-section");
+    });
 
     var contactCount = 1
     // Function to add a new contact section dynamically
@@ -166,7 +295,7 @@ $(document).ready(function(){
         contactSection.find(".relation-other-row").hide();
         contactSection.find(".contact-select").val("Добавить");
         contactSection.find(".contact-options-row").hide();
-        contactSection.find(".contact-info").show();
+        contactSection.find(".contact-input").show();
         contactSection.find("select, input[type='text']").each(function() {
             var originalName = $(this).attr("name");
             var newName = originalName.replace("_1", "_" + contactCount);
@@ -182,137 +311,6 @@ $(document).ready(function(){
         });
         return contactSection;
     }
-
-    // Handle the change event for the relation select dropdown when adding or editing a new client
-    $("#contact-sections, #show-contacts").on("change", ".contact-relation", function () {
-        var relationSelector = $(this);
-        var contactSection = relationSelector.closest(".contact-section");
-        var otherRelationRow = contactSection.find(".relation-other-row");
-        var contactInfoDiv = contactSection.find(".contact-info");
-        var contactSelection = contactSection.find(".contact_selection")
-
-        if (relationSelector.val() === "Другое") {
-            otherRelationRow.show();
-            contactInfoDiv.show();
-            contactSelection.show();
-        } else if (relationSelector.val() === "Сам ребенок") {
-            otherRelationRow.hide();
-            contactInfoDiv.hide();
-            contactSelection.hide();
-        } else {
-            otherRelationRow.hide();
-            contactInfoDiv.show();
-            contactSelection.show();
-        }
-    });
-
-    // Function to update client information when adding or editing a new client
-    function updateClientInformation(selector, section) {
-        var clientId = Number(selector.val());
-        var selectedClient = clientsData.filter(function(client) {
-            return client.id === clientId;
-        });
-        var selectedSection = selector.closest(section);
-
-        selectedSection.find(".client-info-basic").html(`
-            <div class="form-group" style="margin-top: 12px;">
-                <div class="row">
-                    <label class="control-label col-md-3">Фамилия:</label>
-                    <div class="col-md-5">
-                        <p>${selectedClient[0].last_name}</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="control-label col-md-3">Имя:</label>
-                    <div class="col-md-5">
-                        <p>${selectedClient[0].first_name}</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="control-label col-md-3">Отчество:</label>
-                    <div class="col-md-5">
-                        <p>${selectedClient[0].patronym}</p>
-                    </div>
-                </div>
-            </div>
-        `);
-        selectedSection.find(".client-info-contacts").html(`
-            <div class="form-group" style="margin-top: 12px;">
-                <div class="row">
-                    <label class="control-label col-md-3">Телеграм:</label>
-                    <div class="col-md-3">
-                        <p>${selectedClient[0].telegram}</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="control-label col-md-3">Телефон:</label>
-                    <div class="col-md-3">
-                        <p>${selectedClient[0].phone}</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="control-label col-md-3">Другое:</label>
-                    <div class="col-md-3">
-                        <p>${selectedClient[0].other_contact}</p>
-                    </div>
-                </div>
-            </div>
-        `);
-    }
-
-    // Update contact information based on selected person
-    $("#contact-sections, #show-contacts").on("change", ".contact-options", function() {
-        updateClientInformation($(this), ".contact-section");
-    });
-
-    // Handle the change event for selection between adding a new contact and choosing existing
-    $("#contact-sections, #show-contacts").on("change", ".contact-select", function () {
-        var contactSelector = $(this);
-        var contactSection = contactSelector.closest(".contact-section");
-        var contactOptionsRow = contactSection.find(".contact-options-row");
-        var contactInformation = contactSection.find(".contact-information");
-        var clientInformation = contactSection.find(".client-information");
-
-        if (contactSelector.val() === "Добавить") {
-            contactInformation.show();
-            contactOptionsRow.hide();
-            clientInformation.hide();
-        } else {
-            contactInformation.hide();
-            contactOptionsRow.show();
-            clientInformation.show();
-            $(".contact-options").trigger("change");
-        }
-    });
-
-    $(".contact-select").trigger("change");
-
-    // Update client information based on selected person
-    $(".client-section").on("change", ".client-options", function() {
-        updateClientInformation($(this), ".client-section");
-    });
-
-    // Handle the change event for selection between adding a new client and choosing existing
-    $(".client-section").on("change", ".client-select", function () {
-        var clientSelector = $(this);
-        var clientSection = clientSelector.closest(".client-section");
-        var clientOptionsRow = clientSection.find(".client-options-row");
-        var clientInput = clientSection.find(".client-input");
-        var clientInformation = clientSection.find(".client-information");
-
-        if (clientSelector.val() === "Добавить") {
-            clientInput.show();
-            clientOptionsRow.hide();
-            clientInformation.hide();
-        } else {
-            clientInput.hide();
-            clientOptionsRow.show();
-            clientInformation.show();
-            $(".client-options").trigger("change");
-        }
-    });
-
-    $(".client-select").trigger("change");
 
     // Add a new contact form when adding a new client
     $("#add-contact-btn").click(function() {
@@ -349,21 +347,6 @@ $(document).ready(function(){
         handleTabButtonClick(this.id);
     });
 
-//    $('#show-contacts-btn').click(function () {
-//        $('#show-subjects, #show-subscriptions').hide();
-//        $('#show-contacts').show();
-//    });
-//
-//    $('#show-subjects-btn').click(function () {
-//        $('#show-contacts, #show-subscriptions').hide();
-//        $('#show-subjects').show();
-//    });
-//
-//    $('#show-subscriptions-btn').click(function () {
-//        $('#show-subjects, #show-contacts').hide();
-//        $('#show-subscriptions').show();
-//    });
-
     // Toggle new contact form when editing a client
     $('#show-new-contact-btn, #hide-new-contact-btn').click(function () {
         $('#show-new-contact, #new-contact-form').toggle();
@@ -373,16 +356,6 @@ $(document).ready(function(){
     $("#add-client-btn, #cancel-add-client-btn").click(function() {
         $("#clientSelector, #add-client-btn").toggle();
     });
-
-//    $("#add-client-btn").click(function() {
-//        $("#clientSelector").show();
-//        $("#add-client-btn").hide();
-//    });
-//
-//    $("#cancel-add-client-btn").click(function() {
-//        $("#add-client-btn").show();
-//        $("#clientSelector").hide();
-//    });
 
     // Show dropdown by clicking on a specific object
     window.showDropdown = function(objectId, event) {
@@ -470,5 +443,63 @@ $(document).ready(function(){
         var subscriptionSubjectSelector = subscriptionModal.find('.subscription-subject-select');
         subscriptionSubjectSelector.trigger("change");
     });
+
+    // custom multiselect dropdown
+    $(".dropdown-menu input[type=checkbox]").change(function () {
+        var dropdown = $(this).closest(".dropdown-container");
+        if ($(this).is(".select-all")) {
+            dropdown.find(".dropdown-menu input[type=checkbox]").not(this).prop("checked", $(this).prop("checked")).change();
+        }
+
+        var selectedOptions = [];
+
+        dropdown.find(".dropdown-menu input[type=checkbox]:checked").not(".select-all").each(function() {
+            selectedOptions.push($(this).parent().text().trim());
+        });
+
+        dropdown.find(".selected-options").text(selectedOptions.join(', '));
+
+        dropdown.find(".select-all").prop("checked", dropdown.find(".dropdown-menu input[type=checkbox]:checked").not(".select-all").length === dropdown.find(".dropdown-menu input[type=checkbox]").not(".select-all").length);
+    });
+
+    // Handle the change event for employee selection
+    $(".employee-section").on("change", ".employee-select", function () {
+         personSelectChange($(this), ".employee-section");
+    });
+
+    $(".employee-select").trigger("change");
+
+
+    // Update employee information based on selected person
+    $(".employee-section").on("change", ".employee-options", function() {
+        updatePersonInformation($(this), ".employee-section");
+    });
+
+    // Show subjects selector when checking teacher option
+    $("#teacher-checkbox").change(function () {
+        var subjectsTaught = $('#subjects-taught');
+        if ($(this).prop("checked")) {
+            subjectsTaught.show()
+        } else {
+            subjectsTaught.hide()
+        }
+    });
+
+    // Search in select options
+    $('.select-search').selectize();
+
+
+    $('#search').keyup(function() {
+    var $rows = $('.table tr');
+    var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+
+    $rows.show().filter(function() {
+        var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
+        return !~text.indexOf(val);
+    }).hide();
+});
+
+
+
 
 });

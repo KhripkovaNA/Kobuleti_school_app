@@ -1,16 +1,12 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass
-from app.app_functions import basic_student_info, extensive_student_info, lesson_subjects_data, \
+from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass, Employee
+from app.app_functions import DAYS_OF_WEEK, basic_student_info, extensive_student_info, lesson_subjects_data, \
     subscription_subjects_data, student_lesson_register, purchase_subscription, add_child, add_adult, \
-    handle_student_edit, clients_data, week_lessons_dict, filter_lessons, copy_lessons, show_lesson, \
-    handle_lesson, week_school_lessons_dict, class_students_info
-
+    handle_student_edit, clients_data, format_employee, week_lessons_dict, filter_lessons, copy_lessons, \
+    show_lesson, handle_lesson, week_school_lessons_dict, class_students_info
 from app import app, db
 from datetime import datetime
-
-
-DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -167,20 +163,46 @@ def show_edit_student(student_id):
         return redirect(url_for('students.html'))
 
 
-@app.route('/teachers')
+@app.route('/employees')
 @login_required
-def teachers():
-    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
+def employees():
+    all_employees = Person.query.filter(Person.roles.any(Employee.id)).order_by(Person.last_name, Person.first_name).all()
 
-    for teacher in all_teachers:
-        if teacher.contacts[0].telegram:
-            teacher.contact = f"Телеграм: {teacher.contacts[0].telegram}"
-        elif teacher.contacts[0].phone:
-            teacher.contact = f"Тел.: {teacher.contacts[0].phone}"
-        elif teacher.contacts[0].other_contact:
-            teacher.contact = teacher.contacts[0].other_contact
+    for employee in all_employees:
+        format_employee(employee)
 
-    return render_template('teachers.html', teachers=all_teachers)
+    return render_template('employees.html', employees=all_employees)
+
+
+@app.route('/add-employee', methods=['GET', 'POST'])
+@login_required
+def add_employee():
+    # if request.method == 'POST':
+    #     try:
+    #         if 'add_child_btn' in request.form:
+    #             student = add_child(request.form)
+    #
+    #             flash('Новый клиент добавлен в систему.', 'success')
+    #             return redirect(url_for('show_edit_student', student_id=student.id))
+    #
+    #         if 'add_adult_btn' in request.form:
+    #             client = add_adult(request.form)
+    #
+    #             flash('Новый клиент добавлен в систему.', 'success')
+    #             return redirect(url_for('show_edit_student', student_id=client.id))
+    #
+    #     except Exception as e:
+    #         db.session.rollback()
+    #         flash(f'Ошибка при добавлении киента: {str(e)}', 'error')
+    #         return redirect(url_for('add_student'))
+
+    possible_employees = clients_data('employee')
+    distinct_roles = db.session.query(Employee.role.distinct()).filter(Employee.role != "учитель").all()
+    all_subjects = Subject.query.order_by(Subject.name).all()
+    subject_list = [(subj.id, f'{subj.name} ({subj.subject_type.description})') for subj in all_subjects]
+
+    return render_template('add_employee.html', possible_employees=possible_employees, roles=distinct_roles,
+                           subjects=subject_list)
 
 
 @app.route('/subjects')
@@ -286,32 +308,6 @@ def school_students():
 
     return render_template('school_students.html', school_classes=school_classes,
                            class_students=school_classes_dict)
-
-
-# @app.route('/lesson/<string:subject_id>/<string:lesson_id>', methods=['GET', 'POST'])
-# @login_required
-# def lesson(subject_id, lesson_id):
-#     subject_id = int(subject_id)
-#     if not lesson_id:
-#         today = datetime.now().date()
-#         last_lesson = Lesson.query.filter_by(subject_id=subject_id). \
-#             order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
-#         coming_lesson = Lesson.query.filter(Lesson.date >= today,
-#                                           Lesson.subject_id == subject_id). \
-#             order_by(Lesson.date, Lesson.start_time).first()
-#         extra_lesson = coming_lesson if coming_lesson else last_lesson if last_lesson else None
-#     else:
-#         lesson_id = int(lesson_id)
-#         extra_lesson = Lesson.query.filter_by(id=lesson_id).first()
-#     if extra_lesson:
-#         previous_lesson = Lesson.query.filter(Lesson.date >= extra_lesson.date,
-#                                               Lesson.subject_id == extra_lesson.subject_id)\
-#             .order_by(Lesson.date, Lesson.start_time).first()
-#         next_lesson = Lesson.query.filter(Lesson.date <= extra_lesson.date,
-#                                           Lesson.subject_id == extra_lesson.subject_id) \
-#             .order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
-#     previous_lesson_id = previous_lesson.id if previous_lesson else 'no_lesson'
-#     next_lesson_id = next_lesson.id if next_lesson else 'no_lesson'
 
 
 @app.route('/school-lesson/<string:lesson_id>')

@@ -86,8 +86,8 @@
                                                                 </div>
                                                             </td>
                                                             {% if student in subject_lesson.students_registered %}
-                                                                <td style="padding-left:20px;">
-                                                                    <label class="contact-radio-label" style="padding:9px 20px; color:#555; font-weight:300;">
+                                                                <td style="padding-left:20px;" class="checkbox-option">
+                                                                    <label class="contact-radio-label">
                                                                         <input type="checkbox" name="registered_{{ student.id }}" checked="checked">
                                                                         <span class="custom-checkbox"></span>Записан
                                                                     </label>
@@ -102,8 +102,8 @@
                                                                     </div>
                                                                 </td>
                                                             {% else %}
-                                                                <td style="padding-left:20px;">
-                                                                    <label class="contact-radio-label" style="padding:9px 20px; color:#555; font-weight:300;">
+                                                                <td style="padding-left:20px;" class="checkbox-option">
+                                                                    <label class="contact-radio-label">
                                                                         <input type="checkbox" name="registered_{{ student.id }}">
                                                                         <span class="custom-checkbox"></span>Не записан
                                                                     </label>

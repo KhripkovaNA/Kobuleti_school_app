@@ -1929,6 +1929,24 @@ output {
     position: relative;
 }
 
+.checkbox-option {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 20px;
+}
+
+.checkbox-option .contact-radio-label {
+    color:#555;
+    font-weight:300;
+    padding: 5px 5px 5px 20px;
+    cursor: pointer;
+}
+
+.selected-options {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
 .contact-radio-label input {
     position: absolute;
     opacity: 0;
@@ -1937,7 +1955,7 @@ output {
 
 .custom-radio, .custom-checkbox {
     position: absolute;
-    top: 11px;
+    top: 7px;
     left: 0px;
     height: 15px;
     width: 15px;
@@ -1994,7 +2012,6 @@ output {
     -ms-transform: rotate(45deg);
     transform: rotate(45deg);
 }
-
 
 .form-control-static {
     padding-top: 8px;
@@ -4199,6 +4216,7 @@ footer .btn {
 .dropdown-menu {
     border: 0;
     box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+    max-height: 150px;
 }
 
 .dropdown-menu .divider {

@@ -1,8 +1,9 @@
-from app.models import Person, Contact, parent_child_table, Subject, Subscription, \
+from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, \
     Lesson, SchoolClass, Room, SubjectType, SubscriptionType, student_lesson_attended_table
 from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
+from typing import List, Dict, Any
 
 
 DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
@@ -157,11 +158,16 @@ def add_adult(form):
     return client
 
 
-def clients_data(student_type):
-    if student_type == 'child':
+def clients_data(person_type):
+    if person_type == 'child':
         all_clients = Person.query.order_by(Person.last_name, Person.first_name).all()
-    else:
+    elif person_type == 'adult':
         all_clients = Person.query.filter(Person.status.is_(None)).order_by(Person.last_name, Person.first_name).all()
+    else:
+        all_clients = Person.query.filter(
+            ~Person.roles.any(Employee.id),
+            Person.person_type == ADULT
+        ).order_by(Person.last_name, Person.first_name).all()
     clients = []
     for client in all_clients:
         client_data = {
@@ -249,51 +255,39 @@ def after_school_subject():
 def format_subjects_and_subscriptions(student):
     check_subscription(student, 0, 0)
     subscriptions = []
+    subscriptions_list = []
     subscriptions_set = set()
 
-    school = {'subject_name': student.school_class.school_name} if student.school_class else {}
+    school = [student.school_class.school_name] if student.school_class else []
 
     for subscription in student.subscriptions:
         subject = subscription.subject
-        if subject == after_school_subject():
-            if subscription.active:
+        is_after_school = subject == after_school_subject()
+        is_active = subscription.active
 
-                subscription_dict = {
-                    'subscription_id': subscription.id,
-                    'subject_name': subject.name,
-                    'lessons_left': MONTHS[subscription.purchase_date.month - 1],
-                    'end_date': MONTHS[subscription.purchase_date.month - 1]
-                }
-
+        if is_active:
+            subscription_dict = {
+                'subscription_id': subscription.id,
+                'subject_name': subject.name,
+                'lessons_left': subscription.lessons_left if not is_after_school else None,
+                'end_date': subscription.end_date.strftime('%d.%m.%Y') if not is_after_school else MONTHS[
+                    subscription.purchase_date.month - 1]
+            }
+            if is_after_school:
                 subscriptions.insert(0, subscription_dict)
-            subscriptions_set.add(subject.name)
-        else:
-            if subscription.active:
-
-                subscription_dict = {
-                    'subscription_id': subscription.id,
-                    'subject_name': subject.name,
-                    'lessons_left': subscription.lessons_left,
-                    'end_date': subscription.end_date.strftime('%d.%m.%Y')
-                }
-
+                subscriptions_list.insert(0, f'{subject.name}({subscription_dict["end_date"]})')
+            else:
                 subscriptions.append(subscription_dict)
-                subscriptions_set.add(subject.name)
+                subscriptions_list.append(f'{subject.name}({subscription.lessons_left})')
+            subscriptions_set.add(subject.id)
 
-    all_subjects_list = sorted([(subject.name, subject.id) for subject in student.subjects
-                                if subject.subject_type.name != "school"])
+    all_subjects_list = sorted([(subject.name, subject.id) for subject in student.subjects if subject.subject_type.name != "school"])
+    extra_subjects = sorted([subject.name for subject in student.subjects if subject.id not in subscriptions_set and subject.subject_type.name != "school"])
 
-    student.extra_subjects = sorted([subject.name for subject in student.subjects
-                                     if subject.name not in subscriptions_set and
-                                     subject.subject_type.name != "school"])
-
-    subjects_list = [{'subject_name': extra_subject} for extra_subject in student.extra_subjects]
-
-    student.subjects_info = ([school] if school else []) + subscriptions + subjects_list
-
+    student.extra_subjects = extra_subjects
+    student.subjects_info = ', '.join(school + subscriptions_list + extra_subjects)
     student.subscriptions_info = subscriptions
-
-    student.all_subjects = ([(school.get('subject_name'), 0)] if school.get('subject_name') else []) + all_subjects_list
+    student.all_subjects = ([(school[0], 0)] if school else []) + all_subjects_list
 
 
 def basic_student_info(student):
@@ -467,6 +461,33 @@ def handle_student_edit(form, student):
             subscription.lessons_left = form.get(f'subscription_{subscription.id}_lessons')
             subscription.end_date = form.get(f'subscription_{subscription.id}_end_date')
         db.session.commit()
+
+
+def format_employee(employee):
+    if employee.contacts[0].telegram:
+        employee.contact = f"Телеграм: {employee.contacts[0].telegram}"
+    elif employee.contacts[0].phone:
+        employee.contact = f"Тел.: {employee.contacts[0].phone}"
+    elif employee.contacts[0].other_contact:
+        employee.contact = employee.contacts[0].other_contact
+    if employee.subjects_taught.all():
+        school_classes = set()
+        school_subjects = []
+        filtered_subjects = []
+        for subject in employee.subjects_taught:
+            distinct_classes = db.session.query(SchoolClass)\
+                .join(Lesson.school_classes)\
+                .filter(Lesson.teacher_id == employee.id,
+                        Lesson.subject_id == subject.id,
+                        SchoolClass.school_class <= 4).all()
+
+            if distinct_classes:
+                school_classes.update([sc_cl.school_name for sc_cl in distinct_classes])
+                school_subjects.append(subject.name)
+            else:
+                filtered_subjects.append(subject.name)
+        all_subjects = (list(school_classes) if len(school_subjects) > 2 else school_subjects) + filtered_subjects
+        employee.all_subjects = ', '.join(all_subjects)
 
 
 def check_subscription(student, lesson, subject_id):
@@ -827,7 +848,8 @@ def filter_lessons(form):
     week = int(form.get('lessons_week'))
     new_week = int(form.get('next_lessons_week')) - week
     subject_type = form.get('subject_type')
-    school_classes = form.getlist('school_classes') if form.getlist('school_classes') else ["all"]
+    school_classes = "all" if "school_all" in form \
+        else [int(value) for key, value in form.items() if key.startswith('school')]
     room = form.get('room')
     teacher = form.get('teacher')
 
@@ -845,9 +867,8 @@ def filter_lessons(form):
         query = query.filter(Lesson.room_id == int(room))
     if subject_type != "all":
         query = query.filter(Lesson.lesson_type_id == int(subject_type))
-    if 'all' not in school_classes:
-        classes = [int(cl) for cl in school_classes]
-        query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(classes)))
+    if school_classes != 'all':
+        query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(school_classes)))
     if teacher != "all":
         query = query.filter(Lesson.teacher_id == int(teacher))
 

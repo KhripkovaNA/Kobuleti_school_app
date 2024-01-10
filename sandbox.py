@@ -2,11 +2,12 @@ from app import app, db
 from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, \
     parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
     student_lesson_registered_table, student_lesson_attended_table, student_subject_table, \
-    teacher_subject_table, subscription_types_table, class_lesson_table
+    teacher_subject_table, subscription_types_table, class_lesson_table, Employee
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-from app.app_functions import format_subjects_and_subscriptions
+from app.app_functions import clients_data
+
 
 app.app_context().push()
 
@@ -96,41 +97,6 @@ def create_parent(student_info, i):
     )
 
     return new_parent
-
-
-# def handle_contact_info(student_info, student, i):
-#     contact_select = student_info["contact_select"][i]
-#     relation_type = student_info["relation"][i]
-#
-#     if relation_type == "Сам ребенок":
-#         contact = create_contact(student_info, i)
-#         db.session.add(contact)
-#         db.session.commit()
-#
-#         student.contacts.append(contact)
-#
-#     else:
-#         if contact_select == "Выбрать":
-#             parent_id = int(student_info["selected_contact"][i])
-#             parent = Person.query.filter_by(id=parent_id).first()
-#             contact = Contact.query.filter_by(person_id=parent_id).first()
-#
-#         else:
-#             contact = create_contact(student_info, i)
-#             parent = create_parent(student_info, i)
-#             db.session.add(parent)
-#             db.session.add(contact)
-#             db.session.commit()
-#
-#             parent.contacts.append(contact)
-#             parent.primary_contact = parent.id
-#
-#         student.parents.append(parent)
-#         assign_relation_type(student_info, student, parent, i)
-#
-#     if student_info['primary_contact'] == i:
-#         student.primary_contact = contact.person_id
-#     db.session.commit()
 
 
 def delete_record(table_model, record_id):
@@ -674,24 +640,55 @@ def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher
     return conflicting_lessons
 
 
-def check_subscription(student, subject, lesson, after_school_subject):
-    if lesson == 0:
-        date = datetime.today().date()
-    else:
-        date = lesson.date
-    if subject == 'all':
-        subscriptions = student.subscriptions
-    else:
-        subscriptions = Subscription.query.filter_by(subject_id=subject, student_id=student.id).all()
-    for subscription in student.subscriptions:
-        if subscription.subject == after_school_subject:
-            subscription.active = True if subscription.purchase_date.month == date.month else False
-            db.session.commit()
-        else:
-            cond1 = subscription.end_date < date
-            cond2 = subscription.lessons_left <= 0
-            subscription.active = False if (cond1 or cond2) else True
-            db.session.commit()
+def print_employees():
+    existing_employees = [f'{empl.id}\t{empl.person.last_name}\t{empl.person.first_name}\t{empl.role}'
+                          for empl in Employee.query.all()]
+    print(*existing_employees, sep='\n')
 
 
-print_table(Subscription)
+all_employees = Person.query.filter(Person.roles.any(Employee.id)).order_by(Person.last_name, Person.first_name).all()
+
+# for employee in all_employees:
+
+
+def format_employee(employee):
+    if employee.contacts[0].telegram:
+        employee.contact = f"Телеграм: {employee.contacts[0].telegram}"
+    elif employee.contacts[0].phone:
+        employee.contact = f"Тел.: {employee.contacts[0].phone}"
+    elif employee.contacts[0].other_contact:
+        employee.contact = employee.contacts[0].other_contact
+    if employee.subjects_taught.all():
+        school_classes = set()
+        school_subjects = []
+        filtered_subjects = []
+        for subject in employee.subjects_taught:
+            distinct_classes = db.session.query(SchoolClass)\
+                .join(Lesson.school_classes)\
+                .filter(Lesson.teacher_id == employee.id,
+                        Lesson.subject_id == subject.id,
+                        SchoolClass.school_class <= 4).all()
+
+            if distinct_classes:
+                school_classes.update([sc_cl.school_name for sc_cl in distinct_classes])
+                school_subjects.append(subject.name)
+            else:
+                filtered_subjects.append(subject.name)
+        all_subjects = (list(school_classes) if len(school_subjects) > 2 else school_subjects) + filtered_subjects
+        employee.all_subjects = ', '.join(all_subjects)
+
+
+possible_employees = Person.query.filter(
+    ~Person.roles.any(Employee.id),
+    Person.person_type == 'Взрослый'
+).order_by(Person.last_name, Person.first_name).all()
+
+# print(possible_employees)
+
+# distinct_roles = db.session.query(Employee.role.distinct()).filter(Employee.role != "учитель").all()
+# for role in distinct_roles:
+#     print(role[0])
+
+all_subjects = Subject.query.order_by(Subject.name).all()
+subject_list = [f'{subj.name} ({subj.subject_type.description})' for subj in all_subjects]
+print(*[person for person in clients_data('employee')], sep='\n')
