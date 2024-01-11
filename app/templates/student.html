@@ -407,7 +407,7 @@
                                     <div class="row contact-options-row" style="display: none;">
                                         <label class="control-label col-md-3">Контакты:</label>
                                         <div class="col-md-4">
-                                            <select name="selected_contact" class="form-control contact-options">
+                                            <select name="selected_contact" class="form-control contact-options select-search">
                                                 {% for client in clients %}
                                                     <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
                                                 {% endfor %}
@@ -506,9 +506,54 @@
                                     </div>
                                 {% endif %}
                                 <div class="col-md-3">
-                                    <a class="btn btn-primary" href="">
+                                    <a href="" class="btn btn-primary lesson-modal-trigger" data-toggle="modal" data-target="#lesson-modal">
                                         <i class="material-icons">date_range</i> Записать
                                     </a>
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Register for a lesson modal *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="lesson-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Запись на занятие</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="login-form" action="{{ url_for('lesson_register', student_id=student.id) }}" method="post">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="selected_subject" class="form-control lesson-subject-select">
+                                                                {% for subject in lesson_subjects %}
+                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата и время занятия:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="lesson" class="form-control lesson-select"></select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-3 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-login" data-background-color="main">
+                                                                Записать
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -593,9 +638,66 @@
                                     </div>
                                 {% endif %}
                                 <div class="col-md-3">
-                                    <a class="btn btn-primary" href="">
+                                    <a href="" class="btn btn-primary subscription-modal-trigger" data-toggle="modal" data-target="#subscription-modal">
                                         <i class="material-icons">addchart</i> Купить абонемент
                                     </a>
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student subscription purchase *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="subscription-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="login-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="selected_subject" class="form-control subscription-subject-select">
+                                                                {% for subject in subscription_subjects %}
+                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Тип абонемента:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="subscription_type" class="form-control subscription-type-select"></select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата покупки:</label>
+                                                        <div class="col-md-7">
+                                                            <input type="text" name="purchase_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
+                                                        <div class="col-md-7">
+                                                            <p class="form-control price-display" style="color:green"></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-3 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-login" data-background-color="main">
+                                                                Оплатить
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -654,5 +756,7 @@
 </div>
 <script type="text/javascript">
     var clientsData = {{ clients | tojson | safe }};
+    var lessonSubjectsData = {{ lesson_subjects | tojson | safe }};
+    var subscriptionSubjectsData = {{ subscription_subjects | tojson | safe }};
 </script>
 {% endblock %}

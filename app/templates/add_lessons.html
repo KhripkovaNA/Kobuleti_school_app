@@ -55,39 +55,50 @@
                                 <label class="control-label col-md-3">Класс:</label>
 
                                 <div class="col-md-5">
-                                    <div class="dropdown">
-                                        <button class="form-control dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown">
-                                            Классы
-                                            <span class="caret"></span>
-                                        </button>
-                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu" style="width: 100%;">
-                                            <li>
-                                                <div class="checkbox-option">
-                                                    <label class="contact-radio-label">
-                                                        <input type="checkbox" name="school_all" class="select-all" value="all">
-                                                        <span class="custom-checkbox"></span>Все классы
-                                                    </label>
-                                                </div>
-                                            </li>
-                                            {% for school_class in school_classes %}
-                                                <li>
-                                                    <div class="checkbox-option">
-                                                        <label class="contact-radio-label">
-                                                            <input type="checkbox"  name="school_{{ loop.index }}" value="{{ school_class.id }}">
-                                                            <span class="custom-checkbox"></span>{{ school_class.school_name }}
-                                                        </label>
-                                                    </div>
-                                                </li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
+                                    <select name="school_classes" class="form-control select-search-mult" multiple>
+                                        {% for school_class in school_classes %}
+                                            <option value="{{ school_class.id }}">{{ school_class.school_name }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <label class="control-label col-md-3">Выбранные классы:</label>
-                                <div class="selected-options col-md-5"></div>
-                            </div>
                         </div>
+
+<!--                                <div class="col-md-5">-->
+<!--                                    <div class="dropdown">-->
+<!--                                        <button class="form-control dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown">-->
+<!--                                            Классы-->
+<!--                                            <span class="caret"></span>-->
+<!--                                        </button>-->
+<!--                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu" style="width: 100%;">-->
+<!--                                            <li>-->
+<!--                                                <div class="checkbox-option">-->
+<!--                                                    <label class="contact-radio-label">-->
+<!--                                                        <input type="checkbox" name="school_all" class="select-all" value="all">-->
+<!--                                                        <span class="custom-checkbox"></span>Все классы-->
+<!--                                                    </label>-->
+<!--                                                </div>-->
+<!--                                            </li>-->
+<!--                                            {% for school_class in school_classes %}-->
+<!--                                                <li>-->
+<!--                                                    <div class="checkbox-option">-->
+<!--                                                        <label class="contact-radio-label">-->
+<!--                                                            <input type="checkbox"  name="school_{{ loop.index }}" value="{{ school_class.id }}">-->
+<!--                                                            <span class="custom-checkbox"></span>{{ school_class.school_name }}-->
+<!--                                                        </label>-->
+<!--                                                    </div>-->
+<!--                                                </li>-->
+<!--                                            {% endfor %}-->
+<!--                                        </ul>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="row">-->
+<!--                                <label class="control-label col-md-3">Выбранные классы:</label>-->
+<!--                                <div class="selected-options col-md-5"></div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+
                         <div class="row">
                             <label class="control-label col-md-3">Кабинет:</label>
                             <div class="col-md-5">

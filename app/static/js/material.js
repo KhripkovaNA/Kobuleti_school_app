@@ -182,6 +182,17 @@ $(document).ready(function(){
         }
     });
 
+    // Search in table
+    $('#search').keyup(function() {
+        var $rows = $('.table tr');
+        var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+
+        $rows.show().filter(function() {
+            var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
+            return !~text.indexOf(val);
+        }).hide();
+    });
+
     // Function to update client information when adding or editing a new client
     function updatePersonInformation(selector, section) {
         var personId = Number(selector.val());
@@ -189,52 +200,59 @@ $(document).ready(function(){
             return person.id === personId;
         });
         var selectedSection = selector.closest(section);
+        var personInfoBasic = selectedSection.find(".person-info-basic")
+        var personInfoContacts = selectedSection.find(".person-info-contacts")
 
-        selectedSection.find(".person-info-basic").html(`
-            <div class="form-group" style="margin-top: 12px;">
-                <div class="row">
-                    <label class="control-label col-md-3">Фамилия:</label>
-                    <div class="col-md-5">
-                        <p>${selectedPerson[0].last_name}</p>
+        if (selectedPerson.length > 0) {
+            personInfoBasic.html(`
+                <div class="form-group" style="margin-top: 12px;">
+                    <div class="row">
+                        <label class="control-label col-md-3">Фамилия:</label>
+                        <div class="col-md-5">
+                            <p class="form-control">${selectedPerson[0].last_name}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="control-label col-md-3">Имя:</label>
+                        <div class="col-md-5">
+                            <p class="form-control">${selectedPerson[0].first_name}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="control-label col-md-3">Отчество:</label>
+                        <div class="col-md-5">
+                            <p class="form-control">${selectedPerson[0].patronym}</p>
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <label class="control-label col-md-3">Имя:</label>
-                    <div class="col-md-5">
-                        <p>${selectedPerson[0].first_name}</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="control-label col-md-3">Отчество:</label>
-                    <div class="col-md-5">
-                        <p>${selectedPerson[0].patronym}</p>
-                    </div>
-                </div>
-            </div>
-        `);
+            `);
 
-        selectedSection.find(".person-info-contacts").html(`
-            <div class="form-group" style="margin-top: 12px;">
-                <div class="row">
-                    <label class="control-label col-md-3">Телеграм:</label>
-                    <div class="col-md-3">
-                        <p>${selectedPerson[0].telegram}</p>
+            personInfoContacts.html(`
+                <div class="form-group" style="margin-top: 12px;">
+                    <div class="row">
+                        <label class="control-label col-md-3">Телеграм:</label>
+                        <div class="col-md-3">
+                            <p class="form-control">${selectedPerson[0].telegram}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="control-label col-md-3">Телефон:</label>
+                        <div class="col-md-3">
+                            <p class="form-control">${selectedPerson[0].phone}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="control-label col-md-3">Другое:</label>
+                        <div class="col-md-3">
+                            <p class="form-control">${selectedPerson[0].other_contact}</p>
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <label class="control-label col-md-3">Телефон:</label>
-                    <div class="col-md-3">
-                        <p>${selectedPerson[0].phone}</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="control-label col-md-3">Другое:</label>
-                    <div class="col-md-3">
-                        <p>${selectedPerson[0].other_contact}</p>
-                    </div>
-                </div>
-            </div>
-        `);
+            `);
+        } else {
+            personInfoBasic.html("");
+            personInfoContacts.html("");
+        }
     }
 
     // Function to handle the change event for selection between adding a new person and choosing existing
@@ -254,7 +272,7 @@ $(document).ready(function(){
             personInput.hide();
             personOptionsRow.show();
             personInformation.show();
-            $(prefix + "options").trigger("change");
+            updatePersonInformation($(prefix + "options"), personSection);
         }
     }
 
@@ -444,24 +462,6 @@ $(document).ready(function(){
         subscriptionSubjectSelector.trigger("change");
     });
 
-    // custom multiselect dropdown
-    $(".dropdown-menu input[type=checkbox]").change(function () {
-        var dropdown = $(this).closest(".dropdown-container");
-        if ($(this).is(".select-all")) {
-            dropdown.find(".dropdown-menu input[type=checkbox]").not(this).prop("checked", $(this).prop("checked")).change();
-        }
-
-        var selectedOptions = [];
-
-        dropdown.find(".dropdown-menu input[type=checkbox]:checked").not(".select-all").each(function() {
-            selectedOptions.push($(this).parent().text().trim());
-        });
-
-        dropdown.find(".selected-options").text(selectedOptions.join(', '));
-
-        dropdown.find(".select-all").prop("checked", dropdown.find(".dropdown-menu input[type=checkbox]:checked").not(".select-all").length === dropdown.find(".dropdown-menu input[type=checkbox]").not(".select-all").length);
-    });
-
     // Handle the change event for employee selection
     $(".employee-section").on("change", ".employee-select", function () {
          personSelectChange($(this), ".employee-section");
@@ -476,30 +476,58 @@ $(document).ready(function(){
     });
 
     // Show subjects selector when checking teacher option
-    $("#teacher-checkbox").change(function () {
-        var subjectsTaught = $('#subjects-taught');
-        if ($(this).prop("checked")) {
+    $(".employee-section").on("change", "#role-select", function () {
+        var subjectsTaught = $("#subjects-taught")
+        var roleVal = $(this).val();
+        var teacher = 'учитель';
+        if (roleVal && roleVal.indexOf(teacher) !== -1) {
             subjectsTaught.show()
         } else {
             subjectsTaught.hide()
         }
     });
 
+
+//    Selectize.define('select_remove_all_options', function(options) {
+//        if (this.settings.mode === 'single') return;
+//        var self = this;
+//        self.setup = (function() {
+//            var original = self.setup;
+//            return function() {
+//                original.apply(this, arguments);
+//                var allBtn = $('<button type="button" class="btn btn-xs btn-warning">Выбрать все</button>');
+//                var clearBtn = $('<button type="button" class="btn btn-xs btn-danger">Очистить</button>');
+//                var btnGrp = $('<div class="selectize-plugin-select_remove_all_options-btn-grp"></div>');
+//                btnGrp.append(allBtn, ' ', clearBtn);
+//
+//                allBtn.on('click', function() {
+//                    self.setValue($.map(self.options, function(v, k) {
+//                        return k
+//                    }));
+//                });
+//                clearBtn.on('click', function() {
+//                    self.setValue([]);
+//                });
+//                this.$wrapper.append(btnGrp)
+//            };
+//        })();
+//    });
+
     // Search in select options
+    $('.select-search-add').selectize({
+        plugins: ['remove_button'],
+        create: true,
+        render: {
+            option_create: function(data, escape) {
+                return '<div class="create">Добавить: <strong>' + escape(data.input) + '</strong></div>';
+            }
+        }
+    });
+
     $('.select-search').selectize();
 
-
-    $('#search').keyup(function() {
-    var $rows = $('.table tr');
-    var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
-
-    $rows.show().filter(function() {
-        var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-        return !~text.indexOf(val);
-    }).hide();
-});
-
-
-
+    $('.select-search-mult').selectize({
+        plugins: ['remove_button']
+    });
 
 });

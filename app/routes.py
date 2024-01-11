@@ -1,10 +1,10 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass, Employee
-from app.app_functions import DAYS_OF_WEEK, basic_student_info, extensive_student_info, lesson_subjects_data, \
+from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, extensive_student_info, lesson_subjects_data, \
     subscription_subjects_data, student_lesson_register, purchase_subscription, add_child, add_adult, \
     handle_student_edit, clients_data, format_employee, week_lessons_dict, filter_lessons, copy_lessons, \
-    show_lesson, handle_lesson, week_school_lessons_dict, class_students_info
+    show_lesson, handle_lesson, week_school_lessons_dict, class_students_info, add_new_employee
 from app import app, db
 from datetime import datetime
 
@@ -40,11 +40,10 @@ def students():
     for student in all_students:
         basic_student_info(student)
     subscription_subjects = subscription_subjects_data()
-    today = datetime.now().date().strftime("%d.%m.%Y")
     lesson_subjects = lesson_subjects_data()
 
     return render_template('students.html', students=all_students,
-                           subscription_subjects=subscription_subjects, today=today,
+                           subscription_subjects=subscription_subjects, today=TODAY.strftime("%d.%m.%Y"),
                            lesson_subjects=lesson_subjects)
 
 
@@ -146,6 +145,8 @@ def show_edit_student(student_id):
     if student:
         extensive_student_info(student)
         clients = clients_data('child')
+        lesson_subjects = lesson_subjects_data()
+        subscription_subjects = subscription_subjects_data()
 
         if request.method == 'POST':
             try:
@@ -157,7 +158,8 @@ def show_edit_student(student_id):
                 flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
                 return redirect(url_for('show_edit_student', student_id=student.id))
 
-        return render_template('student.html', student=student, clients=clients)
+        return render_template('student.html', student=student, clients=clients, today=TODAY.strftime("%d.%m.%Y"),
+                               lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects)
     else:
         flash("Такого клиента нет", 'error')
         return redirect(url_for('students.html'))
@@ -177,27 +179,21 @@ def employees():
 @app.route('/add-employee', methods=['GET', 'POST'])
 @login_required
 def add_employee():
-    # if request.method == 'POST':
-    #     try:
-    #         if 'add_child_btn' in request.form:
-    #             student = add_child(request.form)
-    #
-    #             flash('Новый клиент добавлен в систему.', 'success')
-    #             return redirect(url_for('show_edit_student', student_id=student.id))
-    #
-    #         if 'add_adult_btn' in request.form:
-    #             client = add_adult(request.form)
-    #
-    #             flash('Новый клиент добавлен в систему.', 'success')
-    #             return redirect(url_for('show_edit_student', student_id=client.id))
-    #
-    #     except Exception as e:
-    #         db.session.rollback()
-    #         flash(f'Ошибка при добавлении киента: {str(e)}', 'error')
-    #         return redirect(url_for('add_student'))
+    if request.method == 'POST':
+        try:
+            employee = add_new_employee(request.form)
+
+            flash('Новый сотрудник добавлен в систему.', 'success')
+            # return redirect(url_for('show_edit_employee', employee_id=employee.id))
+            return redirect(url_for('employees'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении сотрудника: {str(e)}', 'error')
+            return redirect(url_for('add_student'))
 
     possible_employees = clients_data('employee')
-    distinct_roles = db.session.query(Employee.role.distinct()).filter(Employee.role != "учитель").all()
+    distinct_roles = db.session.query(Employee.role.distinct()).all()
     all_subjects = Subject.query.order_by(Subject.name).all()
     subject_list = [(subj.id, f'{subj.name} ({subj.subject_type.description})') for subj in all_subjects]
 

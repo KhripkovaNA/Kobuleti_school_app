@@ -114,7 +114,7 @@
                                             <div class="row contact-options-row" style="display: none;">
                                                 <label class="control-label col-md-3"></label>
                                                 <div class="col-md-3">
-                                                    <select name="selected_contact_1" class="form-control contact-options">
+                                                    <select name="selected_contact_1" class="form-control contact-options select-search">
                                                         {% for client in clients %}
                                                             <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
                                                         {% endfor %}
@@ -212,7 +212,7 @@
                                         <div class="row">
                                             <label class="control-label col-md-3"></label>
                                             <div class="col-md-3">
-                                                <select name="selected_client" class="form-control client-options">
+                                                <select name="selected_client" class="form-control client-options select-search">
                                                     {% for client in possible_clients %}
                                                         <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
                                                     {% endfor %}

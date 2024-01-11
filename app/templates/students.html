@@ -15,7 +15,7 @@
                         <table class="table table-hover">
                             <thead class="text-success">
                                 <th>Фамилия, Имя</th>
-                                <th>Дата рождения</th>
+                                <th>Дата рождения, Возраст</th>
                                 <th>Статус</th>
                                 <th>Занятия</th>
                                 <th>Контакт</th>
@@ -29,7 +29,10 @@
                                     {% for student in students %}
                                         <tr>
                                             <td>{{ student.last_name }} {{ student.first_name }}</td>
-                                            <td>{{ student.birth_date if student.birth_date }}</td>
+                                            <td>
+                                                <p>{{ student.birth_date if student.birth_date }}</p>
+                                                <p>{{ student.age if student.age }}</p>
+                                            </td>
                                             <td>
                                                 <p>{{ student.status_info }}</p>
                                                 {% if student.balance_plus %}
@@ -79,7 +82,7 @@
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal" data-student="{{ student.id }}">
+                                                            <a href="" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
                                                                 <i class="material-icons" style="color: purple;">date_range</i>Записать
                                                             </a>
                                                         </li>
@@ -256,6 +259,6 @@
 </div>
 <script type="text/javascript">
     var subscriptionSubjectsData = {{ subscription_subjects | tojson | safe }};
-    var lessonSubjectsData = {{ lesson_subjects | tojson | safe }}
+    var lessonSubjectsData = {{ lesson_subjects | tojson | safe }};
 </script>
 {% endblock %}

@@ -57,41 +57,14 @@
                                         </div>
                                     </div>
 
-                                    <div class="dropdown-container">
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Должность:</label>
-                                            <div class="col-md-5">
-                                                <div class="dropdown">
-                                                    <button class="form-control dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown">
-                                                        Должности
-                                                        <span class="caret"></span>
-                                                    </button>
-                                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu" style="width: 100%;">
-                                                        <li>
-                                                            <div class="checkbox-option">
-                                                                <label class="contact-radio-label">
-                                                                    <input type="checkbox"  id="teacher-checkbox" name="role_teacher" value="учитель">
-                                                                    <span class="custom-checkbox"></span>учитель
-                                                                </label>
-                                                            </div>
-                                                        </li>
-                                                        {% for role in roles %}
-                                                            <li>
-                                                                <div class="checkbox-option">
-                                                                    <label class="contact-radio-label">
-                                                                        <input type="checkbox"  name="role_{{ loop.index }}" value="{{ role[0] }}">
-                                                                        <span class="custom-checkbox"></span>{{ role[0] }}
-                                                                    </label>
-                                                                </div>
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Выбранные должности:</label>
-                                            <div class="selected-options col-md-5"></div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Должность:</label>
+                                        <div class="col-md-5">
+                                            <select name="roles" id="role-select" placeholder="Должности" class="form-control select-search-add" multiple>
+                                                {% for role in roles %}
+                                                    <option value="{{ role[0] }}">{{ role[0] }}</option>
+                                                {% endfor %}
+                                            </select>
                                         </div>
                                     </div>
 
@@ -99,32 +72,14 @@
                                         <div class="row">
                                             <label class="control-label col-md-3">Занятия:</label>
                                             <div class="col-md-5">
-                                                <div class="dropdown">
-                                                    <button class="form-control dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
-                                                        Занятия
-                                                        <span class="caret"></span>
-                                                    </button>
-                                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1" style="width: 100%;">
-                                                        {% for subject in subjects %}
-                                                            <li>
-                                                                <div class="checkbox-option">
-                                                                    <label class="contact-radio-label">
-                                                                        <input type="checkbox"  name="subject_{{ loop.index }}" value="{{ subject[0] }}">
-                                                                        <span class="custom-checkbox"></span>{{ subject[1] }}
-                                                                    </label>
-                                                                </div>
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </div>
+                                                <select name="subjects" class="form-control select-search-mult" multiple>
+                                                    {% for subject in subjects %}
+                                                        <option value="{{ subject[0] }}">{{ subject[1] }}</option>
+                                                    {% endfor %}
+                                                </select>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Выбранные занятия:</label>
-                                            <div class="selected-options col-md-5"></div>
-                                        </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>

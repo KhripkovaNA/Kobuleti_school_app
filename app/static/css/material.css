@@ -2873,6 +2873,10 @@ select.form-control[multiple],
     width: 15px;
 }
 
+.table td p {
+    margin: 0;
+}
+
 .table .radio .icons,
 .table .checkbox .icons {
     position: relative;

@@ -11,9 +11,39 @@ MONTHS = ["январь", "февраль", "март", "апрель", "май"
           "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
 CHILD = "Ребенок"
 ADULT = "Взрослый"
+TEACHER = "учитель"
 CHILD_SELF = "Сам ребенок"
 CHOOSE = "Выбрать"
 OTHER = "Другое"
+TODAY = datetime.now().date()
+
+
+def conjugate_lessons(number):
+    last_digit = number % 10
+    last_two_digits = number % 100
+
+    if 10 <= last_two_digits <= 20:
+        return f"{number} занятий"
+    elif last_digit == 1:
+        return f"{number} занятие"
+    elif 2 <= last_digit <= 4:
+        return f"{number} занятия"
+    else:
+        return f"{number} занятий"
+
+
+def conjugate_years(number):
+    last_digit = number % 10
+    last_two_digits = number % 100
+
+    if 10 <= last_two_digits <= 20:
+        return f"{number} лет"
+    elif last_digit == 1:
+        return f"{number} год"
+    elif 2 <= last_digit <= 4:
+        return f"{number} года"
+    else:
+        return f"{number} лет"
 
 
 def create_student(form, student_type):
@@ -158,6 +188,48 @@ def add_adult(form):
     return client
 
 
+def add_new_employee(form):
+    employee_select = form.get('employee_select')
+    if employee_select == CHOOSE:
+        person_id = int(form.get('selected_person'))
+        employee = Person.query.filter_by(id=person_id).first()
+
+    else:
+        last_name = form.get('last_name')
+        first_name = form.get('first_name')
+        patronym = form.get('patronym')
+        employee = Person(
+            last_name=last_name,
+            first_name=first_name,
+            patronym=patronym,
+            person_type=ADULT
+        )
+        contact = create_contact(form, '')
+        db.session.add(employee)
+        db.session.add(contact)
+        db.session.commit()
+        employee.contacts.append(contact)
+        employee.primary_contact = employee.id
+
+    roles = form.getlist('roles')
+    if roles:
+        for role in roles:
+            new_employee = Employee(
+                person_id=employee.id,
+                role=role
+            )
+            db.session.add(new_employee)
+            if role == TEACHER:
+                employee.teacher = True
+                subject_ids = [int(subject_id) for subject_id in form.getlist('subjects')]
+                subjects = Subject.query.filter(Subject.id.in_(subject_ids)).all()
+                employee.subjects_taught.extend(subjects)
+
+    db.session.commit()
+
+    return employee
+
+
 def clients_data(person_type):
     if person_type == 'child':
         all_clients = Person.query.order_by(Person.last_name, Person.first_name).all()
@@ -192,7 +264,10 @@ def clients_data(person_type):
 
 def format_student_info(student):
     if student.dob:
-        student.birth_date = student.dob.strftime('%d.%m.%Y')
+        dob = student.dob
+        age = TODAY.year - dob.year - ((TODAY.month, TODAY.day) < (dob.month, dob.day))
+        student.birth_date = dob.strftime('%d.%m.%Y')
+        student.age = conjugate_years(age)
     if student.pause_until:
         student.pause_date = student.pause_until.strftime('%d.%m.%y')
 
@@ -302,20 +377,6 @@ def extensive_student_info(student):
     format_subjects_and_subscriptions(student)
 
 
-def conjugate_lessons(number):
-    last_digit = number % 10
-    last_two_digits = number % 100
-
-    if 10 <= last_two_digits <= 20:
-        return f"{number} занятий"
-    elif last_digit == 1:
-        return f"{number} занятие"
-    elif 2 <= last_digit <= 4:
-        return f"{number} занятия"
-    else:
-        return f"{number} занятий"
-
-
 def subscription_subjects_data():
     filtered_subjects = Subject.query.filter(Subject.id != after_school_subject().id,
                                              Subject.subscription_types.any(SubscriptionType.id.isnot(None)))\
@@ -339,10 +400,9 @@ def subscription_subjects_data():
 
 
 def lesson_subjects_data():
-    today = datetime.now().date()
     now = datetime.now().time()
     filtered_subjects = Subject.query.filter(
-        Subject.subject_type.has(SubjectType.name.notin_(["school", "after_school"]))
+        Subject.subject_type.has(SubjectType.name == "extra")
     ).order_by(Subject.name).all()
 
     lesson_subjects = []
@@ -352,10 +412,10 @@ def lesson_subjects_data():
                 Lesson.subject_id == subject.id,
                 or_(
                     and_(
-                        Lesson.date == today,
+                        Lesson.date == TODAY,
                         Lesson.start_time > now
                     ),
-                    Lesson.date > today
+                    Lesson.date > TODAY
                 )
             )
         ).order_by(Lesson.date, Lesson.start_time).all()
@@ -685,10 +745,9 @@ def prev_next_lessons(lesson):
 
 def show_lesson(subject, lesson_id):
     if int(lesson_id) == 0:
-        today = datetime.now().date()
         last_lesson = Lesson.query.filter_by(subject_id=subject.id). \
             order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
-        coming_lesson = Lesson.query.filter(Lesson.date >= today,
+        coming_lesson = Lesson.query.filter(Lesson.date >= TODAY,
                                             Lesson.subject_id == subject.id). \
             order_by(Lesson.date, Lesson.start_time).first()
         subject_lesson = coming_lesson if coming_lesson else last_lesson if last_lesson else None
@@ -775,8 +834,7 @@ def day_lessons_list(day_room_lessons):
 
 
 def get_date(day_of_week, week=0):
-    today = datetime.now().date()
-    day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week*timedelta(weeks=1)
+    day_of_week_date = TODAY - timedelta(days=TODAY.weekday()) + timedelta(days=day_of_week) + week*timedelta(weeks=1)
     return day_of_week_date
 
 
@@ -848,8 +906,7 @@ def filter_lessons(form):
     week = int(form.get('lessons_week'))
     new_week = int(form.get('next_lessons_week')) - week
     subject_type = form.get('subject_type')
-    school_classes = "all" if "school_all" in form \
-        else [int(value) for key, value in form.items() if key.startswith('school')]
+    school_classes = form.getlist('school_classes') if form.getlist('school_classes') else ["all"]
     room = form.get('room')
     teacher = form.get('teacher')
 
