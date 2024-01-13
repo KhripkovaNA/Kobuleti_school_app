@@ -201,6 +201,33 @@ def add_employee():
                            subjects=subject_list)
 
 
+@app.route('/employee/<string:employee_id>', methods=['GET', 'POST'])
+@login_required
+def show_edit_employee(employee_id):
+    employee = Person.query.filter_by(id=employee_id).first()
+    if employee:
+        if employee.teacher:
+            future_lessons = Lesson.query.filter(Lesson.date >= TODAY, Lesson.teacher_id == employee_id).all()
+            lesson_subjects = set([lesson.subject.name for lesson in future_lessons])
+            employee.future_lessons = future_lessons
+            employee.lesson_subjects = lesson_subjects
+
+        # if request.method == 'POST':
+        #     try:
+        #         handle_student_edit(request.form, student)
+        #         flash('Изменения внесены.', 'success')
+        #         return redirect(url_for('show_edit_student', student_id=student.id))
+        #     except Exception as e:
+        #         db.session.rollback()
+        #         flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+        #         return redirect(url_for('show_edit_student', student_id=student.id))
+
+        return render_template('employee.html', employee=employee)
+    else:
+        flash("Такого клиента нет", 'error')
+        return redirect(url_for('students.html'))
+
+
 @app.route('/subjects')
 @login_required
 def subjects():

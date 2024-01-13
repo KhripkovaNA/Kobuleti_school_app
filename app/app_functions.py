@@ -11,7 +11,7 @@ MONTHS = ["январь", "февраль", "март", "апрель", "май"
           "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
 CHILD = "Ребенок"
 ADULT = "Взрослый"
-TEACHER = "учитель"
+TEACHER = "Учитель"
 CHILD_SELF = "Сам ребенок"
 CHOOSE = "Выбрать"
 OTHER = "Другое"
@@ -44,6 +44,11 @@ def conjugate_years(number):
         return f"{number} года"
     else:
         return f"{number} лет"
+
+
+def person_age(dob):
+    age = TODAY.year - dob.year - ((TODAY.month, TODAY.day) < (dob.month, dob.day))
+    return conjugate_years(age)
 
 
 def create_student(form, student_type):
@@ -216,7 +221,7 @@ def add_new_employee(form):
         for role in roles:
             new_employee = Employee(
                 person_id=employee.id,
-                role=role
+                role=role.capitalize()
             )
             db.session.add(new_employee)
             if role == TEACHER:
@@ -265,9 +270,8 @@ def clients_data(person_type):
 def format_student_info(student):
     if student.dob:
         dob = student.dob
-        age = TODAY.year - dob.year - ((TODAY.month, TODAY.day) < (dob.month, dob.day))
         student.birth_date = dob.strftime('%d.%m.%Y')
-        student.age = conjugate_years(age)
+        student.age = person_age(dob)
     if student.pause_until:
         student.pause_date = student.pause_until.strftime('%d.%m.%y')
 
@@ -281,6 +285,8 @@ def format_student_info(student):
             student.balance_plus = round(student.balance, 1)
         elif student.balance < 0:
             student.balance_minus = round(student.balance, 1)
+    if student.children.all():
+        format_children(student)
 
 
 def format_main_contact(student):
@@ -320,6 +326,16 @@ def format_all_contacts(student):
             contacts.append(parent)
 
     student.additional_contacts = contacts
+
+
+def format_children(person):
+    children = []
+    for child in person.children.all():
+        child_age = person_age(child.dob) if child.dob else None
+        child_info = f'{child.last_name} {child.first_name} ({child_age})' \
+            if child_age else f'{child.last_name} {child.first_name}'
+        children.append((child.id, child_info))
+    person.children_info = children
 
 
 def after_school_subject():

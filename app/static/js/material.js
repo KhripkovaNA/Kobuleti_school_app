@@ -184,13 +184,20 @@ $(document).ready(function(){
 
     // Search in table
     $('#search').keyup(function() {
-        var $rows = $('.table tr');
         var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+        var table = $('.scroll-table-body');
 
-        $rows.show().filter(function() {
+        table.find('tbody tr').show().filter(function() {
             var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
             return !~text.indexOf(val);
         }).hide();
+
+        table.perfectScrollbar('update');
+
+        var visibleRow = table.find('tbody tr:visible:first');
+        if (visibleRow.length > 0) {
+            table.scrollTop(table.scrollTop() + visibleRow.position().top);
+        }
     });
 
     // Function to update client information when adding or editing a new client
@@ -205,47 +212,43 @@ $(document).ready(function(){
 
         if (selectedPerson.length > 0) {
             personInfoBasic.html(`
-                <div class="form-group" style="margin-top: 12px;">
-                    <div class="row">
-                        <label class="control-label col-md-3">Фамилия:</label>
-                        <div class="col-md-5">
-                            <p class="form-control">${selectedPerson[0].last_name}</p>
-                        </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Фамилия:</label>
+                    <div class="col-md-5">
+                        <p class="form-control">${selectedPerson[0].last_name}</p>
                     </div>
-                    <div class="row">
-                        <label class="control-label col-md-3">Имя:</label>
-                        <div class="col-md-5">
-                            <p class="form-control">${selectedPerson[0].first_name}</p>
-                        </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Имя:</label>
+                    <div class="col-md-5">
+                        <p class="form-control">${selectedPerson[0].first_name}</p>
                     </div>
-                    <div class="row">
-                        <label class="control-label col-md-3">Отчество:</label>
-                        <div class="col-md-5">
-                            <p class="form-control">${selectedPerson[0].patronym}</p>
-                        </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Отчество:</label>
+                    <div class="col-md-5">
+                        <p class="form-control">${selectedPerson[0].patronym}</p>
                     </div>
                 </div>
             `);
 
             personInfoContacts.html(`
-                <div class="form-group" style="margin-top: 12px;">
-                    <div class="row">
-                        <label class="control-label col-md-3">Телеграм:</label>
-                        <div class="col-md-3">
-                            <p class="form-control">${selectedPerson[0].telegram}</p>
-                        </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Телеграм:</label>
+                    <div class="col-md-3">
+                        <p class="form-control">${selectedPerson[0].telegram}</p>
                     </div>
-                    <div class="row">
-                        <label class="control-label col-md-3">Телефон:</label>
-                        <div class="col-md-3">
-                            <p class="form-control">${selectedPerson[0].phone}</p>
-                        </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Телефон:</label>
+                    <div class="col-md-3">
+                        <p class="form-control">${selectedPerson[0].phone}</p>
                     </div>
-                    <div class="row">
-                        <label class="control-label col-md-3">Другое:</label>
-                        <div class="col-md-3">
-                            <p class="form-control">${selectedPerson[0].other_contact}</p>
-                        </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Другое:</label>
+                    <div class="col-md-3">
+                        <p class="form-control">${selectedPerson[0].other_contact}</p>
                     </div>
                 </div>
             `);
@@ -306,6 +309,7 @@ $(document).ready(function(){
     // Function to add a new contact section dynamically
     function addContactSection() {
         contactCount++;
+
         var contactSection = $(".contact-section").first().clone();
         contactSection.find(".contact-radio").prop("checked", false);
         contactSection.attr("id", "contact-section-" + contactCount);
@@ -314,19 +318,43 @@ $(document).ready(function(){
         contactSection.find(".contact-select").val("Добавить");
         contactSection.find(".contact-options-row").hide();
         contactSection.find(".contact-input").show();
+        contactSection.find(".contact-information").hide();
+
         contactSection.find("select, input[type='text']").each(function() {
             var originalName = $(this).attr("name");
-            var newName = originalName.replace("_1", "_" + contactCount);
-            $(this).attr("name", newName);
-            if ($(this).is("input[type='text']")) {
-                $(this).val("");
+            if (originalName) {
+                var newName = originalName.replace("_1", "_" + contactCount);
+                $(this).attr("name", newName);
+                if ($(this).is("input[type='text']")) {
+                    $(this).val("");
+                }
             }
         });
+
         contactSection.find("input[type='radio']").each(function() {
             var originalValue = $(this).val();
             var newValue = originalValue.replace("_1", "_" + contactCount);
             $(this).val(newValue);
         });
+
+        var newContactOptionsRow = $('<label class="control-label col-md-3"></label>'
+        + '<div class="col-md-5">'
+        + '<select name="contact_select_' + contactCount + '" class="form-control contact-options select-search">'
+        + '</select>'
+        + '</div>');
+
+        var selectElement = newContactOptionsRow.find('select');
+        clientsData.forEach(function(person) {
+            var option = $('<option>', {
+                value: person.id,
+                text: person.last_name + ' ' + person.first_name
+            });
+            selectElement.append(option);
+        });
+
+        contactSection.find(".contact-options-row").empty();
+        contactSection.find(".contact-options-row").html(newContactOptionsRow);
+
         return contactSection;
     }
 
@@ -334,6 +362,16 @@ $(document).ready(function(){
     $("#add-contact-btn").click(function() {
         var newContactSection = addContactSection();
         newContactSection.appendTo("#contact-sections");
+
+        newContactSection.find(".contact-options.select-search").selectize({
+            onDropdownOpen: function ($dropdown) {
+                $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
+            },
+            onDropdownClose: function ($dropdown) {
+                $dropdown.find('.selectize-dropdown-content').perfectScrollbar('desroy');
+            }
+        });
+
         if (contactCount >= 2) {
             $("#remove-contact").show();
         }
@@ -479,7 +517,7 @@ $(document).ready(function(){
     $(".employee-section").on("change", "#role-select", function () {
         var subjectsTaught = $("#subjects-taught")
         var roleVal = $(this).val();
-        var teacher = 'учитель';
+        var teacher = 'Учитель';
         if (roleVal && roleVal.indexOf(teacher) !== -1) {
             subjectsTaught.show()
         } else {
@@ -521,13 +559,32 @@ $(document).ready(function(){
             option_create: function(data, escape) {
                 return '<div class="create">Добавить: <strong>' + escape(data.input) + '</strong></div>';
             }
+        },
+        onDropdownOpen: function ($dropdown) {
+            $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
+        },
+        onDropdownClose: function ($dropdown) {
+            $dropdown.find('.selectize-dropdown-content').perfectScrollbar('desroy');
         }
     });
 
-    $('.select-search').selectize();
+    $('.select-search').selectize({
+        onDropdownOpen: function ($dropdown) {
+            $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
+        },
+        onDropdownClose: function ($dropdown) {
+            $dropdown.find('.selectize-dropdown-content').perfectScrollbar('desroy');
+        }
+    });
 
     $('.select-search-mult').selectize({
-        plugins: ['remove_button']
+        plugins: ['remove_button'],
+        onDropdownOpen: function ($dropdown) {
+            $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
+        },
+        onDropdownClose: function ($dropdown) {
+            $dropdown.find('.selectize-dropdown-content').perfectScrollbar('desroy');
+        }
     });
 
 });

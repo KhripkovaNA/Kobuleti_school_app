@@ -31,6 +31,20 @@
                             <p class="form-control">{{ student.status_info }}</p>
                         </div>
                     </div>
+                    {% if student.children_info %}
+                        {% for child in student.children_info %}
+                            <div class="row">
+                                <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
+                                <div class="col-md-5">
+                                    <p class="form-control">
+                                        <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
+                                            {{ child[1] }}
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                     <div class="footer">
                         <div class="row">
                             <div class="col-md-3">
@@ -100,6 +114,20 @@
                                 </div>
                             </div>
                         </div>
+                        {% if student.children_info %}
+                            {% for child in student.children_info %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
+                                    <div class="col-md-5">
+                                        <p class="form-control">
+                                            <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
+                                                {{ child[1] }}
+                                            </a>
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
                         <div class="footer">
                             <div class="row">
                                 <div class="col-md-3">
@@ -292,11 +320,11 @@
                                 <form class="login-form contact-section" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
                                     <div class="row">
                                         <label class="control-label col-md-3">Контакт:</label>
-                                        <div class="col-md-2">
+                                        <div class="col-md-5">
                                             <p class="form-control">{{ contact.type }}</p>
                                         </div>
-                                        <div class="col-md-3">
-                                            <label class="contact-radio-label" style="padding: 9px 25px">Сделать основным
+                                        <div class="col-md-3 checkbox-option">
+                                            <label class="contact-radio-label">Сделать основным
                                                 <input type="checkbox" name="primary_contact_{{ loop.index }}">
                                                 <span class="custom-checkbox"></span>
                                             </label>
@@ -373,7 +401,7 @@
                             <form class="login-form contact-section" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
                                 <div class="row">
                                     <label class="control-label col-md-3">Контакт:</label>
-                                    <div class="col-md-4">
+                                    <div class="col-md-5">
                                         <select name="relation_new" class="form-control contact-relation">
                                             <option value="Мама">Мама</option>
                                             <option value="Папа">Папа</option>
@@ -381,8 +409,8 @@
                                             <option value="Другое">Другое контактное лицо</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-3">
-                                        <label class="contact-radio-label" style="padding: 9px 25px">Сделать основным
+                                    <div class="col-md-3 checkbox-option">
+                                        <label class="contact-radio-label">Сделать основным
                                             <input type="checkbox" name="primary_contact" value="contact_new">
                                             <span class="custom-checkbox"></span>
                                         </label>
@@ -397,7 +425,7 @@
                                 <div  class="contact_selection">
                                     <div class="row">
                                         <label class="control-label col-md-3">Данные контактного лица:</label>
-                                        <div class="col-md-4">
+                                        <div class="col-md-5">
                                             <select name="contact_select_new" class="form-control contact-select">
                                                 <option value="Добавить">Добавить</option>
                                                 <option value="Выбрать">Выбрать из списка</option>
@@ -481,18 +509,18 @@
 
                     <div class="form-group section section-subjects" data-target="subjects">
                         {% if student.all_subjects %}
-                            <div class="row">
-                                {% if student.status=="Лид"%}
-                                    <label class="control-label col-md-3">Интересуется:</label>
-                                {% else %}
-                                    <label class="control-label col-md-3">Посещает:</label>
-                                {% endif %}
-                                <div class="col-md-5">
-                                    {% for subject in student.all_subjects %}
-                                        <p style="padding: 12px 12px 0; margin: 0;">{{ subject[0] }}</p>
-                                    {% endfor %}
+                            {% for subject in student.all_subjects %}
+                                <div class="row">
+                                    {% if student.status=="Лид"%}
+                                        <label class="control-label col-md-3">{{ "Интересуется:" if loop.first }}</label>
+                                    {% else %}
+                                        <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
+                                    {% endif %}
+                                    <div class="col-md-5">
+                                        <p class="form-control">{{ subject[0] }}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            {% endfor %}
                         {% else %}
                             <div class="row">
                                 <p>Занятий пока нет</p>
@@ -564,24 +592,27 @@
                     <div class="form-group form form-subjects" data-target="subjects" style="display: none;">
                         <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
                             {% if student.all_subjects %}
-                                <div class="row">
-                                    {% if student.status=="Лид" %}
-                                        <label class="control-label col-md-3">Интересуется:</label>
-                                    {% else %}
-                                        <label class="control-label col-md-3">Посещает:</label>
-                                    {% endif %}
-                                    <div class="col-md-5">
-                                        {% for subject in student.all_subjects %}
-
-                                            <p style="padding: 12px 12px 0; margin: 0;">
-                                                {% if subject[0] in student.extra_subjects %}
-                                                    <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger" style="padding: 1px 4px; font-size: 7px;">x</button>
-                                                {% endif %}
-                                                {{ subject[0] }}
-                                            </p>
-                                        {% endfor %}
+                                {% for subject in student.all_subjects %}
+                                    <div class="row">
+                                        {% if student.status=="Лид" %}
+                                            <label class="control-label col-md-3">{{ "Интересуется:" if loop.first }}</label>
+                                        {% else %}
+                                            <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
+                                        {% endif %}
+                                        <div class="col-md-5">
+                                            {% if subject[0] in student.extra_subjects %}
+                                                <div class="input-group">
+                                                    <p class="form-control" style="border-radius: 4px;">{{ subject[0] }}</p>
+                                                    <span class="input-group-addon" style="padding:0;">
+                                                        <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger del-btn">x</button>
+                                                    </span>
+                                                </div>
+                                            {% else %}
+                                                <p class="form-control">{{ subject[0] }}</p>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                </div>
+                                {% endfor %}
                             {% endif %}
                             <div class="footer">
                                 <div class="row">

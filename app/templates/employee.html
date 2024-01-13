@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Информация о сотруднике</h4>
+            </div>
+            <div class="card-content col-md-offset-1">
+
+            <!-- *-*-*-*-*-*-*-*-*-* Employee information show *-*-*-*-*-*-*-*-*-* -->
+
+                <div class="form-group section section-employee" data-target="employee">
+                    <h4 class="title" style="margin-bottom:27px;">{{ employee.last_name }} {{ employee.first_name }} {{ employee.patronym }}</h4>
+                    {% if employee.roles %}
+                        {% for role in employee.roles %}
+                            <div class="row">
+                                <label class="control-label col-md-3">{{ "Должность:" if loop.first }}</label>
+                                <div class="col-md-5">
+                                    <p class="form-control">{{ role.role }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% if employee.teacher and employee.subjects %}
+                        {% for subject in employee.subjects %}
+                            <div class="row">
+                                <label class="control-label col-md-3">{{ "Предмет:" if loop.first }}</label>
+                                <div class="col-md-5">
+                                    <p class="form-control">{{ subject.name }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    <hr>
+                    <h4 class="title">Kонтакты</h4>
+                    <div class="row">
+                        <label class="control-label col-md-3">Телеграм:</label>
+                        <div class="col-md-5">
+                            <p class="form-control">{{ employee.contacts[0].telegram }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="control-label col-md-3">Телефон:</label>
+                        <div class="col-md-5">
+                            <p class="form-control">{{ employee.contacts[0].phone }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="control-label col-md-3">Другое:</label>
+                        <div class="col-md-5">
+                            <p class="form-control">{{ employee.contacts[0].other_contact }}</p>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button class="btn btn-login section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Employee information edit *-*-*-*-*-*-*-*-*-* -->
+
+                <div class="form-group form form-employee" data-target="employee" style="display: none;">
+                    <form class="login-form" action="{{ url_for('show_edit_employee', employee_id=employee.id) }}" method="post">
+                        <div class="row">
+                            <label class="control-label col-md-3">Фамилия:</label>
+                            <div class="col-md-5">
+                                <input type="text" name="last_name" class="form-control" value="{{ employee.last_name }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-md-3">Имя:</label>
+                            <div class="col-md-5">
+                                <input type="text" name="first_name" class="form-control" value="{{ employee.first_name }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-md-3">Отчество:</label>
+                            <div class="col-md-5">
+                                <input type="text" name="patronym" class="form-control" value="{{ employee.patronym }}">
+                            </div>
+                        </div>
+                        {% if employee.roles %}
+                            {% for role in employee.roles %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">{{ "Должность:" if loop.first }}</label>
+                                    <div class="col-md-5">
+                                        {% if role.role != "Учитель" %}
+                                            <div class="input-group">
+                                                <input type="text" name="role_{{ role.id }}" value="{{ role.role }}">
+                                                <span class="input-group-addon" style="padding:0;">
+                                                    <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn">x</button>
+                                                </span>
+                                            </div>
+                                        {% elif employee.future_lessons %}
+                                            <p class="form-control">{{ role.role }}</p>
+                                        {% else %}
+                                            <div class="input-group">
+                                                <p class="form-control" style="border-radius: 4px;">{{ role.role }}</p>
+                                                <span class="input-group-addon" style="padding:0;">
+                                                    <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn">x</button>
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+<!--                        {% if employee.teacher and employee.subjects_info %}-->
+<!--                            {% for role in employee.roles_info %}-->
+<!--                                <div class="row">-->
+<!--                                    <label class="control-label col-md-3">{{ "Предмет:" if loop.first }}</label>-->
+<!--                                    <div class="col-md-5">-->
+<!--                                        -->
+<!--                                            <button type="submit" name="del_subject_btn" value="{{ role[0] }}" class="btn btn-danger" style="margin:0; padding: 1px 4px; font-size: 7px;">x</button>-->
+<!--                                        -->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            {% endfor %}-->
+<!--                        {% endif %}-->
+                        <hr>
+                        <h4 class="title">Kонтакты</h4>
+                        <div class="row">
+                            <label class="control-label col-md-3">Телеграм:</label>
+                            <div class="col-md-5">
+                                <input type="text" name="telegram" class="form-control" value="{{ employee.contacts[0].telegram }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-md-3">Телефон:</label>
+                            <div class="col-md-5">
+                                <input type="text" name="phone" class="form-control" value="{{ employee.contacts[0].phone }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-md-3">Другое:</label>
+                            <div class="col-md-5">
+                                <input type="text" name="other_contact" class="form-control" value="{{ employee.contacts[0].other_contact }}">
+                            </div>
+                        </div>
+                        <div class="footer">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-default section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

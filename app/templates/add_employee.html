@@ -60,7 +60,7 @@
                                     <div class="row">
                                         <label class="control-label col-md-3">Должность:</label>
                                         <div class="col-md-5">
-                                            <select name="roles" id="role-select" placeholder="Должности" class="form-control select-search-add" multiple>
+                                            <select name="roles" id="role-select" placeholder="Выбрать должность" class="form-control select-search-add" multiple>
                                                 {% for role in roles %}
                                                     <option value="{{ role[0] }}">{{ role[0] }}</option>
                                                 {% endfor %}
@@ -70,9 +70,9 @@
 
                                     <div class="dropdown-container" id="subjects-taught" style="display: none;">
                                         <div class="row">
-                                            <label class="control-label col-md-3">Занятия:</label>
+                                            <label class="control-label col-md-3">Предметы:</label>
                                             <div class="col-md-5">
-                                                <select name="subjects" class="form-control select-search-mult" multiple>
+                                                <select name="subjects" class="form-control select-search-mult" placeholder="Выбрать предмет" multiple>
                                                     {% for subject in subjects %}
                                                         <option value="{{ subject[0] }}">{{ subject[1] }}</option>
                                                     {% endfor %}

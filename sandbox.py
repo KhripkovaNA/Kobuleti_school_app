@@ -6,7 +6,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-from app.app_functions import clients_data
+from app.app_functions import clients_data, conjugate_years
 
 
 app.app_context().push()
@@ -645,3 +645,30 @@ def print_employees():
                           for empl in Employee.query.all()]
     print(*existing_employees, sep='\n')
 
+
+adult_persons = Person.query.filter_by(person_type='Взрослый').all()
+
+
+def format_children(person):
+    children = []
+    for child in person.children.all():
+        today = datetime.now().date()
+        child_age = (today.year - child.dob.year - ((today.month, today.day) < (child.dob.month, child.dob.day))) \
+            if child.dob else None
+        child_info = f'{child.last_name} {child.first_name} ({conjugate_years(child_age)})' \
+            if child_age else f'{child.last_name} {child.first_name}'
+        children.append(child_info)
+    person.children_info = ', '.join(children)
+
+
+# for person in adult_persons:
+#     print(person.last_name, person.first_name)
+#     if person.children.all():
+#         format_children(person)
+#         print('Дети: ', person.children_info)
+
+
+teacher_id = 26
+teacher_lessons = Lesson.query.filter_by(teacher_id=teacher_id).all()
+teacher_subjects = set([lesson.subject.name for lesson in teacher_lessons])
+print('Математика' in teacher_subjects)

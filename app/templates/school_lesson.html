@@ -35,7 +35,7 @@
                                                 {% for student in lesson_students %}
                                                     <tr>
                                                         <td>
-                                                            <button type="submit" name="del_client_btn" value="{{ student.id }}" class="btn btn-danger" style="padding: 1px 4px; font-size: 7px;">x</button>
+                                                            <button type="submit" name="del_client_btn" value="{{ student.id }}" class="btn btn-danger del-btn" style="margin-bottom:0">x</button>
                                                             {{ student.last_name }} {{ student.first_name }}
                                                         </td>
                                                         {% if school_lesson.lesson_completed == False %}

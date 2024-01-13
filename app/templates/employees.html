@@ -56,13 +56,8 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a href="">
+                                                            <a href="{{ url_for('show_edit_employee', employee_id=employee.id) }}">
                                                                 <i class="material-icons" style="color: purple;">info</i>Просмотр
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="">
-                                                                <i class="material-icons" style="color: purple;">edit</i>Изменить
                                                             </a>
                                                         </li>
                                                         <li class="divider"></li>
