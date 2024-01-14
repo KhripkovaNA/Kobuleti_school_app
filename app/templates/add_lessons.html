@@ -11,11 +11,16 @@
             <div class="card-content">
                 <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
                     <div class="form-group">
-                        <div class="row">
+                        <div class="row selectors-group">
                             <label class="control-label col-md-3">День:</label>
                             <div class="col-md-3">
-                                <select name="lessons_day" class="form-control">
+                                <select name="lessons_days" class="form-control main-selector">
                                     <option value="all">Вся неделя</option>
+                                    <option value="specific">Выбрать дни</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 secondary-selector-div" style="display: none;">
+                                <select name="lessons_days_specific" placeholder="Выбрать дни" class="form-control select-search-mult" multiple>
                                     {% for day in days %}
                                         <option value="{{ loop.index0 }}">{{ day }}</option>
                                     {% endfor %}
@@ -39,82 +44,64 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row selectors-group">
                             <label class="control-label col-md-3">Занятия:</label>
                             <div class="col-md-3">
-                                <select id="subject-type-select" name="subject_type" class="form-control">
+                                <select name="subject_types" class="form-control main-selector">
                                     <option value="all">Все занятия</option>
+                                    <option value="specific">Выбрать типы занятий</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 secondary-selector-div" style="display: none;">
+                                <select id="subject-type-select" name="subject_types_specific" placeholder="Выбрать типы занятий" class="form-control select-search-mult" multiple>
                                     {% for subject_type in subject_types %}
                                         <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                         </div>
-                        <div class="dropdown-container" id="school-class-row" style="display: none;">
-                            <div class="row">
-                                <label class="control-label col-md-3">Класс:</label>
-
-                                <div class="col-md-5">
-                                    <select name="school_classes" class="form-control select-search-mult" multiple>
-                                        {% for school_class in school_classes %}
-                                            <option value="{{ school_class.id }}">{{ school_class.school_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                        <div class="row selectors-group" id="school-class-row" style="display: none;">
+                            <label class="control-label col-md-3">Классы:</label>
+                            <div class="col-md-3">
+                                <select name="school_classes" class="form-control main-selector">
+                                    <option value="all">Все классы</option>
+                                    <option value="specific">Выбрать классы</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 secondary-selector-div" style="display: none;">
+                                <select name="school_classes_specific" placeholder="Выбрать классы" class="form-control select-search-mult" multiple>
+                                    {% for school_class in school_classes %}
+                                        <option value="{{ school_class.id }}">{{ school_class.school_name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
-
-<!--                                <div class="col-md-5">-->
-<!--                                    <div class="dropdown">-->
-<!--                                        <button class="form-control dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown">-->
-<!--                                            Классы-->
-<!--                                            <span class="caret"></span>-->
-<!--                                        </button>-->
-<!--                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu" style="width: 100%;">-->
-<!--                                            <li>-->
-<!--                                                <div class="checkbox-option">-->
-<!--                                                    <label class="contact-radio-label">-->
-<!--                                                        <input type="checkbox" name="school_all" class="select-all" value="all">-->
-<!--                                                        <span class="custom-checkbox"></span>Все классы-->
-<!--                                                    </label>-->
-<!--                                                </div>-->
-<!--                                            </li>-->
-<!--                                            {% for school_class in school_classes %}-->
-<!--                                                <li>-->
-<!--                                                    <div class="checkbox-option">-->
-<!--                                                        <label class="contact-radio-label">-->
-<!--                                                            <input type="checkbox"  name="school_{{ loop.index }}" value="{{ school_class.id }}">-->
-<!--                                                            <span class="custom-checkbox"></span>{{ school_class.school_name }}-->
-<!--                                                        </label>-->
-<!--                                                    </div>-->
-<!--                                                </li>-->
-<!--                                            {% endfor %}-->
-<!--                                        </ul>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="row">-->
-<!--                                <label class="control-label col-md-3">Выбранные классы:</label>-->
-<!--                                <div class="selected-options col-md-5"></div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-
-                        <div class="row">
+                        <div class="row selectors-group">
                             <label class="control-label col-md-3">Кабинет:</label>
-                            <div class="col-md-5">
-                                <select name="room" class="form-control">
+                            <div class="col-md-3">
+                                <select name="rooms" class="form-control">
                                     <option value="all">Все кабинеты</option>
+                                    <option value="specific">Выбрать кабинеты</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 secondary-selector-div" style="display: none;">
+                                <select name="rooms_specific" placeholder="Выбрать кабинеты" class="form-control select-search-mult" multiple>
                                     {% for room in rooms %}
                                         <option value="{{ room.id }}">{{ room.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row selectors-group">
                             <label class="control-label col-md-3">Учитель:</label>
-                            <div class="col-md-5">
-                                <select name="teacher" class="form-control">
+                            <div class="col-md-3">
+                                <select name="teachers" class="form-control">
                                     <option value="all">Все учителя</option>
+                                    <option value="specific">Выбрать учителей</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 secondary-selector-div" style="display: none;">
+                                <select name="teachers_specific" placeholder="Выбрать учителей" class="form-control select-search-mult" multiple>
                                     {% for teacher in teachers %}
                                         <option value="{{ teacher.id }}">{{ teacher.last_name }} {{ teacher.first_name }}</option>
                                     {% endfor %}

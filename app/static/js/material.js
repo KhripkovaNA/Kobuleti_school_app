@@ -266,6 +266,7 @@ $(document).ready(function(){
         var personOptionsRow = parentSection.find(prefix + "options-row");
         var personInput = parentSection.find(prefix + "input");
         var personInformation = parentSection.find(prefix + "information");
+        var personSelector = parentSection.find(prefix + "options");
 
         if (selectorVal === "Добавить") {
             personInput.show();
@@ -275,7 +276,7 @@ $(document).ready(function(){
             personInput.hide();
             personOptionsRow.show();
             personInformation.show();
-            updatePersonInformation($(prefix + "options"), personSection);
+            personSelector[0].selectize.trigger( "change" );
         }
     }
 
@@ -310,7 +311,20 @@ $(document).ready(function(){
     function addContactSection() {
         contactCount++;
 
-        var contactSection = $(".contact-section").first().clone();
+        var firstContactSection = $(".contact-section").first()
+        firstContactSection.find('select').each(function() {
+            if ($(this)[0].selectize) {
+                inputValue = $(this)[0].selectize.getValue()
+                $(this)[0].selectize.destroy();
+            }
+        });
+
+        var contactSection = firstContactSection.clone();
+
+        var firstSelectizeElement = firstContactSection.find(".contact-options.select-search");
+        initializeSelectize(firstSelectizeElement);
+        firstSelectizeElement[0].selectize.setValue(inputValue);
+
         contactSection.find(".contact-radio").prop("checked", false);
         contactSection.attr("id", "contact-section-" + contactCount);
         contactSection.find(".contact-relation").val("Мама");
@@ -330,30 +344,11 @@ $(document).ready(function(){
                 }
             }
         });
-
         contactSection.find("input[type='radio']").each(function() {
             var originalValue = $(this).val();
             var newValue = originalValue.replace("_1", "_" + contactCount);
             $(this).val(newValue);
         });
-
-        var newContactOptionsRow = $('<label class="control-label col-md-3"></label>'
-        + '<div class="col-md-5">'
-        + '<select name="contact_select_' + contactCount + '" class="form-control contact-options select-search">'
-        + '</select>'
-        + '</div>');
-
-        var selectElement = newContactOptionsRow.find('select');
-        clientsData.forEach(function(person) {
-            var option = $('<option>', {
-                value: person.id,
-                text: person.last_name + ' ' + person.first_name
-            });
-            selectElement.append(option);
-        });
-
-        contactSection.find(".contact-options-row").empty();
-        contactSection.find(".contact-options-row").html(newContactOptionsRow);
 
         return contactSection;
     }
@@ -363,14 +358,8 @@ $(document).ready(function(){
         var newContactSection = addContactSection();
         newContactSection.appendTo("#contact-sections");
 
-        newContactSection.find(".contact-options.select-search").selectize({
-            onDropdownOpen: function ($dropdown) {
-                $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
-            },
-            onDropdownClose: function ($dropdown) {
-                $dropdown.find('.selectize-dropdown-content').perfectScrollbar('desroy');
-            }
-        });
+        var newSelectizeElement = newContactSection.find(".contact-options.select-search");
+        initializeSelectize(newSelectizeElement);
 
         if (contactCount >= 2) {
             $("#remove-contact").show();
@@ -426,20 +415,6 @@ $(document).ready(function(){
     // Hide dropdown when clicking anywhere
     $(document).on('click', function () {
         $('.dropdown-content').hide();
-    });
-
-    // Handle the change event for subject types selector
-    $("#subject-type-select").on("change", function () {
-        const selectedType = $(this).val();
-        const classSelect = $("select[name='school_classes']");
-        const classSelectRow = $("#school-class-row");
-
-        if (selectedType === "1") {
-            classSelectRow.show();
-        } else {
-            classSelectRow.hide();
-            classSelect.val(null);
-        }
     });
 
     // Handle the change event for lesson subject selector
@@ -525,66 +500,63 @@ $(document).ready(function(){
         }
     });
 
+    // Handle the change events for copy lessons selectors
+    $(".main-selector").change(function () {
+        var parentDiv = $(this).closest(".selectors-group");
+        var secondarySelectorDiv = parentDiv.find(".secondary-selector-div");
+        if ($(this).val() === 'specific') {
+            secondarySelectorDiv.show();
+        } else {
+            secondarySelectorDiv.hide();
+        }
+    });
 
-//    Selectize.define('select_remove_all_options', function(options) {
-//        if (this.settings.mode === 'single') return;
-//        var self = this;
-//        self.setup = (function() {
-//            var original = self.setup;
-//            return function() {
-//                original.apply(this, arguments);
-//                var allBtn = $('<button type="button" class="btn btn-xs btn-warning">Выбрать все</button>');
-//                var clearBtn = $('<button type="button" class="btn btn-xs btn-danger">Очистить</button>');
-//                var btnGrp = $('<div class="selectize-plugin-select_remove_all_options-btn-grp"></div>');
-//                btnGrp.append(allBtn, ' ', clearBtn);
-//
-//                allBtn.on('click', function() {
-//                    self.setValue($.map(self.options, function(v, k) {
-//                        return k
-//                    }));
-//                });
-//                clearBtn.on('click', function() {
-//                    self.setValue([]);
-//                });
-//                this.$wrapper.append(btnGrp)
-//            };
-//        })();
-//    });
+    // Handle the change event for subject types selector
+    $(".selectors-group").on("change", "#subject-type-select", function () {
+        var subjectTypeVal = $(this).val();
+        var classSelectRow = $("#school-class-row");
+        var school = '1';
+
+        if (subjectTypeVal && subjectTypeVal.indexOf(school) !== -1) {
+            classSelectRow.show();
+        } else {
+            classSelectRow.hide();
+        }
+    });
 
     // Search in select options
-    $('.select-search-add').selectize({
-        plugins: ['remove_button'],
-        create: true,
-        render: {
-            option_create: function(data, escape) {
-                return '<div class="create">Добавить: <strong>' + escape(data.input) + '</strong></div>';
-            }
-        },
-        onDropdownOpen: function ($dropdown) {
-            $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
-        },
-        onDropdownClose: function ($dropdown) {
-            $dropdown.find('.selectize-dropdown-content').perfectScrollbar('desroy');
-        }
-    });
+    function initializeSelectize(selector, plugins = [], create = false) {
+        const selectizeOptions = {
+            onDropdownOpen: function ($dropdown) {
+                $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
+            },
+            onDropdownClose: function ($dropdown) {
+                $dropdown.find('.selectize-dropdown-content').perfectScrollbar('destroy');
+            },
+            plugins: plugins
+        };
 
-    $('.select-search').selectize({
-        onDropdownOpen: function ($dropdown) {
-            $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
-        },
-        onDropdownClose: function ($dropdown) {
-            $dropdown.find('.selectize-dropdown-content').perfectScrollbar('desroy');
+        if (create) {
+            selectizeOptions.create = function(input) {
+                return {
+                    value: input,
+                    text: input
+                };
+            };
+            selectizeOptions.render = {
+                option_create: function(data, escape) {
+                    return '<div class="create">Добавить: <strong>' + escape(data.input) + '</strong></div>';
+                }
+            };
         }
-    });
 
-    $('.select-search-mult').selectize({
-        plugins: ['remove_button'],
-        onDropdownOpen: function ($dropdown) {
-            $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
-        },
-        onDropdownClose: function ($dropdown) {
-            $dropdown.find('.selectize-dropdown-content').perfectScrollbar('desroy');
-        }
-    });
+        $(selector).selectize(selectizeOptions);
+    }
+
+    initializeSelectize('.select-search-add', ['remove_button'], true);
+
+    initializeSelectize('.select-search');
+
+    initializeSelectize('.select-search-mult', ['remove_button']);
 
 });
