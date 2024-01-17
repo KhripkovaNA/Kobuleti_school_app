@@ -93,7 +93,7 @@
                                             <div class="input-group">
                                                 <input type="text" name="role_{{ role.id }}" value="{{ role.role }}">
                                                 <span class="input-group-addon" style="padding:0;">
-                                                    <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn">x</button>
+                                                    <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn-big">x</button>
                                                 </span>
                                             </div>
                                         {% elif employee.future_lessons %}
@@ -102,7 +102,7 @@
                                             <div class="input-group">
                                                 <p class="form-control" style="border-radius: 4px;">{{ role.role }}</p>
                                                 <span class="input-group-addon" style="padding:0;">
-                                                    <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn">x</button>
+                                                    <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn-big">x</button>
                                                 </span>
                                             </div>
                                         {% endif %}
@@ -154,6 +154,20 @@
                         </div>
                     </form>
                 </div>
+                {% if employee.children_info %}
+                    {% for child in employee.children_info %}
+                        <div class="row">
+                            <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
+                            <div class="col-md-5">
+                                <p class="form-control">
+                                    <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
+                                        {{ child[1] }}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
     </div>

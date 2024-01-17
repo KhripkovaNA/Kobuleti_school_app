@@ -666,9 +666,43 @@ def format_children(person):
 #     if person.children.all():
 #         format_children(person)
 #         print('Дети: ', person.children_info)
+#
 
 
-teacher_id = 26
-teacher_lessons = Lesson.query.filter_by(teacher_id=teacher_id).all()
-teacher_subjects = set([lesson.subject.name for lesson in teacher_lessons])
-print('Математика' in teacher_subjects)
+def get_weekday_date(day_of_week, date):
+    date_of_week_day = date - timedelta(days=date.weekday()) + timedelta(days=day_of_week)
+    return date_of_week_day
+
+
+week_list = ["0", "-1", "26.12.2023"]
+next_week_list = ["1", "0", "30.01.2024"]
+week = "2"
+next_week = "0"
+if week.lstrip('-').isdigit() and next_week.isdigit():
+    week_diff = int(next_week) - int(week)
+else:
+    week_start = get_date(0, int(week)) if week.lstrip('-').isdigit() \
+        else get_weekday_date(0, datetime.strptime(week, '%d.%m.%Y').date())
+    next_week_start = get_date(0, int(next_week)) if next_week.isdigit() \
+        else get_weekday_date(0, datetime.strptime(next_week, '%d.%m.%Y').date())
+    week_diff = int((next_week_start - week_start).days / 7)
+print(week, next_week, week_diff)
+
+
+def get_week_dates():
+    week_dates = [get_date(0).strftime('%d.%m.%Y'),
+                  get_date(0, 1).strftime('%d.%m.%Y'),
+                  get_date(0, -1).strftime('%d.%m.%Y')]
+    return week_dates
+
+
+def get_week_diff(date_1, date_2):
+    week_1_start = get_weekday_date(0, date_1)
+    week_2_start = get_weekday_date(0, date_2)
+    week_diff = (week_2_start - week_1_start).days / 7
+    return int(week_diff)
+
+
+today = datetime.now().date()
+next_week = datetime.strptime('30.01.2024', '%d.%m.%Y').date()
+print(get_week_diff(today, next_week))

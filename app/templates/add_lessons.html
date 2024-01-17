@@ -11,6 +11,48 @@
             <div class="card-content">
                 <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
                     <div class="form-group">
+                        <div class="selectors-group">
+                            <div class="row">
+                                <label class="control-label col-md-3">Перенести с:</label>
+                                <div class="col-md-3">
+                                    <select name="week" class="form-control main-selector">
+                                        <option value="0">Этой недели</option>
+                                        <option value="-1">Предыдущей недели</option>
+                                        <option value="specific">Выбрать неделю</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 datepicker-container secondary-selector-div" style="display: none;">
+                                    <input type="text" name="week_specific" class="form-control datepicker-week" placeholder="Неделя, с которой перенести...">
+                                </div>
+                            </div>
+                            <div class="row secondary-selector-div" style="display: none;">
+                                <label class="control-label col-md-3">Выбранная неделя:</label>
+                                <div class="col-md-3">
+                                    <p class="form-control week-range"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="selectors-group">
+                            <div class="row">
+                                <label class="control-label col-md-3">Перенести на:</label>
+                                <div class="col-md-3">
+                                    <select name="next_week" class="form-control main-selector">
+                                        <option value="1">Следующую неделю</option>
+                                        <option value="0">Эту неделю</option>
+                                        <option value="specific">Выбрать неделю</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 datepicker-container secondary-selector-div" style="display: none;">
+                                    <input type="text" name="next_week_specific" class="form-control datepicker-week" placeholder="Неделя, на которую перенести...">
+                                </div>
+                            </div>
+                            <div class="row secondary-selector-div" style="display: none;">
+                                <label class="control-label col-md-3">Выбранная неделя:</label>
+                                <div class="col-md-3">
+                                    <p class="form-control week-range"></p>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row selectors-group">
                             <label class="control-label col-md-3">День:</label>
                             <div class="col-md-3">
@@ -19,7 +61,7 @@
                                     <option value="specific">Выбрать дни</option>
                                 </select>
                             </div>
-                            <div class="col-md-3 secondary-selector-div" style="display: none;">
+                            <div class="col-md-4 secondary-selector-div" style="display: none;">
                                 <select name="lessons_days_specific" placeholder="Выбрать дни" class="form-control select-search-mult" multiple>
                                     {% for day in days %}
                                         <option value="{{ loop.index0 }}">{{ day }}</option>
@@ -27,25 +69,8 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Перенести</label>
-                            <div class="col-md-3">
-                                <select name="lessons_week" class="form-control">
-                                    <option value="0">С этой недели</option>
-                                    <option value="-1">С предыдущей недели</option>
-                                    <option value="-2">С предпредыдущей недели</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <select name="next_lessons_week" class="form-control">
-                                    <option value="1">На следующую неделю</option>
-                                    <option value="0">На эту неделю</option>
-                                    <option value="2">Через неделю</option>
-                                </select>
-                            </div>
-                        </div>
                         <div class="row selectors-group">
-                            <label class="control-label col-md-3">Занятия:</label>
+                            <label class="control-label col-md-3">Тип занятий:</label>
                             <div class="col-md-3">
                                 <select name="subject_types" class="form-control main-selector">
                                     <option value="all">Все занятия</option>
@@ -79,7 +104,7 @@
                         <div class="row selectors-group">
                             <label class="control-label col-md-3">Кабинет:</label>
                             <div class="col-md-3">
-                                <select name="rooms" class="form-control">
+                                <select name="rooms" class="form-control main-selector">
                                     <option value="all">Все кабинеты</option>
                                     <option value="specific">Выбрать кабинеты</option>
                                 </select>
@@ -95,7 +120,7 @@
                         <div class="row selectors-group">
                             <label class="control-label col-md-3">Учитель:</label>
                             <div class="col-md-3">
-                                <select name="teachers" class="form-control">
+                                <select name="teachers" class="form-control main-selector">
                                     <option value="all">Все учителя</option>
                                     <option value="specific">Выбрать учителей</option>
                                 </select>

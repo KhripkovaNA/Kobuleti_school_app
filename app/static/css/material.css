@@ -2027,6 +2027,13 @@ label {
     margin: 0px 2px 10px;
 }
 
+.del-btn-big {
+    padding: 10px 14px;
+    font-size: 9px;
+    margin: 0 0 10px -3px;
+    border-radius: 0 4px 4px 0;
+}
+
 .selectize-dropdown-content {
     position:relative;
 }
@@ -2411,6 +2418,7 @@ input[type=text], select.form-control {
   border: 1px solid #ccc;
   border-radius: 4px;
   resize: vertical;
+  margin-bottom: 10px;
 }
 
 input[type=text]:focus, input[type=date]:focus,

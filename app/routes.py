@@ -206,6 +206,7 @@ def add_employee():
 def show_edit_employee(employee_id):
     employee = Person.query.filter_by(id=employee_id).first()
     if employee:
+        format_employee(employee)
         if employee.teacher:
             future_lessons = Lesson.query.filter(Lesson.date >= TODAY, Lesson.teacher_id == employee_id).all()
             lesson_subjects = set([lesson.subject.name for lesson in future_lessons])
@@ -295,18 +296,24 @@ def lesson(subject_id, lesson_id):
 def add_lessons():
     if request.method == 'POST':
         try:
-            filtered_lessons, new_week = filter_lessons(request.form)
-            new_lessons, conflicts = copy_lessons(filtered_lessons, new_week)
-            db.session.add_all(new_lessons)
-            db.session.commit()
-            if conflicts == 0:
-                flash('Все занятия добавлены в расписание.', 'success')
-            elif not new_lessons:
-                flash(f'Занятия не добавлены, т.к. есть занятия в это же время.', 'error')
+            filtered_lessons, week_diff, next_week = filter_lessons(request.form)
+            if filtered_lessons:
+                new_lessons, conflicts = copy_lessons(filtered_lessons, week_diff)
+
+                db.session.add_all(new_lessons)
+                db.session.commit()
+                if conflicts == 0:
+                    flash('Все занятия добавлены в расписание.', 'success')
+                elif not new_lessons:
+                    flash(f'Занятия не добавлены, т.к. есть занятия в это же время.', 'error')
+                else:
+                    flash(f'Добавлено занятий: {len(new_lessons)}', 'success')
+                    flash(f'Не добавлено занятий: {conflicts}, т.к. есть занятия в это же время', 'error')
+                return redirect(url_for('timetable', week=next_week))
+
             else:
-                flash(f'Добавлено занятий: {len(new_lessons)}', 'success')
-                flash(f'Не добавлено занятий: {conflicts}, т.к. есть занятия в это же время', 'error')
-            return redirect(url_for('timetable', week=new_week))
+                flash('Нет занятий, удовлетворяющих заданным параметрам', 'error')
+                return redirect(url_for('add_lessons'))
 
         except Exception as e:
             db.session.rollback()
@@ -315,8 +322,8 @@ def add_lessons():
 
     subject_types = SubjectType.query.all()
     rooms = Room.query.all()
-    school_classes = SchoolClass.query.order_by(SchoolClass.school_name).all()
-    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
+    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
     return render_template('add_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types,
                            rooms=rooms, school_classes=school_classes, teachers=all_teachers)
 

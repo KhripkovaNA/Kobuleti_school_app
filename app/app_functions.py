@@ -564,6 +564,8 @@ def format_employee(employee):
                 filtered_subjects.append(subject.name)
         all_subjects = (list(school_classes) if len(school_subjects) > 2 else school_subjects) + filtered_subjects
         employee.all_subjects = ', '.join(all_subjects)
+    if employee.children.all():
+        format_children(employee)
 
 
 def check_subscription(student, lesson, subject_id):
@@ -854,6 +856,16 @@ def get_date(day_of_week, week=0):
     return day_of_week_date
 
 
+def get_weekday_date(day_of_week, date=TODAY):
+    date_of_week_day = date - timedelta(days=date.weekday()) + timedelta(days=day_of_week)
+    return date_of_week_day
+
+
+def get_week_dates():
+    week_dates = [get_date(0), get_date(0, 1), get_date(0, -1)]
+    return week_dates
+
+
 def week_lessons_dict(week, rooms):
     week_lessons = {}
     for day, weekday in enumerate(DAYS_OF_WEEK):
@@ -918,43 +930,64 @@ def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher
 
 
 def filter_lessons(form):
-    weekday = form.get('lessons_day')
-    week = int(form.get('lessons_week'))
-    new_week = int(form.get('next_lessons_week')) - week
-    subject_type = form.get('subject_type')
-    school_classes = form.getlist('school_classes') if form.getlist('school_classes') else ["all"]
-    room = form.get('room')
-    teacher = form.get('teacher')
+    week = form.get('week')
 
-    if weekday == "all":
-        start_date = get_date(0, week)
-        end_date = get_date(6, week)
-        query = Lesson.query.filter(
-            Lesson.date >= start_date,
-            Lesson.date <= end_date)
+    if week.lstrip('-').isdigit():
+        start_date = get_date(0, int(week))
     else:
-        lessons_date = get_date(int(weekday), week)
-        query = Lesson.query.filter(Lesson.date == lessons_date)
+        week_date = datetime.strptime(form.get('week_specific'), '%d.%m.%Y').date()
+        start_date = get_weekday_date(0, week_date)
 
-    if room != "all":
-        query = query.filter(Lesson.room_id == int(room))
-    if subject_type != "all":
-        query = query.filter(Lesson.lesson_type_id == int(subject_type))
-    if school_classes != 'all':
-        query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(school_classes)))
-    if teacher != "all":
-        query = query.filter(Lesson.teacher_id == int(teacher))
+    next_week = form.get('next_week')
+
+    if next_week.isdigit():
+        next_start_date = get_date(0, int(next_week))
+    else:
+        next_week_date = datetime.strptime(form.get('next_week_specific'), '%d.%m.%Y').date()
+        next_start_date = get_weekday_date(0, next_week_date)
+    week_diff = int((next_start_date - start_date).days / 7)
+    next_week = int((next_start_date - get_weekday_date(0, TODAY)).days / 7)
+
+    weekday = form.get('lessons_days')
+    weekdays = form.getlist('lessons_days_specific') if form.getlist('lessons_days_specific') else "all"
+
+    subject_types = form.get('subject_types')
+    school_classes = form.getlist('school_classes')
+    rooms = form.get('rooms')
+    teachers = form.get('teachers')
+    school_type_id = SubjectType.query.filter_by(name='school').first().id
+
+    if (weekday == "all") or (weekdays == "all"):
+        end_date = get_weekday_date(6, start_date)
+        query = Lesson.query.filter(Lesson.date >= start_date,
+                                    Lesson.date <= end_date)
+    else:
+        lessons_dates = [get_weekday_date(int(day), start_date) for day in weekdays]
+        query = Lesson.query.filter(Lesson.date.in_(lessons_dates))
+
+    if rooms != "all" and form.getlist('rooms_specific'):
+        rooms_list = [int(room) for room in form.getlist('rooms_specific')]
+        query = query.filter(Lesson.room_id.in_(rooms_list))
+    if subject_types != "all" and form.getlist('subject_types_specific'):
+        subject_types_list = [int(room) for room in form.getlist('subject_types_specific')]
+        query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
+        if school_classes != 'all' and form.getlist('school_classes_specific') and (school_type_id in subject_types_list):
+            school_classes_list = [int(school_class) for school_class in form.getlist('school_classes_specific')]
+            query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(school_classes_list)))
+    if teachers != "all" and form.getlist('teachers_specific'):
+        teachers_list = [int(teacher) for teacher in form.getlist('teachers_specific')]
+        query = query.filter(Lesson.lesson_type_id.in_(teachers_list))
 
     filtered_lessons = query.all()
 
-    return filtered_lessons, new_week
+    return filtered_lessons, week_diff, next_week
 
 
-def copy_lessons(filtered_lessons, new_week):
+def copy_lessons(filtered_lessons, week_diff):
     copied_lessons = []
     conflicts = 0
     for lesson in filtered_lessons:
-        date = lesson.date + timedelta(weeks=new_week)
+        date = lesson.date + timedelta(weeks=week_diff)
         start_time = lesson.start_time
         end_time = lesson.end_time
         classes = [cl.id for cl in lesson.school_classes]

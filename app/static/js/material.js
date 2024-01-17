@@ -110,6 +110,7 @@ $(document).ready(function(){
 
     // Date and time pickers settings
     $.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
+
     $(".datepicker").datepicker({
         dateFormat: "dd.mm.yy",
         changeYear: true,
@@ -521,6 +522,33 @@ $(document).ready(function(){
             classSelectRow.show();
         } else {
             classSelectRow.hide();
+        }
+    });
+
+    function formatDate(date) {
+        var day = date.getDate();
+        var month = date.getMonth() + 1; // Months are zero-based
+        return (day < 10 ? '0' : '') + day + '.' + (month < 10 ? '0' : '') + month;
+    }
+
+    $(".datepicker-week").datepicker({
+        onSelect: function (dateText, inst) {
+            var selectedDate = $(this).datepicker('getDate');
+            var dayOfWeek = selectedDate.getDay();
+
+            var startOfWeek = new Date(selectedDate);
+            startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+            var endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+            var formattedStartDate = formatDate(startOfWeek);
+            var formattedEndDate = formatDate(endOfWeek);
+
+            var pContainer = $(this).closest(".selectors-group").find(".week-range")
+            pContainer.html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
+
+            $(this).val(dateText);
         }
     });
 
