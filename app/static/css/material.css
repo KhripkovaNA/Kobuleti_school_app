@@ -4745,6 +4745,7 @@ ul {
     height: 130px;
     font-size: 14px;
     display: none;
+    z-index: 200;
 }
 
 .wickedpicker__title {

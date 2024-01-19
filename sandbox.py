@@ -2,11 +2,11 @@ from app import app, db
 from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, \
     parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
     student_lesson_registered_table, student_lesson_attended_table, student_subject_table, \
-    teacher_subject_table, subscription_types_table, class_lesson_table, Employee
+    teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-from app.app_functions import clients_data, conjugate_years
+from app.app_functions import subjects_data
 
 
 app.app_context().push()
@@ -648,61 +648,10 @@ def print_employees():
 
 adult_persons = Person.query.filter_by(person_type='Взрослый').all()
 
+sc_subj = Subject.query.filter_by(id=35).first()
+sc_classes = sorted(sc_subj.school_classes, key=lambda x: x.school_class)
+sc_teachers = sorted(sc_subj.teachers, key=lambda x: (x.last_name, x.first_name))
 
-def format_children(person):
-    children = []
-    for child in person.children.all():
-        today = datetime.now().date()
-        child_age = (today.year - child.dob.year - ((today.month, today.day) < (child.dob.month, child.dob.day))) \
-            if child.dob else None
-        child_info = f'{child.last_name} {child.first_name} ({conjugate_years(child_age)})' \
-            if child_age else f'{child.last_name} {child.first_name}'
-        children.append(child_info)
-    person.children_info = ', '.join(children)
-
-
-# for person in adult_persons:
-#     print(person.last_name, person.first_name)
-#     if person.children.all():
-#         format_children(person)
-#         print('Дети: ', person.children_info)
-#
-
-
-def get_weekday_date(day_of_week, date):
-    date_of_week_day = date - timedelta(days=date.weekday()) + timedelta(days=day_of_week)
-    return date_of_week_day
-
-
-week_list = ["0", "-1", "26.12.2023"]
-next_week_list = ["1", "0", "30.01.2024"]
-week = "2"
-next_week = "0"
-if week.lstrip('-').isdigit() and next_week.isdigit():
-    week_diff = int(next_week) - int(week)
-else:
-    week_start = get_date(0, int(week)) if week.lstrip('-').isdigit() \
-        else get_weekday_date(0, datetime.strptime(week, '%d.%m.%Y').date())
-    next_week_start = get_date(0, int(next_week)) if next_week.isdigit() \
-        else get_weekday_date(0, datetime.strptime(next_week, '%d.%m.%Y').date())
-    week_diff = int((next_week_start - week_start).days / 7)
-print(week, next_week, week_diff)
-
-
-def get_week_dates():
-    week_dates = [get_date(0).strftime('%d.%m.%Y'),
-                  get_date(0, 1).strftime('%d.%m.%Y'),
-                  get_date(0, -1).strftime('%d.%m.%Y')]
-    return week_dates
-
-
-def get_week_diff(date_1, date_2):
-    week_1_start = get_weekday_date(0, date_1)
-    week_2_start = get_weekday_date(0, date_2)
-    week_diff = (week_2_start - week_1_start).days / 7
-    return int(week_diff)
-
-
-today = datetime.now().date()
-next_week = datetime.strptime('30.01.2024', '%d.%m.%Y').date()
-print(get_week_diff(today, next_week))
+all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+teachers_data = {teacher.id: f"{teacher.last_name} {teacher.first_name}" for teacher in all_teachers}
+print(teachers_data)

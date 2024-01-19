@@ -6,141 +6,90 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Новое расписание</h4>
+                <h4 class="title">Новое занятие</h4>
             </div>
             <div class="card-content">
                 <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
-                    <div class="form-group">
-                        <div class="selectors-group">
-                            <div class="row">
-                                <label class="control-label col-md-3">Перенести с:</label>
-                                <div class="col-md-3">
-                                    <select name="week" class="form-control main-selector">
-                                        <option value="0">Этой недели</option>
-                                        <option value="-1">Предыдущей недели</option>
-                                        <option value="specific">Выбрать неделю</option>
-                                    </select>
+                    <div id="lesson-sections">
+                        <div class="lesson-section">
+                            <h5 class="title" style="margin: 27px;">Занятие 1</h5>
+                            <div class="form-group">
+                                <div class="row">
+                                    <label class="control-label col-md-3">Дата:</label>
+                                    <div class="col-md-3">
+                                        <input type="text" name="lesson_date_1" id="lesson-date-1" class="form-control datepicker" placeholder="дд.мм.гггг">
+                                    </div>
                                 </div>
-                                <div class="col-md-4 datepicker-container secondary-selector-div" style="display: none;">
-                                    <input type="text" name="week_specific" class="form-control datepicker-week" placeholder="Неделя, с которой перенести...">
+                                <div class="row">
+                                    <label class="control-label col-md-3">Начало:</label>
+                                    <div class="col-md-3">
+                                        <input type="text" name="lesson_start_time_1" class="form-control timepicker">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row secondary-selector-div" style="display: none;">
-                                <label class="control-label col-md-3">Выбранная неделя:</label>
-                                <div class="col-md-3">
-                                    <p class="form-control week-range"></p>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Конец:</label>
+                                    <div class="col-md-3">
+                                        <input type="text" name="lesson_end_time_1" class="form-control timepicker">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Предмет:</label>
+                                    <div class="col-md-6">
+                                        <select name="subject_1" class="form-control subject-select select-search">
+                                            {% for subject in subjects %}
+                                                <option value="{{ subject.id }}-{{ subject.subject_type }}">{{ subject.name }} ({{ subject.description }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row school-class-row" style="display: none;">
+                                    <label class="control-label col-md-3">Класс:</label>
+                                    <div class="col-md-6">
+                                        <select name="school_classes_1" placeholder="Выбрать классы" class="form-control classes-select select-search" multiple></select>
+                                    </div>
+                                    <button type="button" class="btn btn-success btn-sm add-classes-btn" style="margin: 4px 0;">Все классы</button>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Кабинет:</label>
+                                    <div class="col-md-6">
+                                        <select name="room_1" class="form-control select-search">
+                                            {% for room in rooms %}
+                                                <option value="{{ room.id }}">{{ room.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Учитель:</label>
+                                    <div class="col-md-6">
+                                        <select name="teacher_1" class="form-control teacher-select select-search"></select>
+                                    </div>
+                                    <button type="button" class="btn btn-success btn-sm add-teachers-btn" style="margin: 4px 0;">Все учителя</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="selectors-group">
-                            <div class="row">
-                                <label class="control-label col-md-3">Перенести на:</label>
-                                <div class="col-md-3">
-                                    <select name="next_week" class="form-control main-selector">
-                                        <option value="1">Следующую неделю</option>
-                                        <option value="0">Эту неделю</option>
-                                        <option value="specific">Выбрать неделю</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 datepicker-container secondary-selector-div" style="display: none;">
-                                    <input type="text" name="next_week_specific" class="form-control datepicker-week" placeholder="Неделя, на которую перенести...">
-                                </div>
-                            </div>
-                            <div class="row secondary-selector-div" style="display: none;">
-                                <label class="control-label col-md-3">Выбранная неделя:</label>
-                                <div class="col-md-3">
-                                    <p class="form-control week-range"></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row selectors-group">
-                            <label class="control-label col-md-3">День:</label>
+                    </div>
+                    <input type="hidden" name="lesson_count" id="lesson-count" value="">
+                    <input type="hidden" id="school-type" value="{{ school.id }}">
+                    <div class="row">
+                        <div id="add-lesson">
                             <div class="col-md-3">
-                                <select name="lessons_days" class="form-control main-selector">
-                                    <option value="all">Вся неделя</option>
-                                    <option value="specific">Выбрать дни</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 secondary-selector-div" style="display: none;">
-                                <select name="lessons_days_specific" placeholder="Выбрать дни" class="form-control select-search-mult" multiple>
-                                    {% for day in days %}
-                                        <option value="{{ loop.index0 }}">{{ day }}</option>
-                                    {% endfor %}
-                                </select>
+                                <button type="button" id="add-lesson-btn" class="btn btn-default" style="background-color: #ff9800;">Добавить занятие</button>
                             </div>
                         </div>
-                        <div class="row selectors-group">
-                            <label class="control-label col-md-3">Тип занятий:</label>
+                        <div id="remove-lesson" style="display: none;">
                             <div class="col-md-3">
-                                <select name="subject_types" class="form-control main-selector">
-                                    <option value="all">Все занятия</option>
-                                    <option value="specific">Выбрать типы занятий</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 secondary-selector-div" style="display: none;">
-                                <select id="subject-type-select" name="subject_types_specific" placeholder="Выбрать типы занятий" class="form-control select-search-mult" multiple>
-                                    {% for subject_type in subject_types %}
-                                        <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row selectors-group" id="school-class-row" style="display: none;">
-                            <label class="control-label col-md-3">Классы:</label>
-                            <div class="col-md-3">
-                                <select name="school_classes" class="form-control main-selector">
-                                    <option value="all">Все классы</option>
-                                    <option value="specific">Выбрать классы</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 secondary-selector-div" style="display: none;">
-                                <select name="school_classes_specific" placeholder="Выбрать классы" class="form-control select-search-mult" multiple>
-                                    {% for school_class in school_classes %}
-                                        <option value="{{ school_class.id }}">{{ school_class.school_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row selectors-group">
-                            <label class="control-label col-md-3">Кабинет:</label>
-                            <div class="col-md-3">
-                                <select name="rooms" class="form-control main-selector">
-                                    <option value="all">Все кабинеты</option>
-                                    <option value="specific">Выбрать кабинеты</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 secondary-selector-div" style="display: none;">
-                                <select name="rooms_specific" placeholder="Выбрать кабинеты" class="form-control select-search-mult" multiple>
-                                    {% for room in rooms %}
-                                        <option value="{{ room.id }}">{{ room.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row selectors-group">
-                            <label class="control-label col-md-3">Учитель:</label>
-                            <div class="col-md-3">
-                                <select name="teachers" class="form-control main-selector">
-                                    <option value="all">Все учителя</option>
-                                    <option value="specific">Выбрать учителей</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 secondary-selector-div" style="display: none;">
-                                <select name="teachers_specific" placeholder="Выбрать учителей" class="form-control select-search-mult" multiple>
-                                    {% for teacher in teachers %}
-                                        <option value="{{ teacher.id }}">{{ teacher.last_name }} {{ teacher.first_name }}</option>
-                                    {% endfor %}
-                                </select>
+                                <button type="button" id="remove-lesson-btn" class="btn btn-danger">Удалить занятие</button>
                             </div>
                         </div>
                     </div>
                     <div class="footer">
                         <div class="row">
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" id="submit-btn" style="background-color:#4BD1A0;">Заполнить расписание</button>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-login" id="submit-lesson-btn" style="background-color:#4BD1A0;">Добавить в расписание</button>
                             </div>
                             <div class="col-md-3">
-                                <a href="{{ url_for('timetable', week=0) }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                                <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
                             </div>
                         </div>
                     </div>
@@ -149,5 +98,9 @@
         </div>
     </div>
 </div>
-
+<script type="text/javascript">
+    var subjectsData = {{ subjects | tojson | safe }};
+    var teachersData = {{ teachers | tojson | safe }};
+    var classesData = {{ school_classes | tojson | safe }};
+</script>
 {% endblock %}

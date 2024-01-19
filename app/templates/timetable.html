@@ -88,9 +88,15 @@
                     </div>
                     <div class="col-md-3"></div>
                     <div class="col-md-3">
-                        <button class="btn" style="background-color: #4bd1a0;">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_lessons') }}">Составить расписание</a>
-                        </button>
+                        <div class="dropdown">
+                            <button class="btn dropdown-toggle" style="background-color: #4bd1a0;" data-toggle="dropdown">Составить расписание</button>
+                            <div class="dropup">
+                                <ul class="dropdown-menu">
+                                    <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
+                                    <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

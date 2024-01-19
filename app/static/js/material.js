@@ -334,6 +334,9 @@ $(document).ready(function(){
         contactSection.find(".contact-options-row").hide();
         contactSection.find(".contact-input").show();
         contactSection.find(".contact-information").hide();
+        var originalTitle = contactSection.find("h5").text();
+        var newTitle = originalTitle.replace("1", contactCount);
+        contactSection.find("h5").text(newTitle);
 
         contactSection.find("select, input[type='text']").each(function() {
             var originalName = $(this).attr("name");
@@ -354,7 +357,7 @@ $(document).ready(function(){
         return contactSection;
     }
 
-    // Add a new contact form when adding a new client
+    // Add a new contact section when adding a new client
     $("#add-contact-btn").click(function() {
         var newContactSection = addContactSection();
         newContactSection.appendTo("#contact-sections");
@@ -367,7 +370,7 @@ $(document).ready(function(){
         }
     });
 
-    // Remove a contact form when adding a new client
+    // Remove last contact section when adding a new client
     $("#remove-contact").click(function() {
         $("#contact-sections .contact-section:last").remove();
         contactCount--;
@@ -525,12 +528,14 @@ $(document).ready(function(){
         }
     });
 
+    // Function to format date in datepicker
     function formatDate(date) {
         var day = date.getDate();
         var month = date.getMonth() + 1; // Months are zero-based
         return (day < 10 ? '0' : '') + day + '.' + (month < 10 ? '0' : '') + month;
     }
 
+    // Show week range for week datepicker
     $(".datepicker-week").datepicker({
         onSelect: function (dateText, inst) {
             var selectedDate = $(this).datepicker('getDate');
@@ -552,7 +557,7 @@ $(document).ready(function(){
         }
     });
 
-    // Search in select options
+    // Function to initialize search in select options
     function initializeSelectize(selector, plugins = [], create = false) {
         const selectizeOptions = {
             onDropdownOpen: function ($dropdown) {
@@ -581,10 +586,164 @@ $(document).ready(function(){
         $(selector).selectize(selectizeOptions);
     }
 
+    // Search in select options with adding new options
     initializeSelectize('.select-search-add', ['remove_button'], true);
 
-    initializeSelectize('.select-search');
+    // Search in select options without adding new options
+    initializeSelectize('.select-search', ['remove_button']);
 
-    initializeSelectize('.select-search-mult', ['remove_button']);
+
+    var lessonCount = 1
+    // Function to add a new lesson section dynamically
+    function addLessonSection() {
+        lessonCount++;
+
+        var firstLessonSection = $(".lesson-section").first()
+        var selectizeElements = {};
+        firstLessonSection.find('select').each(function() {
+            if ($(this)[0].selectize) {
+                selectizeElements[$(this).attr('name')] = $(this)[0].selectize.getValue();
+                $(this)[0].selectize.destroy();
+            }
+        });
+
+        var lessonSection = firstLessonSection.clone();
+
+        $.each(selectizeElements, function(key, value) {
+            var selectElement = firstLessonSection.find('select[name=' + key + ']');
+            initializeSelectize(selectElement);
+        });
+
+        $.each(selectizeElements, function(key, value) {
+            var selectElement = firstLessonSection.find('select[name=' + key + ']');
+            selectElement[0].selectize.setValue(value);
+        });
+
+        lessonSection.attr("id", "lesson-section-" + lessonCount);
+        lessonSection.find(".school-class-row").hide();
+        var originalTitle = lessonSection.find("h5").text();
+        var newTitle = originalTitle.replace("1", lessonCount);
+        lessonSection.find("h5").text(newTitle);
+
+        lessonSection.find("select, input[type='text']").each(function() {
+            var originalName = $(this).attr("name");
+            var originalId = $(this).attr("id");
+            if (originalName) {
+                var newName = originalName.replace("_1", "_" + lessonCount);
+                $(this).attr("name", newName);
+                if ($(this).is("input[type='text']")) {
+                    $(this).val("");
+                }
+            }
+            if (originalId) {
+                var newId = originalId.replace("-1", "-" + lessonCount);
+                $(this).attr("id", newId);
+            }
+        });
+
+        return lessonSection;
+    }
+
+    // Add a new lesson section when adding new lessons
+    $("#add-lesson-btn").click(function() {
+        var newLessonSection = addLessonSection();
+        newLessonSection.appendTo("#lesson-sections");
+
+        var newSelectElements = newLessonSection.find(".select-search");
+        initializeSelectize(newSelectElements);
+
+        newLessonSection.find(".subject-select")[0].selectize.trigger("change");
+
+        if (lessonCount >= 2) {
+            $("#remove-lesson").show();
+        }
+    });
+
+    // Remove last lesson section when adding new lessons
+    $("#remove-lesson").click(function() {
+        $("#lesson-sections .lesson-section:last").remove();
+        lessonCount--;
+        if (lessonCount === 1) {
+            $("#remove-lesson").hide();
+        }
+    });
+
+    // Pass lesson count information when submitting new lessons
+    $("#submit-lesson-btn").click(function() {
+        $('#lesson-count').val(lessonCount);
+    });
+
+    // Handle the change event for new lesson subject selector
+    $("#lesson-sections").on("change", ".subject-select", function() {
+        var selectorVal = $(this)[0].selectize.getValue();
+        var subjectId = Number(selectorVal.split("-")[0]);
+        var subjectTypeId = selectorVal.split("-")[1];
+
+        var selectedSubject = subjectsData.filter(function(subject) {
+            return subject.id === subjectId;
+        });
+
+        var lessonSection = $(this).closest('.lesson-section');
+        var schoolClassRow = lessonSection.find('.school-class-row');
+        var classesSelector = lessonSection.find('.classes-select');
+        var schoolType = $('#school-type').val();
+
+        if (subjectTypeId === schoolType) {
+            classesSelector[0].selectize.clear();
+            classesSelector[0].selectize.clearOptions();
+            if (!$.isEmptyObject(selectedSubject[0].school_classes)) {
+                $.each(selectedSubject[0].school_classes, function (index, school_class) {
+                    classesSelector[0].selectize.addOption({value:index,text:school_class});
+                });
+                lessonSection.find('.add-classes-btn').show();
+            } else {
+                lessonSection.find('.add-classes-btn').trigger("click");
+            }
+            schoolClassRow.show();
+        } else {
+            schoolClassRow.hide();
+        }
+
+        var teacherSelector = lessonSection.find('.teacher-select');
+        teacherSelector[0].selectize.clear();
+        teacherSelector[0].selectize.clearOptions();
+        if (!$.isEmptyObject(selectedSubject[0].teachers)) {
+            $.each(selectedSubject[0].teachers, function (index, teacher) {
+                teacherSelector[0].selectize.addOption({value:index,text:teacher});
+            });
+            teacherSelector[0].selectize.addItem(Object.keys(selectedSubject[0].teachers)[0]);
+            lessonSection.find('.add-teachers-btn').show();
+        } else {
+            lessonSection.find('.add-teachers-btn').trigger("click");
+        }
+
+    });
+
+    $("#lesson-sections").on("click", ".add-classes-btn", function() {
+        var lessonSection = $(this).closest('.lesson-section');
+        var classesSelector = lessonSection.find('.classes-select');
+        classesSelector[0].selectize.clear();
+        classesSelector[0].selectize.clearOptions();
+        $.each(classesData, function (index, schoolClass) {
+            var optionValue = Object.keys(schoolClass)[0]
+            classesSelector[0].selectize.addOption({value:optionValue,text:schoolClass[optionValue]});
+        });
+        $(this).hide();
+    });
+
+    $("#lesson-sections").on("click", ".add-teachers-btn", function() {
+        var lessonSection = $(this).closest('.lesson-section');
+        var teacherSelector = lessonSection.find('.teacher-select');
+        teacherSelector[0].selectize.clear();
+        teacherSelector[0].selectize.clearOptions();
+        $.each(teachersData, function (index, teacher) {
+            var optionValue = Object.keys(teacher)[0]
+            teacherSelector[0].selectize.addOption({value:optionValue,text:teacher[optionValue]});
+        });
+        teacherSelector[0].selectize.addItem(Object.keys(teachersData[0])[0]);
+        $(this).hide();
+    });
+
+    $(".subject-select")[0].selectize.trigger("change");
 
 });

@@ -415,6 +415,25 @@ def subscription_subjects_data():
     return subscription_subjects
 
 
+def subjects_data():
+    all_subjects = Subject.query.order_by(Subject.name).all()
+    subjects_teachers = []
+    for subject in all_subjects:
+        subject_data = {
+            "id": subject.id,
+            "name": subject.name,
+            "description": subject.subject_type.description,
+            "subject_type": subject.subject_type_id,
+            "school_classes": {school_class.id: school_class.school_name
+                               for school_class in sorted(subject.school_classes, key=lambda x: x.school_class)},
+            "teachers": {teacher.id: f"{teacher.last_name} {teacher.first_name}"
+                         for teacher in sorted(subject.teachers, key=lambda x: (x.last_name, x.first_name))}
+        }
+        subjects_teachers.append(subject_data)
+
+    return subjects_teachers
+
+
 def lesson_subjects_data():
     now = datetime.now().time()
     filtered_subjects = Subject.query.filter(

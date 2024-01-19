@@ -58,6 +58,12 @@ teacher_class_table = db.Table(
     db.Column('main_teacher', db.Boolean, default=False)
 )
 
+subject_class_table = db.Table(
+    'subject_class_table',
+    db.Column('class_id', db.Integer, db.ForeignKey('school_classes.id')),
+    db.Column('subject_id', db.Integer, db.ForeignKey('subjects.id'))
+)
+
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -219,6 +225,8 @@ class SchoolClass(db.Model):
     school_students = db.relationship('Person', backref='school_class', lazy='dynamic')
     school_teachers = db.relationship('Person', secondary=teacher_class_table,
                                       backref='teaching_classes', lazy='dynamic')
+    school_subjects = db.relationship('Subject', secondary=subject_class_table,
+                                      backref='school_classes', lazy='dynamic')
 
 
 class SubjectType(db.Model):

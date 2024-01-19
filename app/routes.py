@@ -1,10 +1,11 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Subject, Room, Lesson, SubjectType, SchoolClass, Employee
-from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, extensive_student_info, lesson_subjects_data, \
-    subscription_subjects_data, student_lesson_register, purchase_subscription, add_child, add_adult, \
-    handle_student_edit, clients_data, format_employee, week_lessons_dict, filter_lessons, copy_lessons, \
-    show_lesson, handle_lesson, week_school_lessons_dict, class_students_info, add_new_employee
+from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass
+from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscription_subjects_data, \
+    lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
+    student_lesson_register, handle_student_edit, format_employee, add_new_employee, week_lessons_dict, \
+    week_school_lessons_dict, filter_lessons, copy_lessons, subjects_data, \
+    show_lesson, handle_lesson, class_students_info
 from app import app, db
 from datetime import datetime
 
@@ -270,30 +271,9 @@ def school_timetable(week):
                            classes=week_school_lessons, week=week, week_day=DAYS_OF_WEEK[0])
 
 
-@app.route('/lesson/<string:subject_id>/<string:lesson_id>', methods=['GET', 'POST'])
+@app.route('/copy-lessons', methods=['GET', 'POST'])
 @login_required
-def lesson(subject_id, lesson_id):
-    lesson_subject = Subject.query.filter_by(id=subject_id).first()
-    if lesson_subject.subject_type.name == 'school':
-        return redirect(url_for('school_lesson', lesson_id=lesson_id))
-    subject_lesson = show_lesson(lesson_subject, lesson_id)
-
-    if request.method == 'POST':
-        handle_lesson(request.form, lesson_subject, subject_lesson)
-
-        return redirect(url_for('lesson', subject_id=subject_id, lesson_id=subject_lesson.id))
-
-    all_clients = Person.query.filter(Person.status.in_(["Клиент", "Лид"])).order_by(Person.last_name,
-                                                                                     Person.first_name).all()
-    possible_clients = [client for client in all_clients if client not in subject_lesson.students]
-
-    return render_template('lesson.html', subject_lesson=subject_lesson, clients=possible_clients,
-                           lesson_subject=lesson_subject)
-
-
-@app.route('/add-lessons', methods=['GET', 'POST'])
-@login_required
-def add_lessons():
+def copy_lessons():
     if request.method == 'POST':
         try:
             filtered_lessons, week_diff, next_week = filter_lessons(request.form)
@@ -313,19 +293,54 @@ def add_lessons():
 
             else:
                 flash('Нет занятий, удовлетворяющих заданным параметрам', 'error')
-                return redirect(url_for('add_lessons'))
+                return redirect(url_for('copy_lessons'))
 
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
-            return redirect(url_for('timetable', week=0))
+            return redirect(url_for('copy_lessons'))
 
     subject_types = SubjectType.query.all()
     rooms = Room.query.all()
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-    return render_template('add_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types,
+    return render_template('copy_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types,
                            rooms=rooms, school_classes=school_classes, teachers=all_teachers)
+
+
+@app.route('/add-lessons', methods=['GET', 'POST'])
+@login_required
+def add_lessons():
+    all_subjects = subjects_data()
+    rooms = Room.query.all()
+    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+    school_classes_data = [{school_class.id: school_class.school_name} for school_class in school_classes]
+    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+    teachers_data = [{teacher.id: f"{teacher.last_name} {teacher.first_name}"} for teacher in all_teachers]
+    school = SubjectType.query.filter_by(name='school').first()
+    return render_template('add_lessons.html', subjects=all_subjects, school_classes=school_classes_data,
+                           rooms=rooms, teachers=teachers_data, school=school)
+
+
+@app.route('/lesson/<string:subject_id>/<string:lesson_id>', methods=['GET', 'POST'])
+@login_required
+def lesson(subject_id, lesson_id):
+    lesson_subject = Subject.query.filter_by(id=subject_id).first()
+    if lesson_subject.subject_type.name == 'school':
+        return redirect(url_for('school_lesson', lesson_id=lesson_id))
+    subject_lesson = show_lesson(lesson_subject, lesson_id)
+
+    if request.method == 'POST':
+        handle_lesson(request.form, lesson_subject, subject_lesson)
+
+        return redirect(url_for('lesson', subject_id=subject_id, lesson_id=subject_lesson.id))
+
+    all_clients = Person.query.filter(Person.status.in_(["Клиент", "Лид"])).order_by(Person.last_name,
+                                                                                     Person.first_name).all()
+    possible_clients = [client for client in all_clients if client not in subject_lesson.students]
+
+    return render_template('lesson.html', subject_lesson=subject_lesson, clients=possible_clients,
+                           lesson_subject=lesson_subject)
 
 
 @app.route('/school-students')
@@ -361,35 +376,8 @@ def school_lesson(lesson_id):
                            lesson_students=lesson_students, school_students=sc_students)
 
 
-# @app.route('/add-lesson', methods=['GET', 'POST'])
-# @login_required
-# def add_lesson():
-#     if request.method == 'POST':
-#         try:
-#             filtered_lessons, new_week = filter_lessons(request.form)
-#             new_lessons, conflicts = copy_lessons(filtered_lessons, new_week)
-#             db.session.add_all(new_lessons)
-#             db.session.commit()
-#             if conflicts == 0:
-#                 flash('Все занятия добавлены в расписание.', 'success')
-#             elif not new_lessons:
-#                 flash(f'Занятия не добавлены, т.к. есть занятия в это же время.', 'error')
-#             else:
-#                 flash(f'Добавлено занятий: {len(new_lessons)}', 'success')
-#                 flash(f'Не добавлено занятий: {conflicts}, т.к. есть занятия в это же время', 'error')
-#             return redirect(url_for('timetable', week=new_week))
-#
-#         except Exception as e:
-#             db.session.rollback()
-#             flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
-#             return redirect(url_for('timetable', week=0))
-#
-#     subject_types = SubjectType.query.all()
-#     rooms = Room.query.all()
-#     school_classes = SchoolClass.query.order_by(SchoolClass.school_name).all()
-#     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
-#     return render_template('add_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types,
-#                            rooms=rooms, school_classes=school_classes, teachers=all_teachers)
+
+
 #     if request.method == 'POST':
 #         try:
 #             new_lesson = create_lesson(request.form)
@@ -408,4 +396,4 @@ def school_lesson(lesson_id):
 #     all_rooms = Room.query.all()
 #     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
 #
-#     return render_template('add_lesson.html', subjects=all_subjects, rooms=all_rooms, teachers=all_teachers)
+#     return render_template('add_lessons.html', subjects=all_subjects, rooms=all_rooms, teachers=all_teachers)
