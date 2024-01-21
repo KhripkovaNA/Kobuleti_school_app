@@ -4,7 +4,7 @@ from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Roo
 from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, week_lessons_dict, \
-    week_school_lessons_dict, filter_lessons, copy_lessons, subjects_data, \
+    week_school_lessons_dict, filter_lessons, copy_lessons, add_new_lessons, subjects_data, \
     show_lesson, handle_lesson, class_students_info
 from app import app, db
 from datetime import datetime
@@ -44,7 +44,7 @@ def students():
     lesson_subjects = lesson_subjects_data()
 
     return render_template('students.html', students=all_students,
-                           subscription_subjects=subscription_subjects, today=TODAY.strftime("%d.%m.%Y"),
+                           subscription_subjects=subscription_subjects, today=f'{TODAY:%d.%m.%Y}',
                            lesson_subjects=lesson_subjects)
 
 
@@ -65,6 +65,7 @@ def add_comment():
 def lesson_register(student_id):
     try:
         subject_id, lesson_id = student_lesson_register(request.form, student_id)
+        db.session.commit()
         flash('Клиент записан на занятие.', 'success')
 
         return redirect(url_for('lesson', subject_id=subject_id, lesson_id=lesson_id))
@@ -118,13 +119,13 @@ def add_student():
         try:
             if 'add_child_btn' in request.form:
                 student = add_child(request.form)
-
+                db.session.commit()
                 flash('Новый клиент добавлен в систему.', 'success')
                 return redirect(url_for('show_edit_student', student_id=student.id))
 
             if 'add_adult_btn' in request.form:
                 client = add_adult(request.form)
-
+                db.session.commit()
                 flash('Новый клиент добавлен в систему.', 'success')
                 return redirect(url_for('show_edit_student', student_id=client.id))
 
@@ -152,6 +153,7 @@ def show_edit_student(student_id):
         if request.method == 'POST':
             try:
                 handle_student_edit(request.form, student)
+                db.session.commit()
                 flash('Изменения внесены.', 'success')
                 return redirect(url_for('show_edit_student', student_id=student.id))
             except Exception as e:
@@ -159,7 +161,7 @@ def show_edit_student(student_id):
                 flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
                 return redirect(url_for('show_edit_student', student_id=student.id))
 
-        return render_template('student.html', student=student, clients=clients, today=TODAY.strftime("%d.%m.%Y"),
+        return render_template('student.html', student=student, clients=clients, today=f'{TODAY:%d.%m.%Y}',
                                lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects)
     else:
         flash("Такого клиента нет", 'error')
@@ -183,15 +185,15 @@ def add_employee():
     if request.method == 'POST':
         try:
             employee = add_new_employee(request.form)
-
+            db.session.commit()
             flash('Новый сотрудник добавлен в систему.', 'success')
             # return redirect(url_for('show_edit_employee', employee_id=employee.id))
-            return redirect(url_for('employees'))
+            return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении сотрудника: {str(e)}', 'error')
-            return redirect(url_for('add_student'))
+            return redirect(url_for('add_employee'))
 
     possible_employees = clients_data('employee')
     distinct_roles = db.session.query(Employee.role.distinct()).all()
@@ -227,7 +229,7 @@ def show_edit_employee(employee_id):
         return render_template('employee.html', employee=employee)
     else:
         flash("Такого клиента нет", 'error')
-        return redirect(url_for('students.html'))
+        return redirect(url_for('employees.html'))
 
 
 @app.route('/subjects')
@@ -311,6 +313,19 @@ def copy_lessons():
 @app.route('/add-lessons', methods=['GET', 'POST'])
 @login_required
 def add_lessons():
+    if request.method == 'POST':
+        try:
+            messages, week = add_new_lessons(request.form)
+            db.session.commit()
+            for message in messages:
+                flash(message['text'], message['type'])
+            return redirect(url_for('timetable', week=week))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
+            return redirect(url_for('add_lessons'))
+
     all_subjects = subjects_data()
     rooms = Room.query.all()
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
@@ -328,10 +343,19 @@ def lesson(subject_id, lesson_id):
     lesson_subject = Subject.query.filter_by(id=subject_id).first()
     if lesson_subject.subject_type.name == 'school':
         return redirect(url_for('school_lesson', lesson_id=lesson_id))
+
     subject_lesson = show_lesson(lesson_subject, lesson_id)
 
     if request.method == 'POST':
-        handle_lesson(request.form, lesson_subject, subject_lesson)
+        try:
+            message = handle_lesson(request.form, lesson_subject, subject_lesson)
+            db.session.commit()
+            if message:
+                flash(message, 'success')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
 
         return redirect(url_for('lesson', subject_id=subject_id, lesson_id=subject_lesson.id))
 

@@ -6,7 +6,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-from app.app_functions import subjects_data
+from app.app_functions import subjects_data, get_weekday_date, TODAY
 
 
 app.app_context().push()
@@ -242,26 +242,63 @@ def create_subscription(student_id, subject_id, subscription_type_id, lessons=8)
         print(f'Ошибка при добавлении абонемента: {str(e)}')
 
 
-def create_lesson(lesson_info):
-    lesson_date = datetime.strptime(lesson_info['date'], '%d.%m.%Y').date()
-    start_time = datetime.strptime(lesson_info['start_time'], '%H:%M').time()
-    end_time = datetime.strptime(lesson_info['end_time'], '%H:%M').time()
-    lesson_type = lesson_info['lesson_type']
-    subject_id = lesson_info['subject_id']
-    room_id = lesson_info['room_id']
-    teacher_id = lesson_info['teacher_id']
+def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher):
+    conflicting_lessons = Lesson.query.filter(
+        and_(
+            Lesson.date == date,
+            or_(
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.room_id == room
+                ),
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.teacher_id == teacher
+                ),
+                and_(
+                    Lesson.start_time < end_time,
+                    Lesson.end_time > start_time,
+                    Lesson.school_classes.any(SchoolClass.id.in_(classes))
+                )
+            )
+        )
+    ).all()
 
-    lesson = Lesson(
-        date=lesson_date,
-        start_time=start_time,
-        end_time=end_time,
-        lesson_type=lesson_type,
-        room_id=room_id,
-        subject_id=subject_id,
-        teacher_id=teacher_id,
-    )
+    return conflicting_lessons
 
-    return lesson
+
+def create_lesson(form, i):
+    lesson_date = datetime.strptime(form.get(f'lesson_date_{i}'), '%d.%m.%Y').date()
+    start_time = datetime.strptime(form.get(f'lesson_start_time_{i}'), '%H:%M').time()
+    end_time = datetime.strptime(form.get(f'lesson_end_time_{i}'), '%H:%M').time()
+    subject_id, lesson_type_id = form.get(f'subject_{i}').split('-')
+    room_id = int(form.get(f'room_{i}'))
+    school_classes = [int(school_class) for school_class in form.get(f'school_classes_{i}')]
+    teacher_id = int(form.get(f'teacher_{i}'))
+
+    conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
+                                                    school_classes, room_id, teacher_id)
+    intersection = set()
+    message = ''
+    if conflicting_lessons:
+        for conflict in conflicting_lessons:
+            if conflict.room_id == room_id:
+                alert = 'кабинету (' + conflict.room.name + ')'
+                intersection.add(alert)
+            if conflict.teacher_id == teacher_id:
+                alert = 'учителю (' + f'{conflict.teacher.last_name} {conflict.teacher.first_name}' + ')'
+                intersection.add(alert)
+            conflict_classes = set([school_class.id for school_class in conflict.school_classes])
+            intersected_classes = conflict_classes.intersection(school_classes)
+            if intersected_classes:
+                inter_classes = SchoolClass.query.filter(SchoolClass.id.in_(intersected_classes)).all()
+                alert = 'классам (' + ', '.join([school_class.school_name for school_class in inter_classes]) + ')'
+                intersection.add(alert)
+        message = 'Пересечения по ' + ', '.join(intersection)
+
+    return conflicting_lessons, message
 
 
 def lesson_class(lesson, school_class):
@@ -320,8 +357,8 @@ def print_subscriptions():
         basic_info = f'{subscr.id}\t{subscr.student.last_name} {subscr.student.first_name}\t{subscr.subject.name}\t'
         lessons_left = f'{subscr.lessons_left} lessons' if subscr.lessons_left else ''
         date = 'finish: ' + \
-               (subscr.purchase_date + timedelta(days=subscr.subscription_type.duration)).strftime('%d.%m.%y') \
-            if subscr.subscription_type.duration else 'start: ' + subscr.purchase_date.strftime('%d.%m.%y')
+               f'{subscr.purchase_date + timedelta(days=subscr.subscription_type.duration):%d.%m.%y}' \
+            if subscr.subscription_type.duration else 'start: ' + f'{subscr.purchase_date:%d.%m.%y}'
         subscr_info = basic_info + '\t' + lessons_left + '\t' + date + '\t' + str(subscr.active)
         existing_subscriptions.append(subscr_info)
 
@@ -350,7 +387,7 @@ def create_lesson_dict(lesson):
         lesson_type = ''
 
     return {
-        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'time': f'{lesson.start_time:%H:%M} - {lesson.end_time:%H:%M}',
         'start_time': start_time,
         'end_time': end_time,
         'subject': lesson.subject_names,
@@ -363,7 +400,7 @@ def create_school_lesson_dict(lesson):
     start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
     end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
     return {
-        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'time': f'{lesson.start_time:%H:%M} - {lesson.end_time:%H:%M}',
         'start_time': start_time,
         'end_time': end_time,
         'subject': lesson.subject.short_name,
@@ -408,7 +445,7 @@ def week_lessons_dict(week):
 
     for day, weekday in enumerate(days_of_week):
         lessons_date = get_date(week, day)
-        lessons_date_str = lessons_date.strftime('%d.%m')
+        lessons_date_str = f'{lessons_date:%d.%m}'
         day_lessons = {}
         for room in rooms:
             lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).order_by(
@@ -426,7 +463,7 @@ def week_school_lessons_dict(week):
     week_lessons = {}
     for day, weekday in enumerate(days_of_week):
         lessons_date = get_date(day, week)
-        lessons_date_str = lessons_date.strftime('%d.%m')
+        lessons_date_str = f'{lessons_date:%d.%m}'
         day_lessons = {}
         for school_class in school_classes:
             lessons_filtered = Lesson.query.filter(
@@ -602,8 +639,8 @@ ninth_grade_list = [
 def show_lesson(lesson):
     lesson_dict = {
         'id': lesson.id,
-        'date': lesson.date.strftime("%d.%m"),
-        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'date': f'{lesson.date:%d.%m}',
+        'time': f'{lesson.start_time:%H:%M} - {lesson.end_time:%H:%M}',
         'room': Room.query.filter_by(id=lesson.room_id).first().name,
         'subject': Subject.query.filter_by(id=lesson.subject_id).first().name,
         'teacher': Person.query.filter_by(id=lesson.teacher_id).first().first_name,
@@ -613,45 +650,90 @@ def show_lesson(lesson):
     return lesson_dict
 
 
-def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher):
-    conflicting_lessons = Lesson.query.filter(
-        and_(
-            Lesson.date == date,
-            or_(
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.room_id == room
-                ),
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.teacher_id == teacher
-                ),
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.school_classes.any(SchoolClass.id.in_(classes))
-                )
-            )
-        )
-    ).all()
-
-    return conflicting_lessons
-
-
 def print_employees():
     existing_employees = [f'{empl.id}\t{empl.person.last_name}\t{empl.person.first_name}\t{empl.role}'
                           for empl in Employee.query.all()]
     print(*existing_employees, sep='\n')
 
 
-adult_persons = Person.query.filter_by(person_type='Взрослый').all()
+lesson_dict = {
+    'lesson_date': '10.01.2024',
+    'lesson_count': 1,
+    'lesson_start_time_1': '13:40',
+    'lesson_end_time_1': '14:40',
+    'subject_1': '14-1',
+    'room_1': '8',
+    'school_classes_1': ['1'],
+    'teacher_1': '23',
+    'lesson_start_time_2': '12:40',
+    'lesson_end_time_2': '13:40',
+    'subject_2': '14-1',
+    'room_2': '4',
+    'school_classes_2': ['1'],
+    'teacher_2': '23'
+}
 
-sc_subj = Subject.query.filter_by(id=35).first()
-sc_classes = sorted(sc_subj.school_classes, key=lambda x: x.school_class)
-sc_teachers = sorted(sc_subj.teachers, key=lambda x: (x.last_name, x.first_name))
 
-all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-teachers_data = {teacher.id: f"{teacher.last_name} {teacher.first_name}" for teacher in all_teachers}
-print(teachers_data)
+def create_check_lesson(lesson_date, form, i):
+    start_time = datetime.strptime(form.get(f'lesson_start_time_{i}'), '%H : %M').time()
+    end_time = datetime.strptime(form.get(f'lesson_end_time_{i}'), '%H : %M').time()
+    subject_id, lesson_type_id = form.get(f'subject_{i}').split('-')
+    room_id = int(form.get(f'room_{i}'))
+    school_classes = [int(school_class) for school_class in form.get(f'school_classes_{i}')]
+    teacher_id = int(form.get(f'teacher_{i}'))
+
+    conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
+                                                    school_classes, room_id, teacher_id)
+    intersection = set()
+    if conflicting_lessons:
+        for conflict in conflicting_lessons:
+            if conflict.room_id == room_id:
+                alert = 'кабинету (' + conflict.room.name + ')'
+                intersection.add(alert)
+            if conflict.teacher_id == teacher_id:
+                alert = 'учителю (' + f'{conflict.teacher.last_name} {conflict.teacher.first_name}' + ')'
+                intersection.add(alert)
+            conflict_classes = set([school_class.id for school_class in conflict.school_classes])
+            intersected_classes = conflict_classes.intersection(school_classes)
+            if intersected_classes:
+                inter_classes = SchoolClass.query.filter(SchoolClass.id.in_(intersected_classes)).all()
+                alert = 'классам (' + ', '.join([school_class.school_name for school_class in inter_classes]) + ')'
+                intersection.add(alert)
+        message_text = f'Занятие {i} не добавлено в расписание. Пересечения по ' + ', '.join(intersection) + '.'
+        lesson = None
+    else:
+        lesson = Lesson(
+            date=lesson_date,
+            start_time=start_time,
+            end_time=end_time,
+            lesson_type_id=int(lesson_type_id),
+            room_id=room_id,
+            subject_id=int(subject_id),
+            teacher_id=teacher_id,
+        )
+        school_classes = SchoolClass.query.filter(SchoolClass.id.in_(school_classes)).all()
+        lesson.school_classes.extend(school_classes)
+        message_text = f'Занятие {i} добавлено в расписание.'
+
+    return lesson, message_text
+
+
+def add_new_lessons(form):
+    lesson_date = datetime.strptime(form.get(f'lesson_date'), '%d.%m.%Y').date()
+    lesson_count = int(form.get('lesson_count'))
+    messages = []
+    for i in range(1, lesson_count + 1):
+        new_lesson, text = create_check_lesson(lesson_date, form, i)
+        if new_lesson:
+            message = {'text': text, 'type': 'success'}
+            messages.append(message)
+            db.session.add(new_lesson)
+            db.session.commit()
+        else:
+            message = {'text': text, 'type': 'error'}
+            messages.append(message)
+    week = int((get_weekday_date(0, lesson_date) - get_weekday_date(0, TODAY)).days / 7)
+    return messages, week
+
+
+

@@ -11,15 +11,15 @@
             <div class="card-content">
                 <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
                     <div id="lesson-sections">
+                        <div class="row form-group">
+                            <label class="control-label col-md-3">Дата:</label>
+                            <div class="col-md-3">
+                                <input type="text" name="lesson_date" id="lesson-date" class="form-control datepicker" placeholder="дд.мм.гггг">
+                            </div>
+                        </div>
                         <div class="lesson-section">
                             <h5 class="title" style="margin: 27px;">Занятие 1</h5>
                             <div class="form-group">
-                                <div class="row">
-                                    <label class="control-label col-md-3">Дата:</label>
-                                    <div class="col-md-3">
-                                        <input type="text" name="lesson_date_1" id="lesson-date-1" class="form-control datepicker" placeholder="дд.мм.гггг">
-                                    </div>
-                                </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Начало:</label>
                                     <div class="col-md-3">

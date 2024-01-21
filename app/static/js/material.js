@@ -627,17 +627,12 @@ $(document).ready(function(){
 
         lessonSection.find("select, input[type='text']").each(function() {
             var originalName = $(this).attr("name");
-            var originalId = $(this).attr("id");
             if (originalName) {
                 var newName = originalName.replace("_1", "_" + lessonCount);
                 $(this).attr("name", newName);
                 if ($(this).is("input[type='text']")) {
                     $(this).val("");
                 }
-            }
-            if (originalId) {
-                var newId = originalId.replace("-1", "-" + lessonCount);
-                $(this).attr("id", newId);
             }
         });
 

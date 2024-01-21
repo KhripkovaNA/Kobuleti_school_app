@@ -5,7 +5,6 @@ from app import db
 from sqlalchemy import and_, or_
 from typing import List, Dict, Any
 
-
 DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
 MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
           "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
@@ -109,11 +108,11 @@ def create_parent(form, i):
 def handle_contact_info(form, student, i):
     contact_select = form.get(f'contact_select_{i}')
     relation_type = form.get(f'relation_{i}')
-
-    if relation_type == CHILD_SELF and not student.contacts:
+    student_contacts = Contact.query.filter_by(person_id=student.id).first()
+    if relation_type == CHILD_SELF and not student_contacts:
         contact = create_contact(form, i)
         db.session.add(contact)
-        db.session.commit()
+        db.session.flush()
 
         student.contacts.append(contact)
 
@@ -128,7 +127,7 @@ def handle_contact_info(form, student, i):
             parent = create_parent(form, i)
             db.session.add(parent)
             db.session.add(contact)
-            db.session.commit()
+            db.session.flush()
 
             parent.contacts.append(contact)
             parent.primary_contact = parent.id
@@ -140,7 +139,7 @@ def handle_contact_info(form, student, i):
 
     if form.get('primary_contact') == f'contact_{i}':
         student.primary_contact = contact.person_id
-    db.session.commit()
+    db.session.flush()
 
 
 def assign_relation_type(form, student, parent, i):
@@ -160,7 +159,7 @@ def assign_relation_type(form, student, parent, i):
 def add_child(form):
     student = create_student(form, 'child')
     db.session.add(student)
-    db.session.commit()
+    db.session.flush()
 
     contact_count = int(form.get('contact_count'))
     for i in range(1, contact_count + 1):
@@ -184,11 +183,11 @@ def add_adult(form):
         contact = create_contact(form, '')
         db.session.add(client)
         db.session.add(contact)
-        db.session.commit()
+        db.session.flush()
         client.contacts.append(contact)
         client.primary_contact = client.id
 
-    db.session.commit()
+    db.session.flush()
 
     return client
 
@@ -212,7 +211,7 @@ def add_new_employee(form):
         contact = create_contact(form, '')
         db.session.add(employee)
         db.session.add(contact)
-        db.session.commit()
+        db.session.flush()
         employee.contacts.append(contact)
         employee.primary_contact = employee.id
 
@@ -229,8 +228,6 @@ def add_new_employee(form):
                 subject_ids = [int(subject_id) for subject_id in form.getlist('subjects')]
                 subjects = Subject.query.filter(Subject.id.in_(subject_ids)).all()
                 employee.subjects_taught.extend(subjects)
-
-    db.session.commit()
 
     return employee
 
@@ -270,15 +267,15 @@ def clients_data(person_type):
 def format_student_info(student):
     if student.dob:
         dob = student.dob
-        student.birth_date = dob.strftime('%d.%m.%Y')
+        student.birth_date = f'{dob:%d.%m.%Y}'
         student.age = person_age(dob)
     if student.pause_until:
-        student.pause_date = student.pause_until.strftime('%d.%m.%y')
+        student.pause_date = f'{student.pause_until:%d.%m.%y}'
 
     if student.status == "Закрыт":
         student.status_info = f"{student.status} причина: {student.leaving_reason}"
     elif student.status == "Пауза":
-        student.status_info = f"{student.status} до {student.pause_date}"
+        student.status_info = f"{student.status} до {student.pause_date}" if student.pause_date else student.status
     else:
         student.status_info = student.status
         if student.balance > 0:
@@ -361,8 +358,8 @@ def format_subjects_and_subscriptions(student):
                 'subscription_id': subscription.id,
                 'subject_name': subject.name,
                 'lessons_left': subscription.lessons_left if not is_after_school else None,
-                'end_date': subscription.end_date.strftime('%d.%m.%Y') if not is_after_school else MONTHS[
-                    subscription.purchase_date.month - 1]
+                'end_date': f'{subscription.end_date:%d.%m.%Y}' if not is_after_school
+                else MONTHS[subscription.purchase_date.month - 1]
             }
             if is_after_school:
                 subscriptions.insert(0, subscription_dict)
@@ -372,8 +369,10 @@ def format_subjects_and_subscriptions(student):
                 subscriptions_list.append(f'{subject.name}({subscription.lessons_left})')
             subscriptions_set.add(subject.id)
 
-    all_subjects_list = sorted([(subject.name, subject.id) for subject in student.subjects if subject.subject_type.name != "school"])
-    extra_subjects = sorted([subject.name for subject in student.subjects if subject.id not in subscriptions_set and subject.subject_type.name != "school"])
+    all_subjects_list = sorted(
+        [(subject.name, subject.id) for subject in student.subjects if subject.subject_type.name != "school"])
+    extra_subjects = sorted([subject.name for subject in student.subjects if
+                             subject.id not in subscriptions_set and subject.subject_type.name != "school"])
 
     student.extra_subjects = extra_subjects
     student.subjects_info = ', '.join(school + subscriptions_list + extra_subjects)
@@ -395,7 +394,7 @@ def extensive_student_info(student):
 
 def subscription_subjects_data():
     filtered_subjects = Subject.query.filter(Subject.id != after_school_subject().id,
-                                             Subject.subscription_types.any(SubscriptionType.id.isnot(None)))\
+                                             Subject.subscription_types.any(SubscriptionType.id.isnot(None))) \
         .order_by(Subject.name).all()
     subscription_subjects = []
     for subject in filtered_subjects:
@@ -456,8 +455,8 @@ def lesson_subjects_data():
         ).order_by(Lesson.date, Lesson.start_time).all()
         if future_lessons:
             lessons_list = {lesson.id: f"{DAYS_OF_WEEK[lesson.date.weekday()]} " +
-                                       f"{lesson.date.strftime('%d.%m')} " +
-                                       f"в {lesson.start_time.strftime('%H:%M')}"
+                                       f"{lesson.date:%d.%m} " +
+                                       f"в {lesson.start_time:%H:%M}"
                             for lesson in future_lessons}
             subject_data = {
                 "id": subject.id,
@@ -478,7 +477,6 @@ def student_lesson_register(form, student_id):
         subject.students.append(student)
     if student not in lesson.students_registered:
         lesson.students_registered.append(student)
-    db.session.commit()
 
     return subject_id, lesson_id
 
@@ -515,7 +513,7 @@ def handle_student_edit(form, student):
         student.pause_date = datetime.strptime(form.get('pause_until'), '%d.%m.%Y').date() \
             if form.get('pause_until') else None
         student.leaving_reason = form.get('leaving_reason')
-        db.session.commit()
+        db.session.flush()
 
     if 'form_main_contact_submit' in form:
         main_contact = student.main_contact
@@ -526,7 +524,7 @@ def handle_student_edit(form, student):
             main_contact.last_name = form.get('parent_last_name_main')
             main_contact.first_name = form.get('parent_first_name_main')
             main_contact.patronym = form.get('parent_patronym_main')
-        db.session.commit()
+        db.session.flush()
 
     for i, contact in enumerate(student.additional_contacts, 1):
         if f'form_cont_{i}_submit' in form:
@@ -539,7 +537,7 @@ def handle_student_edit(form, student):
                 contact.patronym = form.get(f'parent_patronym_{i}')
             if form.get(f'primary_contact_{i}') == 'on':
                 student.primary_contact = contact.id
-            db.session.commit()
+            db.session.flush()
 
     if 'form_cont_new_submit' in form:
         handle_contact_info(form, student, 'new')
@@ -549,13 +547,13 @@ def handle_student_edit(form, student):
         del_subject = Subject.query.filter_by(id=del_subject_id).first()
         if del_subject in student.subjects:
             student.subjects.remove(del_subject)
-            db.session.commit()
+            db.session.flush()
 
     if 'form_subscriptions_submit' in form:
         for subscription in student.subscriptions:
             subscription.lessons_left = form.get(f'subscription_{subscription.id}_lessons')
             subscription.end_date = form.get(f'subscription_{subscription.id}_end_date')
-        db.session.commit()
+        db.session.flush()
 
 
 def format_employee(employee):
@@ -570,8 +568,8 @@ def format_employee(employee):
         school_subjects = []
         filtered_subjects = []
         for subject in employee.subjects_taught:
-            distinct_classes = db.session.query(SchoolClass)\
-                .join(Lesson.school_classes)\
+            distinct_classes = db.session.query(SchoolClass) \
+                .join(Lesson.school_classes) \
                 .filter(Lesson.teacher_id == employee.id,
                         Lesson.subject_id == subject.id,
                         SchoolClass.school_class <= 4).all()
@@ -626,7 +624,7 @@ def get_payment_options(student, subject_id, lesson):
                                                     active=True).first()
     subscriptions = Subscription.query.filter_by(student_id=student.id,
                                                  subject_id=subject_id,
-                                                 active=True)\
+                                                 active=True) \
         .order_by(Subscription.purchase_date.desc()).all()
     student_balance = round(student.balance, 1)
 
@@ -636,7 +634,7 @@ def get_payment_options(student, subject_id, lesson):
             payment_option = {
                 'value': f'subscription_{subscription.id}',
                 'type': 'Абонемент',
-                'info': f'{subscription.lessons_left} (до {subscription.end_date.strftime("%d.%m")})'
+                'info': f'{subscription.lessons_left} (до {subscription.end_date:%d.%m})'
             }
             payment_options.append(payment_option)
     if after_school_sub:
@@ -680,7 +678,6 @@ def carry_out_lesson(form, subject, lesson):
             )
             db.session.execute(attendance)
     lesson.lesson_completed = True
-    db.session.commit()
 
 
 def undo_lesson(form, subject, lesson):
@@ -702,7 +699,6 @@ def undo_lesson(form, subject, lesson):
             lesson.students_attended.remove(student)
 
     lesson.lesson_completed = False
-    db.session.commit()
 
 
 def handle_lesson(form, subject, lesson):
@@ -713,12 +709,12 @@ def handle_lesson(form, subject, lesson):
             subject.students.remove(del_client)
         if del_client in lesson.students_registered:
             lesson.students_registered.remove(del_client)
-        db.session.commit()
+        db.session.flush()
     if 'add_client_btn' in form:
         new_client_id = int(form.get('added_client_id'))
         new_client = Person.query.filter_by(id=new_client_id).first()
         subject.students.append(new_client)
-        db.session.commit()
+        db.session.flush()
     if 'registered_btn' in form:
         for student in lesson.students:
             if (
@@ -726,19 +722,19 @@ def handle_lesson(form, subject, lesson):
                     and form.get(f'registered_{student.id}') == 'on'
             ):
                 lesson.students_registered.append(student)
-                db.session.commit()
             elif (
                     student in lesson.students_registered
                     and not form.get(f'registered_{student.id}')
             ):
                 lesson.students_registered.remove(student)
-                db.session.commit()
 
     if 'attended_btn' in form:
         carry_out_lesson(form, subject, lesson)
+        return 'Занятие проведено.'
 
     if 'change_btn' in form:
         undo_lesson(form, subject, lesson)
+        return 'Занятие отменено.'
 
 
 def get_lesson_students(lesson):
@@ -820,7 +816,7 @@ def create_lesson_dict(lesson):
 
     return {
         'id': lesson.id,
-        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'time': f'{lesson.start_time:%H:%M} - {lesson.end_time:%H:%M}',
         'start_time': start_time,
         'end_time': end_time,
         'subject': lesson.subject_names,
@@ -835,7 +831,7 @@ def create_school_lesson_dict(lesson):
     end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
     return {
         'id': lesson.id,
-        'time': f'{lesson.start_time.strftime("%H:%M")} - {lesson.end_time.strftime("%H:%M")}',
+        'time': f'{lesson.start_time:%H:%M} - {lesson.end_time:%H:%M}',
         'start_time': start_time,
         'end_time': end_time,
         'subject': lesson.subject.short_name,
@@ -852,10 +848,10 @@ def day_lessons_list(day_room_lessons):
 
     for next_lesson in day_room_lessons[1:]:
         if (
-            current_lesson.teacher.id == next_lesson.teacher.id
-            and current_lesson.school_classes.all() == next_lesson.school_classes.all()
-            and current_lesson.lesson_type.name == 'school'
-            and current_lesson.lesson_type.name == 'school'
+                current_lesson.teacher.id == next_lesson.teacher.id
+                and current_lesson.school_classes.all() == next_lesson.school_classes.all()
+                and current_lesson.lesson_type.name == 'school'
+                and current_lesson.lesson_type.name == 'school'
         ):
             if current_lesson.subject_names[-1] != next_lesson.subject.short_name:
                 current_lesson.subject_names.append(next_lesson.subject.short_name)
@@ -871,7 +867,7 @@ def day_lessons_list(day_room_lessons):
 
 
 def get_date(day_of_week, week=0):
-    day_of_week_date = TODAY - timedelta(days=TODAY.weekday()) + timedelta(days=day_of_week) + week*timedelta(weeks=1)
+    day_of_week_date = TODAY - timedelta(days=TODAY.weekday()) + timedelta(days=day_of_week) + week * timedelta(weeks=1)
     return day_of_week_date
 
 
@@ -889,10 +885,10 @@ def week_lessons_dict(week, rooms):
     week_lessons = {}
     for day, weekday in enumerate(DAYS_OF_WEEK):
         lessons_date = get_date(day, week)
-        lessons_date_str = lessons_date.strftime('%d.%m')
+        lessons_date_str = f'{lessons_date:%d.%m}'
         day_lessons = {}
         for room in rooms:
-            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).\
+            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id). \
                 order_by(Lesson.start_time).all()
             day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
 
@@ -905,7 +901,7 @@ def week_school_lessons_dict(week, school_classes, days_of_week):
     week_lessons = {}
     for day, weekday in enumerate(days_of_week):
         lessons_date = get_date(day, week)
-        lessons_date_str = lessons_date.strftime('%d.%m')
+        lessons_date_str = f'{lessons_date:%d.%m}'
         day_lessons = {}
         for school_class in school_classes:
             lessons_filtered = Lesson.query.filter(
@@ -946,6 +942,68 @@ def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher
     ).all()
 
     return conflicting_lessons
+
+
+def create_check_lesson(lesson_date, form, i):
+    start_time = datetime.strptime(form.get(f'lesson_start_time_{i}'), '%H : %M').time()
+    end_time = datetime.strptime(form.get(f'lesson_end_time_{i}'), '%H : %M').time()
+    subject_id, lesson_type_id = form.get(f'subject_{i}').split('-')
+    room_id = int(form.get(f'room_{i}'))
+    school_classes = [int(school_class) for school_class in form.getlist(f'school_classes_{i}')]
+    teacher_id = int(form.get(f'teacher_{i}'))
+
+    conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
+                                                    school_classes, room_id, teacher_id)
+    intersection = set()
+    if conflicting_lessons:
+        for conflict in conflicting_lessons:
+            if conflict.room_id == room_id:
+                alert = 'кабинету (' + conflict.room.name + ')'
+                intersection.add(alert)
+            if conflict.teacher_id == teacher_id:
+                alert = 'учителю (' + f'{conflict.teacher.last_name} {conflict.teacher.first_name}' + ')'
+                intersection.add(alert)
+            conflict_classes = set([school_class.id for school_class in conflict.school_classes])
+            intersected_classes = conflict_classes.intersection(school_classes)
+            if intersected_classes:
+                inter_classes = SchoolClass.query.filter(SchoolClass.id.in_(intersected_classes)).all()
+                alert = 'классам (' + ', '.join([school_class.school_name for school_class in inter_classes]) + ')'
+                intersection.add(alert)
+        message_text = f'Занятие {i} не добавлено в расписание. Пересечения по ' + ', '.join(intersection) + '.'
+        lesson = None
+    else:
+        lesson = Lesson(
+            date=lesson_date,
+            start_time=start_time,
+            end_time=end_time,
+            lesson_type_id=int(lesson_type_id),
+            room_id=room_id,
+            subject_id=int(subject_id),
+            teacher_id=teacher_id,
+        )
+        school_classes = SchoolClass.query.filter(SchoolClass.id.in_(school_classes)).all()
+        lesson.school_classes.extend(school_classes)
+        message_text = f'Занятие {i} добавлено в расписание.'
+
+    return lesson, message_text
+
+
+def add_new_lessons(form):
+    lesson_date = datetime.strptime(form.get(f'lesson_date'), '%d.%m.%Y').date()
+    lesson_count = int(form.get('lesson_count'))
+    messages = []
+    for i in range(1, lesson_count + 1):
+        new_lesson, text = create_check_lesson(lesson_date, form, i)
+        if new_lesson:
+            message = {'text': text, 'type': 'success'}
+            messages.append(message)
+            db.session.add(new_lesson)
+            db.session.flush()
+        else:
+            message = {'text': text, 'type': 'error'}
+            messages.append(message)
+    week = int((get_weekday_date(0, lesson_date) - get_weekday_date(0, TODAY)).days / 7)
+    return messages, week
 
 
 def filter_lessons(form):
@@ -990,7 +1048,8 @@ def filter_lessons(form):
     if subject_types != "all" and form.getlist('subject_types_specific'):
         subject_types_list = [int(room) for room in form.getlist('subject_types_specific')]
         query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
-        if school_classes != 'all' and form.getlist('school_classes_specific') and (school_type_id in subject_types_list):
+        if school_classes != 'all' and form.getlist('school_classes_specific') and (
+                school_type_id in subject_types_list):
             school_classes_list = [int(school_class) for school_class in form.getlist('school_classes_specific')]
             query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(school_classes_list)))
     if teachers != "all" and form.getlist('teachers_specific'):
@@ -1041,5 +1100,3 @@ def class_students_info(school_class):
         format_main_contact(student)
 
     return class_students
-
-
