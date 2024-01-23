@@ -2034,6 +2034,13 @@ label {
     border-radius: 0 4px 4px 0;
 }
 
+.del-btn-sm {
+    padding: 2px 6px;
+    font-size: 10px;
+    margin: 8px 0 10px -20px;
+    border-radius: 0 4px 4px 0;
+}
+
 .selectize-dropdown-content {
     position:relative;
 }

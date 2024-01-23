@@ -119,7 +119,7 @@
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                                         <div class="col-md-7">
-                                                                            <select name="selected_subject" class="form-control lesson-subject-select">
+                                                                            <select name="selected_subject" class="form-control lesson-subjects-select">
                                                                                 {% for subject in lesson_subjects %}
                                                                                     <option value="{{ subject.id }}">{{ subject.name }}</option>
                                                                                 {% endfor %}
@@ -164,7 +164,7 @@
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                                         <div class="col-md-7">
-                                                                            <select name="selected_subject" class="form-control subscription-subject-select">
+                                                                            <select name="selected_subject" class="form-control subscription-select">
                                                                                 {% for subject in subscription_subjects %}
                                                                                     <option value="{{ subject.id }}">{{ subject.name }}</option>
                                                                                 {% endfor %}

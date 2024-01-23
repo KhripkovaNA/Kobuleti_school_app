@@ -88,17 +88,15 @@
                             <label class="control-label col-md-3">Статус:</label>
                             <div class="col-md-3">
                                 <select name="status" class="form-control" id="status-select">
-                                    <option value="Клиент">Клиент</option>
-                                    <option value="Лид">Лид</option>
-                                    <option value="Пауза">Пауза</option>
-                                    <option value="Закрыт">Закрыт</option>
+                                    {% for val in ["Клиент", "Лид", "Пауза", "Закрыт"] %}
+                                        {% if student.status==val %}
+                                            <option value="{{ val }}" selected>{{ val }}</option>
+                                        {% else %}
+                                            <option value="{{ val }}">{{ val }}</option>
+                                        {% endif %}
+                                    {% endfor %}
                                 </select>
                             </div>
-                            <script type="text/javascript">
-                                var studentStatus = "{{ student.status }}";
-                                var statusSelect = document.getElementById("status-select");
-                                statusSelect.value = studentStatus;
-                            </script>
                             <div id="pause-date" style="display: none;">
                                 <label class="control-label col-md-1">до:</label>
                                 <div class="col-md-3">
@@ -553,7 +551,7 @@
                                                     <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                         <div class="col-md-7">
-                                                            <select name="selected_subject" class="form-control lesson-subject-select">
+                                                            <select name="selected_subject" class="form-control lesson-subjects-select">
                                                                 {% for subject in lesson_subjects %}
                                                                     <option value="{{ subject.id }}">{{ subject.name }}</option>
                                                                 {% endfor %}
@@ -688,7 +686,7 @@
                                                     <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                         <div class="col-md-7">
-                                                            <select name="selected_subject" class="form-control subscription-subject-select">
+                                                            <select name="selected_subject" class="form-control subscription-select">
                                                                 {% for subject in subscription_subjects %}
                                                                     <option value="{{ subject.id }}">{{ subject.name }}</option>
                                                                 {% endfor %}

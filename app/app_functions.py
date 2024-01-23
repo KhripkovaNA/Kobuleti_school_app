@@ -585,6 +585,33 @@ def format_employee(employee):
         format_children(employee)
 
 
+# def format_subject(subject):
+#     subscription_types = []
+#     for subscription_type in subject.subscription_types.all():
+#         if subscription_type.lessons:
+#             type_of_subscription = f"{subscription_type.lessons} занятий за {subscription_type.price:.0f} " \
+#                                    f"({subscription_type.duration} дней)"
+#             subscription_types.append((subscription_type.id, type_of_subscription))
+#         elif subscription_type.period:
+#             type_of_subscription = f"{subscription_type.price:.0f} за {subscription_type.period}"
+#             subscription_types.append((subscription_type.id, type_of_subscription))
+#     subject.types_of_subscription = subscription_types
+
+
+def format_subscription_types(subscription_types):
+    types_of_subscription = []
+    for subscription_type in subscription_types:
+        if subscription_type.lessons:
+            type_of_subscription = f"{subscription_type.lessons} занятий за {subscription_type.price:.0f} " \
+                                   f"({subscription_type.duration} дней)"
+            types_of_subscription.append((subscription_type.id, type_of_subscription))
+        elif subscription_type.period:
+            type_of_subscription = f"{subscription_type.price:.0f} за {subscription_type.period}"
+            types_of_subscription.append((subscription_type.id, type_of_subscription))
+
+    return types_of_subscription
+
+
 def check_subscription(student, lesson, subject_id):
     after_school = after_school_subject()
     cond = lesson == 0

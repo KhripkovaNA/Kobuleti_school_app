@@ -6,7 +6,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-from app.app_functions import subjects_data, get_weekday_date, TODAY
+from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types
 
 
 app.app_context().push()
@@ -736,4 +736,7 @@ def add_new_lessons(form):
     return messages, week
 
 
-
+not_after_school = SubscriptionType.query.filter(SubscriptionType.subjects.any(Subject.id != 1)).all()
+all_types = SubscriptionType.query.all()
+print(format_subscription_types(not_after_school))
+print(format_subscription_types(all_types))

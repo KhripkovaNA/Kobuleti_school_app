@@ -422,7 +422,7 @@ $(document).ready(function(){
     });
 
     // Handle the change event for lesson subject selector
-    $('.lesson-subject-select').change(function () {
+    $('.lesson-subjects-select').change(function () {
         var subjectId = Number($(this).val());
         var selectedSubject = lessonSubjectsData.filter(function(subject) {
             return subject.id === subjectId;
@@ -442,14 +442,14 @@ $(document).ready(function(){
         var lessonModalId = $(this).data('target');
         var lessonModal = $(lessonModalId);
         lessonModal.on('shown.bs.modal', function () {
-            var lessonSubjectSelector = $(this).find('.lesson-subject-select');
+            var lessonSubjectSelector = $(this).find('.lesson-subjects-select');
             lessonSubjectSelector.trigger("change");
         });
 
     });
 
     // Handle the change event for subscription subject selector
-    $('.subscription-subject-select').change(function () {
+    $('.subscription-select').change(function () {
         var subjectId = Number($(this).val());
         var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
             return subject.id === subjectId;
@@ -475,7 +475,7 @@ $(document).ready(function(){
     $('.subscription-modal-trigger').on('click', function () {
         var subscriptionModalId = $(this).data('target');
         var subscriptionModal = $(subscriptionModalId);
-        var subscriptionSubjectSelector = subscriptionModal.find('.subscription-subject-select');
+        var subscriptionSubjectSelector = subscriptionModal.find('.subscription-select');
         subscriptionSubjectSelector.trigger("change");
     });
 
@@ -739,6 +739,52 @@ $(document).ready(function(){
         $(this).hide();
     });
 
-    $(".subject-select")[0].selectize.trigger("change");
+    var subjectSelect = $(".subject-select").eq(0);
+
+    if (subjectSelect.length && subjectSelect[0].selectize) {
+        subjectSelect[0].selectize.trigger("change");
+    }
+
+    $(".float-field").change(function() {
+        $(this).val(parseFloat($(this).val()).toFixed(1));
+    });
+
+
+    // Add subscription type
+    $("#subscription-types-container").on("change", "#add-subscription-type", function() {
+        var subscriptionTypeCount = Number($("#subscription-type-count").val());
+        var selectorVal = $(this).val();
+        var selectorText = $("option:selected", this ).text();
+        console.log(selectorVal, selectorText)
+        if (subscriptionTypeCount !== 0) {
+            var newSubscriptionTypeRow = $(".subscription-type").first().clone();
+            newSubscriptionTypeRow.find("label").empty()
+            newSubscriptionTypeRow.find("p").html(selectorText);
+            newSubscriptionTypeRow.find(".subscription-type-value").val(selectorVal);
+            newSubscriptionTypeRow.appendTo("#subscription-types");
+        } else {
+            var noSubscriptionTypeRow = $("#no-subscription-types");
+            newSubscriptionTypeRow = noSubscriptionTypeRow.clone();
+            newSubscriptionTypeRow.find("p").html(selectorText);
+            var newSubscriptionTypeHTML = '<div class="col-md-1">' +
+            '<button type="button" class="btn btn-danger del-btn-sm delete-subscription">Удалить</button>' +
+            '</div><input type="hidden" name="subscription-types[]" class="subscription-type-value" value=' +
+            selectorVal + '>;';
+            $(newSubscriptionTypeHTML).appendTo(newSubscriptionTypeRow);
+            $("#subscription-types").append(newSubscriptionTypeRow);
+            noSubscriptionTypeRow.hide();
+            $("#subscription-types").show();
+        }
+        $("#subscription-type-count").val(subscriptionTypeCount + 1);
+    });
+
+
+//    // Delete subscription type
+//    $(document).on("click", ".delete-subscription", function() {
+//        var subscriptionId = $(this).data("subscription-id");
+//        // Implement logic to remove the subscription type with the given subscriptionId
+//        // Optionally, you can keep track of deleted subscription types and handle them during form submission
+//        // For example, you can store deleted subscription types in a hidden input field
+//    });
 
 });

@@ -1,13 +1,12 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass
+from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, SubscriptionType
 from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
-    student_lesson_register, handle_student_edit, format_employee, add_new_employee, week_lessons_dict, \
-    week_school_lessons_dict, filter_lessons, copy_lessons, add_new_lessons, subjects_data, \
+    student_lesson_register, handle_student_edit, format_employee, add_new_employee, format_subscription_types, \
+    week_lessons_dict, week_school_lessons_dict, filter_lessons, copy_lessons, add_new_lessons, subjects_data, \
     show_lesson, handle_lesson, class_students_info
 from app import app, db
-from datetime import datetime
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -238,18 +237,22 @@ def subjects():
     school = SubjectType.query.filter_by(name='school').first()
     all_subjects = Subject.query.filter(Subject.subject_type_id != school.id).order_by(Subject.name).all()
     for subject in all_subjects:
-        subscription_types = []
-        for subscription_type in subject.subscription_types.all():
-            if subscription_type.lessons:
-                type_of_subscription = f"{subscription_type.lessons} занятий за {subscription_type.price:.0f} " \
-                                       f"({subscription_type.duration} дней)"
-                subscription_types.append(type_of_subscription)
-            elif subscription_type.period:
-                type_of_subscription2 = f"{subscription_type.price:.0f} за {subscription_type.period}"
-                subscription_types.append(type_of_subscription2)
-        subject.types_of_subscription = subscription_types
+        subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
 
     return render_template('subjects.html', subjects=all_subjects)
+
+
+@app.route('/subject/<string:subject_id>', methods=['GET', 'POST'])
+@login_required
+def edit_subject(subject_id):
+    subject = Subject.query.filter_by(id=subject_id).first()
+    subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
+    filtered_subscription_types = SubscriptionType.query.filter(
+        SubscriptionType.subjects.any(Subject.id != subject.id)
+    ).all()
+    subscription_types = format_subscription_types(filtered_subscription_types)
+
+    return render_template('edit_subject.html', subject=subject, subscription_types=subscription_types)
 
 
 @app.route('/timetable/<string:week>')
