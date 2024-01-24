@@ -4,8 +4,8 @@ from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Roo
 from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, format_subscription_types, \
-    week_lessons_dict, week_school_lessons_dict, filter_lessons, copy_lessons, add_new_lessons, subjects_data, \
-    show_lesson, handle_lesson, class_students_info
+    add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, filter_lessons, copy_lessons, \
+    add_new_lessons, subjects_data, show_lesson, handle_lesson, class_students_info
 from app import app, db
 
 
@@ -228,7 +228,7 @@ def show_edit_employee(employee_id):
         return render_template('employee.html', employee=employee)
     else:
         flash("Такого клиента нет", 'error')
-        return redirect(url_for('employees.html'))
+        return redirect(url_for('employees'))
 
 
 @app.route('/subjects')
@@ -242,17 +242,61 @@ def subjects():
     return render_template('subjects.html', subjects=all_subjects)
 
 
+@app.route('/add-subject', methods=['GET', 'POST'])
+@login_required
+def add_subject():
+    if request.method == 'POST':
+        try:
+            new_subject = add_new_subject(request.form)
+            db.session.add(new_subject)
+            db.session.commit()
+            flash('Новое занятие добавлено в систему.', 'success')
+
+            return redirect(url_for('subjects'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении занятия: {str(e)}', 'error')
+
+            return redirect(url_for('add_subject'))
+
+    subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school'])).all()
+    subscription_types = format_subscription_types(SubscriptionType.query.all())
+    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+
+    return render_template('add_subject.html', subject_types=subject_types, subscription_types=subscription_types,
+                           teachers=all_teachers, subjects_type="extra_school")
+
+
 @app.route('/subject/<string:subject_id>', methods=['GET', 'POST'])
 @login_required
 def edit_subject(subject_id):
     subject = Subject.query.filter_by(id=subject_id).first()
-    subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
-    filtered_subscription_types = SubscriptionType.query.filter(
-        SubscriptionType.subjects.any(Subject.id != subject.id)
-    ).all()
-    subscription_types = format_subscription_types(filtered_subscription_types)
+    if subject:
+        if request.method == 'POST':
+            try:
+                handle_subject_edit(subject, request.form)
+                db.session.commit()
+                flash('Изменения внесены.', 'success')
 
-    return render_template('edit_subject.html', subject=subject, subscription_types=subscription_types)
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+
+            return redirect(url_for('edit_subject', subject_id=subject_id))
+
+        subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
+        filtered_subscription_types = SubscriptionType.query.filter(
+            ~SubscriptionType.subjects.any(Subject.id == subject.id)
+        ).all()
+
+        subscription_types = format_subscription_types(filtered_subscription_types)
+
+        return render_template('edit_subject.html', subject=subject, subscription_types=subscription_types)
+
+    else:
+        flash("Такого занятия нет.", 'error')
+        return redirect(url_for('subjects'))
 
 
 @app.route('/timetable/<string:week>')
@@ -309,8 +353,10 @@ def copy_lessons():
     rooms = Room.query.all()
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-    return render_template('copy_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types,
-                           rooms=rooms, school_classes=school_classes, teachers=all_teachers)
+    school = SubjectType.query.filter_by(name='school').first()
+
+    return render_template('copy_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types, rooms=rooms,
+                           school_classes=school_classes, teachers=all_teachers, school=school)
 
 
 @app.route('/add-lessons', methods=['GET', 'POST'])
@@ -402,25 +448,3 @@ def school_lesson(lesson_id):
     return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
                            lesson_students=lesson_students, school_students=sc_students)
 
-
-
-
-#     if request.method == 'POST':
-#         try:
-#             new_lesson = create_lesson(request.form)
-#             db.session.add(new_lesson)
-#             db.session.commit()
-#
-#             flash('Новый урок добавлен в расписание.', 'success')
-#             return redirect(url_for('students'))
-#
-#         except Exception as e:
-#             db.session.rollback()
-#             flash(f'Ошибка при добавлении нового урока: {str(e)}', 'error')
-#             return redirect(url_for('add_lesson'))
-#
-#     all_subjects = Subject.query.order_by(Subject.name).all()
-#     all_rooms = Room.query.all()
-#     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name).all()
-#
-#     return render_template('add_lessons.html', subjects=all_subjects, rooms=all_rooms, teachers=all_teachers)

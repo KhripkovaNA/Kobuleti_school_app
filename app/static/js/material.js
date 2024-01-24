@@ -519,9 +519,9 @@ $(document).ready(function(){
     $(".selectors-group").on("change", "#subject-type-select", function () {
         var subjectTypeVal = $(this).val();
         var classSelectRow = $("#school-class-row");
-        var school = '1';
+        var schoolType = $('#school-type').val();;
 
-        if (subjectTypeVal && subjectTypeVal.indexOf(school) !== -1) {
+        if (subjectTypeVal && subjectTypeVal.indexOf(schoolType) !== -1) {
             classSelectRow.show();
         } else {
             classSelectRow.hide();
@@ -749,13 +749,24 @@ $(document).ready(function(){
         $(this).val(parseFloat($(this).val()).toFixed(1));
     });
 
+    $(".price_row").on("change", "input[type='checkbox']", function() {
+        var priceRow = $(this).closest(".price_row")
+        if (this.checked) {
+            priceRow.find(".float-field-row").hide();
+        } else {
+            priceRow.find(".float-field-row").show();
+        }
+    });
+
+    $("input[type='checkbox']").trigger("change");
 
     // Add subscription type
     $("#subscription-types-container").on("change", "#add-subscription-type", function() {
         var subscriptionTypeCount = Number($("#subscription-type-count").val());
         var selectorVal = $(this).val();
         var selectorText = $("option:selected", this ).text();
-        console.log(selectorVal, selectorText)
+        $("option:selected", this ).remove()
+        $("option:first", this).prop('selected', true);
         if (subscriptionTypeCount !== 0) {
             var newSubscriptionTypeRow = $(".subscription-type").first().clone();
             newSubscriptionTypeRow.find("label").empty()
@@ -763,28 +774,36 @@ $(document).ready(function(){
             newSubscriptionTypeRow.find(".subscription-type-value").val(selectorVal);
             newSubscriptionTypeRow.appendTo("#subscription-types");
         } else {
-            var noSubscriptionTypeRow = $("#no-subscription-types");
-            newSubscriptionTypeRow = noSubscriptionTypeRow.clone();
+            newSubscriptionTypeRow = $("#no-subscription-types").clone();
+            newSubscriptionTypeRow.addClass("subscription-type").removeAttr('id');
             newSubscriptionTypeRow.find("p").html(selectorText);
-            var newSubscriptionTypeHTML = '<div class="col-md-1">' +
-            '<button type="button" class="btn btn-danger del-btn-sm delete-subscription">Удалить</button>' +
-            '</div><input type="hidden" name="subscription-types[]" class="subscription-type-value" value=' +
-            selectorVal + '>;';
+            var newSubscriptionTypeHTML = `
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-danger del-btn-sm delete-subscription">Удалить</button>
+                </div>
+                <input type="hidden" name="subscription_types" class="subscription-type-value" value="${selectorVal}">`;
             $(newSubscriptionTypeHTML).appendTo(newSubscriptionTypeRow);
             $("#subscription-types").append(newSubscriptionTypeRow);
-            noSubscriptionTypeRow.hide();
-            $("#subscription-types").show();
+            $("#no-subscription-types, #subscription-types").toggle();
         }
         $("#subscription-type-count").val(subscriptionTypeCount + 1);
     });
 
+    // Delete subscription type
+    $("#subscription-types-container").on("click", ".delete-subscription", function() {
+        var subscriptionTypeRow = $(this).closest(".subscription-type");
+        subscriptionTypeText = subscriptionTypeRow.find("p").html();
+        subscriptionTypeVal = subscriptionTypeRow.find(".subscription-type-value").val();
+        var optionHTML = `
+            <option value="${subscriptionTypeVal}">${subscriptionTypeText}</option>`;
+        $('#add-subscription-type').append(optionHTML);
+        subscriptionTypeRow.remove();
+        var subscriptionTypeCount = Number($("#subscription-type-count").val()) - 1;
+        $("#subscription-type-count").val(subscriptionTypeCount);
+        if (subscriptionTypeCount === 0) {
+            $("#no-subscription-types, #subscription-types").toggle();
+        }
 
-//    // Delete subscription type
-//    $(document).on("click", ".delete-subscription", function() {
-//        var subscriptionId = $(this).data("subscription-id");
-//        // Implement logic to remove the subscription type with the given subscriptionId
-//        // Optionally, you can keep track of deleted subscription types and handle them during form submission
-//        // For example, you can store deleted subscription types in a hidden input field
-//    });
+    });
 
 });

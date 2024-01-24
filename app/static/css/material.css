@@ -2041,8 +2041,15 @@ label {
     border-radius: 0 4px 4px 0;
 }
 
+
+
 .selectize-dropdown-content {
     position:relative;
+    max-height: 100px;
+}
+
+.form-control.selectize-control {
+    margin-bottom: 10px;
 }
 
 .form-control-static {
@@ -2419,7 +2426,7 @@ label {
     display: inline-block;
 }
 
-input[type=text], select.form-control {
+input[type=text], input[type=number], select.form-control {
   width: 100%;
   padding: 5px 12px;
   border: 1px solid #ccc;

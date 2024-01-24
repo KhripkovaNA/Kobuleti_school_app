@@ -736,7 +736,3 @@ def add_new_lessons(form):
     return messages, week
 
 
-not_after_school = SubscriptionType.query.filter(SubscriptionType.subjects.any(Subject.id != 1)).all()
-all_types = SubscriptionType.query.all()
-print(format_subscription_types(not_after_school))
-print(format_subscription_types(all_types))

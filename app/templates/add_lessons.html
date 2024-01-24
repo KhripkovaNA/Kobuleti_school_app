@@ -10,82 +10,84 @@
             </div>
             <div class="card-content">
                 <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
-                    <div id="lesson-sections">
-                        <div class="row form-group">
-                            <label class="control-label col-md-3">Дата:</label>
-                            <div class="col-md-3">
-                                <input type="text" name="lesson_date" id="lesson-date" class="form-control datepicker" placeholder="дд.мм.гггг">
-                            </div>
-                        </div>
-                        <div class="lesson-section">
-                            <h5 class="title" style="margin: 27px;">Занятие 1</h5>
+                    <div class="col-md-offset-1">
+                        <div id="lesson-sections">
                             <div class="form-group">
                                 <div class="row">
-                                    <label class="control-label col-md-3">Начало:</label>
+                                    <label class="control-label col-md-3">Дата:</label>
                                     <div class="col-md-3">
-                                        <input type="text" name="lesson_start_time_1" class="form-control timepicker">
+                                        <input type="text" name="lesson_date" id="lesson-date" class="form-control datepicker" placeholder="дд.мм.гггг">
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Конец:</label>
-                                    <div class="col-md-3">
-                                        <input type="text" name="lesson_end_time_1" class="form-control timepicker">
+                                <div class="lesson-section">
+                                    <h5 class="title" style="margin: 27px;">Занятие 1</h5>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Начало:</label>
+                                        <div class="col-md-3">
+                                            <input type="text" name="lesson_start_time_1" class="form-control timepicker">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Предмет:</label>
-                                    <div class="col-md-6">
-                                        <select name="subject_1" class="form-control subject-select select-search">
-                                            {% for subject in subjects %}
-                                                <option value="{{ subject.id }}-{{ subject.subject_type }}">{{ subject.name }} ({{ subject.description }})</option>
-                                            {% endfor %}
-                                        </select>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Конец:</label>
+                                        <div class="col-md-3">
+                                            <input type="text" name="lesson_end_time_1" class="form-control timepicker">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row school-class-row" style="display: none;">
-                                    <label class="control-label col-md-3">Класс:</label>
-                                    <div class="col-md-6">
-                                        <select name="school_classes_1" placeholder="Выбрать классы" class="form-control classes-select select-search" multiple></select>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Предмет:</label>
+                                        <div class="col-md-6">
+                                            <select name="subject_1" class="form-control subject-select select-search">
+                                                {% for subject in subjects %}
+                                                    <option value="{{ subject.id }}-{{ subject.subject_type }}">{{ subject.name }} ({{ subject.description }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
-                                    <button type="button" class="btn btn-success btn-sm add-classes-btn" style="margin: 4px 0;">Все классы</button>
-                                </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Кабинет:</label>
-                                    <div class="col-md-6">
-                                        <select name="room_1" class="form-control select-search">
-                                            {% for room in rooms %}
-                                                <option value="{{ room.id }}">{{ room.name }}</option>
-                                            {% endfor %}
-                                        </select>
+                                    <div class="row school-class-row" style="display: none;">
+                                        <label class="control-label col-md-3">Класс:</label>
+                                        <div class="col-md-6">
+                                            <select name="school_classes_1" placeholder="Выбрать классы" class="form-control classes-select select-search" multiple></select>
+                                        </div>
+                                        <button type="button" class="btn btn-success btn-xs add-classes-btn" style="margin: 4px 0;">Все классы</button>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Учитель:</label>
-                                    <div class="col-md-6">
-                                        <select name="teacher_1" class="form-control teacher-select select-search"></select>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Кабинет:</label>
+                                        <div class="col-md-6">
+                                            <select name="room_1" class="form-control select-search">
+                                                {% for room in rooms %}
+                                                    <option value="{{ room.id }}">{{ room.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
-                                    <button type="button" class="btn btn-success btn-sm add-teachers-btn" style="margin: 4px 0;">Все учителя</button>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Учитель:</label>
+                                        <div class="col-md-6">
+                                            <select name="teacher_1" class="form-control teacher-select select-search"></select>
+                                        </div>
+                                        <button type="button" class="btn btn-success btn-xs add-teachers-btn" style="margin: 4px 0;">Все учителя</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <input type="hidden" name="lesson_count" id="lesson-count" value="">
-                    <input type="hidden" id="school-type" value="{{ school.id }}">
-                    <div class="row">
-                        <div id="add-lesson">
-                            <div class="col-md-3">
-                                <button type="button" id="add-lesson-btn" class="btn btn-default" style="background-color: #ff9800;">Добавить занятие</button>
+                        <input type="hidden" name="lesson_count" id="lesson-count" value="">
+                        <input type="hidden" id="school-type" value="{{ school.id }}">
+                        <div class="row">
+                            <div id="add-lesson">
+                                <div class="col-md-3">
+                                    <button type="button" id="add-lesson-btn" class="btn btn-sm btn-default" style="background-color: #ff9800;">Добавить занятие</button>
+                                </div>
                             </div>
-                        </div>
-                        <div id="remove-lesson" style="display: none;">
-                            <div class="col-md-3">
-                                <button type="button" id="remove-lesson-btn" class="btn btn-danger">Удалить занятие</button>
+                            <div id="remove-lesson" style="display: none;">
+                                <div class="col-md-3">
+                                    <button type="button" id="remove-lesson-btn" class="btn btn-sm btn-danger">Удалить занятие</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="footer">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <button type="submit" class="btn btn-login" id="submit-lesson-btn" style="background-color:#4BD1A0;">Добавить в расписание</button>
                             </div>
                             <div class="col-md-3">

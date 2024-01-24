@@ -585,17 +585,40 @@ def format_employee(employee):
         format_children(employee)
 
 
-# def format_subject(subject):
-#     subscription_types = []
-#     for subscription_type in subject.subscription_types.all():
-#         if subscription_type.lessons:
-#             type_of_subscription = f"{subscription_type.lessons} занятий за {subscription_type.price:.0f} " \
-#                                    f"({subscription_type.duration} дней)"
-#             subscription_types.append((subscription_type.id, type_of_subscription))
-#         elif subscription_type.period:
-#             type_of_subscription = f"{subscription_type.price:.0f} за {subscription_type.period}"
-#             subscription_types.append((subscription_type.id, type_of_subscription))
-#     subject.types_of_subscription = subscription_types
+def add_new_subject(form):
+    subject_name = form.get("subject_name").capitalize()
+    subject_short_name = form.get("subject_short_name").capitalize()
+    subject_type_id = form.get("subject_type")
+    description = form.get("description")
+
+    if not form.get('no_subject_price'):
+        subject_price = float(form.get('subject_price'))
+        one_time_price = subject_price if int(subject_price) > 0 else None
+    else:
+        one_time_price = None
+    if not form.get('no_subject_school_price'):
+        subject_school_price = float(form.get('subject_school_price'))
+        school_price = subject_school_price if int(subject_school_price) > 0 else None
+    else:
+        school_price = None
+
+    new_subject = Subject(
+        name=subject_name,
+        short_name=subject_short_name,
+        subject_type_id=subject_type_id,
+        description=description,
+        one_time_price=one_time_price,
+        school_price=school_price
+    )
+
+    subscription_type_ids = [int(st) for st in form.getlist('subscription_types')]
+    subscription_types = SubscriptionType.query.filter(SubscriptionType.id.in_(subscription_type_ids)).all()
+    new_subject.subscription_types.extend(subscription_types)
+    teacher_ids = [int(st) for st in form.getlist('teachers')]
+    teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
+    new_subject.teachers.extend(teachers)
+
+    return new_subject
 
 
 def format_subscription_types(subscription_types):
@@ -610,6 +633,25 @@ def format_subscription_types(subscription_types):
             types_of_subscription.append((subscription_type.id, type_of_subscription))
 
     return types_of_subscription
+
+
+def handle_subject_edit(subject, form):
+    subject.name = form.get('subject_name')
+    subject.short_name = form.get('subject_short_name')
+    subject.description = form.get('description')
+    if not form.get('no_subject_price'):
+        subject_price = float(form.get('subject_price'))
+        subject.one_time_price = subject_price if int(subject_price) > 0 else None
+    else:
+        subject.one_time_price = None
+    if not form.get('no_subject_school_price'):
+        school_price = float(form.get('subject_school_price'))
+        subject.school_price = school_price if int(school_price) > 0 else None
+    else:
+        subject.school_price = None
+    subscription_type_ids = [int(st) for st in form.getlist('subscription_types')]
+    subscription_types = SubscriptionType.query.filter(SubscriptionType.id.in_(subscription_type_ids)).all()
+    subject.subscription_types = [subscription_type for subscription_type in subscription_types]
 
 
 def check_subscription(student, lesson, subject_id):
@@ -982,6 +1024,7 @@ def create_check_lesson(lesson_date, form, i):
     conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
                                                     school_classes, room_id, teacher_id)
     intersection = set()
+
     if conflicting_lessons:
         for conflict in conflicting_lessons:
             if conflict.room_id == room_id:
@@ -998,6 +1041,7 @@ def create_check_lesson(lesson_date, form, i):
                 intersection.add(alert)
         message_text = f'Занятие {i} не добавлено в расписание. Пересечения по ' + ', '.join(intersection) + '.'
         lesson = None
+
     else:
         lesson = Lesson(
             date=lesson_date,
@@ -1008,6 +1052,7 @@ def create_check_lesson(lesson_date, form, i):
             subject_id=int(subject_id),
             teacher_id=teacher_id,
         )
+
         school_classes = SchoolClass.query.filter(SchoolClass.id.in_(school_classes)).all()
         lesson.school_classes.extend(school_classes)
         message_text = f'Занятие {i} добавлено в расписание.'

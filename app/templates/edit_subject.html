@@ -34,20 +34,38 @@
                                 <textarea name="description" class="form-control" style="margin-bottom:10px;">{{ subject.description }}</textarea>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row price_row">
                             <label class="control-label col-md-3">Цена разового занятия:</label>
-                            <div class="col-md-5">
-                                <input type="number" class="form-control float-field" name="suject_price" step="1" min="0" value="{{ subject.one_time_price|float if subject.one_time_price else 0|float }}">
+                            <div class="col-md-3 float-field-row">
+                                <input type="number" class="form-control float-field" name="subject_price" step="1" min="0" value="{{ subject.one_time_price|float if subject.one_time_price else 20|float }}">
+                            </div>
+                            <div class="col-md-2 checkbox-option">
+                                <label class="contact-radio-label">Нет
+                                    {% if subject.one_time_price %}
+                                        <input type="checkbox" name="no_subject_price">
+                                    {% else %}
+                                        <input type="checkbox" checked name="no_subject_price">
+                                    {% endif %}
+                                    <span class="custom-checkbox"></span>
+                                </label>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row price_row">
                             <label class="control-label col-md-3">Специальная цена (Продленка):</label>
-                            <div class="col-md-5">
-                                <input type="number" class="form-control float-field" name="subject_school_price" step="1" min="0" value="{{ subject.school_price|float if subject.school_price else subject.one_time_price|float if subject.one_time_price else 0|float }}">
+                            <div class="col-md-3 float-field-row">
+                                <input type="number" class="form-control float-field" name="subject_school_price" step="1" min="0" value="{{ subject.school_price|float if subject.school_price else subject.one_time_price|float if subject.one_time_price else 20|float }}">
+                            </div>
+                            <div class="col-md-2 checkbox-option">
+                                <label class="contact-radio-label">Нет
+                                    {% if subject.school_price %}
+                                        <input type="checkbox" name="no_subject_school_price">
+                                    {% else %}
+                                        <input type="checkbox" checked name="no_subject_school_price">
+                                    {% endif %}
+                                    <span class="custom-checkbox"></span>
+                                </label>
                             </div>
                         </div>
-
-
                         <div id="subscription-types-container">
                             <div class="row" id="no-subscription-types" style="{{ 'display:none;' if subject.types_of_subscription else '' }}">
                                 <label class="control-label col-md-3">Абонемент:</label>
@@ -63,9 +81,9 @@
                                             <p class="form-control">{{ subscription_type[1] }}</p>
                                         </div>
                                         <div class="col-md-1">
-                                            <button type="button" class="btn btn-danger del-btn-sm delete-subscription" data-subscription-id="{{ subscription_type[0] }}">Удалить</button>
+                                            <button type="button" class="btn btn-danger del-btn-sm delete-subscription">Удалить</button>
                                         </div>
-                                        <input type="hidden" name="subscription-types[]" class="subscription-type-value" value="{{ subscription_type[0] }}">
+                                        <input type="hidden" name="subscription_types" class="subscription-type-value" value="{{ subscription_type[0] }}">
                                     </div>
                                 {% endfor %}
                             </div>
@@ -81,30 +99,6 @@
                                 </div>
                             </div>
                         </div>
-
-<!--                        {% if subject.types_of_subscription %}-->
-<!--                            {% for subscription_type in subject.types_of_subscription %}-->
-<!--                                <div class="row">-->
-<!--                                    <label class="control-label col-md-3">{{ "Абонемент:" if loop.first }}</label>-->
-<!--                                    <div class="col-md-5">-->
-<!--                                        <div class="input-group">-->
-<!--                                            <p class="form-control" style="border-radius: 4px;">{{ subscription_type[1] }}</p>-->
-<!--                                            <span class="input-group-addon" style="padding:0;">-->
-<!--                                                <button type="submit" name="del_subscription_btn" value="{{ subscription_type[0] }}" class="btn btn-danger del-btn-big">x</button>-->
-<!--                                            </span>-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            {% endfor %}-->
-<!--                        {% else %}-->
-<!--                            <div class="row">-->
-<!--                                <label class="control-label col-md-3">Абонемент:</label>-->
-<!--                                <div class="col-md-5">-->
-<!--                                    <p class="form-control">Нет</p>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        {% endif %}-->
-
                         {% if subject.teachers %}
                             {% for teacher in subject.teachers %}
                                 <div class="row">
@@ -119,7 +113,6 @@
                                 </div>
                             {% endfor %}
                         {% endif %}
-
                         <div class="footer">
                             <div class="row">
                                 <div class="col-md-3">

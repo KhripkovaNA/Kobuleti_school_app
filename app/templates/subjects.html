@@ -17,6 +17,7 @@
                                 <th>Название</th>
                                 <th>Абонементы</th>
                                 <th>Цена разового занятия</th>
+                                <th>Учителя</th>
                                 <th>Действие</th>
                             </thead>
                         </table>
@@ -42,6 +43,13 @@
                                                 {% endif %}
                                                 {% if subject.school_price %}
                                                     <p>{{ subject.school_price | round(1) }} (Продленка)</p>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if subject.teachers %}
+                                                    {% for teacher in subject.teachers %}
+                                                        <p>{{ teacher.last_name }} {{ teacher.first_name }}</p>
+                                                    {% endfor %}
                                                 {% endif %}
                                             </td>
                                             <td>
@@ -80,7 +88,7 @@
                     <p>Занятий пока нет</p>
                 {% endif %}
                 <button class="btn" style="background-color: #ff9800;">
-                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
+                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_subject') }}">
                         <i class="material-icons">add_box</i>Добавить занятие
                     </a>
                 </button>
