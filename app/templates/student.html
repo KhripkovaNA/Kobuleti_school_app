@@ -7,48 +7,52 @@
             <div class="card-header" data-background-color="main">
                 <h4 class="title">Информация о клиенте</h4>
             </div>
-            <div class="card-content col-md-offset-1">
+            <div class="card-content">
 
             <!-- *-*-*-*-*-*-*-*-*-* Student information show *-*-*-*-*-*-*-*-*-* -->
 
-                <div class="form-group section section-student" data-target="student">
-                    <h4 class="title" style="margin-bottom:27px;">{{ student.last_name }} {{ student.first_name }} {{ student.patronym }}</h4>
-                    {% if student.person_type == 'Ребенок' %}
-                        <div class="row">
-                            <label class="control-label col-md-3">Дата рождения:</label>
-                            <div class="col-md-3">
-                                <p class="form-control">
-                                    {% if student.birth_date %}
-                                        {{ student.birth_date }}
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                    {% endif %}
+                <div class="section section-student" data-target="student">
                     <div class="row">
-                        <label class="control-label col-md-3">Статус:</label>
-                        <div class="col-md-3">
-                            <p class="form-control">{{ student.status_info }}</p>
-                        </div>
-                    </div>
-                    {% if student.children_info %}
-                        {% for child in student.children_info %}
+                        <h4 class="title" style="margin-left:27px;">{{ student.last_name }} {{ student.first_name }} {{ student.patronym }}</h4>
+                        <div class="form-group" style="margin-left:30px;">
+                            {% if student.person_type == 'Ребенок' %}
                             <div class="row">
-                                <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
-                                <div class="col-md-5">
+                                <label class="control-label col-md-3">Дата рождения:</label>
+                                <div class="col-md-3">
                                     <p class="form-control">
-                                        <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
-                                            {{ child[1] }}
-                                        </a>
+                                        {% if student.birth_date %}
+                                            {{ student.birth_date }}
+                                        {% endif %}
                                     </p>
                                 </div>
                             </div>
-                        {% endfor %}
-                    {% endif %}
+                            {% endif %}
+                            <div class="row">
+                                <label class="control-label col-md-3">Статус:</label>
+                                <div class="col-md-3">
+                                    <p class="form-control">{{ student.status_info }}</p>
+                                </div>
+                            </div>
+                            {% if student.children_info %}
+                                {% for child in student.children_info %}
+                                    <div class="row">
+                                        <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
+                                        <div class="col-md-5">
+                                            <p class="form-control">
+                                                <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
+                                                    {{ child[1] }}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
                     <div class="footer">
                         <div class="row">
-                            <div class="col-md-3">
-                                <button class="btn btn-login section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                            <div class="col-md-2">
+                                <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
                             </div>
                         </div>
                     </div>
@@ -56,83 +60,87 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Student information edit *-*-*-*-*-*-*-*-*-* -->
 
-                <div class="form-group form form-student" data-target="student" style="display: none;">
+                <div class="form form-student" data-target="student" style="display: none;">
                     <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
                         <div class="row">
-                            <label class="control-label col-md-3">Фамилия:</label>
-                            <div class="col-md-5">
-                                <input type="text" name="last_name" class="form-control" value="{{ student.last_name }}">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Имя:</label>
-                            <div class="col-md-5">
-                                <input type="text" name="first_name" class="form-control" value="{{ student.first_name }}">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Отчество:</label>
-                            <div class="col-md-5">
-                                <input type="text" name="patronym" class="form-control" value="{{ student.patronym }}">
-                            </div>
-                        </div>
-                        {% if student.person_type == 'Ребенок' %}
-                            <div class="row">
-                                <label class="control-label col-md-3">Дата рождения:</label>
-                                <div class="col-md-3 datepicker-container">
-                                    <input type="text" name="dob" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.birth_date }}">
-                                </div>
-                            </div>
-                        {% endif  %}
-                        <div class="row">
-                            <label class="control-label col-md-3">Статус:</label>
-                            <div class="col-md-3">
-                                <select name="status" class="form-control" id="status-select">
-                                    {% for val in ["Клиент", "Лид", "Пауза", "Закрыт"] %}
-                                        {% if student.status==val %}
-                                            <option value="{{ val }}" selected>{{ val }}</option>
-                                        {% else %}
-                                            <option value="{{ val }}">{{ val }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div id="pause-date" style="display: none;">
-                                <label class="control-label col-md-1">до:</label>
-                                <div class="col-md-3">
-                                    <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.pause_date }}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div id="leaving-reason" style="display: none;">
-                                <label class="control-label col-md-3">Причина:</label>
-                                <div class="col-md-5">
-                                    <textarea name="leaving_reason" class="form-control">{{ student.leaving_reason }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-                        {% if student.children_info %}
-                            {% for child in student.children_info %}
+                            <div class="form-group" style="margin-left:30px;">
                                 <div class="row">
-                                    <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
+                                    <label class="control-label col-md-3">Фамилия:</label>
                                     <div class="col-md-5">
-                                        <p class="form-control">
-                                            <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
-                                                {{ child[1] }}
-                                            </a>
-                                        </p>
+                                        <input type="text" name="last_name" class="form-control" value="{{ student.last_name }}">
                                     </div>
                                 </div>
-                            {% endfor %}
-                        {% endif %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Имя:</label>
+                                    <div class="col-md-5">
+                                        <input type="text" name="first_name" class="form-control" value="{{ student.first_name }}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Отчество:</label>
+                                    <div class="col-md-5">
+                                        <input type="text" name="patronym" class="form-control" value="{{ student.patronym }}">
+                                    </div>
+                                </div>
+                                {% if student.person_type == 'Ребенок' %}
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Дата рождения:</label>
+                                        <div class="col-md-3 datepicker-container">
+                                            <input type="text" name="dob" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.birth_date }}">
+                                        </div>
+                                    </div>
+                                {% endif  %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Статус:</label>
+                                    <div class="col-md-3">
+                                        <select name="status" class="form-control" id="status-select">
+                                            {% for val in ["Клиент", "Лид", "Пауза", "Закрыт"] %}
+                                                {% if student.status==val %}
+                                                    <option value="{{ val }}" selected>{{ val }}</option>
+                                                {% else %}
+                                                    <option value="{{ val }}">{{ val }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div id="pause-date" style="display: none;">
+                                        <label class="control-label col-md-1">до:</label>
+                                        <div class="col-md-3">
+                                            <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.pause_date }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div id="leaving-reason" style="display: none;">
+                                        <label class="control-label col-md-3">Причина:</label>
+                                        <div class="col-md-5">
+                                            <textarea name="leaving_reason" class="form-control">{{ student.leaving_reason }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if student.children_info %}
+                                    {% for child in student.children_info %}
+                                        <div class="row">
+                                            <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
+                                            <div class="col-md-5">
+                                                <p class="form-control">
+                                                    <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
+                                                        {{ child[1] }}
+                                                    </a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
                         <div class="footer">
                             <div class="row">
-                                <div class="col-md-3">
-                                    <button type="submit" name="form_student_submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
+                                <div class="col-md-2">
+                                    <button type="submit" name="form_student_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
                                 </div>
-                                <div class="col-md-3">
-                                    <button type="button" class="btn btn-default section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
                                 </div>
                             </div>
                         </div>
@@ -164,41 +172,45 @@
             <!-- *-*-*-*-*-*-*-*-*-* Contact section *-*-*-*-*-*-*-*-*-* -->
 
                 <div id="show-contacts" style="display: none;">
-                    <h4 class="title">Kонтакты</h4>
+                    <h4 class="title" style="margin-left: 27px;">Kонтакты</h4>
                     {% if student.additional_contacts %}
-                        <h5 class="title" style="margin-left: 12px; margin-top: 12px; font-size: 1.1em;">Основной контакт</h5>
+                        <h5 class="title" style="margin-left: 27px;">Основной контакт</h5>
                     {% endif %}
 
             <!-- *-*-*-*-*-*-*-*-*-* Main contact information show *-*-*-*-*-*-*-*-*-* -->
 
-                    <div class="form-group section section-main-contact" data-target="main-contact">
-                        {% if student.main_contact.id!=student.id %}
-                            <h5 class="title" style="margin: 27px;">
-                                {{ student.main_contact.type }} {{ student.main_contact.last_name }} {{ student.main_contact.first_name }} {{ student.main_contact.patronym }}
-                            </h5>
-                        {% endif %}
+                    <div class="section section-main-contact" data-target="main-contact">
                         <div class="row">
-                            <label class="control-label col-md-3">Телеграм:</label>
-                            <div class="col-md-5">
-                                <p class="form-control">{{ student.main_contact.contacts[0].telegram }}</p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Телефон:</label>
-                            <div class="col-md-5">
-                                <p class="form-control">{{ student.main_contact.contacts[0].phone }}</p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Другое:</label>
-                            <div class="col-md-5">
-                                <p class="form-control">{{ student.main_contact.contacts[0].other_contact }}</p>
+                            {% if student.main_contact.id!=student.id %}
+                                <h5 class="title" style="margin-left:54px;">
+                                    {{ student.main_contact.type }} {{ student.main_contact.last_name }} {{ student.main_contact.first_name }} {{ student.main_contact.patronym }}
+                                </h5>
+                            {% endif %}
+                            <div class="form-group" style="margin-left:30px;">
+                                <div class="row">
+                                    <label class="control-label col-md-3">Телеграм:</label>
+                                    <div class="col-md-5">
+                                        <p class="form-control">{{ student.main_contact.contacts[0].telegram }}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Телефон:</label>
+                                    <div class="col-md-5">
+                                        <p class="form-control">{{ student.main_contact.contacts[0].phone }}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Другое:</label>
+                                    <div class="col-md-5">
+                                        <p class="form-control">{{ student.main_contact.contacts[0].other_contact }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="footer">
                             <div class="row">
-                                <div class="col-md-3">
-                                    <button class="btn btn-login section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                                <div class="col-md-2">
+                                    <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
                                 </div>
                             </div>
                         </div>
@@ -206,62 +218,66 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Main contact information edit *-*-*-*-*-*-*-*-*-* -->
 
-                    <div class="form-group form form-main-contact" data-target="main-contact" style="display:none;">
-                        <h5 class="title" style="margin: 27px;">Изменить контакт</h5>
+                    <div class="form form-main-contact" data-target="main-contact" style="display:none;">
                         <form class="login-form contact-section" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
-                            {% if student.person_type == 'Ребенок' %}
-                                <div class="row">
-                                    <label class="control-label col-md-3">Контакт:</label>
-                                    <div class="col-md-5">
-                                        <p class="form-control">{{ student.main_contact.type }}</p>
-                                    </div>
-                                </div>
-                                <div class="contact-info">
+                            <div class="row">
+                                <h5 class="title" style="margin-left:54px;">Изменить контакт</h5>
+                                <div class="form-group" style="margin-left:30px;">
+                                    {% if student.person_type == 'Ребенок' %}
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Контакт:</label>
+                                            <div class="col-md-5">
+                                                <p class="form-control">{{ student.main_contact.type }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="contact-info">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Фамилия:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="parent_last_name_main" class="form-control" value="{{ student.main_contact.last_name }}">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Имя:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="parent_first_name_main" class="form-control" value="{{ student.main_contact.first_name }}">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Отчество:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="parent_patronym_main" class="form-control" value="{{ student.main_contact.patronym }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                     <div class="row">
-                                        <label class="control-label col-md-3">Фамилия:</label>
+                                        <label class="control-label col-md-3">Телеграм:</label>
                                         <div class="col-md-5">
-                                            <input type="text" name="parent_last_name_main" class="form-control" value="{{ student.main_contact.last_name }}">
+                                            <input type="text" name="telegram_main" class="form-control" value="{{ student.main_contact.contacts[0].telegram }}">
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <label class="control-label col-md-3">Имя:</label>
+                                        <label class="control-label col-md-3">Телефон:</label>
                                         <div class="col-md-5">
-                                            <input type="text" name="parent_first_name_main" class="form-control" value="{{ student.main_contact.first_name }}">
+                                            <input type="text" name="phone_main" class="form-control" value="{{ student.main_contact.contacts[0].phone }}">
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <label class="control-label col-md-3">Отчество:</label>
+                                        <label class="control-label col-md-3">Другое:</label>
                                         <div class="col-md-5">
-                                            <input type="text" name="parent_patronym_main" class="form-control" value="{{ student.main_contact.patronym }}">
+                                            <input type="text" name="other_contact_main" class="form-control" value="{{ student.main_contact.contacts[0].other_contact }}">
                                         </div>
                                     </div>
-                                </div>
-                            {% endif %}
-                            <div class="row">
-                                <label class="control-label col-md-3">Телеграм:</label>
-                                <div class="col-md-5">
-                                    <input type="text" name="telegram_main" class="form-control" value="{{ student.main_contact.contacts[0].telegram }}">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <label class="control-label col-md-3">Телефон:</label>
-                                <div class="col-md-5">
-                                    <input type="text" name="phone_main" class="form-control" value="{{ student.main_contact.contacts[0].phone }}">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <label class="control-label col-md-3">Другое:</label>
-                                <div class="col-md-5">
-                                    <input type="text" name="other_contact_main" class="form-control" value="{{ student.main_contact.contacts[0].other_contact }}">
                                 </div>
                             </div>
                             <div class="footer">
                                 <div class="row">
-                                    <div class="col-md-3">
-                                        <button type="submit" name="form_main_contact_submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
+                                    <div class="col-md-2">
+                                        <button type="submit" name="form_main_contact_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
                                     </div>
-                                    <div class="col-md-3">
-                                        <button type="button" class="btn btn-default section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
                                     </div>
                                 </div>
                             </div>
@@ -271,39 +287,43 @@
             <!-- *-*-*-*-*-*-*-*-*-* Additional contacts information show *-*-*-*-*-*-*-*-*-* -->
 
                     {% if student.additional_contacts %}
-                        <h5 class="title" style="margin-left: 12px; margin-top: 12px; font-size: 1.1em;">Дополнительные контакты</h5>
+                        <h5 class="title" style="margin-left:27px;">Дополнительные контакты</h5>
                         {% for contact in student.additional_contacts %}
-                            <div class="form-group section section-cont-{{ loop.index }}" data-target="cont-{{ loop.index }}">
-                                {% if contact.id!=student.id %}
-                                    <h5 class="title" style="margin: 27px;">
-                                        {{ contact.type }} {{ contact.last_name }} {{ contact.first_name }} {{ contact.patronym }}
-                                    </h5>
-                                {% endif %}
+                            <div class="section section-cont-{{ loop.index }}" data-target="cont-{{ loop.index }}">
                                 <div class="row">
-                                    <label class="control-label col-md-3">Телеграм:</label>
-                                    <div class="col-md-5">
-                                        <p class="form-control">{{ contact.contacts[0].telegram }}</p>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Телефон:</label>
-                                    <div class="col-md-5">
-                                        <p class="form-control">{{ contact.contacts[0].phone }}</p>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Другое:</label>
-                                    <div class="col-md-5">
-                                        <p class="form-control">{{ contact.contacts[0].other_contact }}</p>
+                                    {% if contact.id!=student.id %}
+                                        <h5 class="title" style="margin-left:54px;">
+                                            {{ contact.type }} {{ contact.last_name }} {{ contact.first_name }} {{ contact.patronym }}
+                                        </h5>
+                                    {% endif %}
+                                    <div class="form-group" style="margin-left:30px;">
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Телеграм:</label>
+                                            <div class="col-md-5">
+                                                <p class="form-control">{{ contact.contacts[0].telegram }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Телефон:</label>
+                                            <div class="col-md-5">
+                                                <p class="form-control">{{ contact.contacts[0].phone }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Другое:</label>
+                                            <div class="col-md-5">
+                                                <p class="form-control">{{ contact.contacts[0].other_contact }}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="footer">
                                     <div class="row">
-                                        <div class="col-md-3">
-                                            <button class="btn btn-login section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                                        <div class="col-md-2">
+                                            <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
                                         </div>
-                                        <div class="col-md-3">
-                                            <a class="btn btn-danger" href="">
+                                        <div class="col-md-2">
+                                            <a class="btn btn-sm btn-danger" href="">
                                                 <i class="material-icons">delete_forever</i> Удалить
                                             </a>
                                         </div>
@@ -313,66 +333,70 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Additional contacts information edit *-*-*-*-*-*-*-*-*-* -->
 
-                            <div class="form-group form form-cont-{{ loop.index }}" data-target="cont-{{ loop.index }}" style="display:none;">
-                                <h5 class="title" style="margin: 27px;">Изменить контакт</h5>
+                            <div class="form form-cont-{{ loop.index }}" data-target="cont-{{ loop.index }}" style="display:none;">
                                 <form class="login-form contact-section" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
                                     <div class="row">
-                                        <label class="control-label col-md-3">Контакт:</label>
-                                        <div class="col-md-5">
-                                            <p class="form-control">{{ contact.type }}</p>
-                                        </div>
-                                        <div class="col-md-3 checkbox-option">
-                                            <label class="contact-radio-label">Сделать основным
-                                                <input type="checkbox" name="primary_contact_{{ loop.index }}">
-                                                <span class="custom-checkbox"></span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="contact-info">
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Фамилия:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="parent_last_name_{{ loop.index }}" class="form-control" value="{{ contact.last_name }}">
+                                        <h5 class="title" style="margin-left:54px;">Изменить контакт</h5>
+                                        <div class="form-group" style="margin-left:30px;">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Контакт:</label>
+                                                <div class="col-md-5">
+                                                    <p class="form-control">{{ contact.type }}</p>
+                                                </div>
+                                                <div class="col-md-3 checkbox-option">
+                                                    <label class="contact-radio-label">Сделать основным
+                                                        <input type="checkbox" name="primary_contact_{{ loop.index }}">
+                                                        <span class="custom-checkbox"></span>
+                                                    </label>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Имя:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="parent_first_name_{{ loop.index }}" class="form-control" value="{{ contact.first_name }}">
+                                            <div class="contact-info">
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Фамилия:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_last_name_{{ loop.index }}" class="form-control" value="{{ contact.last_name }}">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Имя:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_first_name_{{ loop.index }}" class="form-control" value="{{ contact.first_name }}">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Отчество:</label>
+                                                    <div class="col-md-5">
+                                                        <input type="text" name="parent_patronym_{{ loop.index }}" class="form-control" value="{{ contact.patronym }}">
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Отчество:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="parent_patronym_{{ loop.index }}" class="form-control" value="{{ contact.patronym }}">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Телеграм:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="telegram_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].telegram }}">
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Телеграм:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="telegram_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].telegram }}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Телефон:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="phone_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].phone }}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Другое:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="other_contact_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].other_contact }}">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Телефон:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="phone_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].phone }}">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Другое:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="other_contact_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].other_contact }}">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="footer">
                                         <div class="row">
-                                            <div class="col-md-3">
-                                                <button type="submit" name="form_cont_{{ loop.index }}_submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
+                                            <div class="col-md-2">
+                                                <button type="submit" name="form_cont_{{ loop.index }}_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
                                             </div>
-                                            <div class="col-md-3">
-                                                <button type="button" class="btn btn-default section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                            <div class="col-md-2">
+                                                <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
                                             </div>
                                         </div>
                                     </div>
@@ -385,8 +409,8 @@
 
                     {% if student.person_type == 'Ребенок' %}
                         <div class="row" id="show-new-contact">
-                            <div class="col-md-3">
-                                <button type="button" id="show-new-contact-btn" class="btn btn-default" style="background-color: #ff9800;">
+                            <div class="col-md-2">
+                                <button type="button" id="show-new-contact-btn" class="btn btn-sm" style="background-color: #ff9800;">
                                     Добавить контакт
                                 </button>
                             </div>
@@ -394,145 +418,151 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* New contact form *-*-*-*-*-*-*-*-*-* -->
 
-                        <div class="form-group" id="new-contact-form" style="display:none;">
-                            <h5 class="title" style="margin: 27px;">Добавить контакт</h5>
-                            <form class="login-form contact-section" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
-                                <div class="row">
-                                    <label class="control-label col-md-3">Контакт:</label>
-                                    <div class="col-md-5">
-                                        <select name="relation_new" class="form-control contact-relation">
-                                            <option value="Мама">Мама</option>
-                                            <option value="Папа">Папа</option>
-                                            <option value="Сам ребенок">Сам ребенок</option>
-                                            <option value="Другое">Другое контактное лицо</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3 checkbox-option">
-                                        <label class="contact-radio-label">Сделать основным
-                                            <input type="checkbox" name="primary_contact" value="contact_new">
-                                            <span class="custom-checkbox"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="row relation-other-row" style="display: none;">
-                                    <label class="control-label col-md-3"></label>
-                                    <div class="col-md-4">
-                                        <input type="text" name="other_relation_new" class="form-control">
-                                    </div>
-                                </div>
-                                <div  class="contact_selection">
+                        <form class="login-form contact-section" id="new-contact-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post" style="display:none;">
+                            <div class="row">
+                                <h5 class="title" style="margin-left:54px;">Добавить контакт</h5>
+                                <div class="form-group" style="margin-left:30px;">
                                     <div class="row">
-                                        <label class="control-label col-md-3">Данные контактного лица:</label>
+                                        <label class="control-label col-md-3">Контакт:</label>
                                         <div class="col-md-5">
-                                            <select name="contact_select_new" class="form-control contact-select">
-                                                <option value="Добавить">Добавить</option>
-                                                <option value="Выбрать">Выбрать из списка</option>
+                                            <select name="relation_new" class="form-control contact-relation">
+                                                <option value="Мама">Мама</option>
+                                                <option value="Папа">Папа</option>
+                                                <option value="Сам ребенок">Сам ребенок</option>
+                                                <option value="Другое">Другое контактное лицо</option>
                                             </select>
                                         </div>
+                                        <div class="col-md-3 checkbox-option">
+                                            <label class="contact-radio-label">Сделать основным
+                                                <input type="checkbox" name="primary_contact" value="contact_new">
+                                                <span class="custom-checkbox"></span>
+                                            </label>
+                                        </div>
                                     </div>
-                                    <div class="row contact-options-row" style="display: none;">
-                                        <label class="control-label col-md-3">Контакты:</label>
+                                    <div class="row relation-other-row" style="display: none;">
+                                        <label class="control-label col-md-3"></label>
                                         <div class="col-md-4">
-                                            <select name="selected_contact" class="form-control contact-options select-search">
-                                                {% for client in clients %}
-                                                    <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
-                                                {% endfor %}
-                                            </select>
+                                            <input type="text" name="other_relation_new" class="form-control">
                                         </div>
                                     </div>
-                                    <div class="contact-information person-info-basic"></div>
-                                    <div class="contact-information person-info-contacts"></div>
-                                </div>
-                                <div class="contact-input" style="display: none;">
-                                    <div class="contact-info">
+                                    <div  class="contact_selection">
                                         <div class="row">
-                                            <label class="control-label col-md-3">Фамилия:</label>
+                                            <label class="control-label col-md-3">Данные контактного лица:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="parent_last_name_new" class="form-control">
+                                                <select name="contact_select_new" class="form-control contact-select">
+                                                    <option value="Добавить">Добавить</option>
+                                                    <option value="Выбрать">Выбрать из списка</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row contact-options-row" style="display: none;">
+                                            <label class="control-label col-md-3">Контакты:</label>
+                                            <div class="col-md-5">
+                                                <select name="selected_contact" class="form-control contact-options select-search">
+                                                    {% for client in clients %}
+                                                        <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="contact-information person-info-basic"></div>
+                                        <div class="contact-information person-info-contacts"></div>
+                                    </div>
+                                    <div class="contact-input" style="display: none;">
+                                        <div class="contact-info">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Фамилия:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="parent_last_name_new" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Имя:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="parent_first_name_new" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Отчество:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="parent_patronym_new" class="form-control">
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <label class="control-label col-md-3">Имя:</label>
+                                            <label class="control-label col-md-3">Телеграм:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="parent_first_name_new" class="form-control">
+                                                <input type="text" name="telegram_new" class="form-control">
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <label class="control-label col-md-3">Отчество:</label>
+                                            <label class="control-label col-md-3">Телефон:</label>
                                             <div class="col-md-5">
-                                                <input type="text" name="parent_patronym_new" class="form-control">
+                                                <input type="text" name="phone_new" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Другое:</label>
+                                            <div class="col-md-5">
+                                                <input type="text" name="other_contact_new" class="form-control">
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Телеграм:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="telegram_new" class="form-control">
-                                        </div>
+                                </div>
+                            </div>
+                            <div class="footer">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <button type="submit" name="form_cont_new_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
                                     </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Телефон:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="phone_new" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Другое:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="other_contact_new" class="form-control">
-                                        </div>
+                                    <div class="col-md-2">
+                                        <button type="button" id="hide-new-contact-btn" class="btn btn-sm" style="background-color:#ef5350;">Закрыть</button>
                                     </div>
                                 </div>
-                                <div class="footer">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <button type="submit" name="form_cont_new_submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <button type="button" id="hide-new-contact-btn" class="btn btn-default" style="background-color:#ef5350;">Закрыть</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     {% endif %}
                 </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Subjects section *-*-*-*-*-*-*-*-*-* -->
 
-                <div id="show-subjects" style="display: none;">
-                    <h4 class="title">Занятия</h4>
+                <div id="show-subjects" style="display:none;">
+                    <h4 class="title" style="margin-left:27px;">Занятия</h4>
 
             <!-- *-*-*-*-*-*-*-*-*-* Subjects information show *-*-*-*-*-*-*-*-*-* -->
 
-                    <div class="form-group section section-subjects" data-target="subjects">
-                        {% if student.all_subjects %}
-                            {% for subject in student.all_subjects %}
-                                <div class="row">
-                                    {% if student.status=="Лид"%}
-                                        <label class="control-label col-md-3">{{ "Интересуется:" if loop.first }}</label>
-                                    {% else %}
-                                        <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
-                                    {% endif %}
-                                    <div class="col-md-5">
-                                        <p class="form-control">{{ subject[0] }}</p>
+                    <div class="section section-subjects" data-target="subjects">
+                        <div class="row">
+                            <div class="form-group" style="margin-left:30px;">
+                                {% if student.all_subjects %}
+                                    {% for subject in student.all_subjects %}
+                                        <div class="row">
+                                            {% if student.status=="Лид"%}
+                                                <label class="control-label col-md-3">{{ "Интересуется:" if loop.first }}</label>
+                                            {% else %}
+                                                <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
+                                            {% endif %}
+                                            <div class="col-md-5">
+                                                <p class="form-control">{{ subject[0] }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="row">
+                                        <p>Занятий пока нет</p>
                                     </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="row">
-                                <p>Занятий пока нет</p>
+                                {% endif %}
                             </div>
-                        {% endif %}
+                        </div>
                         <div class="footer">
                             <div class="row">
                                 {% if student.extra_subjects %}
-                                    <div class="col-md-3">
-                                        <button class="btn btn-login section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
                                     </div>
                                 {% endif %}
                                 <div class="col-md-3">
-                                    <a href="" class="btn btn-primary lesson-modal-trigger" data-toggle="modal" data-target="#lesson-modal">
+                                    <a href="" class="btn btn-primary btn-sm lesson-modal-trigger" data-toggle="modal" data-target="#lesson-modal">
                                         <i class="material-icons">date_range</i> Записать
                                     </a>
                                 </div>
@@ -587,35 +617,39 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Subjects information edit *-*-*-*-*-*-*-*-*-* -->
 
-                    <div class="form-group form form-subjects" data-target="subjects" style="display: none;">
+                    <div class="form form-subjects" data-target="subjects" style="display: none;">
                         <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
-                            {% if student.all_subjects %}
-                                {% for subject in student.all_subjects %}
-                                    <div class="row">
-                                        {% if student.status=="Лид" %}
-                                            <label class="control-label col-md-3">{{ "Интересуется:" if loop.first }}</label>
-                                        {% else %}
-                                            <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
-                                        {% endif %}
-                                        <div class="col-md-5">
-                                            {% if subject[0] in student.extra_subjects %}
-                                                <div class="input-group">
-                                                    <p class="form-control" style="border-radius: 4px;">{{ subject[0] }}</p>
-                                                    <span class="input-group-addon" style="padding:0;">
-                                                        <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger del-btn-big">x</button>
-                                                    </span>
-                                                </div>
-                                            {% else %}
-                                                <p class="form-control">{{ subject[0] }}</p>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
+                            <div class="row">
+                                <div class="form-group" style="margin-left:30px;">
+                                    {% if student.all_subjects %}
+                                        {% for subject in student.all_subjects %}
+                                            <div class="row">
+                                                {% if student.status=="Лид" %}
+                                                    <label class="control-label col-md-3">{{ "Интересуется:" if loop.first }}</label>
+                                                {% else %}
+                                                    <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
+                                                {% endif %}
+                                                {% if subject[0] in student.extra_subjects %}
+                                                    <div class="col-md-4">
+                                                        <p class="form-control" style="border-radius: 4px;">{{ subject[0] }}</p>
+                                                    </div>
+                                                    <div class="col-md-1">
+                                                        <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger del-btn-sm">Удалить</button>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="col-md-5">
+                                                        <p class="form-control">{{ subject[0] }}</p>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
                             <div class="footer">
                                 <div class="row">
-                                    <div class="col-md-3">
-                                        <button type="button" class="btn btn-default section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
                                     </div>
                                 </div>
                             </div>
@@ -626,48 +660,54 @@
             <!-- *-*-*-*-*-*-*-*-*-* Subscriptions section *-*-*-*-*-*-*-*-*-* -->
 
                 <div id="show-subscriptions" style="display: none;">
-                    <h4 class="title">Абонементы</h4>
+                    <h4 class="title" style="margin-left:27px;">Абонементы</h4>
 
             <!-- *-*-*-*-*-*-*-*-*-* Subscriptions information show *-*-*-*-*-*-*-*-*-* -->
 
-                    <div class="form-group section section-subscriptions" data-target="subscriptions">
-                        {% if student.subscriptions_info %}
-                            <div class="row">
-                                <div class="col-md-8 table-responsive">
-                                    <table class="table table-hover" style="table-layout: fixed;">
-                                        <thead class="text-success">
-                                            <th>Занятие</th>
-                                            <th style="text-align:center;">Остаток уроков</th>
-                                            <th style="text-align:center;">Срок действия</th>
-                                        </thead>
-                                        <tbody>
-                                            {% for subscription in student.subscriptions_info %}
-                                                <tr>
-                                                    <td>{{ subscription.subject_name }}</td>
-                                                    <td style="text-align:center;">
-                                                        {{ subscription.lessons_left if subscription.lessons_left }}
-                                                    </td>
-                                                    <td style="text-align:center;">{{ subscription.end_date }}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
+                    <div class="section section-subscriptions" data-target="subscriptions">
+                        <div class="row">
+                            <div class="form-group" style="margin-left:30px;">
+                                {% if student.subscriptions_info %}
+                                    <div class="row">
+                                        <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                                            <table class="table table-hover" style="table-layout: fixed;">
+                                                <thead class="text-success">
+                                                    <th>Занятие</th>
+                                                    <th style="text-align:center;">Остаток уроков</th>
+                                                    <th style="text-align:center;">Срок действия</th>
+                                                </thead>
+                                                <tbody>
+                                                    {% for subscription in student.subscriptions_info %}
+                                                        <tr>
+                                                            <td>{{ subscription.subject_name }}</td>
+                                                            <td style="padding: 12px 40px;">
+                                                                <p class="form-control">{{ subscription.lessons_left if subscription.lessons_left }}</p>
+                                                            </td>
+                                                            <td style="padding: 12px 30px;">
+                                                                <p class="form-control">{{ subscription.end_date }}</p>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row">
+                                        <p>Абонементов пока нет</p>
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% else %}
-                            <div class="row">
-                                <p>Абонементов пока нет</p>
-                            </div>
-                        {% endif %}
+                        </div>
                         <div class="footer">
                             <div class="row">
                                 {% if student.subscriptions_info %}
-                                    <div class="col-md-3">
-                                        <button class="btn btn-login section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
                                     </div>
                                 {% endif %}
-                                <div class="col-md-3">
-                                    <a href="" class="btn btn-primary subscription-modal-trigger" data-toggle="modal" data-target="#subscription-modal">
+                                <div class="col-md-2">
+                                    <a href="" class="btn btn-primary btn-sm subscription-modal-trigger" data-toggle="modal" data-target="#subscription-modal">
                                         <i class="material-icons">addchart</i> Купить абонемент
                                     </a>
                                 </div>
@@ -734,45 +774,49 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Subscriptions information edit *-*-*-*-*-*-*-*-*-* -->
 
-                    <div class="form-group form form-subscriptions" data-target="subscriptions" style="display: none;">
+                    <div class="form form-subscriptions" data-target="subscriptions" style="display: none;">
                         <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
-                            {% if student.subscriptions_info %}
-                                <div class="row">
-                                    <div class="col-md-8 table-responsive">
-                                        <table class="table table-hover" style="table-layout: fixed;"> <!--style="table-layout: fixed;"-->
-                                            <thead class="text-success">
-                                                <th>Занятие</th>
-                                                <th style="text-align:center;">Остаток уроков</th>
-                                                <th style="text-align:center;">Срок действия</th>
-                                            </thead>
-                                            <tbody>
-                                                {% for subscription in student.subscriptions_info %}
-                                                    <tr>
-                                                        <td>{{ subscription.subject_name }}</td>
-                                                        <td style="text-align:center; padding: 12px 60px;">
-                                                            {% if subscription.lessons_left %}
-                                                                <input type="number" class="form-control" name="subscription_{{ subscription.id }}_lessons" step="1" min="0" max="50" value="{{ subscription.lessons_left }}">
-                                                            {% endif %}
-                                                        </td>
-                                                        <td style="text-align:center; padding: 12px 40px;">
-                                                            {% if subscription.lessons_left %}
-                                                                <input type="text" name="subscription_{{ subscription.id }}_end_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ subscription.end_date }}">
-                                                            {% endif %}
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                            <div class="row">
+                                <div class="form-group" style="margin-left:30px;">
+                                    {% if student.subscriptions_info %}
+                                        <div class="row">
+                                            <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                                                <table class="table table-hover" style="table-layout: fixed;"> <!--style="table-layout: fixed;"-->
+                                                    <thead class="text-success">
+                                                        <th>Занятие</th>
+                                                        <th style="text-align:center;">Остаток уроков</th>
+                                                        <th style="text-align:center;">Срок действия</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for subscription in student.subscriptions_info %}
+                                                            <tr>
+                                                                <td>{{ subscription.subject_name }}</td>
+                                                                <td style="text-align:center; padding: 12px 40px;">
+                                                                    {% if subscription.lessons_left %}
+                                                                        <input type="number" class="form-control" name="subscription_{{ subscription.id }}_lessons" step="1" min="0" max="50" value="{{ subscription.lessons_left }}">
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td style="text-align:center; padding: 12px 30px;">
+                                                                    {% if subscription.lessons_left %}
+                                                                        <input type="text" name="subscription_{{ subscription.id }}_end_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ subscription.end_date }}">
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
+                            </div>
                             <div class="footer">
                                 <div class="row">
-                                    <div class="col-md-3">
-                                        <button type="submit" name="form_subscriptions_submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
+                                    <div class="col-md-2">
+                                        <button type="submit" name="form_subscriptions_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
                                     </div>
-                                    <div class="col-md-3">
-                                        <button type="button" class="btn btn-default section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
                                     </div>
                                 </div>
                             </div>

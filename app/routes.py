@@ -1,11 +1,12 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, SubscriptionType
+from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, SubscriptionType, \
+    teacher_class_table
 from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, format_subscription_types, \
     add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, filter_lessons, copy_lessons, \
-    add_new_lessons, subjects_data, show_lesson, handle_lesson, class_students_info
+    add_new_lessons, subjects_data, show_lesson, handle_lesson, format_school_classes, format_subject_classes
 from app import app, db
 
 
@@ -239,7 +240,7 @@ def subjects():
     for subject in all_subjects:
         subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
 
-    return render_template('subjects.html', subjects=all_subjects)
+    return render_template('subjects.html', subjects=all_subjects, subjects_type="extra_school")
 
 
 @app.route('/add-subject', methods=['GET', 'POST'])
@@ -420,12 +421,24 @@ def lesson(subject_id, lesson_id):
 @login_required
 def school_students():
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-    school_classes_dict = {}
     for school_class in school_classes:
-        school_classes_dict[school_class.school_name] = class_students_info(school_class)
+        format_school_classes(school_class)
 
-    return render_template('school_students.html', school_classes=school_classes,
-                           class_students=school_classes_dict)
+    lesson_subjects = lesson_subjects_data()
+
+    return render_template('school_students.html', school_classes=school_classes, lesson_subjects=lesson_subjects)
+
+
+@app.route('/school_subjects')
+@login_required
+def school_subjects():
+    all_school_subjects = Subject.query.filter(
+        Subject.subject_type.has(SubjectType.name == "school")
+    ).order_by(Subject.name).all()
+    for subject in all_school_subjects:
+        subject.classes = format_subject_classes(subject)
+
+    return render_template('subjects.html', subjects=all_school_subjects, subjects_type="school")
 
 
 @app.route('/school-lesson/<string:lesson_id>')

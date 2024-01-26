@@ -1,5 +1,5 @@
-from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, \
-    Lesson, SchoolClass, Room, SubjectType, SubscriptionType, student_lesson_attended_table
+from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, \
+    SchoolClass, Room, SubjectType, SubscriptionType, student_lesson_attended_table, teacher_class_table
 from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
@@ -1165,10 +1165,26 @@ def copy_lessons(filtered_lessons, week_diff):
     return copied_lessons, conflicts
 
 
-def class_students_info(school_class):
+def format_school_classes(school_class):
+    school_class.main_teacher = db.session.query(Person).join(teacher_class_table).filter(
+        teacher_class_table.c.class_id == school_class.id,
+        teacher_class_table.c.main_teacher).first()
     class_students = Person.query.filter_by(school_class_id=school_class.id).order_by(Person.last_name).all()
     for student in class_students:
         format_student_info(student)
         format_main_contact(student)
+    school_class.class_students = class_students
 
-    return class_students
+def format_subject_classes(subject):
+    school_classes = [int(sc_cl.school_class) for sc_cl in subject.school_classes]
+    if set(range(1, 5)).issubset(school_classes):
+        school = [sc_cl.school_name for sc_cl in sorted(subject.school_classes, key=lambda x: x.school_class)
+                  if int(sc_cl.school_class) > 4]
+        classes = "Начальные классы" + (", " + ", ".join(school) if school else "")
+    elif len(school_classes) == len(SchoolClass.query.all()):
+        classes = "Все классы"
+    else:
+        school = [sc_cl.school_name for sc_cl in sorted(subject.school_classes, key=lambda x: x.school_class)]
+        classes = ", ".join(school)
+
+    return classes

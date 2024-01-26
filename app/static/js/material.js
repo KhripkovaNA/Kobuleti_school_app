@@ -38,9 +38,10 @@ $(document).ready(function(){
     $('.switch-button').on('click', function() {
         $('.switch-button').removeClass('btn-success');
         $(this).addClass('btn-success');
-        $('.target-table').hide();
+        $('.target-table, .target-row').hide();
         var targetTable = $(this).data('target');
         $('#' + targetTable).show();
+        $('#' + targetTable.replace('table', 'row')).show();
     });
 
     // Switch between sections and forms
@@ -236,19 +237,19 @@ $(document).ready(function(){
             personInfoContacts.html(`
                 <div class="row">
                     <label class="control-label col-md-3">Телеграм:</label>
-                    <div class="col-md-3">
+                    <div class="col-md-5">
                         <p class="form-control">${selectedPerson[0].telegram}</p>
                     </div>
                 </div>
                 <div class="row">
                     <label class="control-label col-md-3">Телефон:</label>
-                    <div class="col-md-3">
+                    <div class="col-md-5">
                         <p class="form-control">${selectedPerson[0].phone}</p>
                     </div>
                 </div>
                 <div class="row">
                     <label class="control-label col-md-3">Другое:</label>
-                    <div class="col-md-3">
+                    <div class="col-md-5">
                         <p class="form-control">${selectedPerson[0].other_contact}</p>
                     </div>
                 </div>

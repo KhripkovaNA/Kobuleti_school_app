@@ -6,8 +6,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types
-
+from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, class_students_info
 
 app.app_context().push()
 
@@ -328,10 +327,10 @@ def add_lesson(lesson_info):
         print(f'Ошибка при добавлении урока: {str(e)}')
 
 
-def print_subjects():
+def print_subjects(subjects):
     existing_subjects = [f'{subject.id}\t{subject.name}\t{subject.short_name}\t{subject.subject_type.description}' +
                          '\tабонемент ' + ('+' if subject.subscription_types.all() else '-')
-                         for subject in Subject.query.all()]
+                         for subject in subjects]
     print(*existing_subjects, sep='\n')
 
 
@@ -366,7 +365,8 @@ def print_subscriptions():
 
 
 def print_subjects_types():
-    existing_subjects_types = [f'{subj_type.id}\t{subj_type.name}\t{subj_type.description}' for subj_type in SubjectType.query.all()]
+    existing_subjects_types = [f'{subj_type.id}\t{subj_type.name}\t{subj_type.description}' for subj_type in
+                               SubjectType.query.all()]
     print(*existing_subjects_types, sep='\n')
 
 
@@ -557,71 +557,337 @@ copy_inform = {
 }
 
 first_grade_list = [
-    {'student': {'last_name': 'Казанцева', 'first_name': 'Вероника', 'patronym': 'Алексеевна', 'dob': '14.03.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Казанцева', 'first_name': 'Анастасия', 'patronym': 'Юрьевна'}, 2: {'last_name': 'Казанцев', 'first_name': 'Алексей', 'patronym': 'Николаевич'}}, 'contact_select': {1: 'Выбрать', 2: 'Добавить'}, 'selected_contact': {1: '34', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '79120121035', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995555973320', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Бекиров', 'first_name': 'Илья', 'patronym': 'Павлович', 'dob': '04.10.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Бекирова', 'first_name': 'Дарья', 'patronym': 'Юрьевна'}, 2: {'last_name': 'Бекиров', 'first_name': 'Павел', 'patronym': 'Смайлович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '595 124 799', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Железняк', 'first_name': 'Полина', 'patronym': 'Николаевна', 'dob': '07.09.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Кириллина', 'first_name': 'Наталия', 'patronym': 'Сергеевна'}, 2: {'last_name': 'Железняк', 'first_name': 'Николай', 'patronym': 'Валерьевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '995 555 182 656', 'other_contact': '7 951 686 27 12'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Гросман', 'first_name': 'Светлана', 'patronym': 'Георгиевна', 'dob': '13.11.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Гросман', 'first_name': 'Екатерина', 'patronym': 'Владимировна'}, 2: {'last_name': 'Гросман', 'first_name': 'Георгий', 'patronym': 'Сергеевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '995 595 071 893, ', 'other_contact': '7 988 990 73 45'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Москаленко', 'first_name': 'Лев', 'patronym': 'Юльевич', 'dob': None, 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Москаленко', 'first_name': 'Мария', 'patronym': 'Семеновна'}, 2: {'last_name': 'Москаленко', 'first_name': 'Юлий', 'patronym': 'Владимирович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 555 561 384', 'other_contact': '7 916 707 45 93'}, 2: {'telegram': '', 'phone': '9 995 555 560 183', 'other_contact': '7 916 507 19 71'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Авдеев', 'first_name': 'Дмитрий', 'patronym': 'Иванович', 'dob': '24.04.2017', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Авдеева', 'first_name': 'Ольга', 'patronym': 'Юрьевна'}, 2: {'last_name': 'Авдеев', 'first_name': 'Иван', 'patronym': 'Дмитриевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 551 026 306', 'other_contact': ''}, 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Трифонов', 'first_name': 'Матвей', 'patronym': '', 'dob': '23.05.2017', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Ковалева', 'first_name': 'Ирина', 'patronym': 'Андреевна'}, 2: {'last_name': 'Трифонов', 'first_name': 'Никита', 'patronym': 'Сергеевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995595022159', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995599120475', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Гришин', 'first_name': 'Алексей', 'patronym': 'Сергеевич', 'dob': None, 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Гришин', 'first_name': 'Сергей', 'patronym': 'Сергеевич'}, 2: {'last_name': 'гришина', 'first_name': 'Екатерина', 'patronym': 'Сергеевна'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Шаповалова', 'first_name': 'Алина', 'patronym': 'Олеговна', 'dob': '12.11.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Хрипкова', 'first_name': 'Наталья', 'patronym': 'Александровна'}, 2: {'last_name': 'Шаповалов', 'first_name': 'Олег', 'patronym': 'Вячеславович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '7 916 295 62 74', 'other_contact': ''}, 2: {'telegram': '', 'phone': '7 916 903 97 42', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
+    {'student': {'last_name': 'Казанцева', 'first_name': 'Вероника', 'patronym': 'Алексеевна', 'dob': '14.03.2016',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Казанцева', 'first_name': 'Анастасия', 'patronym': 'Юрьевна'},
+                2: {'last_name': 'Казанцев', 'first_name': 'Алексей', 'patronym': 'Николаевич'}},
+     'contact_select': {1: 'Выбрать', 2: 'Добавить'}, 'selected_contact': {1: '34', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '79120121035', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995555973320', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Бекиров', 'first_name': 'Илья', 'patronym': 'Павлович', 'dob': '04.10.2016',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Бекирова', 'first_name': 'Дарья', 'patronym': 'Юрьевна'},
+                2: {'last_name': 'Бекиров', 'first_name': 'Павел', 'patronym': 'Смайлович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'},
+                 2: {'telegram': '', 'phone': '595 124 799', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Железняк', 'first_name': 'Полина', 'patronym': 'Николаевна', 'dob': '07.09.2016',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Кириллина', 'first_name': 'Наталия', 'patronym': 'Сергеевна'},
+                2: {'last_name': 'Железняк', 'first_name': 'Николай', 'patronym': 'Валерьевич'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'},
+                 2: {'telegram': '', 'phone': '995 555 182 656', 'other_contact': '7 951 686 27 12'}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Гросман', 'first_name': 'Светлана', 'patronym': 'Георгиевна', 'dob': '13.11.2016',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Гросман', 'first_name': 'Екатерина', 'patronym': 'Владимировна'},
+                2: {'last_name': 'Гросман', 'first_name': 'Георгий', 'patronym': 'Сергеевич'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'},
+                 2: {'telegram': '', 'phone': '995 595 071 893, ', 'other_contact': '7 988 990 73 45'}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Москаленко', 'first_name': 'Лев', 'patronym': 'Юльевич', 'dob': None, 'status': 'Клиент',
+                 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Москаленко', 'first_name': 'Мария', 'patronym': 'Семеновна'},
+                2: {'last_name': 'Москаленко', 'first_name': 'Юлий', 'patronym': 'Владимирович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995 555 561 384', 'other_contact': '7 916 707 45 93'},
+                 2: {'telegram': '', 'phone': '9 995 555 560 183', 'other_contact': '7 916 507 19 71'}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Авдеев', 'first_name': 'Дмитрий', 'patronym': 'Иванович', 'dob': '24.04.2017',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Авдеева', 'first_name': 'Ольга', 'patronym': 'Юрьевна'},
+                2: {'last_name': 'Авдеев', 'first_name': 'Иван', 'patronym': 'Дмитриевич'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995 551 026 306', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Трифонов', 'first_name': 'Матвей', 'patronym': '', 'dob': '23.05.2017',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Ковалева', 'first_name': 'Ирина', 'patronym': 'Андреевна'},
+                2: {'last_name': 'Трифонов', 'first_name': 'Никита', 'patronym': 'Сергеевич'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995595022159', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995599120475', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Гришин', 'first_name': 'Алексей', 'patronym': 'Сергеевич', 'dob': None,
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Гришин', 'first_name': 'Сергей', 'patronym': 'Сергеевич'},
+                2: {'last_name': 'гришина', 'first_name': 'Екатерина', 'patronym': 'Сергеевна'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'},
+                 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Шаповалова', 'first_name': 'Алина', 'patronym': 'Олеговна', 'dob': '12.11.2016',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Хрипкова', 'first_name': 'Наталья', 'patronym': 'Александровна'},
+                2: {'last_name': 'Шаповалов', 'first_name': 'Олег', 'patronym': 'Вячеславович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '7 916 295 62 74', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '7 916 903 97 42', 'other_contact': ''}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
 ]
 
-
 second_grade_list = [
-    {'student': {'last_name': 'Зайцева', 'first_name': 'Кира', 'patronym': 'Владимировна', 'dob': '18.03.2016', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Зайцева', 'first_name': 'Елена', 'patronym': 'Владиславовна'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '599012840', 'other_contact': ''}}, 'relation': {1: 'Мама'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Миронов', 'first_name': 'Андрей', 'patronym': 'Антонович', 'dob': None, 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Миронов', 'first_name': 'Антон', 'patronym': ''}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Бекиров', 'first_name': 'Кирилл', 'patronym': 'Павлович', 'dob': '04.05.2015', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Бекирова', 'first_name': 'Дарья', 'patronym': 'Юрьевна'}, 2: {'last_name': 'Бекиров', 'first_name': 'Павел', 'patronym': 'Смайлович'}}, 'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '50', 2: '51'}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '595 124 799', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 2},
-    {'student': {'last_name': 'Заставный', 'first_name': 'Савелий', 'patronym': 'Дмитриевич', 'dob': '30.01.2015', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Заставная', 'first_name': 'Наталья', 'patronym': 'Сергеевна'}, 2: {'last_name': 'Заставный', 'first_name': 'Дмитрий', 'patronym': 'Владимирович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '892 64229112', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 2},
-    {'student': {'last_name': 'Земцова', 'first_name': 'Виктория', 'patronym': 'Олеговна', 'dob': '18.03.2015', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Земцова', 'first_name': 'Алена', 'patronym': 'Алексеевна'}, 2: {'last_name': 'Земцов', 'first_name': 'Олег', 'patronym': 'Олександрович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 599 521 026', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995 599 066 651', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
+    {'student': {'last_name': 'Зайцева', 'first_name': 'Кира', 'patronym': 'Владимировна', 'dob': '18.03.2016',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Зайцева', 'first_name': 'Елена', 'patronym': 'Владиславовна'}},
+     'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''},
+     'contact': {1: {'telegram': '', 'phone': '599012840', 'other_contact': ''}}, 'relation': {1: 'Мама'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Миронов', 'first_name': 'Андрей', 'patronym': 'Антонович', 'dob': None,
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Миронов', 'first_name': 'Антон', 'patronym': ''}}, 'contact_select': {1: 'Добавить'},
+     'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}},
+     'relation': {1: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Бекиров', 'first_name': 'Кирилл', 'patronym': 'Павлович', 'dob': '04.05.2015',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Бекирова', 'first_name': 'Дарья', 'patronym': 'Юрьевна'},
+                2: {'last_name': 'Бекиров', 'first_name': 'Павел', 'patronym': 'Смайлович'}},
+     'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '50', 2: '51'},
+     'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'},
+                 2: {'telegram': '', 'phone': '595 124 799', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 2},
+    {'student': {'last_name': 'Заставный', 'first_name': 'Савелий', 'patronym': 'Дмитриевич', 'dob': '30.01.2015',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Заставная', 'first_name': 'Наталья', 'patronym': 'Сергеевна'},
+                2: {'last_name': 'Заставный', 'first_name': 'Дмитрий', 'patronym': 'Владимирович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'},
+                 2: {'telegram': '', 'phone': '892 64229112', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 2},
+    {'student': {'last_name': 'Земцова', 'first_name': 'Виктория', 'patronym': 'Олеговна', 'dob': '18.03.2015',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Земцова', 'first_name': 'Алена', 'patronym': 'Алексеевна'},
+                2: {'last_name': 'Земцов', 'first_name': 'Олег', 'patronym': 'Олександрович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995 599 521 026', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995 599 066 651', 'other_contact': ''}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
 ]
 
 third_grade_list = [
-    {'student': {'last_name': 'Калашникова', 'first_name': 'Анна', 'patronym': 'Александровна', 'dob': '14.11.2015', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Калашникова', 'first_name': 'Варвара', 'patronym': 'Викторовна'}, 2: {'last_name': 'Калашников', 'first_name': 'Александр', 'patronym': 'Олегович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '7 926 270 53 42', 'other_contact': ''}, 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Серяков', 'first_name': 'Михаил', 'patronym': 'Максимович', 'dob': '05.07.2014', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Молчанова', 'first_name': 'Русулана', 'patronym': 'Ивановна'}, 2: {'last_name': 'Серяков', 'first_name': 'Максим', 'patronym': 'Сергеевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 505 556 791', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995 505 55 67 65', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Калашников', 'first_name': 'Федор', 'patronym': 'Александрович', 'dob': '04.03.2014', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Калашникова', 'first_name': 'Варвара', 'patronym': 'Викторовна'}, 2: {'last_name': 'Калашников', 'first_name': 'Александр', 'patronym': 'Олегович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '7 926 270 53 42', 'other_contact': ''}, 2: {'telegram': '', 'phone': '7 909 158 13 88', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Полищук', 'first_name': 'Аделина', 'patronym': 'Евгеньевна', 'dob': '24.08.2014', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Полищук-Молодоженя', 'first_name': 'Татьяна', 'patronym': 'Романовна'}, 2: {'last_name': 'Полищук', 'first_name': 'Евгений', 'patronym': 'Витальевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995593789646', 'other_contact': '79095647573'}, 2: {'telegram': '', 'phone': '995558669855', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Платонов', 'first_name': 'Кирилл', 'patronym': 'Алексеевич', 'dob': '31.01.2014', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Платонова', 'first_name': 'Мария', 'patronym': 'Григорьевна'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '995557135212', 'other_contact': ''}}, 'relation': {1: 'Мама'}, 'primary_contact': 1}
+    {'student': {'last_name': 'Калашникова', 'first_name': 'Анна', 'patronym': 'Александровна', 'dob': '14.11.2015',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Калашникова', 'first_name': 'Варвара', 'patronym': 'Викторовна'},
+                2: {'last_name': 'Калашников', 'first_name': 'Александр', 'patronym': 'Олегович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '7 926 270 53 42', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Серяков', 'first_name': 'Михаил', 'patronym': 'Максимович', 'dob': '05.07.2014',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Молчанова', 'first_name': 'Русулана', 'patronym': 'Ивановна'},
+                2: {'last_name': 'Серяков', 'first_name': 'Максим', 'patronym': 'Сергеевич'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995 505 556 791', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995 505 55 67 65', 'other_contact': ''}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Калашников', 'first_name': 'Федор', 'patronym': 'Александрович', 'dob': '04.03.2014',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Калашникова', 'first_name': 'Варвара', 'patronym': 'Викторовна'},
+                2: {'last_name': 'Калашников', 'first_name': 'Александр', 'patronym': 'Олегович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '7 926 270 53 42', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '7 909 158 13 88', 'other_contact': ''}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Полищук', 'first_name': 'Аделина', 'patronym': 'Евгеньевна', 'dob': '24.08.2014',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Полищук-Молодоженя', 'first_name': 'Татьяна', 'patronym': 'Романовна'},
+                2: {'last_name': 'Полищук', 'first_name': 'Евгений', 'patronym': 'Витальевич'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995593789646', 'other_contact': '79095647573'},
+                 2: {'telegram': '', 'phone': '995558669855', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Платонов', 'first_name': 'Кирилл', 'patronym': 'Алексеевич', 'dob': '31.01.2014',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Платонова', 'first_name': 'Мария', 'patronym': 'Григорьевна'}},
+     'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''},
+     'contact': {1: {'telegram': '', 'phone': '995557135212', 'other_contact': ''}}, 'relation': {1: 'Мама'},
+     'primary_contact': 1}
 ]
 
-andrew = {'student': {'last_name': 'Гросман', 'first_name': 'Андрей', 'patronym': 'Георгиевич', 'dob': '29.09.2014', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Гросман', 'first_name': 'Екатерина', 'patronym': 'Владимировна'}, 2: {'last_name': 'Гросман', 'first_name': 'Георгий', 'patronym': 'Сергеевич'}}, 'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '56', 2: '57'}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}, 2: {'telegram': '', 'phone': '995 595 07 18 93', 'other_contact': '7 988 990 73 45'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 2}
-
+andrew = {'student': {'last_name': 'Гросман', 'first_name': 'Андрей', 'patronym': 'Георгиевич', 'dob': '29.09.2014',
+                      'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+          'parent': {1: {'last_name': 'Гросман', 'first_name': 'Екатерина', 'patronym': 'Владимировна'},
+                     2: {'last_name': 'Гросман', 'first_name': 'Георгий', 'patronym': 'Сергеевич'}},
+          'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '56', 2: '57'},
+          'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'},
+                      2: {'telegram': '', 'phone': '995 595 07 18 93', 'other_contact': '7 988 990 73 45'}},
+          'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 2}
 
 fourth_grade_list = [
-    {'student': {'last_name': 'Казанцева', 'first_name': 'Алисия', 'patronym': 'Алексеевна', 'dob': '23.11.2012', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Казанцева', 'first_name': 'Анастасия', 'patronym': 'Юрьевна'}, 2: {'last_name': 'Казанцев', 'first_name': 'Алексей', 'patronym': 'Николаевич'}}, 'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '34', 2: '48'}, 'contact': {1: {'telegram': '', 'phone': '79120121035', 'other_contact': ''}, 2: {'telegram': '', 'phone': '79128703412', 'other_contact': '995555973320'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Чернина', 'first_name': 'Евгения', 'patronym': 'Вадимовна', 'dob': '11.11.2013', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Чернина', 'first_name': 'Вера', 'patronym': 'Алексеевна'}, 2: {'last_name': 'Чернин', 'first_name': 'Вадим', 'patronym': 'Борисович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '595 420 847', 'other_contact': ''}, 2: {'telegram': '', 'phone': '595 082 114', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Волковыский', 'first_name': 'Захар', 'patronym': 'Юрьевич', 'dob': '30.07.2013', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Лизина', 'first_name': 'Марина', 'patronym': 'Ростиславовна'}, 2: {'last_name': 'Волковыский', 'first_name': 'Юрий', 'patronym': 'Михайлович'}}, 'contact_select': {1: 'Выбрать', 2: 'Добавить'}, 'selected_contact': {1: '27', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 595 082 057', 'other_contact': '7 904 631 47 42'}, 2: {'telegram': '', 'phone': '7 921 744 04 34', 'other_contact': '995 591 71 51 59'}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Тришина', 'first_name': 'Милана', 'patronym': 'Денисова', 'dob': '05.07.2013', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Тришина', 'first_name': 'Яна', 'patronym': 'Николаевна'}, 2: {'last_name': 'Тришин', 'first_name': 'Денис', 'patronym': 'Игоревич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995591634486', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995599061427', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Полищук', 'first_name': 'Инна', 'patronym': 'Евгеньевна', 'dob': '22.04.2013', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Полищук-Молодоженя', 'first_name': 'Татьяна', 'patronym': 'Романовна'}, 2: {'last_name': 'Полищук', 'first_name': 'Евгений', 'patronym': 'Витальевич'}}, 'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '91', 2: '92'}, 'contact': {1: {'telegram': '', 'phone': '995593789646', 'other_contact': '79095647573'}, 2: {'telegram': '', 'phone': '995558669855', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Лушанкина', 'first_name': 'Владислава', 'patronym': 'Павловна', 'dob': '06.11.2014', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Лушанкина', 'first_name': 'Юлия', 'patronym': 'Юрьевна'}, 2: {'last_name': 'Лушанкин', 'first_name': 'Павел', 'patronym': 'Вячеславович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 595 081 186', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995 598 127 922 ', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
+    {'student': {'last_name': 'Казанцева', 'first_name': 'Алисия', 'patronym': 'Алексеевна', 'dob': '23.11.2012',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Казанцева', 'first_name': 'Анастасия', 'patronym': 'Юрьевна'},
+                2: {'last_name': 'Казанцев', 'first_name': 'Алексей', 'patronym': 'Николаевич'}},
+     'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '34', 2: '48'},
+     'contact': {1: {'telegram': '', 'phone': '79120121035', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '79128703412', 'other_contact': '995555973320'}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Чернина', 'first_name': 'Евгения', 'patronym': 'Вадимовна', 'dob': '11.11.2013',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Чернина', 'first_name': 'Вера', 'patronym': 'Алексеевна'},
+                2: {'last_name': 'Чернин', 'first_name': 'Вадим', 'patronym': 'Борисович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '595 420 847', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '595 082 114', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Волковыский', 'first_name': 'Захар', 'patronym': 'Юрьевич', 'dob': '30.07.2013',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Лизина', 'first_name': 'Марина', 'patronym': 'Ростиславовна'},
+                2: {'last_name': 'Волковыский', 'first_name': 'Юрий', 'patronym': 'Михайлович'}},
+     'contact_select': {1: 'Выбрать', 2: 'Добавить'}, 'selected_contact': {1: '27', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995 595 082 057', 'other_contact': '7 904 631 47 42'},
+                 2: {'telegram': '', 'phone': '7 921 744 04 34', 'other_contact': '995 591 71 51 59'}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Тришина', 'first_name': 'Милана', 'patronym': 'Денисова', 'dob': '05.07.2013',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Тришина', 'first_name': 'Яна', 'patronym': 'Николаевна'},
+                2: {'last_name': 'Тришин', 'first_name': 'Денис', 'patronym': 'Игоревич'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995591634486', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995599061427', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Полищук', 'first_name': 'Инна', 'patronym': 'Евгеньевна', 'dob': '22.04.2013',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Полищук-Молодоженя', 'first_name': 'Татьяна', 'patronym': 'Романовна'},
+                2: {'last_name': 'Полищук', 'first_name': 'Евгений', 'patronym': 'Витальевич'}},
+     'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '91', 2: '92'},
+     'contact': {1: {'telegram': '', 'phone': '995593789646', 'other_contact': '79095647573'},
+                 2: {'telegram': '', 'phone': '995558669855', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Лушанкина', 'first_name': 'Владислава', 'patronym': 'Павловна', 'dob': '06.11.2014',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Лушанкина', 'first_name': 'Юлия', 'patronym': 'Юрьевна'},
+                2: {'last_name': 'Лушанкин', 'first_name': 'Павел', 'patronym': 'Вячеславович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995 595 081 186', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995 598 127 922 ', 'other_contact': ''}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
 ]
 
-petr = {'student': {'last_name': 'Ляшкевич', 'first_name': 'Петр', 'patronym': 'Константинович', 'dob': '22.02.2013', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Ляшкевич', 'first_name': 'Евгения', 'patronym': 'Валерьевна'}, 2: {'last_name': 'Ляшкевич', 'first_name': 'Константин', 'patronym': 'Владимирович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 571 051 683', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995 568 819 706', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
+petr = {'student': {'last_name': 'Ляшкевич', 'first_name': 'Петр', 'patronym': 'Константинович', 'dob': '22.02.2013',
+                    'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+        'parent': {1: {'last_name': 'Ляшкевич', 'first_name': 'Евгения', 'patronym': 'Валерьевна'},
+                   2: {'last_name': 'Ляшкевич', 'first_name': 'Константин', 'patronym': 'Владимирович'}},
+        'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+        'contact': {1: {'telegram': '', 'phone': '995 571 051 683', 'other_contact': ''},
+                    2: {'telegram': '', 'phone': '995 568 819 706', 'other_contact': ''}},
+        'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
 
 sixth_grade_list = [
-    {'student': {'last_name': 'Котова', 'first_name': 'Анна', 'patronym': 'Васильевна', 'dob': '25.06.2011', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Котова', 'first_name': 'Елена', 'patronym': 'Геннадьевна'}, 2: {'last_name': 'Котов', 'first_name': 'Василий', 'patronym': 'Александрович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '8 916 969 62 45 ', 'other_contact': '995 555 33 40 79'}, 2: {'telegram': '', 'phone': '555 33 54 27 ', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Гудкова', 'first_name': 'Ева', 'patronym': 'Сергеевна', 'dob': '02.03.2011', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Гудкова', 'first_name': 'Татьяна', 'patronym': 'Юрьевна'}, 2: {'last_name': 'Гудков', 'first_name': 'Сергей', 'patronym': 'Сергеевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '8 929 683 93 99', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995599026049', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Миронов', 'first_name': 'Лев', 'patronym': 'Антонович', 'dob': '24.04.2011', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Миронов', 'first_name': 'Антон', 'patronym': ''}}, 'contact_select': {1: 'Выбрать'}, 'selected_contact': {1: '73'}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Перова', 'first_name': 'Эва', 'patronym': '', 'dob': None, 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Савойлайнен', 'first_name': 'Анна', 'patronym': 'Геннадьевна'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Ковалев', 'first_name': 'Данил', 'patronym': 'Андреевич', 'dob': '20.09.2011', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Ковалева', 'first_name': 'Ирина', 'patronym': 'Андреевна'}}, 'contact_select': {1: 'Выбрать'}, 'selected_contact': {1: '65'}, 'contact': {1: {'telegram': '', 'phone': '995595022159', 'other_contact': ''}}, 'relation': {1: 'Мама'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Козлова', 'first_name': 'Татьяна', 'patronym': 'Евгеньевна', 'dob': '24.01.2012', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Козлова', 'first_name': 'Наталья', 'patronym': 'Валерьевна'}, 2: {'last_name': 'Козлов', 'first_name': 'Евгений', 'patronym': 'Александрович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995555453279', 'other_contact': ''}, 2: {'telegram': '', 'phone': '79269566313', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Семенова', 'first_name': 'Мария', 'patronym': 'Андреевна', 'dob': '17.06.2011', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Семенов', 'first_name': 'Андрей', 'patronym': 'Константинович'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Папа'}, 'primary_contact': 1}
+    {'student': {'last_name': 'Котова', 'first_name': 'Анна', 'patronym': 'Васильевна', 'dob': '25.06.2011',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Котова', 'first_name': 'Елена', 'patronym': 'Геннадьевна'},
+                2: {'last_name': 'Котов', 'first_name': 'Василий', 'patronym': 'Александрович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '8 916 969 62 45 ', 'other_contact': '995 555 33 40 79'},
+                 2: {'telegram': '', 'phone': '555 33 54 27 ', 'other_contact': ''}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Гудкова', 'first_name': 'Ева', 'patronym': 'Сергеевна', 'dob': '02.03.2011',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Гудкова', 'first_name': 'Татьяна', 'patronym': 'Юрьевна'},
+                2: {'last_name': 'Гудков', 'first_name': 'Сергей', 'patronym': 'Сергеевич'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '8 929 683 93 99', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995599026049', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Миронов', 'first_name': 'Лев', 'patronym': 'Антонович', 'dob': '24.04.2011',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Миронов', 'first_name': 'Антон', 'patronym': ''}}, 'contact_select': {1: 'Выбрать'},
+     'selected_contact': {1: '73'}, 'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}},
+     'relation': {1: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Перова', 'first_name': 'Эва', 'patronym': '', 'dob': None, 'status': 'Клиент',
+                 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Савойлайнен', 'first_name': 'Анна', 'patronym': 'Геннадьевна'}},
+     'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''},
+     'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Мама'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Ковалев', 'first_name': 'Данил', 'patronym': 'Андреевич', 'dob': '20.09.2011',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Ковалева', 'first_name': 'Ирина', 'patronym': 'Андреевна'}},
+     'contact_select': {1: 'Выбрать'}, 'selected_contact': {1: '65'},
+     'contact': {1: {'telegram': '', 'phone': '995595022159', 'other_contact': ''}}, 'relation': {1: 'Мама'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Козлова', 'first_name': 'Татьяна', 'patronym': 'Евгеньевна', 'dob': '24.01.2012',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Козлова', 'first_name': 'Наталья', 'patronym': 'Валерьевна'},
+                2: {'last_name': 'Козлов', 'first_name': 'Евгений', 'patronym': 'Александрович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '995555453279', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '79269566313', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Семенова', 'first_name': 'Мария', 'patronym': 'Андреевна', 'dob': '17.06.2011',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Семенов', 'first_name': 'Андрей', 'patronym': 'Константинович'}},
+     'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''},
+     'contact': {1: {'telegram': '', 'phone': '', 'other_contact': 'Нет'}}, 'relation': {1: 'Папа'},
+     'primary_contact': 1}
 ]
 
 seventh_grade_list = [
-    {'student': {'last_name': 'Ляшкевич', 'first_name': 'Элина', 'patronym': 'Константиновна', 'dob': '13.08.2010', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Ляшкевич', 'first_name': 'Евгения', 'patronym': 'Валерьевна'}, 2: {'last_name': 'Ляшкевич', 'first_name': 'Константин', 'patronym': 'Владимирович'}}, 'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '110', 2: '111'}, 'contact': {1: {'telegram': '', 'phone': 'nan', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995568816706', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Куксинский', 'first_name': 'Платон', 'patronym': 'Дмитриевич', 'dob': '28.08.2010', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Ганичева', 'first_name': 'Марьяна', 'patronym': 'Петровна'}, 2: {'last_name': 'Куксинский', 'first_name': 'Дмитрий', 'patronym': 'Глебович'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '595 35 94 77', 'other_contact': ''}, 2: {'telegram': '', 'phone': '595 04 95 37', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Федорова', 'first_name': 'Милана', 'patronym': 'Вадимовна', 'dob': None, 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Федорова', 'first_name': 'Ксения', 'patronym': 'Александровна'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': 'nan', 'other_contact': ''}}, 'relation': {1: 'Мама'}, 'primary_contact': 1}
+    {'student': {'last_name': 'Ляшкевич', 'first_name': 'Элина', 'patronym': 'Константиновна', 'dob': '13.08.2010',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Ляшкевич', 'first_name': 'Евгения', 'patronym': 'Валерьевна'},
+                2: {'last_name': 'Ляшкевич', 'first_name': 'Константин', 'patronym': 'Владимирович'}},
+     'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '110', 2: '111'},
+     'contact': {1: {'telegram': '', 'phone': 'nan', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995568816706', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Куксинский', 'first_name': 'Платон', 'patronym': 'Дмитриевич', 'dob': '28.08.2010',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Ганичева', 'first_name': 'Марьяна', 'patronym': 'Петровна'},
+                2: {'last_name': 'Куксинский', 'first_name': 'Дмитрий', 'patronym': 'Глебович'}},
+     'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+     'contact': {1: {'telegram': '', 'phone': '595 35 94 77', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '595 04 95 37', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Федорова', 'first_name': 'Милана', 'patronym': 'Вадимовна', 'dob': None,
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Федорова', 'first_name': 'Ксения', 'patronym': 'Александровна'}},
+     'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''},
+     'contact': {1: {'telegram': '', 'phone': 'nan', 'other_contact': ''}}, 'relation': {1: 'Мама'},
+     'primary_contact': 1}
 ]
 
-eighth_grade = {'student': {'last_name': 'Петручак', 'first_name': 'Владислав', 'patronym': 'Викторович', 'dob': '25.10.2009', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Петручак', 'first_name': 'Ольга', 'patronym': 'Евгеньевна'}, 2: {'last_name': 'Петручак', 'first_name': 'Виктор', 'patronym': 'Николаевич'}}, 'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''}, 'contact': {1: {'telegram': '', 'phone': '995 593 45 27 80', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995 593 45 52 87 ', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
+eighth_grade = {
+    'student': {'last_name': 'Петручак', 'first_name': 'Владислав', 'patronym': 'Викторович', 'dob': '25.10.2009',
+                'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+    'parent': {1: {'last_name': 'Петручак', 'first_name': 'Ольга', 'patronym': 'Евгеньевна'},
+               2: {'last_name': 'Петручак', 'first_name': 'Виктор', 'patronym': 'Николаевич'}},
+    'contact_select': {1: 'Добавить', 2: 'Добавить'}, 'selected_contact': {1: '', 2: ''},
+    'contact': {1: {'telegram': '', 'phone': '995 593 45 27 80', 'other_contact': ''},
+                2: {'telegram': '', 'phone': '995 593 45 52 87 ', 'other_contact': ''}},
+    'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1}
 
 ninth_grade_list = [
-    {'student': {'last_name': 'Давыдова', 'first_name': 'Ульяна', 'patronym': 'Ивановна', 'dob': '09.11.2008', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Давыдов', 'first_name': 'Иван', 'patronym': 'Дмитриевич'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '995 599 019 679', 'other_contact': ''}}, 'relation': {1: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Ляшкевич', 'first_name': 'Алексей', 'patronym': 'Константинович', 'dob': '15.07.2008', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Ляшкевич', 'first_name': 'Евгения', 'patronym': 'Валерьевна'}, 2: {'last_name': 'Ляшкевич', 'first_name': 'Константин', 'patronym': 'Владимирович'}}, 'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '110', 2: '111'}, 'contact': {1: {'telegram': '', 'phone': '995 571 051 683', 'other_contact': ''}, 2: {'telegram': '', 'phone': '995 568 81 97 06', 'other_contact': ''}}, 'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
-    {'student': {'last_name': 'Данилова', 'first_name': 'Александра', 'patronym': 'Алексеевна', 'dob': '14.01.2008', 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''}, 'parent': {1: {'last_name': 'Глазырина', 'first_name': 'Мария', 'patronym': 'Александровна'}}, 'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''}, 'contact': {1: {'telegram': '', 'phone': '79162163460,', 'other_contact': '995591756793'}}, 'relation': {1: 'Мама'}, 'primary_contact': 1}
+    {'student': {'last_name': 'Давыдова', 'first_name': 'Ульяна', 'patronym': 'Ивановна', 'dob': '09.11.2008',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Давыдов', 'first_name': 'Иван', 'patronym': 'Дмитриевич'}},
+     'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''},
+     'contact': {1: {'telegram': '', 'phone': '995 599 019 679', 'other_contact': ''}}, 'relation': {1: 'Папа'},
+     'primary_contact': 1},
+    {'student': {'last_name': 'Ляшкевич', 'first_name': 'Алексей', 'patronym': 'Константинович', 'dob': '15.07.2008',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Ляшкевич', 'first_name': 'Евгения', 'patronym': 'Валерьевна'},
+                2: {'last_name': 'Ляшкевич', 'first_name': 'Константин', 'patronym': 'Владимирович'}},
+     'contact_select': {1: 'Выбрать', 2: 'Выбрать'}, 'selected_contact': {1: '110', 2: '111'},
+     'contact': {1: {'telegram': '', 'phone': '995 571 051 683', 'other_contact': ''},
+                 2: {'telegram': '', 'phone': '995 568 81 97 06', 'other_contact': ''}},
+     'relation': {1: 'Мама', 2: 'Папа'}, 'primary_contact': 1},
+    {'student': {'last_name': 'Данилова', 'first_name': 'Александра', 'patronym': 'Алексеевна', 'dob': '14.01.2008',
+                 'status': 'Клиент', 'pause_until': '', 'leaving_reason': ''},
+     'parent': {1: {'last_name': 'Глазырина', 'first_name': 'Мария', 'patronym': 'Александровна'}},
+     'contact_select': {1: 'Добавить'}, 'selected_contact': {1: ''},
+     'contact': {1: {'telegram': '', 'phone': '79162163460,', 'other_contact': '995591756793'}},
+     'relation': {1: 'Мама'}, 'primary_contact': 1}
 ]
+
+
 # unique_rooms = Lesson.query.filter(Lesson.date == today).with_entities(Lesson.room_id).distinct().all()
 # unique_rooms = [room[0] for room in unique_rooms]
 # first_date = today - timedelta(days=2)
@@ -735,4 +1001,25 @@ def add_new_lessons(form):
     week = int((get_weekday_date(0, lesson_date) - get_weekday_date(0, TODAY)).days / 7)
     return messages, week
 
+
+# extra_school_subjects = Subject.query.filter(
+#     Subject.subject_type.has(~SubjectType.name.in_(["after_school", "school"]))
+# ).order_by(Subject.name).all()
+#
+# school_subjects = Subject.query.filter(
+#     Subject.subject_type.has(SubjectType.name == "school")
+# ).order_by(Subject.name).all()
+# print_subjects(school_subjects)
+# print_association_table(teacher_class_table)
+
+school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+
+for school_class in school_classes:
+    school_class.class_students = class_students_info(school_class)
+    school_class.main_teacher = db.session.query(Person).join(teacher_class_table).filter(
+        teacher_class_table.c.class_id == school_class.id,
+        teacher_class_table.c.main_teacher).first()
+
+print(school_classes[0].class_students[-1].age)
+print(school_classes[0].main_teacher)
 

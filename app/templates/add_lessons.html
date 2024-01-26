@@ -10,17 +10,19 @@
             </div>
             <div class="card-content">
                 <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
-                    <div class="col-md-offset-1">
-                        <div id="lesson-sections">
-                            <div class="form-group">
+                    <div id="lesson-sections">
+                        <div class="row">
+                            <div class="form-group" style="margin-left:30px;margin-top:0">
                                 <div class="row">
                                     <label class="control-label col-md-3">Дата:</label>
                                     <div class="col-md-3">
                                         <input type="text" name="lesson_date" id="lesson-date" class="form-control datepicker" placeholder="дд.мм.гггг">
                                     </div>
                                 </div>
-                                <div class="lesson-section">
-                                    <h5 class="title" style="margin: 27px;">Занятие 1</h5>
+                            </div>
+                            <div class="lesson-section">
+                                <h5 class="title" style="margin-left: 27px;">Занятие 1</h5>
+                                <div class="form-group" style="margin-left:30px;">
                                     <div class="row">
                                         <label class="control-label col-md-3">Начало:</label>
                                         <div class="col-md-3">
@@ -70,18 +72,18 @@
                                 </div>
                             </div>
                         </div>
-                        <input type="hidden" name="lesson_count" id="lesson-count" value="">
-                        <input type="hidden" id="school-type" value="{{ school.id }}">
-                        <div class="row">
-                            <div id="add-lesson">
-                                <div class="col-md-3">
-                                    <button type="button" id="add-lesson-btn" class="btn btn-sm btn-default" style="background-color: #ff9800;">Добавить занятие</button>
-                                </div>
+                    </div>
+                    <input type="hidden" name="lesson_count" id="lesson-count" value="">
+                    <input type="hidden" id="school-type" value="{{ school.id }}">
+                    <div class="row">
+                        <div id="add-lesson">
+                            <div class="col-md-2">
+                                <button type="button" id="add-lesson-btn" class="btn btn-sm btn-default" style="background-color: #ff9800;">Добавить занятие</button>
                             </div>
-                            <div id="remove-lesson" style="display: none;">
-                                <div class="col-md-3">
-                                    <button type="button" id="remove-lesson-btn" class="btn btn-sm btn-danger">Удалить занятие</button>
-                                </div>
+                        </div>
+                        <div id="remove-lesson" style="display: none;">
+                            <div class="col-md-2">
+                                <button type="button" id="remove-lesson-btn" class="btn btn-sm btn-danger">Удалить занятие</button>
                             </div>
                         </div>
                     </div>

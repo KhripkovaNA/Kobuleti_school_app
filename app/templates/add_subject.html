@@ -8,99 +8,102 @@
             <div class="card-header" data-background-color="main">
                 <h4 class="title">Новое {{'школьное' if subjects_type=="school"}} занятие</h4>
             </div>
-            <div class="card-content col-md-offset-1">
-                <div class="form-group">
-                    <form class="login-form" action="{{ url_for('add_subject') }}" method="post">
-                        <div class="row">
-                            <label class="control-label col-md-3">Название:</label>
-                            <div class="col-md-5">
-                                <input type="text" name="subject_name" class="form-control">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Короткое название:</label>
-                            <div class="col-md-5">
-                                <input type="text" name="subject_short_name" class="form-control">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Тип занятия:</label>
-                            <div class="col-md-5">
-                                {% if subjects_type != "school" %}
-                                    <select name="subject_type" class="form-control">
-                                        {% for subject_type in subject_types %}
-                                            <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
-                                        {% endfor %}
-                                    </select>
-                                {% else %}
-                                    <p class="form-control">{{ subject_types[0].description }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Описание:</label>
-                            <div class="col-md-5">
-                                <textarea name="description" class="form-control" style="margin-bottom:10px;"></textarea>
-                            </div>
-                        </div>
-                        {% if subjects_type != "school" %}
-                            <div class="row price_row">
-                                <label class="control-label col-md-3">Цена разового занятия:</label>
-                                <div class="col-md-3 float-field-row">
-                                    <input type="number" class="form-control float-field" name="subject_price" step="1" min="0" value="{{ 20|float }}">
-                                </div>
-                                <div class="col-md-2 checkbox-option">
-                                    <label class="contact-radio-label">Нет
-                                        <input type="checkbox" name="no_subject_price">
-                                        <span class="custom-checkbox"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="row price_row">
-                                <label class="control-label col-md-3">Специальная цена (Продленка):</label>
-                                <div class="col-md-3 float-field-row">
-                                    <input type="number" class="form-control float-field" name="subject_school_price" step="1" min="0" value="{{ 20|float }}">
-                                </div>
-                                <div class="col-md-2 checkbox-option">
-                                    <label class="contact-radio-label">Нет
-                                        <input type="checkbox" name="no_subject_school_price">
-                                        <span class="custom-checkbox"></span>
-                                    </label>
-                                </div>
-                            </div>
+            <div class="card-content">
+                <form class="login-form" action="{{ url_for('add_subject') }}" method="post">
+                    <div class="row">
+                        <div class="form-group" style="margin-left:30px;">
                             <div class="row">
-                                <label class="control-label col-md-3">Абонемент:</label>
+                                <label class="control-label col-md-3">Название:</label>
                                 <div class="col-md-5">
-                                    <select class="form-control select-search" name="subscription_types" multiple placeholder="Добавить абонемент">
-                                        {% for type_of_subscription in subscription_types %}
-                                            <option value="{{ type_of_subscription[0] }}">{{ type_of_subscription[1] }}</option>
+                                    <input type="text" name="subject_name" class="form-control">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Короткое название:</label>
+                                <div class="col-md-5">
+                                    <input type="text" name="subject_short_name" class="form-control">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Тип занятия:</label>
+                                <div class="col-md-5">
+                                    {% if subjects_type != "school" %}
+                                        <select name="subject_type" class="form-control">
+                                            {% for subject_type in subject_types %}
+                                                <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}
+                                        <p class="form-control">{{ subject_types[0].description }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Описание:</label>
+                                <div class="col-md-5">
+                                    <textarea name="description" class="form-control" style="margin-bottom:10px;"></textarea>
+                                </div>
+                            </div>
+                            {% if subjects_type != "school" %}
+                                <div class="row price_row">
+                                    <label class="control-label col-md-3">Цена разового занятия:</label>
+                                    <div class="col-md-3 float-field-row">
+                                        <input type="number" class="form-control float-field" name="subject_price" step="1" min="0" value="{{ 20|float }}">
+                                    </div>
+                                    <div class="col-md-2 checkbox-option">
+                                        <label class="contact-radio-label">Нет
+                                            <input type="checkbox" name="no_subject_price">
+                                            <span class="custom-checkbox"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row price_row">
+                                    <label class="control-label col-md-3">Специальная цена (Продленка):</label>
+                                    <div class="col-md-3 float-field-row">
+                                        <input type="number" class="form-control float-field" name="subject_school_price" step="1" min="0" value="{{ 20|float }}">
+                                    </div>
+                                    <div class="col-md-2 checkbox-option">
+                                        <label class="contact-radio-label">Нет
+                                            <input type="checkbox" name="no_subject_school_price">
+                                            <span class="custom-checkbox"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Абонемент:</label>
+                                    <div class="col-md-5">
+                                        <select class="form-control select-search" name="subscription_types" multiple placeholder="Добавить абонемент">
+                                            {% for type_of_subscription in subscription_types %}
+                                                <option value="{{ type_of_subscription[0] }}">{{ type_of_subscription[1] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="row">
+                                <label class="control-label col-md-3">Учителя:</label>
+                                <div class="col-md-5">
+                                    <select class="form-control select-search" name="teachers" multiple placeholder="Добавить учителя">
+                                        {% for teacher in teachers %}
+                                            <option value="{{ teacher.id }}">{{ teacher.last_name}} {{ teacher.first_name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                             </div>
-                        {% endif %}
+                        </div>
+                    </div>
+                    <div class="footer">
                         <div class="row">
-                            <label class="control-label col-md-3">Учителя:</label>
-                            <div class="col-md-5">
-                                <select class="form-control select-search" name="teachers" multiple placeholder="Добавить учителя">
-                                    {% for teacher in teachers %}
-                                        <option value="{{ teacher.id }}">{{ teacher.last_name}} {{ teacher.first_name }}</option>
-                                    {% endfor %}
-                                </select>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Добавить занятие</button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
                             </div>
                         </div>
-                        <div class="footer">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Добавить занятие</button>
-                                </div>
-                                <div class="col-md-3">
-                                    <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>

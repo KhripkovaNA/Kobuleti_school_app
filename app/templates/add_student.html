@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="row">
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
@@ -10,61 +9,69 @@
             </div>
             <div class="card-content">
                 <div class="row" style="margin-left:10px;">
-                    <button type="button" class="btn btn-default switch-button btn-success" data-target="form-1">Ребенок</button>
-                    <button type="button" class="btn btn-default switch-button" data-target="form-2">Взрослый</button>
+                    <button type="button"
+                            class="btn btn-sm btn-default switch-button btn-success"
+                            data-target="form-1"
+                            style="width:80px; padding: 5px 5px;">
+                        Ребенок
+                    </button>
+                    <button type="button"
+                            class="btn btn-sm btn-default switch-button"
+                            data-target="form-2"
+                            style="width:80px; padding: 5px 5px;">
+                        Взрослый
+                    </button>
                 </div>
                 <form class="login-form target-table" id="form-1" action="{{ url_for('add_student') }}" method="post">
                     <div class="row">
-                        <div class="col-md-12">
-                            <h4 class="title">Ребенок</h4>
-                            <div class="form-group">
-                                <div class="row">
-                                    <label class="control-label col-md-3">Фамилия:</label>
-                                    <div class="col-md-5">
-                                        <input type="text" name="last_name" class="form-control">
-                                    </div>
+                        <h4 class="title" style="margin-left: 27px;">Ребенок</h4>
+                        <div class="form-group" style="margin-left:30px;">
+                            <div class="row">
+                                <label class="control-label col-md-3">Фамилия:</label>
+                                <div class="col-md-5">
+                                    <input type="text" name="last_name" class="form-control">
                                 </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Имя:</label>
-                                    <div class="col-md-5">
-                                        <input type="text" name="first_name" class="form-control">
-                                    </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Имя:</label>
+                                <div class="col-md-5">
+                                    <input type="text" name="first_name" class="form-control">
                                 </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Отчество:</label>
-                                    <div class="col-md-5">
-                                        <input type="text" name="patronym" class="form-control">
-                                    </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Отчество:</label>
+                                <div class="col-md-5">
+                                    <input type="text" name="patronym" class="form-control">
                                 </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Дата рождения:</label>
-                                    <div class="col-md-3 datepicker-container">
-                                        <input type="text" name="dob" class="form-control datepicker" placeholder="дд.мм.гггг">
-                                    </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Дата рождения:</label>
+                                <div class="col-md-3 datepicker-container">
+                                    <input type="text" name="dob" class="form-control datepicker" placeholder="дд.мм.гггг">
                                 </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Статус:</label>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Статус:</label>
+                                <div class="col-md-3">
+                                    <select name="status" class="form-control" id="status-select">
+                                        <option value="Клиент">Клиент</option>
+                                        <option value="Лид">Лид</option>
+                                        <option value="Пауза">Пауза</option>
+                                        <option value="Закрыт">Закрыт</option>
+                                    </select>
+                                </div>
+                                <div id="pause-date" style="display: none;">
+                                    <label class="control-label col-md-1">до:</label>
                                     <div class="col-md-3">
-                                        <select name="status" class="form-control" id="status-select">
-                                            <option value="Клиент">Клиент</option>
-                                            <option value="Лид">Лид</option>
-                                            <option value="Пауза">Пауза</option>
-                                            <option value="Закрыт">Закрыт</option>
-                                        </select>
-                                    </div>
-                                    <div id="pause-date" style="display: none;">
-                                        <label class="control-label col-md-1">до:</label>
-                                        <div class="col-md-3">
-                                            <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг">
-                                        </div>
+                                        <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг">
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div id="leaving-reason" style="display: none;">
-                                        <label class="control-label col-md-3">Причина:</label>
-                                        <div class="col-md-5">
-                                            <textarea name="leaving_reason" class="form-control"></textarea>
-                                        </div>
+                            </div>
+                            <div class="row">
+                                <div id="leaving-reason" style="display: none;">
+                                    <label class="control-label col-md-3">Причина:</label>
+                                    <div class="col-md-5">
+                                        <textarea name="leaving_reason" class="form-control"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -72,114 +79,112 @@
                     </div>
                     <hr>
                     <div class="row">
-                        <div class="col-md-12">
-                            <h4 class="title">Контакты</h4>
-                            <div id="contact-sections">
-                                <div class="contact-section">
-                                    <h5 class="title" style="margin: 27px;">Контакт 1</h5>
-                                    <div class="form-group">
+                        <h4 class="title" style="margin-left: 27px;">Контакты</h4>
+                        <div id="contact-sections">
+                            <div class="contact-section">
+                                <h5 class="title" style="margin-left: 54px;">Контакт 1</h5>
+                                <div class="form-group" style="margin-left:30px;">
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Контакт:</label>
+                                        <div class="col-md-5">
+                                            <select name="relation_1" class="form-control contact-relation">
+                                                <option value="Мама">Мама</option>
+                                                <option value="Папа">Папа</option>
+                                                <option value="Сам ребенок">Сам ребенок</option>
+                                                <option value="Другое">Другое контактное лицо</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 checkbox-option">
+                                            <label class="contact-radio-label">Основной контакт
+                                                <input type="radio" class="contact-radio" name="primary_contact"
+                                                       value="contact_1" required checked>
+                                                <span class="custom-radio"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="row relation-other-row" style="display: none;">
+                                        <label class="control-label col-md-3"></label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="other_relation_1" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="contact_selection">
                                         <div class="row">
-                                            <label class="control-label col-md-3">Контакт:</label>
+                                            <label class="control-label col-md-3">Данные контактного лица:</label>
                                             <div class="col-md-5">
-                                                <select name="relation_1" class="form-control contact-relation">
-                                                    <option value="Мама">Мама</option>
-                                                    <option value="Папа">Папа</option>
-                                                    <option value="Сам ребенок">Сам ребенок</option>
-                                                    <option value="Другое">Другое контактное лицо</option>
+                                                <select name="contact_select_1" class="form-control contact-select">
+                                                    <option value="Добавить">Добавить</option>
+                                                    <option value="Выбрать">Выбрать из списка</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-3 checkbox-option">
-                                                <label class="contact-radio-label">Основной контакт
-                                                    <input type="radio" class="contact-radio" name="primary_contact"
-                                                           value="contact_1" required checked>
-                                                    <span class="custom-radio"></span>
-                                                </label>
-                                            </div>
                                         </div>
-                                        <div class="row relation-other-row" style="display: none;">
+                                        <div class="row contact-options-row" style="display: none; margin-bottom: 10px;">
                                             <label class="control-label col-md-3"></label>
                                             <div class="col-md-5">
-                                                <input type="text" name="other_relation_1" class="form-control">
+                                                <select name="selected_contact_1" class="form-control contact-options select-search">
+                                                    {% for client in clients %}
+                                                        <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
+                                                    {% endfor %}
+                                                </select>
                                             </div>
                                         </div>
-                                        <div class="contact_selection">
+                                        <div class="contact-information person-info-basic"></div>
+                                        <div class="contact-information person-info-contacts"></div>
+                                    </div>
+                                    <div class="contact-input" style="display: none;">
+                                        <div class="contact-info">
                                             <div class="row">
-                                                <label class="control-label col-md-3">Данные контактного лица:</label>
+                                                <label class="control-label col-md-3">Фамилия:</label>
                                                 <div class="col-md-5">
-                                                    <select name="contact_select_1" class="form-control contact-select">
-                                                        <option value="Добавить">Добавить</option>
-                                                        <option value="Выбрать">Выбрать из списка</option>
-                                                    </select>
+                                                    <input type="text" name="parent_last_name_1" class="form-control">
                                                 </div>
                                             </div>
-                                            <div class="row contact-options-row" style="display: none; margin-bottom: 10px;">
-                                                <label class="control-label col-md-3"></label>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Имя:</label>
                                                 <div class="col-md-5">
-                                                    <select name="selected_contact_1" class="form-control contact-options select-search">
-                                                        {% for client in clients %}
-                                                            <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
-                                                        {% endfor %}
-                                                    </select>
+                                                    <input type="text" name="parent_first_name_1" class="form-control">
                                                 </div>
                                             </div>
-                                            <div class="contact-information person-info-basic"></div>
-                                            <div class="contact-information person-info-contacts"></div>
-                                        </div>
-                                        <div class="contact-input" style="display: none;">
-                                            <div class="contact-info">
-                                                <div class="row">
-                                                    <label class="control-label col-md-3">Фамилия:</label>
-                                                    <div class="col-md-5">
-                                                        <input type="text" name="parent_last_name_1" class="form-control">
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <label class="control-label col-md-3">Имя:</label>
-                                                    <div class="col-md-5">
-                                                        <input type="text" name="parent_first_name_1" class="form-control">
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <label class="control-label col-md-3">Отчество:</label>
-                                                    <div class="col-md-5">
-                                                        <input type="text" name="parent_patronym_1" class="form-control">
-                                                    </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Отчество:</label>
+                                                <div class="col-md-5">
+                                                    <input type="text" name="parent_patronym_1" class="form-control">
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Телеграм:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="telegram_1" class="form-control">
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Телеграм:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="telegram_1" class="form-control">
                                         </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Телефон:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="phone_1" class="form-control">
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Телефон:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="phone_1" class="form-control">
                                         </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Другое:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="other_contact_1" class="form-control">
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Другое:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="other_contact_1" class="form-control">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <input type="hidden" name="contact_count" id="contact-count" value="">
                         </div>
+                        <input type="hidden" name="contact_count" id="contact-count" value="">
                     </div>
                     <div class="row">
                         <div id="add-contact">
-                            <div class="col-md-3">
-                                <button type="button" id="add-contact-btn" class="btn btn-default" style="background-color: #ff9800;">Добавить контакт</button>
+                            <div class="col-md-2">
+                                <button type="button" id="add-contact-btn" class="btn btn-sm btn-default" style="background-color: #ff9800;">Добавить контакт</button>
                             </div>
                         </div>
                         <div id="remove-contact" style="display: none;">
-                            <div class="col-md-3">
-                                <button type="button" id="remove-contact-btn" class="btn btn-danger">Удалить контакт</button>
+                            <div class="col-md-2">
+                                <button type="button" id="remove-contact-btn" class="btn btn-sm btn-danger">Удалить контакт</button>
                             </div>
                         </div>
                     </div>
@@ -197,75 +202,73 @@
                 <form class="login-form target-table" id="form-2" action="{{ url_for('add_student') }}" method="post" style="display: none;">
                     <div class="client-section">
                         <div class="row">
-                            <div class="col-md-12">
-                                <h4 class="title">Взрослый</h4>
-                                <div class="form-group">
-                                    <div class="row contact_selection">
-                                        <label class="control-label col-md-3">Данные клиента:</label>
+                            <h4 class="title" style="margin-left:27px;">Взрослый</h4>
+                            <div class="form-group" style="margin-left:30px;">
+                                <div class="row contact_selection">
+                                    <label class="control-label col-md-3">Данные клиента:</label>
+                                    <div class="col-md-5">
+                                        <select name="client_select" class="form-control client-select">
+                                            <option value="Добавить">Добавить</option>
+                                            <option value="Выбрать">Выбрать из списка</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="client-options-row" style="display: none;">
+                                    <div class="row" style="margin-bottom: 10px;">
+                                        <label class="control-label col-md-3"></label>
                                         <div class="col-md-5">
-                                            <select name="client_select" class="form-control client-select">
-                                                <option value="Добавить">Добавить</option>
-                                                <option value="Выбрать">Выбрать из списка</option>
+                                            <select name="selected_client" class="form-control client-options select-search">
+                                                {% for client in possible_clients %}
+                                                    <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
+                                                {% endfor %}
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="client-options-row" style="display: none;">
-                                        <div class="row" style="margin-bottom: 10px;">
-                                            <label class="control-label col-md-3"></label>
-                                            <div class="col-md-5">
-                                                <select name="selected_client" class="form-control client-options select-search">
-                                                    {% for client in possible_clients %}
-                                                        <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="client-information person-info-basic"></div>
-                                    </div>
-                                    <div class="client-input" style="display: none;">
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Фамилия:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="last_name" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Имя:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="first_name" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Отчество:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="patronym" class="form-control">
-                                            </div>
+                                    <div class="client-information person-info-basic"></div>
+                                </div>
+                                <div class="client-input" style="display: none;">
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Фамилия:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="last_name" class="form-control">
                                         </div>
                                     </div>
-                                    <div class="client-status">
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Статус:</label>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Имя:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="first_name" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Отчество:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="patronym" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="client-status">
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Статус:</label>
+                                        <div class="col-md-3">
+                                            <select name="status" class="form-control" id="status-select-adult">
+                                                <option value="Клиент">Клиент</option>
+                                                <option value="Лид">Лид</option>
+                                                <option value="Пауза">Пауза</option>
+                                                <option value="Закрыт">Закрыт</option>
+                                            </select>
+                                        </div>
+                                        <div id="pause-date-adult" style="display: none;">
+                                            <label class="control-label col-md-1">до:</label>
                                             <div class="col-md-3">
-                                                <select name="status" class="form-control" id="status-select-adult">
-                                                    <option value="Клиент">Клиент</option>
-                                                    <option value="Лид">Лид</option>
-                                                    <option value="Пауза">Пауза</option>
-                                                    <option value="Закрыт">Закрыт</option>
-                                                </select>
-                                            </div>
-                                            <div id="pause-date-adult" style="display: none;">
-                                                <label class="control-label col-md-1">до:</label>
-                                                <div class="col-md-3">
-                                                    <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг">
-                                                </div>
+                                                <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг">
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div id="leaving-reason-adult" style="display: none;">
-                                                <label class="control-label col-md-3">Причина:</label>
-                                                <div class="col-md-5">
-                                                    <textarea name="leaving_reason" class="form-control"></textarea>
-                                                </div>
+                                    </div>
+                                    <div class="row">
+                                        <div id="leaving-reason-adult" style="display: none;">
+                                            <label class="control-label col-md-3">Причина:</label>
+                                            <div class="col-md-5">
+                                                <textarea name="leaving_reason" class="form-control"></textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -274,28 +277,26 @@
                         </div>
                         <hr>
                         <div class="row">
-                            <div class="col-md-12">
-                                <h4 class="title">Контакты</h4>
-                                <div class="form-group">
-                                    <div class="client-information person-info-contacts" style="display: none;"></div>
-                                    <div class="client-input" style="display: none;">
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Телеграм:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="telegram_" class="form-control">
-                                            </div>
+                            <h4 class="title" style="margin-left:27px;">Контакты</h4>
+                            <div class="form-group" style="margin-left:30px;">
+                                <div class="client-information person-info-contacts" style="display: none;"></div>
+                                <div class="client-input" style="display: none;">
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Телеграм:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="telegram_" class="form-control">
                                         </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Телефон:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="phone_" class="form-control">
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Телефон:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="phone_" class="form-control">
                                         </div>
-                                        <div class="row">
-                                            <label class="control-label col-md-3">Другое:</label>
-                                            <div class="col-md-5">
-                                                <input type="text" name="other_contact_" class="form-control">
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Другое:</label>
+                                        <div class="col-md-5">
+                                            <input type="text" name="other_contact_" class="form-control">
                                         </div>
                                     </div>
                                 </div>
