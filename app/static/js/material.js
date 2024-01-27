@@ -130,6 +130,13 @@ $(document).ready(function(){
         }
     });
 
+    // set value of wickedpicker
+    var timepickerStartVal = $(".timepicker-start-value").val();
+    $('.timepicker-start').wickedpicker({now: timepickerStartVal});
+    var timepickerEndVal = $(".timepicker-end-value").val();
+    $('.timepicker-end').wickedpicker({now: timepickerEndVal});
+
+
     // function to handle the change event for the status select dropdown
     function handleStatusChange(statusSelect, pauseDateId, leavingReasonId) {
         const selectedStatus = statusSelect.val();

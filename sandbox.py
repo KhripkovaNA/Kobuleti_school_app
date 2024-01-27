@@ -6,7 +6,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, class_students_info
+from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types
 
 app.app_context().push()
 
@@ -1012,14 +1012,8 @@ def add_new_lessons(form):
 # print_subjects(school_subjects)
 # print_association_table(teacher_class_table)
 
-school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
 
-for school_class in school_classes:
-    school_class.class_students = class_students_info(school_class)
-    school_class.main_teacher = db.session.query(Person).join(teacher_class_table).filter(
-        teacher_class_table.c.class_id == school_class.id,
-        teacher_class_table.c.main_teacher).first()
-
-print(school_classes[0].class_students[-1].age)
-print(school_classes[0].main_teacher)
-
+extra_school_subjects = Subject.query.filter(
+    Subject.subject_type.has(~SubjectType.name.in_(["school", "after_school"]))
+).order_by(Subject.name).all()
+print(extra_school_subjects)

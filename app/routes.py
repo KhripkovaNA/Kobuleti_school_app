@@ -311,16 +311,6 @@ def timetable(week):
                            classes=week_lessons, week=week)
 
 
-@app.route('/school-timetable/<string:week>')
-@login_required
-def school_timetable(week):
-    week = int(week)
-    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-    week_school_lessons = week_school_lessons_dict(week, school_classes, DAYS_OF_WEEK)
-    return render_template('school_timetable.html', days=DAYS_OF_WEEK, school_classes=school_classes,
-                           classes=week_school_lessons, week=week, week_day=DAYS_OF_WEEK[0])
-
-
 @app.route('/copy-lessons', methods=['GET', 'POST'])
 @login_required
 def copy_lessons():
@@ -387,14 +377,35 @@ def add_lessons():
                            rooms=rooms, teachers=teachers_data, school=school)
 
 
+@app.route('/edit-lesson/<string:lesson_id>', methods=['GET', 'POST'])
+@login_required
+def edit_lesson(lesson_id):
+    edited_lesson = Lesson.query.filter_by(id=lesson_id).first()
+    # if edited_lesson:
+    if edited_lesson.lesson_type.name in ["school", "after_school"]:
+        return redirect(url_for('school_timetable', week=0))
+
+    else:
+        rooms = Room.query.all()
+        all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+        extra_school_subjects = Subject.query.filter(
+            Subject.subject_type.has(~SubjectType.name.in_(["school", "after_school"]))
+        ).order_by(Subject.name).all()
+
+        return render_template('edit_lesson.html', lesson=edited_lesson, subjects=extra_school_subjects,
+                               rooms=rooms, teachers=all_teachers)
+
+
 @app.route('/lesson/<string:subject_id>/<string:lesson_id>', methods=['GET', 'POST'])
 @login_required
 def lesson(subject_id, lesson_id):
-    lesson_subject = Subject.query.filter_by(id=subject_id).first()
-    if lesson_subject.subject_type.name == 'school':
-        return redirect(url_for('school_lesson', lesson_id=lesson_id))
+    if int(subject_id) != 0:
+        lesson_subject = Subject.query.filter_by(id=subject_id).first()
+        if lesson_subject.subject_type.name == 'school':
+            return redirect(url_for('school_lesson', lesson_id=lesson_id))
 
-    subject_lesson = show_lesson(lesson_subject, lesson_id)
+    subject_lesson = show_lesson(subject_id, lesson_id)
+    lesson_subject = subject_lesson.subject
 
     if request.method == 'POST':
         try:
@@ -425,11 +436,36 @@ def school_students():
         format_school_classes(school_class)
 
     lesson_subjects = lesson_subjects_data()
+    possible_students = Person.query.filter(
+        Person.person_type == 'Ребенок',
+        Person.status == 'Клиент',
+        Person.school_class_id.is_(None)
+    ).order_by(Person.last_name, Person.first_name).all()
 
-    return render_template('school_students.html', school_classes=school_classes, lesson_subjects=lesson_subjects)
+    return render_template('school_students.html', school_classes=school_classes, lesson_subjects=lesson_subjects,
+                           possible_students=possible_students)
 
 
-@app.route('/school_subjects')
+@app.route('/add-school-student', methods=['POST'])
+@login_required
+def add_school_student():
+    try:
+        added_student_id = int(request.form.get('added_student_id'))
+        new_school_student = Person.query.filter_by(id=added_student_id).first()
+        school_class_id = int(request.form.get('school_class_id'))
+        new_school_student.school_class_id = school_class_id
+        db.session.commit()
+        school_class = SchoolClass.query.filter_by(id=school_class_id).first()
+        flash(f'Новый ученик добавлен класс ({school_class.school_name}).', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении нового ученика: {str(e)}', 'error')
+
+    return redirect(url_for('school_students'))
+
+
+@app.route('/school-subjects')
 @login_required
 def school_subjects():
     all_school_subjects = Subject.query.filter(
@@ -439,6 +475,16 @@ def school_subjects():
         subject.classes = format_subject_classes(subject)
 
     return render_template('subjects.html', subjects=all_school_subjects, subjects_type="school")
+
+
+@app.route('/school-timetable/<string:week>')
+@login_required
+def school_timetable(week):
+    week = int(week)
+    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+    week_school_lessons = week_school_lessons_dict(week, school_classes, DAYS_OF_WEEK)
+    return render_template('school_timetable.html', days=DAYS_OF_WEEK, school_classes=school_classes,
+                           classes=week_school_lessons, week=week, week_day=DAYS_OF_WEEK[0])
 
 
 @app.route('/school-lesson/<string:lesson_id>')

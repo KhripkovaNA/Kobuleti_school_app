@@ -845,12 +845,12 @@ def prev_next_lessons(lesson):
     return prev_id, next_id
 
 
-def show_lesson(subject, lesson_id):
+def show_lesson(subject_id, lesson_id):
     if int(lesson_id) == 0:
-        last_lesson = Lesson.query.filter_by(subject_id=subject.id). \
+        last_lesson = Lesson.query.filter_by(subject_id=subject_id). \
             order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
         coming_lesson = Lesson.query.filter(Lesson.date >= TODAY,
-                                            Lesson.subject_id == subject.id). \
+                                            Lesson.subject_id == subject_id). \
             order_by(Lesson.date, Lesson.start_time).first()
         subject_lesson = coming_lesson if coming_lesson else last_lesson if last_lesson else None
     else:
@@ -862,22 +862,27 @@ def show_lesson(subject, lesson_id):
     return subject_lesson
 
 
+def format_school_classes_names(school_classes):
+    num_classes = [cl.school_name[:2].strip() for cl in school_classes
+                   if (cl.school_name[0].isdigit() or cl.school_name[:2].isdigit())]
+    classes = [cl.school_name for cl in school_classes
+               if not (cl.school_name[0].isdigit() or cl.school_name[:2].isdigit())]
+    formatted_school_classes = (
+        f"{'-'.join(num_classes)} класс, {', '.join(classes)}"
+        if (classes and num_classes)
+        else f"{'-'.join(num_classes)} класс"
+        if num_classes
+        else f"{', '.join(classes)}"
+    )
+    return formatted_school_classes
+
+
 def create_lesson_dict(lesson):
     start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
     end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
 
     if lesson.lesson_type.name == 'school':
-        num_classes = [cl.school_name[:2].strip() for cl in lesson.school_classes
-                       if (cl.school_name[0].isdigit() or cl.school_name[:2].isdigit())]
-        classes = [cl.school_name for cl in lesson.school_classes
-                   if not (cl.school_name[0].isdigit() or cl.school_name[:2].isdigit())]
-        lesson_type = (
-            f"{'-'.join(num_classes)} класс, {', '.join(classes)}"
-            if (classes and num_classes)
-            else f"{'-'.join(num_classes)} класс"
-            if num_classes
-            else f"{', '.join(classes)}"
-        )
+        lesson_type = format_school_classes_names(lesson.school_classes)
     elif lesson.lesson_type.name == 'individual':
         lesson_type = 'индив'
     else:
@@ -1175,16 +1180,7 @@ def format_school_classes(school_class):
         format_main_contact(student)
     school_class.class_students = class_students
 
-def format_subject_classes(subject):
-    school_classes = [int(sc_cl.school_class) for sc_cl in subject.school_classes]
-    if set(range(1, 5)).issubset(school_classes):
-        school = [sc_cl.school_name for sc_cl in sorted(subject.school_classes, key=lambda x: x.school_class)
-                  if int(sc_cl.school_class) > 4]
-        classes = "Начальные классы" + (", " + ", ".join(school) if school else "")
-    elif len(school_classes) == len(SchoolClass.query.all()):
-        classes = "Все классы"
-    else:
-        school = [sc_cl.school_name for sc_cl in sorted(subject.school_classes, key=lambda x: x.school_class)]
-        classes = ", ".join(school)
 
+def format_subject_classes(subject):
+    classes = format_school_classes_names(subject.school_classes)
     return classes
