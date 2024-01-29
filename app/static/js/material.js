@@ -2,13 +2,14 @@ $(document).ready(function(){
 
     // Adjust the width of class boxes based on the width of table cells
     function adjustClassBoxWidth() {
-        var tdWidth = $('.table td').width();
-        var classBoxWidth = tdWidth - 10;
-        $('.class-box').width(classBoxWidth);
+        $('.table tbody tr').find('td').each(function() {
+            var colWidth = $(this).width();
+            var classBox = $(this).find('.class-box');
+            classBox.width(colWidth - 10);
+        });
     }
 
     adjustClassBoxWidth();
-
 
     // Adjust the width of class boxes when resizing window
     $(window).resize(function () {

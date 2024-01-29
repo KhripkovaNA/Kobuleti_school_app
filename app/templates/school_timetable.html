@@ -12,7 +12,7 @@
                 <div class="row" style="margin-left:30px;">
                     {% for day in days %}
                         <button type="button"
-                                class="btn btn-sm switch-button {{ 'btn-success' if loop.index == 1 else '' }}"
+                                class="btn btn-sm switch-button {{ 'btn-success' if loop.index0==week_day else '' }}"
                                 style="width:130px; padding: 5px 5px;"
                                 data-target="table-{{ loop.index }}">
                             {{ day }}, {{ classes[day][0] }}
@@ -20,7 +20,7 @@
                     {% endfor %}
                 </div>
                 {% for day in days %}
-                    <div class="scroll-timetable target-table" id="table-{{ loop.index }}" style="{{ 'display:block' if loop.index == 1 else 'display:none' }}; height: 330px;">
+                    <div class="scroll-timetable target-table" id="table-{{ loop.index }}" style="{{ 'display:block' if loop.index0==week_day else 'display:none' }}; height: 330px;">
                         <table class="table school-timetable">
                             <thead class="text-success">
                                 <tr>
@@ -38,7 +38,7 @@
                                             {% if classes[day][1][school_class.school_name] %}
                                                 {% for lesson in classes[day][1][school_class.school_name] %}
                                                     <div class="class-box" id="class-box-{{ lesson.id }}"
-                                                         style="background-color: {{ lesson.room_color }}; top: {{ lesson.start_time/0.75 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.75 - 1 }}px; width: {{ 900 / (school_classes|length + 1) - 6 }}px;"
+                                                         style="background-color: {{ lesson.room_color }}; top: {{ lesson.start_time/0.75 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.75 - 1 }}px;"
                                                          onclick="showDropdown({{ lesson.id }}, event)">
                                                         <p style="color: #660000;">{{ lesson.time }}</p>
                                                         <p style="color: #003366;">{{ lesson.subject }}</p>
@@ -68,12 +68,12 @@
                 {% endfor %}
                 <div class="row">
                     <div class="col-md-6">
-                        <button class="btn" style="background-color: #ff9800;">
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week = week - 1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущая неделя
                             </a>
                         </button>
-                        <button class="btn" style="background-color: #ff9800;">
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week = week + 1) }}">
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
@@ -81,7 +81,7 @@
                     </div>
                     <div class="col-md-3"></div>
                     <div class="col-md-3">
-                        <button class="btn" style="background-color: #4bd1a0;">
+                        <button class="btn btn-sm" style="background-color: #4bd1a0;">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week=week) }}">Все расписание</a>
                         </button>
                     </div>

@@ -1013,7 +1013,19 @@ def add_new_lessons(form):
 # print_association_table(teacher_class_table)
 
 
-extra_school_subjects = Subject.query.filter(
-    Subject.subject_type.has(~SubjectType.name.in_(["school", "after_school"]))
+school_subjects = Subject.query.filter(
+    Subject.subject_type.has(SubjectType.name == "school")
 ).order_by(Subject.name).all()
-print(extra_school_subjects)
+
+school_subject = Subject.query.filter_by(id=32).first()
+
+school_subject.school_teachers = Person.query.filter(
+    Person.lessons.any(
+        and_(
+            Lesson.subject_id == school_subject.id,
+            Lesson.school_classes.any(SchoolClass.id == 2)
+        )
+    )
+).order_by(Person.last_name, Person.first_name).all()
+
+print(TODAY.weekday())

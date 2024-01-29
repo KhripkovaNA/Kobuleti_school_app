@@ -897,6 +897,7 @@ def create_lesson_dict(lesson):
         'teacher': lesson.teacher.first_name,
         'color': lesson.teacher.color,
         'lesson_type': lesson_type,
+        'lesson_type_name': lesson.lesson_type.name
     }
 
 
@@ -1170,7 +1171,7 @@ def copy_lessons(filtered_lessons, week_diff):
     return copied_lessons, conflicts
 
 
-def format_school_classes(school_class):
+def format_school_class_students(school_class):
     school_class.main_teacher = db.session.query(Person).join(teacher_class_table).filter(
         teacher_class_table.c.class_id == school_class.id,
         teacher_class_table.c.main_teacher).first()
@@ -1181,6 +1182,18 @@ def format_school_classes(school_class):
     school_class.class_students = class_students
 
 
-def format_subject_classes(subject):
-    classes = format_school_classes_names(subject.school_classes)
-    return classes
+def format_school_class_subjects(school_class):
+    school_class_subjects = Subject.query.filter(
+        Subject.school_classes.any(SchoolClass.id == school_class.id)
+    ).order_by(Subject.name).all()
+    for school_subject in school_class_subjects:
+        school_subject.school_teachers = Person.query.filter(
+            Person.lessons.any(
+                and_(
+                    Lesson.subject_id == school_subject.id,
+                    Lesson.school_classes.any(SchoolClass.id == 2)
+                )
+            )
+        ).order_by(Person.last_name, Person.first_name).all()
+    school_class.school_class_subjects = school_class_subjects
+

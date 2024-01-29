@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Изменить занятие</h4>
+            </div>
+            <div class="card-content">
+                <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
+                    <div class="row">
+                        <div class="form-group" style="margin-left:30px;margin-top:0">
+                            <div class="row">
+                                <label class="control-label col-md-3">Дата:</label>
+                                <div class="col-md-3">
+                                    <input type="text" name="lesson_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ lesson.date.strftime('%d.%m.%Y') }}">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <label class="control-label col-md-3">Начало:</label>
+                                <div class="col-md-3">
+                                    <input type="text" name="lesson_start_time_1" class="form-control timepicker-start">
+                                    <input type="hidden" class="timepicker-start-value" value="{{ lesson.start_time.strftime('%H : %M') }}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Конец:</label>
+                                <div class="col-md-3">
+                                    <input type="text" name="lesson_end_time_1" class="form-control timepicker-end">
+                                    <input type="hidden" class="timepicker-end-value" value="{{ lesson.end_time.strftime('%H : %M') }}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Предмет:</label>
+                                <div class="col-md-6">
+                                    <select name="lesson_subject" class="form-control select-search">
+                                        {% for subject in subjects %}
+                                            {% if subject.id==lesson.subject_id %}
+                                                <option value="{{ subject.id }}" selected>{{ subject.name }} ({{ subject.subject_type.description }})</option>
+                                            {% else %}
+                                                <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.subject_type.description }})</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Кабинет:</label>
+                                <div class="col-md-6">
+                                    <select name="lesson_room" class="form-control select-search">
+                                        {% for room in rooms %}
+                                            {% if room.id==lesson.room_id %}
+                                                <option value="{{ room.id }}" selected>{{ room.name }}</option>
+                                            {% else %}
+                                                <option value="{{ room.id }}">{{ room.name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Учитель:</label>
+                                <div class="col-md-6">
+                                    <select name="lesson_teacher" class="form-control teacher-select select-search">
+                                        {% for teacher in teachers %}
+                                            {% if teacher.id==lesson.teacher_id %}
+                                                <option value="{{ teacher.id }}" selected>{{ teacher.last_name }} {{ teacher.first_name }}</option>
+                                            {% else %}
+                                                <option value="{{ teacher.id }}">{{ teacher.last_name }} {{ teacher.first_name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Изменить занятие</button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

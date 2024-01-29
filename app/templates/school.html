@@ -1,0 +1,349 @@
+{% extends "school_base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                {% if render_type=="students" %}
+                    <h4 class="title">Школьные классы</h4>
+                {% elif render_type=="subjects" %}
+                    <h4 class="title">Школьные занятия</h4>
+                {% endif %}
+            </div>
+            <div class="card-content table-responsive">
+                <div class="row" style="margin-left:30px;">
+                    {% for school_class in school_classes %}
+                        <button type="button"
+                                class="btn btn-sm switch-button {{ 'btn-success' if loop.index == 1 else '' }}"
+                                style="width:80px; padding: 5px 5px;"
+                                data-target="table-{{ loop.index }}">
+                            {{ school_class.school_name }}
+                        </button>
+                    {% endfor %}
+                </div>
+                {% for school_class in school_classes %}
+                    <div class="target-table" id="table-{{ loop.index }}" style="{{ 'display:block' if loop.index == 1 else 'display:none' }};">
+                        {% if render_type=="students" %}
+                            <div class="school-students">
+                                <div class="row">
+                                    <label class="control-label col-md-3" style="margin-left:30px;">Классный руководитель:</label>
+                                    <div class="col-md-6">
+                                        <p class="form-control">
+                                            {% if school_class.main_teacher %}
+                                                {{ school_class.main_teacher.last_name }} {{ school_class.main_teacher.first_name }} {{ school_class.main_teacher.patronym if school_class.main_teacher.patronym }}
+                                            {% else %}
+                                                Нет
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                {% if school_class.class_students %}
+                                    <div class="scroll-table">
+                                        <table class="table table-hover">
+                                            <thead class="text-success">
+                                                <th>Фамилия, Имя</th>
+                                                <th>Дата рождения</th>
+                                                <th>Контакт</th>
+                                                <th>Комментарий</th>
+                                                <th>Действия</th>
+                                            </thead>
+                                        </table>
+                                        <div class="scroll-table-body">
+                                            <table class="table table-hover">
+                                                <tbody>
+                                                    {% for student in school_class.class_students %}
+                                                        <tr>
+                                                            <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                                            <td>
+                                                                <p>{{ student.birth_date if student.birth_date }}</p>
+                                                                <p>{{ student.age if student.age }}</p>
+                                                            </td>
+                                                            <td>
+                                                                {{ student.contact_name if student.contact_name }}
+                                                                {{ student.contact if student.contact }}
+                                                            </td>
+                                                            <td class="comment-cell"  style="cursor:pointer;">
+                                                                <div class="comment-container">
+                                                                    {{ student.comment if student.comment }}
+                                                                </div>
+                                                                <div class="form-group comment-form-container text-center" style="display:none;">
+                                                                    <form class="comment-form" method="post" data-person-id="{{ student.id }}">
+                                                                        <textarea class="form-control" name="comment" rows="3" cols="8"></textarea><br>
+                                                                        <button type="submit">Добавить</button>
+                                                                    </form>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="dropdown">
+                                                                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">
+                                                                        <i class="material-icons" style="color: white;">toc</i>
+                                                                        <span class="caret"></span>
+                                                                    </button>
+                                                                    <ul class="dropdown-menu">
+                                                                        <li>
+                                                                            <a href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                                                <i class="material-icons" style="color: purple;">info</i>Просмотр
+                                                                            </a>
+                                                                        </li>
+                                                                        <li>
+                                                                            <a href="" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
+                                                                                <i class="material-icons" style="color: purple;">date_range</i>Записать
+                                                                            </a>
+                                                                        </li>
+                                                                        <li>
+                                                                            <a href="" data-toggle="modal" data-target="#deposit-{{ student.id }}-modal">
+                                                                                <i class="material-icons" style="color: purple;">money</i>Пополнить
+                                                                            </a>
+                                                                        </li>
+                                                                        <li class="divider"></li>
+                                                                        <li>
+                                                                            <a href="">
+                                                                                <i class="material-icons" style="color: red;">delete_forever</i>Удалить
+                                                                            </a>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+
+                                                            <!-- *-*-*-*-*-*-*-*-*-* Student register for a lesson *-*-*-*-*-*-*-*-*-* -->
+
+                                                                <div class="modal fade" id="lesson-{{ student.id }}-modal" role="dialog">
+                                                                    <div class="modal-dialog">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Запись на занятие</h4>
+                                                                            </div>
+                                                                            <div class="modal-body">
+                                                                                <form class="login-form" action="{{ url_for('lesson_register', student_id=student.id) }}" method="post">
+                                                                                    <div class="row">
+                                                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
+                                                                                        <div class="col-md-7">
+                                                                                            <select name="selected_subject" class="form-control lesson-subjects-select">
+                                                                                                {% for subject in lesson_subjects %}
+                                                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                                                                                {% endfor %}
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="row">
+                                                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата и время занятия:</label>
+                                                                                        <div class="col-md-7">
+                                                                                            <select name="lesson" class="form-control lesson-select"></select>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="row">
+                                                                                        <div class="col-md-3 col-md-offset-3">
+                                                                                            <button type="submit" class="btn btn-login" data-background-color="main">
+                                                                                                Записать
+                                                                                            </button>
+                                                                                        </div>
+                                                                                        <div class="col-md-3">
+                                                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
+                                                                                                Отмена
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </form>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                            <!-- *-*-*-*-*-*-*-*-*-* Student balance replenishment *-*-*-*-*-*-*-*-*-* -->
+
+                                                                <div class="modal fade" id="deposit-{{ student.id }}-modal" role="dialog">
+                                                                    <div class="modal-dialog">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Пополнение депозита</h4>
+                                                                            </div>
+                                                                            <div class="modal-body">
+                                                                                <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                                                    <div class="row">
+                                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
+                                                                                        <div class="col-md-4">
+                                                                                            <input type="number" class="form-control" name="deposit" step="10" min="10" max="1000" required>
+                                                                                        </div>
+                                                                                        <div class="col-md-4">
+                                                                                            <button type="submit" class="btn btn-login float-right" data-background-color="main" style="margin:0;">
+                                                                                                Внести
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </form>
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Отмена</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p>Учеников пока нет</p>
+                                {% endif %}
+                                <button id="add-client-btn" class="btn btn-sm" style="background-color: #ff9800;">Добавить ученика</button>
+                                <div id="clientSelector" style="display: none;">
+                                    <div class="form-group">
+                                        <form class="login-form" action="{{ url_for('add_school_student') }}" method="post">
+                                            <select name="added_student_id">
+                                                {% for possible_student in possible_students %}
+                                                    <option value="{{ possible_student.id }}">{{ possible_student.last_name }} {{ possible_student.first_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input type="hidden" name="school_class_id" value="{{ school_class.id }}">
+                                            <br>
+                                            <button type="submit" name="add_client_btn" class="btn btn-xs" style="background-color: #ff9800;">Добавить</button>
+                                            <button type="button" id="cancel-add-client-btn" class="btn btn-danger btn-xs">Отменить</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif render_type=="subjects" %}
+                            <div class="school-subjects">
+                                {% if school_class.school_class_subjects %}
+			                        <div class="scroll-table">
+                                        <table class="table table-hover">
+                                            <thead class="text-success">
+					                            <th>Название</th>
+                                                <th>Учителя</th>
+                                                <th>Действие</th>
+                                            </thead>
+                                        </table>
+				                        <div class="scroll-table-body">
+                                            <table class="table table-hover">
+                                                <tbody>
+                                                    {% for subject in school_class.school_class_subjects %}
+                                                        <tr>
+                                                            <td>{{ subject.name }}</td>
+                                                            <td>
+                                                                {% for school_teacher in subject.school_teachers %}
+                                                                    <p>{{ school_teacher.last_name }} {{ school_teacher.first_name }} {{ school_teacher.patronym if school_teacher.patronym }}
+                                                                {% endfor %}
+                                                            </td>
+                                                            <td>
+                                                                <div class="dropdown">
+                                                                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">
+                                                                        <i class="material-icons" style="color: white;">toc</i>
+                                                                        <span class="caret"></span>
+                                                                    </button>
+                                                                    <ul class="dropdown-menu">
+                                                                        <li>
+                                                                            <a href=""> <!--{{ url_for('school_lesson', school_class_id=school_class.id, subject_id=subject.id, lesson_id=0) }}-->
+                                                                                <i class="material-icons" style="color: purple;">info</i>Журнал занятия
+                                                                            </a>
+                                                                        </li>
+                                                                        <li>
+                                                                            <a href="{{ url_for('edit_subject', subject_id=subject.id) }}">
+                                                                                <i class="material-icons" style="color: purple;">edit</i>Изменить
+                                                                            </a>
+                                                                        </li>
+                                                                        <li class="divider"></li>
+                                                                        <li>
+                                                                            <a href="">
+                                                                                <i class="material-icons" style="color: red;">delete_forever</i>Удалить
+                                                                            </a>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p>Занятий пока нет</p>
+                                {% endif %}
+                                <button class="btn btn-sm" style="background-color: #ff9800;">
+                                    <a href="" data-toggle="modal" data-target="#new-subject-{{ school_class.id }}-modal">
+                                        <i class="material-icons" style="color: purple;">date_range</i>Добавить занятие
+                                    </a>
+                                </button>
+                                <div class="modal fade" id="new-subject-{{ school_class.id }}-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">Новое занятие</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="login-form" action="{{ url_for('add_subject') }}" method="post">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Название:</label>
+                                                        <div class="col-md-7">
+                                                            <input type="text" name="subject_name" class="form-control">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Короткое название:</label>
+                                                        <div class="col-md-7">
+                                                            <input type="text" name="subject_short_name" class="form-control">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row school-class-row" style="display: none;">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Класс:</label>
+                                                        <div class="col-md-7">
+                                                            <select class="form-control select-search" name="school_classes" placeholder="Выбрать классы" multiple>
+                                                                {% for teacher in teachers %}
+                                                                    <option value="{{ teacher.id }}">{{ teacher.last_name}} {{ teacher.first_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Учителя:</label>
+                                                        <div class="col-md-7">
+                                                            <select class="form-control select-search" name="teachers" multiple placeholder="Добавить учителя">
+                                                                {% for option_school_class in school_classes %}
+                                                                    {% if option_school_class.id==school_class.id %}
+                                                                        <option value="{{ option_school_class.id }}" selected>{{ option_school_class.school_name }}</option>
+                                                                    {% else %}
+                                                                        <option value="{{ option_school_class.id }}">{{ option_school_class.school_name }}</option>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-3 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-login" data-background-color="main">
+                                                                Добавить
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% if render_type=="students" %}
+    <script type="text/javascript">
+        var lessonSubjectsData = {{ lesson_subjects | tojson | safe }};
+    </script>
+{% endif %}
+{% endblock %}
