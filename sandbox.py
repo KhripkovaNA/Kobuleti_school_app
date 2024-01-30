@@ -2,7 +2,8 @@ from app import app, db
 from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, \
     parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
     student_lesson_registered_table, student_lesson_attended_table, student_subject_table, \
-    teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table
+    teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
+    SchoolLessonJournal
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
@@ -1036,3 +1037,59 @@ def add_new_lessons(form):
 #
 # print(school_teachers_1)
 # print(school_teachers_2)
+
+math_lesson = Lesson.query.filter_by(id=1677).first()
+# # db.session.rollback()
+# # sc_cl = SchoolClass.query.filter_by(id=1).first()
+# # reg_students = sc_cl.school_students.all()
+# # att_students = sc_cl.school_students.all()
+# # att_students.remove(Person.query.filter_by(id=1).first())
+# # math_lesson.students_registered
+# # math_lesson.students_attended
+#
+# journal_record1 = SchoolLessonJournal(
+#     lesson_id=math_lesson.id,
+#     student_id=math_lesson.students_attended.all()[0].id,
+#     grade=5
+# )
+# journal_record2 = SchoolLessonJournal(
+#     lesson_id=math_lesson.id,
+#     student_id=math_lesson.students_attended.all()[5].id,
+#     grade=5
+# )
+# journal_record3 = SchoolLessonJournal(
+#     lesson_id=math_lesson.id,
+#     student_id=math_lesson.students_attended.all()[5].id,
+#     lesson_comment="Баловался на уроке"
+# )
+# db.session.add(journal_record1)
+# db.session.add(journal_record2)
+# db.session.add(journal_record3)
+# db.session.commit()
+lesson = Lesson.query.filter_by(id=1677).first()
+
+query = Lesson.query.filter(Lesson.subject_id == lesson.subject_id)
+for school_class in lesson.school_classes:
+    query = query.filter(Lesson.school_classes.any(SchoolClass.id == school_class.id))
+previous_lesson = query.filter(
+    or_(
+        and_(
+            Lesson.date == lesson.date,
+            Lesson.start_time < lesson.start_time
+        ),
+        Lesson.date < lesson.date
+    )
+).order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
+next_lesson = query.filter(
+    or_(
+        and_(
+            Lesson.date == lesson.date,
+            Lesson.start_time > lesson.start_time
+        ),
+        Lesson.date > lesson.date
+    )
+).order_by(Lesson.date, Lesson.start_time).first()
+
+print(show_lesson(lesson))
+print(show_lesson(previous_lesson))
+print(show_lesson(next_lesson))

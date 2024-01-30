@@ -52,8 +52,8 @@
                                                         <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                         <div class="dropdown open dropdown-content" id="dropdown-{{ lesson.id }}">
                                                             <ul class="dropdown-menu">
-                                                                <li><a href="{{ url_for('lesson', subject_id=0, lesson_id=lesson.id) }}">Просмотр</a></li>
                                                                 {% if lesson.lesson_type_name not in ["school", "after_school"] %}
+                                                                    <li><a href="{{ url_for('lesson', lesson_id=lesson.id) }}">Занятие</a></li>
                                                                     <li><a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">Изменить</a></li>
                                                                 {% elif lesson.lesson_type_name=="school" %}
                                                                     <li><a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">Школьное расписание</a></li>

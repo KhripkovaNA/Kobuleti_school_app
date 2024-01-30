@@ -44,31 +44,6 @@ $(document).ready(function(){
         $('#' + targetTable).show();
     });
 
-//    // Function to update or add a query string parameter in the URL
-//    function updateQueryStringParameter(uri, key, value) {
-//        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
-//        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
-//        if (uri.match(re)) {
-//            return uri.replace(re, '$1' + key + "=" + value + '$2');
-//        } else {
-//            return uri + separator + key + "=" + value;
-//        }
-//    }
-//
-//    // Switch between sections in school timetable
-//    $('.switch-day-button').on('click', function () {
-//        $('.switch-day-button').removeClass('btn-success');
-//        $(this).addClass('btn-success');
-//        $('.target-table').hide();
-//        var targetTable = $(this).data('target');
-//        $('#' + targetTable).show();
-//        var currentUrl = window.location.href;
-//        var lastDigit = currentUrl.match(/\d+$/);
-//        var digit = Number(targetTable.replace("table-", "")) - 1
-//        var updatedUrl = updateQueryStringParameter(currentUrl, lastDigit[0], digit);
-//        window.location.href = updatedUrl;
-//    });
-
     // Switch between sections and forms
     function toggleSectionAndForm() {
         $(document).on('click', '.section-form-btn', function() {

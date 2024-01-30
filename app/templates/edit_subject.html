@@ -7,124 +7,126 @@
             <div class="card-header" data-background-color="main">
                 <h4 class="title">{{ subject.name }}</h4>
             </div>
-            <div class="card-content col-md-offset-1">
-                <div class="form-group">
-                    <form class="login-form" action="{{ url_for('edit_subject', subject_id=subject.id) }}" method="post">
-                        <div class="row">
-                            <label class="control-label col-md-3">Название:</label>
-                            <div class="col-md-5">
-                                <input type="text" name="subject_name" class="form-control" value="{{ subject.name }}">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Короткое название:</label>
-                            <div class="col-md-5">
-                                <input type="text" name="subject_short_name" class="form-control" value="{{ subject.short_name }}">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Тип занятия:</label>
-                            <div class="col-md-5">
-                                <p class="form-control">{{ subject.subject_type.description }}</p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col-md-3">Описание:</label>
-                            <div class="col-md-5">
-                                <textarea name="description" class="form-control" style="margin-bottom:10px;">{{ subject.description }}</textarea>
-                            </div>
-                        </div>
-                        <div class="row price_row">
-                            <label class="control-label col-md-3">Цена разового занятия:</label>
-                            <div class="col-md-3 float-field-row">
-                                <input type="number" class="form-control float-field" name="subject_price" step="1" min="0" value="{{ subject.one_time_price|float if subject.one_time_price else 20|float }}">
-                            </div>
-                            <div class="col-md-2 checkbox-option">
-                                <label class="contact-radio-label">Нет
-                                    {% if subject.one_time_price %}
-                                        <input type="checkbox" name="no_subject_price">
-                                    {% else %}
-                                        <input type="checkbox" checked name="no_subject_price">
-                                    {% endif %}
-                                    <span class="custom-checkbox"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="row price_row">
-                            <label class="control-label col-md-3">Специальная цена (Продленка):</label>
-                            <div class="col-md-3 float-field-row">
-                                <input type="number" class="form-control float-field" name="subject_school_price" step="1" min="0" value="{{ subject.school_price|float if subject.school_price else subject.one_time_price|float if subject.one_time_price else 20|float }}">
-                            </div>
-                            <div class="col-md-2 checkbox-option">
-                                <label class="contact-radio-label">Нет
-                                    {% if subject.school_price %}
-                                        <input type="checkbox" name="no_subject_school_price">
-                                    {% else %}
-                                        <input type="checkbox" checked name="no_subject_school_price">
-                                    {% endif %}
-                                    <span class="custom-checkbox"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div id="subscription-types-container">
-                            <div class="row" id="no-subscription-types" style="{{ 'display:none;' if subject.types_of_subscription else '' }}">
-                                <label class="control-label col-md-3">Абонемент:</label>
-                                <div class="col-md-4">
-                                    <p class="form-control">Нет</p>
+            <div class="card-content">
+                <form class="login-form" action="{{ url_for('edit_subject', subject_id=subject.id) }}" method="post">
+                    <div class="row">
+                        <div class="form-group" style="margin-left:30px;margin-top:0">
+                            <div class="row">
+                                <label class="control-label col-md-3">Название:</label>
+                                <div class="col-md-5">
+                                    <input type="text" name="subject_name" class="form-control" value="{{ subject.name }}">
                                 </div>
                             </div>
-                            <div id="subscription-types" style="{{ 'display:none;' if not subject.types_of_subscription else '' }}">
-                                {% for subscription_type in subject.types_of_subscription %}
-                                    <div class="row subscription-type">
-                                        <label class="control-label col-md-3">{{ "Абонемент:" if loop.first }}</label>
-                                        <div class="col-md-4">
-                                            <p class="form-control">{{ subscription_type[1] }}</p>
+                            <div class="row">
+                                <label class="control-label col-md-3">Короткое название:</label>
+                                <div class="col-md-5">
+                                    <input type="text" name="subject_short_name" class="form-control" value="{{ subject.short_name }}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Тип занятия:</label>
+                                <div class="col-md-5">
+                                    <p class="form-control">{{ subject.subject_type.description }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Описание:</label>
+                                <div class="col-md-5">
+                                    <textarea name="description" class="form-control" style="margin-bottom:10px;">{{ subject.description }}</textarea>
+                                </div>
+                            </div>
+                            <div class="row price_row">
+                                <label class="control-label col-md-3">Цена разового занятия:</label>
+                                <div class="col-md-3 float-field-row">
+                                    <input type="number" class="form-control float-field" name="subject_price" step="1" min="0" value="{{ subject.one_time_price|float if subject.one_time_price else 20|float }}">
+                                </div>
+                                <div class="col-md-2 checkbox-option">
+                                    <label class="contact-radio-label">Нет
+                                        {% if subject.one_time_price %}
+                                            <input type="checkbox" name="no_subject_price">
+                                        {% else %}
+                                            <input type="checkbox" checked name="no_subject_price">
+                                        {% endif %}
+                                        <span class="custom-checkbox"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row price_row">
+                                <label class="control-label col-md-3">Специальная цена (Продленка):</label>
+                                <div class="col-md-3 float-field-row">
+                                    <input type="number" class="form-control float-field" name="subject_school_price" step="1" min="0" value="{{ subject.school_price|float if subject.school_price else subject.one_time_price|float if subject.one_time_price else 20|float }}">
+                                </div>
+                                <div class="col-md-2 checkbox-option">
+                                    <label class="contact-radio-label">Нет
+                                        {% if subject.school_price %}
+                                            <input type="checkbox" name="no_subject_school_price">
+                                        {% else %}
+                                            <input type="checkbox" checked name="no_subject_school_price">
+                                        {% endif %}
+                                        <span class="custom-checkbox"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="subscription-types-container">
+                                <div class="row" id="no-subscription-types" style="{{ 'display:none;' if subject.types_of_subscription else '' }}">
+                                    <label class="control-label col-md-3">Абонемент:</label>
+                                    <div class="col-md-4">
+                                        <p class="form-control">Нет</p>
+                                    </div>
+                                </div>
+                                <div id="subscription-types" style="{{ 'display:none;' if not subject.types_of_subscription else '' }}">
+                                    {% for subscription_type in subject.types_of_subscription %}
+                                        <div class="row subscription-type">
+                                            <label class="control-label col-md-3">{{ "Абонемент:" if loop.first }}</label>
+                                            <div class="col-md-4">
+                                                <p class="form-control">{{ subscription_type[1] }}</p>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button type="button" class="btn btn-danger del-btn-sm delete-subscription">Удалить</button>
+                                            </div>
+                                            <input type="hidden" name="subscription_types" class="subscription-type-value" value="{{ subscription_type[0] }}">
                                         </div>
-                                        <div class="col-md-1">
-                                            <button type="button" class="btn btn-danger del-btn-sm delete-subscription">Удалить</button>
+                                    {% endfor %}
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-5 col-md-offset-3">
+                                        <input type="hidden" name="subscription-type-count" id="subscription-type-count" value="{{ subject.types_of_subscription|length }}">
+                                        <select class="form-control" id="add-subscription-type">
+                                            <option value="" disabled selected>Добавить абонемент</option>
+                                            {% for type_of_subscription in subscription_types %}
+                                                <option value="{{ type_of_subscription[0] }}">{{ type_of_subscription[1] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if subject.teachers %}
+                                {% for teacher in subject.teachers %}
+                                    <div class="row">
+                                        <label class="control-label col-md-3">{{ "Учителя:" if loop.first }}</label>
+                                        <div class="col-md-5">
+                                            <p class="form-control">
+                                                <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=teacher.id) }}">
+                                                    {{ teacher.last_name }} {{ teacher.first_name }} {{ teacher.patronym if teacher.patronym }}
+                                                </a>
+                                            </p>
                                         </div>
-                                        <input type="hidden" name="subscription_types" class="subscription-type-value" value="{{ subscription_type[0] }}">
                                     </div>
                                 {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
                             </div>
-                            <div class="row">
-                                <div class="col-md-5 col-md-offset-3">
-                                    <input type="hidden" name="subscription-type-count" id="subscription-type-count" value="{{ subject.types_of_subscription|length }}">
-                                    <select class="form-control" id="add-subscription-type">
-                                        <option value="" disabled selected>Добавить абонемент</option>
-                                        {% for type_of_subscription in subscription_types %}
-                                            <option value="{{ type_of_subscription[0] }}">{{ type_of_subscription[1] }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                            <div class="col-md-3">
+                                <a href="{{ url_for('subjects') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
                             </div>
                         </div>
-                        {% if subject.teachers %}
-                            {% for teacher in subject.teachers %}
-                                <div class="row">
-                                    <label class="control-label col-md-3">{{ "Учителя:" if loop.first }}</label>
-                                    <div class="col-md-5">
-                                        <p class="form-control">
-                                            <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=teacher.id) }}">
-                                                {{ teacher.last_name }} {{ teacher.first_name }} {{ teacher.patronym if teacher.patronym }}
-                                            </a>
-                                        </p>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                        <div class="footer">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
-                                </div>
-                                <div class="col-md-3">
-                                    <a href="{{ url_for('subjects') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

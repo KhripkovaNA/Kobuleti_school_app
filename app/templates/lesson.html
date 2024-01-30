@@ -14,7 +14,7 @@
                         {% if subject_lesson %}
                             <h4 class="title" style="margin: 0 40px;">Дата: {{ subject_lesson.date.strftime('%d.%m') }}, время: {{ subject_lesson.start_time.strftime('%H:%M') }}, учитель: {{ subject_lesson.teacher.last_name }} {{ subject_lesson.teacher.first_name }}</h4>
                             <div class="form-group" style="margin: 0 40px;">
-                                <form action="{{ url_for('lesson', subject_id=lesson_subject.id, lesson_id=subject_lesson.id) }}" method="post">
+                                <form action="{{ url_for('lesson', lesson_id=subject_lesson.id) }}" method="post">
                                     <div class="col-md-12">
                                         <table class="table table-hover">
                                             <thead class="text-success">
@@ -153,15 +153,15 @@
                         <div class="row">
                             <div class="col-md-6">
                                 {% if subject_lesson.prev %}
-                                    <button class="btn" style="background-color: #ff9800;">
-                                        <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', subject_id=lesson_subject.id, lesson_id=subject_lesson.prev) }}">
+                                    <button class="btn btn-sm" style="background-color: #ff9800;">
+                                        <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', lesson_id=subject_lesson.prev) }}">
                                             <i class="material-icons">navigate_before</i>Предыдущee занятие
                                         </a>
                                     </button>
                                 {% endif %}
                                 {% if subject_lesson.next %}
-                                    <button class="btn" style="background-color: #ff9800;">
-                                        <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', subject_id=lesson_subject.id, lesson_id=subject_lesson.next) }}">
+                                    <button class="btn btn-sm" style="background-color: #ff9800;">
+                                        <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', lesson_id=subject_lesson.next) }}">
                                             Следующее занятие<i class="material-icons">navigate_next</i>
                                         </a>
                                     </button>
@@ -175,7 +175,7 @@
                                         <span class="caret"></span>
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><a href="{{ url_for('lesson', subject_id=12, lesson_id=0) }}">Подготовка</a></li>
+                                        <li><a href="{{ url_for('lesson', lesson_id='0-12') }}">Подготовка</a></li>
                                     </ul>
                                 </div>
                             </div>

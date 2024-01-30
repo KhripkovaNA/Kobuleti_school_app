@@ -244,3 +244,15 @@ class Employee(db.Model):
     role = db.Column(db.String(50))
     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     person = db.relationship('Person', backref='roles')
+
+
+class SchoolLessonJournal(db.Model):
+    __tablename__ = 'school_lessons'
+
+    id = db.Column(db.Integer, primary_key=True)
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
+    student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    grade = db.Column(db.Integer)
+    lesson_comment = db.Column(db.String(120))
+    student = db.relationship('Person', backref='school_lessons')
+

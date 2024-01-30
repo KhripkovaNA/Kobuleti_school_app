@@ -239,7 +239,7 @@
                                                                     </button>
                                                                     <ul class="dropdown-menu">
                                                                         <li>
-                                                                            <a href=""> <!--{{ url_for('school_lesson', school_class_id=school_class.id, subject_id=subject.id, lesson_id=0) }}-->
+                                                                            <a href="{{ url_for('school_lesson', lesson_id=school_class.id|string+'-'+subject.id|string) }}">
                                                                                 <i class="material-icons" style="color: purple;">info</i>Журнал занятия
                                                                             </a>
                                                                         </li>
