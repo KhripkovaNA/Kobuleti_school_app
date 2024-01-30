@@ -2361,10 +2361,6 @@ fieldset[disabled] .form-group .form-control {
     resize: none;
 }
 
-.form-group p {
-    padding: 5px 12px;
-}
-
 .form-group textarea~.form-control-highlight {
     margin-top: -11px;
 }

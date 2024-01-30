@@ -267,8 +267,8 @@
                                     <p>Занятий пока нет</p>
                                 {% endif %}
                                 <button class="btn btn-sm" style="background-color: #ff9800;">
-                                    <a href="" data-toggle="modal" data-target="#new-subject-{{ school_class.id }}-modal">
-                                        <i class="material-icons" style="color: purple;">date_range</i>Добавить занятие
+                                    <a href="" data-toggle="modal" data-target="#new-subject-{{ school_class.id }}-modal" style="cursor:pointer; color: #FFFFFF;" >
+                                        <i class="material-icons">add_box</i> Добавить занятие
                                     </a>
                                 </button>
                                 <div class="modal fade" id="new-subject-{{ school_class.id }}-modal" role="dialog">
@@ -276,7 +276,7 @@
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                <h4 class="modal-title">Новое занятие</h4>
+                                                <h4 class="modal-title">Новое школьное занятие</h4>
                                             </div>
                                             <div class="modal-body">
                                                 <form class="login-form" action="{{ url_for('add_subject') }}" method="post">
@@ -292,10 +292,10 @@
                                                             <input type="text" name="subject_short_name" class="form-control">
                                                         </div>
                                                     </div>
-                                                    <div class="row school-class-row" style="display: none;">
-                                                        <label class="control-label col-md-4" style="padding-left:44px;">Класс:</label>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Учителя:</label>
                                                         <div class="col-md-7">
-                                                            <select class="form-control select-search" name="school_classes" placeholder="Выбрать классы" multiple>
+                                                            <select class="form-control select-search" name="teachers" placeholder="Выбрать учителей" multiple>
                                                                 {% for teacher in teachers %}
                                                                     <option value="{{ teacher.id }}">{{ teacher.last_name}} {{ teacher.first_name }}</option>
                                                                 {% endfor %}
@@ -303,9 +303,9 @@
                                                         </div>
                                                     </div>
                                                     <div class="row">
-                                                        <label class="control-label col-md-4" style="padding-left:44px;">Учителя:</label>
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Классы:</label>
                                                         <div class="col-md-7">
-                                                            <select class="form-control select-search" name="teachers" multiple placeholder="Добавить учителя">
+                                                            <select class="form-control select-search" name="school_classes" multiple placeholder="Выбрать классы">
                                                                 {% for option_school_class in school_classes %}
                                                                     {% if option_school_class.id==school_class.id %}
                                                                         <option value="{{ option_school_class.id }}" selected>{{ option_school_class.school_name }}</option>

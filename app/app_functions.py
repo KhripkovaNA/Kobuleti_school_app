@@ -1139,7 +1139,7 @@ def filter_lessons(form):
     return filtered_lessons, week_diff, next_week
 
 
-def copy_lessons(filtered_lessons, week_diff):
+def copy_filtered_lessons(filtered_lessons, week_diff):
     copied_lessons = []
     conflicts = 0
     for lesson in filtered_lessons:
@@ -1193,7 +1193,8 @@ def format_school_class_subjects(school_class):
                     Lesson.subject_id == school_subject.id,
                     Lesson.school_classes.any(SchoolClass.id == 2)
                 )
-            )
+            ),
+            Person.subjects_taught.any(Subject.id == school_subject.id)
         ).order_by(Person.last_name, Person.first_name).all()
     school_class.school_class_subjects = school_class_subjects
 

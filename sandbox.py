@@ -1013,19 +1013,26 @@ def add_new_lessons(form):
 # print_association_table(teacher_class_table)
 
 
-school_subjects = Subject.query.filter(
-    Subject.subject_type.has(SubjectType.name == "school")
-).order_by(Subject.name).all()
-
-school_subject = Subject.query.filter_by(id=32).first()
-
-school_subject.school_teachers = Person.query.filter(
-    Person.lessons.any(
-        and_(
-            Lesson.subject_id == school_subject.id,
-            Lesson.school_classes.any(SchoolClass.id == 2)
-        )
-    )
-).order_by(Person.last_name, Person.first_name).all()
-
-print(TODAY.weekday())
+# school_subjects = Subject.query.filter(
+#     Subject.subject_type.has(SubjectType.name == "school")
+# ).order_by(Subject.name).all()
+#
+# school_subject = Subject.query.filter_by(id=32).first()
+#
+# school_teachers_1 = Person.query.filter(
+#     Person.teaching_classes.any(SchoolClass.id == 2),
+#     Person.subjects_taught.any(Subject.id == school_subject.id)
+# ).order_by(Person.last_name, Person.first_name).all()
+#
+# school_teachers_2 = Person.query.filter(
+#     Person.lessons.any(
+#         and_(
+#             Lesson.subject_id == school_subject.id,
+#             Lesson.school_classes.any(SchoolClass.id == 2)
+#         )
+#     ),
+#     Person.subjects_taught.any(Subject.id == school_subject.id)
+# ).order_by(Person.last_name, Person.first_name).all()
+#
+# print(school_teachers_1)
+# print(school_teachers_2)

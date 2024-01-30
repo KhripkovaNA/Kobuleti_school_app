@@ -12,15 +12,16 @@
                 <div class="row" style="margin-left:30px;">
                     {% for day in days %}
                         <button type="button"
-                                class="btn btn-sm switch-button {{ 'btn-success' if loop.index0==week_day else '' }}"
-                                style="width:130px; padding: 5px 5px;"
-                                data-target="table-{{ loop.index }}">
-                            {{ day }}, {{ classes[day][0] }}
+                                class="btn btn-sm {{ 'btn-success' if loop.index==week_day else '' }}"
+                                style="width:130px; padding: 5px 5px;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week=week, day=loop.index) }}">
+                                {{ day }}, {{ classes[day][0] }}
+                            </a>
                         </button>
                     {% endfor %}
                 </div>
                 {% for day in days %}
-                    <div class="scroll-timetable target-table" id="table-{{ loop.index }}" style="{{ 'display:block' if loop.index0==week_day else 'display:none' }}; height: 330px;">
+                    <div class="scroll-timetable" style="{{ 'display:block' if loop.index==week_day else 'display:none' }}; height: 65vh;">
                         <table class="table school-timetable">
                             <thead class="text-success">
                                 <tr>
@@ -69,18 +70,17 @@
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn btn-sm" style="background-color: #ff9800;">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week = week - 1) }}">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week=week-1, day=1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущая неделя
                             </a>
                         </button>
                         <button class="btn btn-sm" style="background-color: #ff9800;">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week = week + 1) }}">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week=week+1, day=1) }}">
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
                         </button>
                     </div>
-                    <div class="col-md-3"></div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-md-offset-3">
                         <button class="btn btn-sm" style="background-color: #4bd1a0;">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week=week) }}">Все расписание</a>
                         </button>

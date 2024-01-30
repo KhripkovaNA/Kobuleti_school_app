@@ -2,7 +2,7 @@ $(document).ready(function(){
 
     // Adjust the width of class boxes based on the width of table cells
     function adjustClassBoxWidth() {
-        $('.table tbody tr').find('td').each(function() {
+        $('.card-content').find('.table tbody tr td').each(function() {
             var colWidth = $(this).width();
             var classBox = $(this).find('.class-box');
             classBox.width(colWidth - 10);
@@ -35,15 +35,39 @@ $(document).ready(function(){
         suppressScrollX: true
     });
 
-    // Switch between sections
+    // Switch between sections in school students and subjects
     $('.switch-button').on('click', function() {
         $('.switch-button').removeClass('btn-success');
         $(this).addClass('btn-success');
-        $('.target-table, .target-row').hide();
+        $('.target-table').hide();
         var targetTable = $(this).data('target');
         $('#' + targetTable).show();
-        $('#' + targetTable.replace('table', 'row')).show();
     });
+
+//    // Function to update or add a query string parameter in the URL
+//    function updateQueryStringParameter(uri, key, value) {
+//        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+//        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+//        if (uri.match(re)) {
+//            return uri.replace(re, '$1' + key + "=" + value + '$2');
+//        } else {
+//            return uri + separator + key + "=" + value;
+//        }
+//    }
+//
+//    // Switch between sections in school timetable
+//    $('.switch-day-button').on('click', function () {
+//        $('.switch-day-button').removeClass('btn-success');
+//        $(this).addClass('btn-success');
+//        $('.target-table').hide();
+//        var targetTable = $(this).data('target');
+//        $('#' + targetTable).show();
+//        var currentUrl = window.location.href;
+//        var lastDigit = currentUrl.match(/\d+$/);
+//        var digit = Number(targetTable.replace("table-", "")) - 1
+//        var updatedUrl = updateQueryStringParameter(currentUrl, lastDigit[0], digit);
+//        window.location.href = updatedUrl;
+//    });
 
     // Switch between sections and forms
     function toggleSectionAndForm() {
@@ -545,25 +569,42 @@ $(document).ready(function(){
     }
 
     // Show week range for week datepicker
-    $(".datepicker-week").datepicker({
-        onSelect: function (dateText, inst) {
-            var selectedDate = $(this).datepicker('getDate');
-            var dayOfWeek = selectedDate.getDay();
+//    $(".datepicker-week").datepicker({
+//        dateFormat: "dd.mm.yy",
+//        changeYear: true,
+//        onSelect: function (dateText, inst) {
+//            var selectedDate = $(this).datepicker('getDate');
+//            var dayOfWeek = selectedDate.getDay();
+//
+//            var startOfWeek = new Date(selectedDate);
+//            startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+//
+//            var endOfWeek = new Date(startOfWeek);
+//            endOfWeek.setDate(startOfWeek.getDate() + 6);
+//
+//            var formattedStartDate = formatDate(startOfWeek);
+//            var formattedEndDate = formatDate(endOfWeek);
+//
+//            var pContainer = $(this).closest(".selectors-group").find(".week-range")
+//            pContainer.html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
+//        }
+//    });
 
-            var startOfWeek = new Date(selectedDate);
-            startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    $(".selectors-group").on("change", ".datepicker", function() {
+        var selectedDate = $(this).datepicker('getDate');
+        var dayOfWeek = selectedDate.getDay();
 
-            var endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
+        var startOfWeek = new Date(selectedDate);
+        startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
 
-            var formattedStartDate = formatDate(startOfWeek);
-            var formattedEndDate = formatDate(endOfWeek);
+        var endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-            var pContainer = $(this).closest(".selectors-group").find(".week-range")
-            pContainer.html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
+        var formattedStartDate = formatDate(startOfWeek);
+        var formattedEndDate = formatDate(endOfWeek);
 
-            $(this).val(dateText);
-        }
+        var pContainer = $(this).closest(".selectors-group").find(".week-range")
+        pContainer.html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
     });
 
     // Function to initialize search in select options
@@ -758,12 +799,12 @@ $(document).ready(function(){
         $(this).val(parseFloat($(this).val()).toFixed(1));
     });
 
-    $(".price_row").on("change", "input[type='checkbox']", function() {
-        var priceRow = $(this).closest(".price_row")
+    $(".price_row, .subscription-row").on("change", "input[type='checkbox']", function() {
+        var parentRow = $(this).closest(".price_row, .subscription-row")
         if (this.checked) {
-            priceRow.find(".float-field-row").hide();
+            parentRow.find(".optional-field").hide();
         } else {
-            priceRow.find(".float-field-row").show();
+            parentRow.find(".optional-field").show();
         }
     });
 

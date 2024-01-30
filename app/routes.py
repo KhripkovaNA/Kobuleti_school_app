@@ -5,8 +5,9 @@ from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Roo
 from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, format_subscription_types, \
-    add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, filter_lessons, copy_lessons, \
-    add_new_lessons, subjects_data, show_lesson, handle_lesson, format_school_class_students, format_school_class_subjects
+    add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, filter_lessons, \
+    copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, format_school_class_students, \
+    format_school_class_subjects
 from app import app, db
 
 
@@ -240,7 +241,12 @@ def subjects():
     for subject in all_subjects:
         subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
 
-    return render_template('subjects.html', subjects=all_subjects, subjects_type="extra_school")
+    subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school'])).all()
+    subscription_types = format_subscription_types(SubscriptionType.query.all())
+    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+
+    return render_template('subjects.html', subjects=all_subjects, subjects_type="extra_school",
+                           subject_types=subject_types, subscription_types=subscription_types, teachers=all_teachers)
 
 
 @app.route('/add-subject', methods=['GET', 'POST'])
@@ -318,7 +324,7 @@ def copy_lessons():
         try:
             filtered_lessons, week_diff, next_week = filter_lessons(request.form)
             if filtered_lessons:
-                new_lessons, conflicts = copy_lessons(filtered_lessons, week_diff)
+                new_lessons, conflicts = copy_filtered_lessons(filtered_lessons, week_diff)
 
                 db.session.add_all(new_lessons)
                 db.session.commit()
@@ -383,7 +389,7 @@ def edit_lesson(lesson_id):
     edited_lesson = Lesson.query.filter_by(id=lesson_id).first()
     # if edited_lesson:
     if edited_lesson.lesson_type.name in ["school", "after_school"]:
-        return redirect(url_for('school_timetable', week=0))
+        return redirect(url_for('school_timetable', week=0, day=0))
 
     else:
         rooms = Room.query.all()
@@ -488,15 +494,18 @@ def school_subjects():
     return render_template('school.html', school_classes=school_classes, teachers=all_teachers, render_type="subjects")
 
 
-@app.route('/school-timetable/<string:week>')
+@app.route('/school-timetable/<string:week>/<string:day>')
 @login_required
-def school_timetable(week):
+def school_timetable(week, day):
+    week_day = int(day)
+    if week_day == 0:
+        week_day = TODAY.weekday() + 1
     week = int(week)
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
     week_school_lessons = week_school_lessons_dict(week, school_classes, DAYS_OF_WEEK)
 
     return render_template('school_timetable.html', days=DAYS_OF_WEEK, school_classes=school_classes,
-                           classes=week_school_lessons, week=week, week_day=3)
+                           classes=week_school_lessons, week=week, week_day=week_day)
 
 
 @app.route('/school-lesson/<string:lesson_id>')

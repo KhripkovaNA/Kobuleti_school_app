@@ -9,7 +9,7 @@
                 <h4 class="title">Новое расписание</h4>
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
+                <form class="login-form" action="{{ url_for('copy_lessons') }}" method="post">
                     <div class="form-group">
                         <div class="selectors-group">
                             <div class="row">
@@ -22,7 +22,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4 datepicker-container secondary-selector-div" style="display: none;">
-                                    <input type="text" name="week_specific" class="form-control datepicker-week" placeholder="Неделя, с которой перенести...">
+                                    <input type="text" name="week_specific" class="form-control datepicker" placeholder="Неделя, с которой перенести...">
                                 </div>
                             </div>
                             <div class="row secondary-selector-div" style="display: none;">
@@ -43,7 +43,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4 datepicker-container secondary-selector-div" style="display: none;">
-                                    <input type="text" name="next_week_specific" class="form-control datepicker-week" placeholder="Неделя, на которую перенести...">
+                                    <input type="text" name="next_week_specific" class="form-control datepicker" placeholder="Неделя, на которую перенести...">
                                 </div>
                             </div>
                             <div class="row secondary-selector-div" style="display: none;">
