@@ -47,6 +47,18 @@
                                     </div>
                                 {% endfor %}
                             {% endif %}
+                            {% if student.roles %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Сотрудник:</label>
+                                    <div class="col-md-5">
+                                        <p class="form-control">
+                                            <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=student.id) }}">
+                                                {{ student.employee_roles }}
+                                            </a>
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="footer">
@@ -118,20 +130,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                {% if student.children_info %}
-                                    {% for child in student.children_info %}
-                                        <div class="row">
-                                            <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
-                                            <div class="col-md-5">
-                                                <p class="form-control">
-                                                    <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
-                                                        {{ child[1] }}
-                                                    </a>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                {% endif %}
                             </div>
                         </div>
                         <div class="footer">

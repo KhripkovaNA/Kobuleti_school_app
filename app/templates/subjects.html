@@ -10,7 +10,7 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">{{ 'Школьные занятия' if subjects_type == 'school' else 'Занятия' }}</h4>
+                <h4 class="title">Занятия</h4>
             </div>
             <div class="card-content table-responsive">
                 {% if subjects %}
@@ -18,13 +18,9 @@
                         <input type="text" id="search" placeholder="Поиск в таблице">
                         <table class="table table-hover">
                             <thead class="text-success">
-                                <th>Название</th>
-                                {% if subjects_type != 'school' %}
-                                    <th>Абонементы</th>
-                                    <th>Цена разового занятия</th>
-                                {% else %}
-                                    <th>Классы</th>
-                                {% endif %}
+                                <th>Предмет</th>
+                                <th>Абонементы</th>
+                                <th>Цена разового занятия</th>
                                 <th>Учителя</th>
                                 <th>Действие</th>
                             </thead>
@@ -36,31 +32,23 @@
                                         <tr>
                                             <td>
                                                 <p>{{ subject.name }}</p>
-                                                {% if subjects_type != 'school' %}
-                                                    <p>({{ subject.subject_type.description }})</p>
+                                                <p>({{ subject.subject_type.description }})</p>
+                                            </td>
+                                            <td>
+                                                {% if subject.types_of_subscription %}
+                                                    {% for subscription_type in subject.types_of_subscription %}
+                                                        <p>{{ subscription_type[1] }}</p>
+                                                    {% endfor %}
                                                 {% endif %}
                                             </td>
-                                            {% if subjects_type != 'school' %}
-                                                <td>
-                                                    {% if subject.types_of_subscription %}
-                                                        {% for subscription_type in subject.types_of_subscription %}
-                                                            <p>{{ subscription_type[1] }}</p>
-                                                        {% endfor %}
-                                                    {% endif %}
-                                                </td>
-                                                <td style="padding-left:40px;">
-                                                    {% if subject.one_time_price %}
-                                                        <p>{{ subject.one_time_price | round(1) }}</p>
-                                                    {% endif %}
-                                                    {% if subject.school_price %}
-                                                        <p>{{ subject.school_price | round(1) }} (Продленка)</p>
-                                                    {% endif %}
-                                                </td>
-                                            {% else %}
-                                                <td>
-                                                    {{ subject.classes if subject.classes }}
-                                                </td>
-                                            {% endif %}
+                                            <td style="padding-left:40px;">
+                                                {% if subject.one_time_price %}
+                                                    <p>{{ subject.one_time_price | round(1) }}</p>
+                                                {% endif %}
+                                                {% if subject.school_price %}
+                                                    <p>{{ subject.school_price | round(1) }} (Продленка)</p>
+                                                {% endif %}
+                                            </td>
                                             <td>
                                                 {% if subject.teachers %}
                                                     {% for teacher in subject.teachers %}
@@ -77,7 +65,7 @@
                                                     <ul class="dropdown-menu">
                                                         <li>
                                                             <a href="{{ url_for('lesson', lesson_id='0-'+subject.id|string) }}">
-                                                                <i class="material-icons" style="color: purple;">info</i>Просмотр
+                                                                <i class="material-icons" style="color: purple;">info</i>Занятие
                                                             </a>
                                                         </li>
                                                         <li>
@@ -104,103 +92,10 @@
                     <p>Занятий пока нет</p>
                 {% endif %}
                 <button class="btn" data-background-color="orange">
-                    <a href="" data-toggle="modal" data-target="#new-subject-modal" style="cursor:pointer; color: #FFFFFF;" >
-                        <i class="material-icons">add_box</i> Добавить занятие
+                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_subject') }}">
+                        <i class="material-icons">add_box</i> Добавить предмет
                     </a>
                 </button>
-                <div class="modal fade" id="new-subject-modal" role="dialog">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title">Новое занятие</h4>
-                            </div>
-                            <div class="modal-body">
-                                <form class="login-form" action="{{ url_for('add_subject') }}" method="post">
-                                    <div class="row">
-                                        <label class="control-label col-md-3" style="padding-left:44px;">Название:</label>
-                                        <div class="col-md-7">
-                                            <input type="text" name="subject_name" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3" style="padding-left:44px;">Короткое название:</label>
-                                        <div class="col-md-7">
-                                            <input type="text" name="subject_short_name" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3" style="padding-left:44px;">Тип занятия:</label>
-                                        <div class="col-md-7">
-                                            <select class="form-control" name="subject_type">
-                                                {% for subject_type in subject_types %}
-                                                    <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3" style="padding-left:44px;">Цена разового занятия:</label>
-                                        <div class="col-md-2">
-                                            <input type="number" class="form-control float-field" name="subject_price" step="1" min="0" value="{{ 20|float }}">
-                                        </div>
-                                        <div class="price_row">
-                                            <label class="control-label col-md-3" style="padding-left:64px;">Специальная цена (Продленка):</label>
-                                            <div class="col-md-2 optional-field">
-                                                <input type="number" class="form-control float-field" name="subject_school_price" step="1" min="0" value="{{ 20|float }}">
-                                            </div>
-                                            <div class="col-md-2 checkbox-option">
-                                                <label class="contact-radio-label">Нет
-                                                    <input type="checkbox" name="no_subject_school_price">
-                                                    <span class="custom-checkbox"></span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row subscription-row">
-                                        <label class="control-label col-md-3" style="padding-left:44px;">Абонемент:</label>
-                                        <div class="col-md-7 optional-field">
-                                            <select class="form-control select-search" name="subscription_types" multiple placeholder="Добавить абонемент">
-                                                {% for type_of_subscription in subscription_types %}
-                                                    <option value="{{ type_of_subscription[0] }}">{{ type_of_subscription[1] }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="col-md-2 checkbox-option">
-                                            <label class="contact-radio-label">Нет
-                                                <input type="checkbox" name="no_subscription_type">
-                                                <span class="custom-checkbox"></span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3" style="padding-left:44px;">Учителя:</label>
-                                        <div class="col-md-7">
-                                            <select class="form-control select-search" name="teachers" placeholder="Добавить учителя" multiple>
-                                                {% for teacher in teachers %}
-                                                    <option value="{{ teacher.id }}">{{ teacher.last_name}} {{ teacher.first_name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-3 col-md-offset-3">
-                                            <button type="submit" class="btn btn-login" data-background-color="main">
-                                                Добавить
-                                            </button>
-                                        </div>
-                                        <div class="col-md-3 col-md-offset-1">
-                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
-                                                Отмена
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>

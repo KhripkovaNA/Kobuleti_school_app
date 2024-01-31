@@ -215,7 +215,7 @@
 			                        <div class="scroll-table">
                                         <table class="table table-hover">
                                             <thead class="text-success">
-					                            <th>Название</th>
+					                            <th>Предмет</th>
                                                 <th>Учителя</th>
                                                 <th>Действие</th>
                                             </thead>
@@ -268,7 +268,7 @@
                                 {% endif %}
                                 <button class="btn btn-sm" style="background-color: #ff9800;">
                                     <a href="" data-toggle="modal" data-target="#new-subject-{{ school_class.id }}-modal" style="cursor:pointer; color: #FFFFFF;" >
-                                        <i class="material-icons">add_box</i> Добавить занятие
+                                        <i class="material-icons">add_box</i> Добавить предмет
                                     </a>
                                 </button>
                                 <div class="modal fade" id="new-subject-{{ school_class.id }}-modal" role="dialog">
@@ -276,7 +276,7 @@
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                <h4 class="modal-title">Новое школьное занятие</h4>
+                                                <h4 class="modal-title">Новый школьный предмет</h4>
                                             </div>
                                             <div class="modal-body">
                                                 <form class="login-form" action="{{ url_for('add_subject') }}" method="post">
@@ -293,16 +293,6 @@
                                                         </div>
                                                     </div>
                                                     <div class="row">
-                                                        <label class="control-label col-md-4" style="padding-left:44px;">Учителя:</label>
-                                                        <div class="col-md-7">
-                                                            <select class="form-control select-search" name="teachers" placeholder="Выбрать учителей" multiple>
-                                                                {% for teacher in teachers %}
-                                                                    <option value="{{ teacher.id }}">{{ teacher.last_name}} {{ teacher.first_name }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Классы:</label>
                                                         <div class="col-md-7">
                                                             <select class="form-control select-search" name="school_classes" multiple placeholder="Выбрать классы">
@@ -316,6 +306,17 @@
                                                             </select>
                                                         </div>
                                                     </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Учителя:</label>
+                                                        <div class="col-md-7">
+                                                            <select class="form-control select-search" name="teachers" placeholder="Выбрать учителей" multiple>
+                                                                {% for teacher in teachers %}
+                                                                    <option value="{{ teacher.id }}">{{ teacher.last_name}} {{ teacher.first_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <input type="hidden" name="subject_type" value="{{ school_type.id }}">
                                                     <div class="row">
                                                         <div class="col-md-3 col-md-offset-3">
                                                             <button type="submit" class="btn btn-login" data-background-color="main">

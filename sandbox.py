@@ -1038,7 +1038,7 @@ def add_new_lessons(form):
 # print(school_teachers_1)
 # print(school_teachers_2)
 
-math_lesson = Lesson.query.filter_by(id=1677).first()
+# math_lesson = Lesson.query.filter_by(id=1677).first()
 # # db.session.rollback()
 # # sc_cl = SchoolClass.query.filter_by(id=1).first()
 # # reg_students = sc_cl.school_students.all()
@@ -1066,30 +1066,7 @@ math_lesson = Lesson.query.filter_by(id=1677).first()
 # db.session.add(journal_record2)
 # db.session.add(journal_record3)
 # db.session.commit()
-lesson = Lesson.query.filter_by(id=1677).first()
 
-query = Lesson.query.filter(Lesson.subject_id == lesson.subject_id)
-for school_class in lesson.school_classes:
-    query = query.filter(Lesson.school_classes.any(SchoolClass.id == school_class.id))
-previous_lesson = query.filter(
-    or_(
-        and_(
-            Lesson.date == lesson.date,
-            Lesson.start_time < lesson.start_time
-        ),
-        Lesson.date < lesson.date
-    )
-).order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
-next_lesson = query.filter(
-    or_(
-        and_(
-            Lesson.date == lesson.date,
-            Lesson.start_time > lesson.start_time
-        ),
-        Lesson.date > lesson.date
-    )
-).order_by(Lesson.date, Lesson.start_time).first()
-
-print(show_lesson(lesson))
-print(show_lesson(previous_lesson))
-print(show_lesson(next_lesson))
+math_lesson = Lesson.query.filter_by(id=1677).first()
+math_teacher = math_lesson.teacher
+print(math_teacher.roles)

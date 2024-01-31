@@ -3,10 +3,10 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, SubscriptionType
 from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
-    student_lesson_register, handle_student_edit, format_employee, add_new_employee, format_subscription_types, \
-    add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, filter_lessons, \
-    copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, format_school_class_students, \
-    format_school_class_subjects, show_school_lesson
+    student_lesson_register, handle_student_edit, format_employee, add_new_employee, handle_employee_edit, \
+    format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, \
+    filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, \
+    format_school_class_students, format_school_class_subjects, show_school_lesson, handle_school_lesson
 from app import app, db
 
 
@@ -187,7 +187,6 @@ def add_employee():
             employee = add_new_employee(request.form)
             db.session.commit()
             flash('Новый сотрудник добавлен в систему.', 'success')
-            # return redirect(url_for('show_edit_employee', employee_id=employee.id))
             return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
         except Exception as e:
@@ -207,24 +206,26 @@ def add_employee():
 @app.route('/employee/<string:employee_id>', methods=['GET', 'POST'])
 @login_required
 def show_edit_employee(employee_id):
-    employee = Person.query.filter_by(id=employee_id).first()
+    employee = Person.query.filter_by(id=int(employee_id)).first()
     if employee:
         format_employee(employee)
         if employee.teacher:
             future_lessons = Lesson.query.filter(Lesson.date >= TODAY, Lesson.teacher_id == employee_id).all()
-            lesson_subjects = set([lesson.subject.name for lesson in future_lessons])
+            lesson_subjects = set([lesson.subject.id for lesson in future_lessons])
             employee.future_lessons = future_lessons
             employee.lesson_subjects = lesson_subjects
 
-        # if request.method == 'POST':
-        #     try:
-        #         handle_student_edit(request.form, student)
-        #         flash('Изменения внесены.', 'success')
-        #         return redirect(url_for('show_edit_student', student_id=student.id))
-        #     except Exception as e:
-        #         db.session.rollback()
-        #         flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
-        #         return redirect(url_for('show_edit_student', student_id=student.id))
+        if request.method == 'POST':
+            try:
+                handle_employee_edit(request.form, employee)
+                # db.session.commit()
+                flash('Изменения внесены.', 'success')
+
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+
+            return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
         return render_template('employee.html', employee=employee)
     else:
@@ -252,26 +253,35 @@ def subjects():
 @login_required
 def add_subject():
     if request.method == 'POST':
+        subject_type_id = request.form.get("subject_type")
+        school_type = SubjectType.query.filter_by(name="school").first()
+        subject_type = "school" if subject_type_id == school_type else "extra_school"
         try:
-            new_subject = add_new_subject(request.form)
+            new_subject = add_new_subject(request.form, subject_type)
             db.session.add(new_subject)
             db.session.commit()
-            flash('Новое занятие добавлено в систему.', 'success')
+            flash('Новый предмет добавлен в систему.', 'success')
 
-            return redirect(url_for('subjects'))
+            if subject_type == "school":
+                return redirect(url_for('school_subjects'))
+            else:
+                return redirect(url_for('subjects'))
 
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении занятия: {str(e)}', 'error')
 
-            return redirect(url_for('add_subject'))
+            if subject_type == "school":
+                return redirect(url_for('school_subjects'))
+            else:
+                return redirect(url_for('add_subject'))
 
     subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school'])).all()
     subscription_types = format_subscription_types(SubscriptionType.query.all())
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
 
     return render_template('add_subject.html', subject_types=subject_types, subscription_types=subscription_types,
-                           teachers=all_teachers, subjects_type="extra_school")
+                           teachers=all_teachers)
 
 
 @app.route('/subject/<string:subject_id>', methods=['GET', 'POST'])
@@ -324,15 +334,14 @@ def copy_lessons():
             filtered_lessons, week_diff, next_week = filter_lessons(request.form)
             if filtered_lessons:
                 new_lessons, conflicts = copy_filtered_lessons(filtered_lessons, week_diff)
-
-                db.session.add_all(new_lessons)
                 db.session.commit()
+
                 if conflicts == 0:
                     flash('Все занятия добавлены в расписание.', 'success')
-                elif not new_lessons:
+                elif new_lessons == 0:
                     flash(f'Занятия не добавлены, т.к. есть занятия в это же время.', 'error')
                 else:
-                    flash(f'Добавлено занятий: {len(new_lessons)}', 'success')
+                    flash(f'Добавлено занятий: {new_lessons}', 'success')
                     flash(f'Не добавлено занятий: {conflicts}, т.к. есть занятия в это же время', 'error')
                 return redirect(url_for('timetable', week=next_week))
 
@@ -472,8 +481,9 @@ def school_subjects():
     for school_class in school_classes:
         format_school_class_subjects(school_class)
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-
-    return render_template('school.html', school_classes=school_classes, teachers=all_teachers, render_type="subjects")
+    school_type = SubjectType.query.filter_by(name="school").first()
+    return render_template('school.html', school_classes=school_classes, teachers=all_teachers,
+                           school_type=school_type, render_type="subjects")
 
 
 @app.route('/school-timetable/<string:week>/<string:day>')
@@ -490,12 +500,29 @@ def school_timetable(week, day):
                            classes=week_school_lessons, week=week, week_day=week_day)
 
 
-@app.route('/school-lesson/<string:lesson_id>')
+@app.route('/school-lesson/<string:lesson_id>', methods=['GET', 'POST'])
 @login_required
 def school_lesson(lesson_id):
     sc_lesson = show_school_lesson(lesson_id)
+
+    if request.method == 'POST':
+        try:
+            message = handle_school_lesson(request.form, sc_lesson)
+            db.session.commit()
+            if message:
+                flash(message, 'success')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
+
+        return redirect(url_for('school_lesson', lesson_id=sc_lesson.id))
+
     days_dict = {day_num: day for (day_num, day) in enumerate(DAYS_OF_WEEK)}
-    sc_students = Person.query.filter(Person.school_class_id.is_not(None)).all()
+    sc_students = Person.query.filter(
+        Person.school_class_id.is_not(None),
+        ~Person.id.in_([student.id for student in sc_lesson.lesson_students])
+    ).order_by(Person.last_name, Person.first_name).all()
 
     return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
                            school_students=sc_students)
