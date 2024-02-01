@@ -119,30 +119,50 @@
                                     </div>
                                 </div>
                                 {% if employee.roles %}
-                                    {% for role in employee.roles %}
-                                        <div class="row">
-                                            <label class="control-label col-md-3">{{ "Должность:" if loop.first }}</label>
-                                            {% if role.role != "Учитель" %}
-                                                <div class="col-md-4">
-                                                    <input type="text" name="role_{{ role.id }}" value="{{ role.role }}">
+                                    <div id="employee-roles-container">
+                                        <div id="employee-roles">
+                                            {% for role in employee.roles %}
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">{{ "Должность:" if loop.first }}</label>
+                                                    <div class="employee-role">
+                                                        {% if role.role != "Учитель" %}
+                                                            <div class="col-md-4">
+                                                                <input type="text" name="role_{{ role.id }}" class="role-value" value="{{ role.role }}">
+                                                            </div>
+                                                            <div class="col-md-1">
+                                                                <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
+                                                            </div>
+                                                            <input type="hidden" class="role-value" value="{{ role.role }}">
+                                                        {% elif employee.future_lessons %}
+                                                            <div class="col-md-5">
+                                                                <p class="form-control">{{ role.role }}</p>
+                                                            </div>
+                                                            <input type="hidden" class="role-value" value="{{ role.role }}">
+                                                        {% else %}
+                                                            <div class="col-md-4">
+                                                                <p class="form-control" style="border-radius: 4px;">{{ role.role }}</p>
+                                                            </div>
+                                                            <div class="col-md-1">
+                                                                <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
+                                                            </div>
+                                                            <input type="hidden" class="role-value" value="{{ role.role }}">
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-1">
-                                                    <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn-sm">Удалить</button>
-                                                </div>
-                                            {% elif employee.future_lessons %}
-                                                <div class="col-md-5">
-                                                    <p class="form-control">{{ role.role }}</p>
-                                                </div>
-                                            {% else %}
-                                                <div class="col-md-4">
-                                                    <p class="form-control" style="border-radius: 4px;">{{ role.role }}</p>
-                                                </div>
-                                                <div class="col-md-1">
-                                                    <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn-sm">Удалить</button>
-                                                </div>
-                                            {% endif %}
+                                            {% endfor %}
                                         </div>
-                                    {% endfor %}
+                                        <div class="row">
+                                            <div class="col-md-5 col-md-offset-3">
+                                                <input type="hidden" name="role_count" id="role-count" value="{{ employee.roles|length }}">
+                                                <select class="form-control" id="add-role">
+                                                    <option value="" disabled selected>Добавить должность</option>
+                                                    {% for possible_role in possible_roles %}
+                                                        <option value="{{ possible_role[0] }}">{{ possible_role[0] }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                 {% endif %}
                                 {% if employee.teacher and employee.subjects_taught.all() %}
                                     {% for subject in employee.subjects.all() %}

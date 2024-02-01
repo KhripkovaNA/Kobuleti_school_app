@@ -209,6 +209,10 @@ def show_edit_employee(employee_id):
     employee = Person.query.filter_by(id=int(employee_id)).first()
     if employee:
         format_employee(employee)
+        employee_roles = [role.role for role in employee.roles]
+        possible_roles = db.session.query(Employee.role.distinct()).filter(
+            ~Employee.role.in_(employee_roles)
+        ).all()
         if employee.teacher:
             future_lessons = Lesson.query.filter(Lesson.date >= TODAY, Lesson.teacher_id == employee_id).all()
             lesson_subjects = set([lesson.subject.id for lesson in future_lessons])
@@ -227,7 +231,7 @@ def show_edit_employee(employee_id):
 
             return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
-        return render_template('employee.html', employee=employee)
+        return render_template('employee.html', employee=employee, possible_roles=possible_roles)
     else:
         flash("Такого клиента нет", 'error')
         return redirect(url_for('employees'))

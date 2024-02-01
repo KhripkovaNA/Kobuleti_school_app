@@ -90,7 +90,7 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-5 col-md-offset-3">
-                                        <input type="hidden" name="subscription-type-count" id="subscription-type-count" value="{{ subject.types_of_subscription|length }}">
+                                        <input type="hidden" id="subscription-type-count" value="{{ subject.types_of_subscription|length }}">
                                         <select class="form-control" id="add-subscription-type">
                                             <option value="" disabled selected>Добавить абонемент</option>
                                             {% for type_of_subscription in subscription_types %}

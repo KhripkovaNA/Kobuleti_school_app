@@ -543,28 +543,6 @@ $(document).ready(function(){
         return (day < 10 ? '0' : '') + day + '.' + (month < 10 ? '0' : '') + month;
     }
 
-    // Show week range for week datepicker
-//    $(".datepicker-week").datepicker({
-//        dateFormat: "dd.mm.yy",
-//        changeYear: true,
-//        onSelect: function (dateText, inst) {
-//            var selectedDate = $(this).datepicker('getDate');
-//            var dayOfWeek = selectedDate.getDay();
-//
-//            var startOfWeek = new Date(selectedDate);
-//            startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-//
-//            var endOfWeek = new Date(startOfWeek);
-//            endOfWeek.setDate(startOfWeek.getDate() + 6);
-//
-//            var formattedStartDate = formatDate(startOfWeek);
-//            var formattedEndDate = formatDate(endOfWeek);
-//
-//            var pContainer = $(this).closest(".selectors-group").find(".week-range")
-//            pContainer.html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
-//        }
-//    });
-
     $(".selectors-group").on("change", ".datepicker", function() {
         var selectedDate = $(this).datepicker('getDate');
         var dayOfWeek = selectedDate.getDay();
@@ -794,7 +772,7 @@ $(document).ready(function(){
         $("option:first", this).prop('selected', true);
         if (subscriptionTypeCount !== 0) {
             var newSubscriptionTypeRow = $(".subscription-type").first().clone();
-            newSubscriptionTypeRow.find("label").empty()
+            newSubscriptionTypeRow.find("label").empty();
             newSubscriptionTypeRow.find("p").html(selectorText);
             newSubscriptionTypeRow.find(".subscription-type-value").val(selectorVal);
             newSubscriptionTypeRow.appendTo("#subscription-types");
@@ -829,6 +807,53 @@ $(document).ready(function(){
             $("#no-subscription-types, #subscription-types").toggle();
         }
 
+    });
+
+    // Disable delete-role button if only one role
+    var roleCount = Number($("#role-count").val());
+    if (roleCount === 1) {
+        $(".delete-role").prop('disabled', true);
+    }
+
+    // Add employee role
+    $("#employee-roles-container").on("change", "#add-role", function() {
+        var roleCount = Number($("#role-count").val());
+        if (roleCount === 1) {
+            $(".delete-role").prop('disabled', false);
+        }
+        var selectedValue = $(this).val();
+        $("option:selected", this ).remove()
+        $("option:first", this).prop('selected', true);
+        var newRoleRow = `
+            <div class="row">
+                <label class="control-label col-md-3"></label>
+                <div class="employee-role">
+                    <div class="col-md-4">
+                        <p class="form-control">${selectedValue}</p>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
+                    </div>
+                    <input type="hidden" name="new_role" class="role-value" value="${selectedValue}">
+                </div
+            </div>`;
+        $("#employee-roles").append(newRoleRow);
+        $("#role-count").val(roleCount + 1);
+    });
+
+    // Delete employee role
+    $("#employee-roles-container").on("click", ".delete-role", function() {
+        var roleRow = $(this).closest(".employee-role");
+        employeeRole = roleRow.find(".role-value").val();
+        var optionHTML = `
+            <option value="${employeeRole}">${employeeRole}</option>`;
+        $("#add-role").append(optionHTML);
+        roleRow.remove();
+        var roleCount = Number($("#role-count").val()) - 1;
+        $("#role-count").val(roleCount);
+        if (roleCount === 1) {
+            $(".delete-role").prop('disabled', true);
+        }
     });
 
 });
