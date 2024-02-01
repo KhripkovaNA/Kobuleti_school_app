@@ -207,12 +207,10 @@ def add_employee():
 @login_required
 def show_edit_employee(employee_id):
     employee = Person.query.filter_by(id=int(employee_id)).first()
-    if employee:
+
+    if employee and employee.roles:
         format_employee(employee)
-        employee_roles = [role.role for role in employee.roles]
-        possible_roles = db.session.query(Employee.role.distinct()).filter(
-            ~Employee.role.in_(employee_roles)
-        ).all()
+
         if employee.teacher:
             future_lessons = Lesson.query.filter(Lesson.date >= TODAY, Lesson.teacher_id == employee_id).all()
             lesson_subjects = set([lesson.subject.id for lesson in future_lessons])
@@ -222,7 +220,7 @@ def show_edit_employee(employee_id):
         if request.method == 'POST':
             try:
                 handle_employee_edit(request.form, employee)
-                # db.session.commit()
+                db.session.commit()
                 flash('Изменения внесены.', 'success')
 
             except Exception as e:
@@ -231,9 +229,20 @@ def show_edit_employee(employee_id):
 
             return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
-        return render_template('employee.html', employee=employee, possible_roles=possible_roles)
+        employee_roles = [role.role for role in employee.roles]
+        possible_roles = db.session.query(Employee.role.distinct()).filter(
+            ~Employee.role.in_(employee_roles)
+        ).all()
+        employee_subjects = [subject.id for subject in employee.subjects_taught]
+        possible_subjects = Subject.query.filter(
+            ~Subject.id.in_(employee_subjects)
+        ).order_by(Subject.name).all()
+        all_subjects = Subject.query.order_by(Subject.name).all()
+
+        return render_template('employee.html', employee=employee, possible_roles=possible_roles,
+                               possible_subjects=possible_subjects, subjects=all_subjects)
     else:
-        flash("Такого клиента нет", 'error')
+        flash("Такого сотрудника нет", 'error')
         return redirect(url_for('employees'))
 
 

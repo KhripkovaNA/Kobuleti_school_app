@@ -567,13 +567,54 @@ def handle_student_edit(form, student):
 
 
 def handle_employee_edit(form, employee):
-    # if 'del_subject_btn' in form:
-    #     del_subject_id = int(form.get('del_subject_btn'))
-    #     del_subject = Subject.query.filter_by(id=del_subject_id).first()
-    #     if del_subject in student.subjects:
-    #         student.subjects.remove(del_subject)
-    #         db.session.flush()
-    return employee
+    employee.last_name = form.get('last_name')
+    employee.first_name = form.get('first_name')
+    employee.patronym = form.get('patronym')
+
+    for role in employee.roles:
+        if not form.get(f'role_{role.id}'):
+            db.session.delete(role)
+            if role.role == TEACHER:
+                employee.teacher = False
+                employee.subjects_taught = []
+        else:
+            role.role = form.get(f'role_{role.id}')
+    db.session.flush()
+
+    if employee.teacher:
+        for subject in employee.subjects_taught:
+            if not form.get(f'subject_{subject.id}'):
+                employee.subjects_taught.remove(subject)
+
+        new_subject_ids = form.getlist('new_subjects')
+        if new_subject_ids:
+            new_subjects = Subject.query.filter(
+                Subject.id.in_([int(subject_id) for subject_id in new_subject_ids])
+            ).all()
+            employee.subjects_taught.extend(new_subjects)
+        employee.color = form.get('new_teacher_color')
+        db.session.flush()
+
+    new_roles = form.getlist('new_roles')
+    if new_roles:
+        for new_role in new_roles:
+            new_employee_role = Employee(
+                person_id=employee.id,
+                role=new_role
+            )
+            db.session.add(new_employee_role)
+
+            if new_role == TEACHER:
+                employee.teacher = True
+                subject_ids = form.getlist('subjects')
+                if subject_ids:
+                    teacher_subjects = Subject.query.filter(
+                        Subject.id.in_([int(subject_id) for subject_id in subject_ids])
+                    ).all()
+                    employee.subjects_taught.extend(teacher_subjects)
+                employee.color = form.get('teacher_color')
+
+        db.session.flush()
 
 
 def format_employee(employee):

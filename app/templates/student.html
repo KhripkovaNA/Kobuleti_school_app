@@ -18,7 +18,7 @@
                             {% if student.person_type == 'Ребенок' %}
                             <div class="row">
                                 <label class="control-label col-md-3">Дата рождения:</label>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <p class="form-control">
                                         {% if student.birth_date %}
                                             {{ student.birth_date }}
@@ -29,7 +29,7 @@
                             {% endif %}
                             <div class="row">
                                 <label class="control-label col-md-3">Статус:</label>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <p class="form-control">{{ student.status_info }}</p>
                                 </div>
                             </div>
@@ -37,7 +37,7 @@
                                 {% for child in student.children_info %}
                                     <div class="row">
                                         <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
-                                        <div class="col-md-5">
+                                        <div class="col-md-6">
                                             <p class="form-control">
                                                 <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
                                                     {{ child[1] }}
@@ -50,7 +50,7 @@
                             {% if student.roles %}
                                 <div class="row">
                                     <label class="control-label col-md-3">Сотрудник:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <p class="form-control">
                                             <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=student.id) }}">
                                                 {{ student.employee_roles }}
@@ -61,7 +61,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="footer">
+                    <div class="footer" style="margin-left:30px;">
                         <div class="row">
                             <div class="col-md-2">
                                 <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
@@ -78,26 +78,26 @@
                             <div class="form-group" style="margin-left:30px;">
                                 <div class="row">
                                     <label class="control-label col-md-3">Фамилия:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="last_name" class="form-control" value="{{ student.last_name }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Имя:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="first_name" class="form-control" value="{{ student.first_name }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Отчество:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="patronym" class="form-control" value="{{ student.patronym }}">
                                     </div>
                                 </div>
                                 {% if student.person_type == 'Ребенок' %}
                                     <div class="row">
                                         <label class="control-label col-md-3">Дата рождения:</label>
-                                        <div class="col-md-3 datepicker-container">
+                                        <div class="col-md-2 datepicker-container">
                                             <input type="text" name="dob" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.birth_date }}">
                                         </div>
                                     </div>
@@ -117,7 +117,7 @@
                                     </div>
                                     <div id="pause-date" style="display: none;">
                                         <label class="control-label col-md-1">до:</label>
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.pause_date }}">
                                         </div>
                                     </div>
@@ -125,14 +125,14 @@
                                 <div class="row">
                                     <div id="leaving-reason" style="display: none;">
                                         <label class="control-label col-md-3">Причина:</label>
-                                        <div class="col-md-5">
+                                        <div class="col-md-6">
                                             <textarea name="leaving_reason" class="form-control">{{ student.leaving_reason }}</textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="footer">
+                        <div class="footer" style="margin-left:30px;">
                             <div class="row">
                                 <div class="col-md-2">
                                     <button type="submit" name="form_student_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
@@ -187,25 +187,25 @@
                             <div class="form-group" style="margin-left:30px;">
                                 <div class="row">
                                     <label class="control-label col-md-3">Телеграм:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <p class="form-control">{{ student.main_contact.contacts[0].telegram }}</p>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Телефон:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <p class="form-control">{{ student.main_contact.contacts[0].phone }}</p>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Другое:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <p class="form-control">{{ student.main_contact.contacts[0].other_contact }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="footer">
+                        <div class="footer" style="margin-left:30px;">
                             <div class="row">
                                 <div class="col-md-2">
                                     <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
@@ -224,26 +224,26 @@
                                     {% if student.person_type == 'Ребенок' %}
                                         <div class="row">
                                             <label class="control-label col-md-3">Контакт:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <p class="form-control">{{ student.main_contact.type }}</p>
                                             </div>
                                         </div>
                                         <div class="contact-info">
                                             <div class="row">
                                                 <label class="control-label col-md-3">Фамилия:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="parent_last_name_main" class="form-control" value="{{ student.main_contact.last_name }}">
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Имя:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="parent_first_name_main" class="form-control" value="{{ student.main_contact.first_name }}">
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Отчество:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="parent_patronym_main" class="form-control" value="{{ student.main_contact.patronym }}">
                                                 </div>
                                             </div>
@@ -251,25 +251,25 @@
                                     {% endif %}
                                     <div class="row">
                                         <label class="control-label col-md-3">Телеграм:</label>
-                                        <div class="col-md-5">
+                                        <div class="col-md-6">
                                             <input type="text" name="telegram_main" class="form-control" value="{{ student.main_contact.contacts[0].telegram }}">
                                         </div>
                                     </div>
                                     <div class="row">
                                         <label class="control-label col-md-3">Телефон:</label>
-                                        <div class="col-md-5">
+                                        <div class="col-md-6">
                                             <input type="text" name="phone_main" class="form-control" value="{{ student.main_contact.contacts[0].phone }}">
                                         </div>
                                     </div>
                                     <div class="row">
                                         <label class="control-label col-md-3">Другое:</label>
-                                        <div class="col-md-5">
+                                        <div class="col-md-6">
                                             <input type="text" name="other_contact_main" class="form-control" value="{{ student.main_contact.contacts[0].other_contact }}">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="footer">
+                            <div class="footer" style="margin-left:30px;">
                                 <div class="row">
                                     <div class="col-md-2">
                                         <button type="submit" name="form_main_contact_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
@@ -297,25 +297,25 @@
                                     <div class="form-group" style="margin-left:30px;">
                                         <div class="row">
                                             <label class="control-label col-md-3">Телеграм:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <p class="form-control">{{ contact.contacts[0].telegram }}</p>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Телефон:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <p class="form-control">{{ contact.contacts[0].phone }}</p>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Другое:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <p class="form-control">{{ contact.contacts[0].other_contact }}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="footer">
+                                <div class="footer" style="margin-left:30px;">
                                     <div class="row">
                                         <div class="col-md-2">
                                             <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
@@ -338,7 +338,7 @@
                                         <div class="form-group" style="margin-left:30px;">
                                             <div class="row">
                                                 <label class="control-label col-md-3">Контакт:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-4">
                                                     <p class="form-control">{{ contact.type }}</p>
                                                 </div>
                                                 <div class="col-md-3 checkbox-option">
@@ -351,44 +351,44 @@
                                             <div class="contact-info">
                                                 <div class="row">
                                                     <label class="control-label col-md-3">Фамилия:</label>
-                                                    <div class="col-md-5">
+                                                    <div class="col-md-6">
                                                         <input type="text" name="parent_last_name_{{ loop.index }}" class="form-control" value="{{ contact.last_name }}">
                                                     </div>
                                                 </div>
                                                 <div class="row">
                                                     <label class="control-label col-md-3">Имя:</label>
-                                                    <div class="col-md-5">
+                                                    <div class="col-md-6">
                                                         <input type="text" name="parent_first_name_{{ loop.index }}" class="form-control" value="{{ contact.first_name }}">
                                                     </div>
                                                 </div>
                                                 <div class="row">
                                                     <label class="control-label col-md-3">Отчество:</label>
-                                                    <div class="col-md-5">
+                                                    <div class="col-md-6">
                                                         <input type="text" name="parent_patronym_{{ loop.index }}" class="form-control" value="{{ contact.patronym }}">
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Телеграм:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="telegram_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].telegram }}">
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Телефон:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="phone_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].phone }}">
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Другое:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="other_contact_{{ loop.index }}" class="form-control" value="{{ contact.contacts[0].other_contact }}">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="footer">
+                                    <div class="footer" style="margin-left:30px;">
                                         <div class="row">
                                             <div class="col-md-2">
                                                 <button type="submit" name="form_cont_{{ loop.index }}_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
@@ -406,7 +406,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* Add new contact button *-*-*-*-*-*-*-*-*-* -->
 
                     {% if student.person_type == 'Ребенок' %}
-                        <div class="row" id="show-new-contact">
+                        <div class="row" id="show-new-contact" style="margin-left:10px;">
                             <div class="col-md-2">
                                 <button type="button" id="show-new-contact-btn" class="btn btn-sm" style="background-color: #ff9800;">
                                     Добавить контакт
@@ -422,7 +422,7 @@
                                 <div class="form-group" style="margin-left:30px;">
                                     <div class="row">
                                         <label class="control-label col-md-3">Контакт:</label>
-                                        <div class="col-md-5">
+                                        <div class="col-md-4">
                                             <select name="relation_new" class="form-control contact-relation">
                                                 <option value="Мама">Мама</option>
                                                 <option value="Папа">Папа</option>
@@ -438,15 +438,15 @@
                                         </div>
                                     </div>
                                     <div class="row relation-other-row" style="display: none;">
-                                        <label class="control-label col-md-3"></label>
-                                        <div class="col-md-4">
+                                        <label class="control-label col-md-3">Контактное лицо:</label>
+                                        <div class="col-md-6">
                                             <input type="text" name="other_relation_new" class="form-control">
                                         </div>
                                     </div>
                                     <div  class="contact_selection">
                                         <div class="row">
                                             <label class="control-label col-md-3">Данные контактного лица:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <select name="contact_select_new" class="form-control contact-select">
                                                     <option value="Добавить">Добавить</option>
                                                     <option value="Выбрать">Выбрать из списка</option>
@@ -455,7 +455,7 @@
                                         </div>
                                         <div class="row contact-options-row" style="display: none;">
                                             <label class="control-label col-md-3">Контакты:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <select name="selected_contact" class="form-control contact-options select-search">
                                                     {% for client in clients %}
                                                         <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
@@ -470,45 +470,45 @@
                                         <div class="contact-info">
                                             <div class="row">
                                                 <label class="control-label col-md-3">Фамилия:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="parent_last_name_new" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Имя:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="parent_first_name_new" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Отчество:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     <input type="text" name="parent_patronym_new" class="form-control">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Телеграм:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <input type="text" name="telegram_new" class="form-control">
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Телефон:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <input type="text" name="phone_new" class="form-control">
                                             </div>
                                         </div>
                                         <div class="row">
                                             <label class="control-label col-md-3">Другое:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <input type="text" name="other_contact_new" class="form-control">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="footer">
+                            <div class="footer" style="margin-left:30px;">
                                 <div class="row">
                                     <div class="col-md-2">
                                         <button type="submit" name="form_cont_new_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
@@ -540,19 +540,19 @@
                                             {% else %}
                                                 <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
                                             {% endif %}
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 <p class="form-control">{{ subject[0] }}</p>
                                             </div>
                                         </div>
                                     {% endfor %}
                                 {% else %}
-                                    <div class="row">
+                                    <div class="row" style="margin-left:10px;">
                                         <p>Занятий пока нет</p>
                                     </div>
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="footer">
+                        <div class="footer" style="margin-left:30px;">
                             <div class="row">
                                 {% if student.extra_subjects %}
                                     <div class="col-md-2">
@@ -628,14 +628,14 @@
                                                     <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
                                                 {% endif %}
                                                 {% if subject[0] in student.extra_subjects %}
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-5">
                                                         <p class="form-control" style="border-radius: 4px;">{{ subject[0] }}</p>
                                                     </div>
                                                     <div class="col-md-1">
                                                         <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger del-btn-sm">Удалить</button>
                                                     </div>
                                                 {% else %}
-                                                    <div class="col-md-5">
+                                                    <div class="col-md-6">
                                                         <p class="form-control">{{ subject[0] }}</p>
                                                     </div>
                                                 {% endif %}
@@ -644,7 +644,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="footer">
+                            <div class="footer" style="margin-left:30px;">
                                 <div class="row">
                                     <div class="col-md-2">
                                         <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
@@ -691,13 +691,13 @@
                                         </div>
                                     </div>
                                 {% else %}
-                                    <div class="row">
+                                    <div class="row" style="margin-left:10px;">
                                         <p>Абонементов пока нет</p>
                                     </div>
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="footer">
+                        <div class="footer" style="margin-left:30px;">
                             <div class="row">
                                 {% if student.subscriptions_info %}
                                     <div class="col-md-2">
@@ -808,7 +808,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="footer">
+                            <div class="footer" style="margin-left:30px;">
                                 <div class="row">
                                     <div class="col-md-2">
                                         <button type="submit" name="form_subscriptions_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>

@@ -1070,6 +1070,7 @@ def add_new_lessons(form):
 math_lesson = Lesson.query.filter_by(id=1677).first()
 math_teacher = math_lesson.teacher
 teacher_roles = [role.role for role in math_teacher.roles]
+person = Person.query.filter_by(last_name="Хрипкова", first_name="Наталья").first()
 
-print(teacher_roles)
-# print(possible_roles)
+
+print(person.roles)

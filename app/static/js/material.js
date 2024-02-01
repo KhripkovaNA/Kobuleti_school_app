@@ -501,7 +501,7 @@ $(document).ready(function(){
     });
 
     // Show subjects selector when checking teacher option
-    $(".employee-section").on("change", "#role-select", function () {
+    $(".employee-section, #role-select-row").on("change", "#role-select", function () {
         var subjectsTaught = $("#subjects-taught")
         var roleVal = $(this).val();
         var teacher = 'Учитель';
@@ -809,51 +809,63 @@ $(document).ready(function(){
 
     });
 
-    // Disable delete-role button if only one role
-    var roleCount = Number($("#role-count").val());
-    if (roleCount === 1) {
-        $(".delete-role").prop('disabled', true);
-    }
-
-    // Add employee role
-    $("#employee-roles-container").on("change", "#add-role", function() {
-        var roleCount = Number($("#role-count").val());
-        if (roleCount === 1) {
-            $(".delete-role").prop('disabled', false);
-        }
-        var selectedValue = $(this).val();
-        $("option:selected", this ).remove()
-        $("option:first", this).prop('selected', true);
-        var newRoleRow = `
-            <div class="row">
-                <label class="control-label col-md-3"></label>
-                <div class="employee-role">
-                    <div class="col-md-4">
-                        <p class="form-control">${selectedValue}</p>
-                    </div>
-                    <div class="col-md-1">
-                        <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
-                    </div>
-                    <input type="hidden" name="new_role" class="role-value" value="${selectedValue}">
-                </div
-            </div>`;
-        $("#employee-roles").append(newRoleRow);
-        $("#role-count").val(roleCount + 1);
-    });
+//    // Add employee role
+//    $("#employee-roles-container").on("change", "#add-role", function() {
+//        var roleCount = Number($("#role-count").val());
+//        if (roleCount === 1) {
+//            $(".delete-role").prop('disabled', false);
+//        }
+//        var selectedValue = $(this).val();
+//        if (selectedValue === "other") {
+//            var newRoleRow = `
+//            <div class="row employee-role">
+//                <label class="control-label col-md-3"></label>
+//                <div class="col-md-4">
+//                    <input type="text" name="new_roles" class="role-value" placeholder="Новая должность">
+//                </div>
+//                <div class="col-md-1">
+//                    <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
+//                </div>
+//                <input type="hidden" class="role-value" value="other">
+//            </div>`;
+//        } else {
+//            $("option:selected", this ).remove();
+//            var newRoleRow = `
+//                <div class="row employee-role">
+//                    <label class="control-label col-md-3"></label>
+//                    <div class="col-md-4">
+//                        <p class="form-control">${selectedValue}</p>
+//                    </div>
+//                    <div class="col-md-1">
+//                        <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
+//                    </div>
+//                    <input type="hidden" class="role-value" value="${selectedValue}">
+//                </div>`;
+//        }
+//
+//        $("option:first", this).prop('selected', true);
+//        $("#employee-roles").append(newRoleRow);
+//        $("#role-count").val(roleCount + 1);
+//    });
 
     // Delete employee role
-    $("#employee-roles-container").on("click", ".delete-role", function() {
+    $(".employee-role").on("click", ".delete-role", function() {
         var roleRow = $(this).closest(".employee-role");
         employeeRole = roleRow.find(".role-value").val();
-        var optionHTML = `
-            <option value="${employeeRole}">${employeeRole}</option>`;
-        $("#add-role").append(optionHTML);
+        $("#role-select")[0].selectize.addOption({value:employeeRole,text:employeeRole});
         roleRow.remove();
-        var roleCount = Number($("#role-count").val()) - 1;
-        $("#role-count").val(roleCount);
-        if (roleCount === 1) {
-            $(".delete-role").prop('disabled', true);
+        if (employeeRole === "Учитель") {
+            $("#teacher-subjects-section").remove();
         }
+    });
+
+    // Delete teacher subject
+    $("#subjects-row").on("click", ".delete-subject", function() {
+        var subjectRow = $(this).closest(".subjects-row");
+        teacherSubjectVal = subjectRow.find(".subject-value").val();
+        teacherSubjectText = subjectRow.find("p").html();
+        $("#subject-select")[0].selectize.addOption({value:teacherSubjectVal,text:teacherSubjectText});
+        subjectRow.remove();
     });
 
 });

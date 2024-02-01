@@ -19,27 +19,33 @@
                                 {% for role in employee.roles %}
                                     <div class="row">
                                         <label class="control-label col-md-3">{{ "Должность:" if loop.first }}</label>
-                                        <div class="col-md-5">
+                                        <div class="col-md-6">
                                             <p class="form-control">{{ role.role }}</p>
                                         </div>
                                     </div>
                                 {% endfor %}
                             {% endif %}
-                            {% if employee.teacher and employee.subjects_taught.all() %}
+                            {% if employee.teacher %}
                                 {% for subject in employee.subjects_taught.all() %}
                                     <div class="row">
                                         <label class="control-label col-md-3">{{ "Предмет:" if loop.first }}</label>
-                                        <div class="col-md-5">
-                                            <p class="form-control">{{ subject.name }}</p>
+                                        <div class="col-md-6">
+                                            <p class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</p>
                                         </div>
                                     </div>
                                 {% endfor %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Цвет в расписании:</label>
+                                    <div class="col-md-6">
+                                        <input type="color" value="{{ employee.color }}" disabled>
+                                    </div>
+                                </div>
                             {% endif %}
                             {% if employee.children_info %}
                                 {% for child in employee.children_info %}
                                     <div class="row">
                                         <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
-                                        <div class="col-md-5">
+                                        <div class="col-md-6">
                                             <p class="form-control">
                                                 <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
                                                     {{ child[1] }}
@@ -52,7 +58,7 @@
                             {% if employee.status %}
                                 <div class="row">
                                     <label class="control-label col-md-3">Статус:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <p class="form-control">
                                             <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=employee.id) }}">
                                                 {{ employee.status_info }}
@@ -67,28 +73,28 @@
                         <div class="form-group" style="margin-left:30px;">
                             <div class="row">
                                 <label class="control-label col-md-3">Телеграм:</label>
-                                <div class="col-md-5">
+                                <div class="col-md-6">
                                     <p class="form-control">{{ employee.contacts[0].telegram }}</p>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Телефон:</label>
-                                <div class="col-md-5">
+                                <div class="col-md-6">
                                     <p class="form-control">{{ employee.contacts[0].phone }}</p>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Другое:</label>
-                                <div class="col-md-5">
+                                <div class="col-md-6">
                                     <p class="form-control">{{ employee.contacts[0].other_contact }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="footer">
+                    <div class="footer" style="margin-left:30px;">
                         <div class="row">
-                            <div class="col-md-3">
-                                <button class="btn btn-login section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                            <div class="col-md-2">
+                                <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
                             </div>
                         </div>
                     </div>
@@ -102,118 +108,147 @@
                             <div class="form-group" style="margin-left:30px;">
                                 <div class="row">
                                     <label class="control-label col-md-3">Фамилия:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="last_name" class="form-control" value="{{ employee.last_name }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Имя:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="first_name" class="form-control" value="{{ employee.first_name }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Отчество:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="patronym" class="form-control" value="{{ employee.patronym }}">
                                     </div>
                                 </div>
-                                {% if employee.roles %}
-                                    <div id="employee-roles-container">
-                                        <div id="employee-roles">
-                                            {% for role in employee.roles %}
-                                                <div class="row">
-                                                    <label class="control-label col-md-3">{{ "Должность:" if loop.first }}</label>
-                                                    <div class="employee-role">
-                                                        {% if role.role != "Учитель" %}
-                                                            <div class="col-md-4">
-                                                                <input type="text" name="role_{{ role.id }}" class="role-value" value="{{ role.role }}">
-                                                            </div>
-                                                            <div class="col-md-1">
-                                                                <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
-                                                            </div>
-                                                            <input type="hidden" class="role-value" value="{{ role.role }}">
-                                                        {% elif employee.future_lessons %}
-                                                            <div class="col-md-5">
-                                                                <p class="form-control">{{ role.role }}</p>
-                                                            </div>
-                                                            <input type="hidden" class="role-value" value="{{ role.role }}">
-                                                        {% else %}
-                                                            <div class="col-md-4">
-                                                                <p class="form-control" style="border-radius: 4px;">{{ role.role }}</p>
-                                                            </div>
-                                                            <div class="col-md-1">
-                                                                <button type="submit" name="del_role_btn" value="{{ role.id }}" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
-                                                            </div>
-                                                            <input type="hidden" class="role-value" value="{{ role.role }}">
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
+                                {% for role in employee.roles %}
+                                    <div class="row employee-role">
+                                        <label class="control-label col-md-3">{{ "Должность:" if loop.first }}</label>
+                                        {% if role.role != "Учитель" %}
+                                            <div class="col-md-5">
+                                                <input type="text" name="role_{{ role.id }}" class="role-value" value="{{ role.role }}">
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
+                                            </div>
+                                            <input type="hidden" class="role-value" value="{{ role.role }}">
+                                        {% elif employee.future_lessons %}
+                                            <div class="col-md-6">
+                                                <p class="form-control">{{ role.role }}</p>
+                                            </div>
+                                            <input type="hidden" name="role_{{ role.id }}" class="role-value" value="{{ role.role }}">
+                                        {% else %}
+                                            <div class="col-md-5">
+                                                <p class="form-control">{{ role.role }}</p>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
+                                            </div>
+                                            <input type="hidden" name="role_{{ role.id }}" class="role-value" value="{{ role.role }}">
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                                <div class="row" id="role-select-row">
+                                    <label class="control-label col-md-3">Новая должность:</label>
+                                    <div class="col-md-6">
+                                        <select class="form-control select-search-add" name="new_roles" id="role-select" placeholder="Добавить должность" multiple>
+                                            {% for possible_role in possible_roles %}
+                                                <option value="{{ possible_role[0] }}">{{ possible_role[0] }}</option>
                                             {% endfor %}
-                                        </div>
+                                        </select>
+                                    </div>
+                                </div>
+                                {% if employee.teacher %}
+                                    <div id="teacher-subjects-section">
+                                        {% for subject in employee.subjects_taught %}
+                                            <div class="row subject-row">
+                                                <label class="control-label col-md-3">{{ "Предметы:" if loop.first }}</label>
+                                                {% if subject.id in employee.lesson_subjects %}
+                                                    <div class="col-md-6">
+                                                        <p class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</p>
+                                                    </div>
+                                                    <input type="hidden" name="subject_{{ subject.id }}" class="subject-value" value="{{ subject.id }}">
+                                                {% else %}
+                                                    <div class="col-md-5">
+                                                        <p class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</p>
+                                                    </div>
+                                                    <div class="col-md-1">
+                                                        <button type="button" class="btn btn-danger del-btn-sm delete-subject">Удалить</button>
+                                                    </div>
+                                                    <input type="hidden" name="subject_{{ subject.id }}" class="subject-value" value="{{ subject.id }}">
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
                                         <div class="row">
-                                            <div class="col-md-5 col-md-offset-3">
-                                                <input type="hidden" name="role_count" id="role-count" value="{{ employee.roles|length }}">
-                                                <select class="form-control" id="add-role">
-                                                    <option value="" disabled selected>Добавить должность</option>
-                                                    {% for possible_role in possible_roles %}
-                                                        <option value="{{ possible_role[0] }}">{{ possible_role[0] }}</option>
+                                            <label class="control-label col-md-3">Новые предметы:</label>
+                                            <div class="col-md-6">
+                                                <select class="form-control select-search" name="new_subjects" id="subject-select" placeholder="Добавить предмет" multiple>
+                                                    {% for possible_subject in possible_subjects %}
+                                                        <option value="{{ possible_subject.id }}">{{ possible_subject.name }} ({{ possible_subject.subject_type.description }})</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Цвет в расписании:</label>
+                                            <div class="col-md-6">
+                                                <input type="color" name="new_teacher_color" value="{{ employee.color }}">
+                                            </div>
+                                        </div>
                                     </div>
                                 {% endif %}
-                                {% if employee.teacher and employee.subjects_taught.all() %}
-                                    {% for subject in employee.subjects.all() %}
-                                        <div class="row">
-                                            <label class="control-label col-md-3">{{ "Предмет:" if loop.first }}</label>
-                                            {% if subject.id in employee.lesson_subjects %}
-                                                <div class="col-md-5">
-                                                    <p class="form-control">{{ subject.name }}</p>
-                                                </div>
-                                            {% else %}
-                                                <div class="col-md-4">
-                                                    <p class="form-control">{{ subject.name }}</p>
-                                                </div>
-                                                <div class="col-md-1">
-                                                    <button type="submit" name="del_subject_btn" value="{{ subject.id }}" class="btn btn-danger del-btn-sm">Удалить</button>
-                                                </div>
-                                            {% endif %}
+                                <div id="subjects-taught" style="display: none;">
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Предметы:</label>
+                                        <div class="col-md-6">
+                                            <select name="subjects" class="form-control select-search" placeholder="Выбрать предмет" multiple>
+                                                {% for subject in subjects %}
+                                                    <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.subject_type.description }})</option>
+                                                {% endfor %}
+                                            </select>
                                         </div>
-                                    {% endfor %}
-                                {% endif %}
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Цвет в расписании:</label>
+                                        <div class="col-md-6">
+                                            <input type="color" name="teacher_color" value="#D9D9D9">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <hr>
                             <h4 class="title" style="margin-left: 27px;">Kонтакты</h4>
                             <div class="form-group" style="margin-left:30px;">
                                 <div class="row">
                                     <label class="control-label col-md-3">Телеграм:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="telegram" class="form-control" value="{{ employee.contacts[0].telegram }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Телефон:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="phone" class="form-control" value="{{ employee.contacts[0].phone }}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Другое:</label>
-                                    <div class="col-md-5">
+                                    <div class="col-md-6">
                                         <input type="text" name="other_contact" class="form-control" value="{{ employee.contacts[0].other_contact }}">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="footer">
+                        <div class="footer" style="margin-left:30px;">
                             <div class="row">
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Сохранить</button>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
                                 </div>
-                                <div class="col-md-3">
-                                    <button type="button" class="btn btn-default section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
                                 </div>
                             </div>
                         </div>
