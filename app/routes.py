@@ -6,8 +6,11 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscript
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, handle_employee_edit, \
     format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, \
     filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, \
-    format_school_class_students, format_school_class_subjects, show_school_lesson, handle_school_lesson
+    format_school_class_students, format_school_class_subjects, show_school_lesson, handle_school_lesson, \
+    employee_record
+
 from app import app, db
+from datetime import datetime, timedelta
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -177,6 +180,18 @@ def employees():
         format_employee(employee)
 
     return render_template('employees.html', employees=all_employees)
+
+
+@app.route('/employee-report')
+@login_required
+def employee_report():
+    all_employees = Person.query.filter(
+        Person.roles.any(Employee.id)
+    ).order_by(Person.last_name, Person.first_name).all()
+
+    employees_list, dates = employee_record(all_employees, 0)
+
+    return render_template('employee_report.html', employees=employees_list, dates=dates)
 
 
 @app.route('/add-employee', methods=['GET', 'POST'])

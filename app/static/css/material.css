@@ -3038,6 +3038,21 @@ select.form-control[multiple],
     z-index: 1;
 }
 
+div.form-control {
+    height:auto;
+    min-height:34px;
+    margin-bottom: 10px;
+}
+
+.table-report>tbody>tr>td {
+    border: 1px solid #ddd;
+}
+
+.form-control p {
+    margin:0;
+}
+
+
 .checkbox label {
     cursor: pointer;
     padding-left: 0;

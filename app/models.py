@@ -246,6 +246,17 @@ class Employee(db.Model):
     person = db.relationship('Person', backref='roles')
 
 
+# class EmployeeReportCard(db.Model):
+#     __tablename__ = 'employee_duties'
+#
+#     id = db.Column(db.Integer, primary_key=True)
+#     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+#     person = db.relationship('Person', backref='employee_reports')
+#     duty_date = db.Column(db.Date)
+#     duty_type = db.Column(db.String(50))
+#     duty_hours = db.Column(db.Integer)
+
+
 class SchoolLessonJournal(db.Model):
     __tablename__ = 'school_lessons'
 

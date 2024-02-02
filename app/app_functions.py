@@ -1430,3 +1430,74 @@ def handle_school_lesson(form, lesson):
 
         return 'Внесение изменений.'
 
+
+def employee_record(employees, week):
+    week_start = get_date(0, week)
+    primary_classes = [sc_cl.id for sc_cl in SchoolClass.query.filter(SchoolClass.school_class < 5)]
+    employees_list = []
+    for employee in employees:
+        for role in employee.roles:
+            if role.role != "Учитель":
+                employee_dict = {
+                    'id': employee.id,
+                    'name': f"{employee.last_name} {employee.first_name}",
+                    'role': role.role,
+                    'activity': {'all': 0}
+                }
+                employees_list.append(employee_dict)
+        if employee.teacher:
+            main_classes = db.session.query(teacher_class_table).filter(
+                teacher_class_table.c.teacher_id == employee.id,
+                teacher_class_table.c.main_teacher,
+                teacher_class_table.c.class_id.in_(primary_classes)
+            ).all()
+            teacher_classes = [SchoolClass.query.filter(SchoolClass.id == main_class[0]).first().id for main_class in
+                               main_classes]
+            classes_dict = {sc_cl: {'all': 0} for sc_cl in teacher_classes}
+            subjects_dict = {}
+            for day in range(7):
+                date = week_start + timedelta(day)
+                lesson_date = f'{date:%d.%m}'
+                teacher_lessons = Lesson.query.filter(
+                    Lesson.date == date,
+                    Lesson.teacher_id == employee.id
+                ).all()
+                for lesson in teacher_lessons:
+                    if len(lesson.school_classes.all()) == 1 and (lesson.school_classes[0].id in teacher_classes):
+                        if classes_dict[lesson.school_classes[0].id].get(lesson_date):
+                            classes_dict[lesson.school_classes[0].id][lesson_date] += 1
+                        else:
+                            classes_dict[lesson.school_classes[0].id][lesson_date] = 1
+                        classes_dict[lesson.school_classes[0].id]['all'] += 1
+                    else:
+                        if subjects_dict.get(lesson.subject.name):
+                            if subjects_dict[lesson.subject.name].get(lesson_date):
+                                subjects_dict[lesson.subject.name][lesson_date] += 1
+                            else:
+                                subjects_dict[lesson.subject.name][lesson_date] = 1
+                            subjects_dict[lesson.subject.name]['all'] += 1
+                        else:
+                            subjects_dict[lesson.subject.name] = {lesson_date: 1, 'all': 1}
+
+            for school_class, hours_count in classes_dict.items():
+                school_name = SchoolClass.query.filter_by(id=school_class).first().school_name
+                employee_dict = {
+                    'id': employee.id,
+                    'name': f"{employee.last_name} {employee.first_name}",
+                    'role': school_name,
+                    'activity': hours_count
+                }
+                employees_list.append(employee_dict)
+
+            for subject, hours_count in subjects_dict.items():
+                employee_dict = {
+                    'id': employee.id,
+                    'name': f"{employee.last_name} {employee.first_name}",
+                    'role': subject,
+                    'activity': hours_count
+                }
+                employees_list.append(employee_dict)
+
+    dates = [f"{week_start + timedelta(day):%d.%m}" for day in range(7)]
+
+    return employees_list, dates

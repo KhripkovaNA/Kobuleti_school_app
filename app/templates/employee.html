@@ -16,24 +16,30 @@
                         <h4 class="title" style="margin-bottom:27px;">{{ employee.last_name }} {{ employee.first_name }} {{ employee.patronym }}</h4>
                         <div class="form-group" style="margin-left:30px;">
                             {% if employee.roles %}
-                                {% for role in employee.roles %}
-                                    <div class="row">
-                                        <label class="control-label col-md-3">{{ "Должность:" if loop.first }}</label>
-                                        <div class="col-md-6">
-                                            <p class="form-control">{{ role.role }}</p>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Должность:</label>
+                                    <div class="col-md-6">
+                                        <div class="form-control">
+                                            {% for role in employee.roles %}
+                                                <p>{{ role.role }}</p>
+                                            {% endfor %}
                                         </div>
                                     </div>
-                                {% endfor %}
+                                </div>
                             {% endif %}
                             {% if employee.teacher %}
-                                {% for subject in employee.subjects_taught.all() %}
+                                {% if employee.subjects_taught.all() %}
                                     <div class="row">
-                                        <label class="control-label col-md-3">{{ "Предмет:" if loop.first }}</label>
+                                        <label class="control-label col-md-3">Предмет:</label>
                                         <div class="col-md-6">
-                                            <p class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</p>
+                                            <div class="form-control">
+                                                {% for subject in employee.subjects_taught %}
+                                                    <p>{{ subject.name }} ({{ subject.subject_type.description }})</p>
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                     </div>
-                                {% endfor %}
+                                {% endif %}
                                 <div class="row">
                                     <label class="control-label col-md-3">Цвет в расписании:</label>
                                     <div class="col-md-6">
@@ -42,28 +48,30 @@
                                 </div>
                             {% endif %}
                             {% if employee.children_info %}
-                                {% for child in employee.children_info %}
-                                    <div class="row">
-                                        <label class="control-label col-md-3">{{ "Дети:" if loop.first }}</label>
-                                        <div class="col-md-6">
-                                            <p class="form-control">
-                                                <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
-                                                    {{ child[1] }}
-                                                </a>
-                                            </p>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Дети:</label>
+                                    <div class="col-md-6">
+                                        <div class="form-control">
+                                            {% for child in employee.children_info %}
+                                                <p>
+                                                    <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
+                                                        {{ child[1] }}
+                                                    </a>
+                                                </p>
+                                            {% endfor %}
                                         </div>
                                     </div>
-                                {% endfor %}
+                                </div>
                             {% endif %}
                             {% if employee.status %}
                                 <div class="row">
                                     <label class="control-label col-md-3">Статус:</label>
                                     <div class="col-md-6">
-                                        <p class="form-control">
+                                        <div class="form-control">
                                             <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=employee.id) }}">
                                                 {{ employee.status_info }}
                                             </a>
-                                        </p>
+                                        </div>
                                     </div>
                                 </div>
                             {% endif %}
@@ -74,19 +82,19 @@
                             <div class="row">
                                 <label class="control-label col-md-3">Телеграм:</label>
                                 <div class="col-md-6">
-                                    <p class="form-control">{{ employee.contacts[0].telegram }}</p>
+                                    <div class="form-control">{{ employee.contacts[0].telegram }}</div>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Телефон:</label>
                                 <div class="col-md-6">
-                                    <p class="form-control">{{ employee.contacts[0].phone }}</p>
+                                    <div class="form-control">{{ employee.contacts[0].phone }}</div>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Другое:</label>
                                 <div class="col-md-6">
-                                    <p class="form-control">{{ employee.contacts[0].other_contact }}</p>
+                                    <div class="form-control">{{ employee.contacts[0].other_contact }}</div>
                                 </div>
                             </div>
                         </div>
