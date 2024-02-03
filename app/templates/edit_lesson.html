@@ -6,11 +6,16 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Изменить занятие</h4>
+                {% if lesson.lesson_type.name == "school" %}
+                    <h4 class="title">{{ lesson.subject.name }}. {{ lesson.classes }}</h4>
+                {% else %}
+                    <h4 class="title">{{ lesson.subject.name }} ({{ lesson.lesson_type.description }})</h4>
+                {% endif %}
             </div>
             <div class="card-content">
                 <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
                     <div class="row">
+                        <h4 class="title" style="margin-left:27px;">Изменить занятие</h4>
                         <div class="form-group" style="margin-left:30px;margin-top:0">
                             <div class="row">
                                 <label class="control-label col-md-3">Дата:</label>
@@ -31,20 +36,6 @@
                                 <div class="col-md-3">
                                     <input type="text" name="lesson_end_time_1" class="form-control timepicker-end">
                                     <input type="hidden" class="timepicker-end-value" value="{{ lesson.end_time.strftime('%H : %M') }}">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <label class="control-label col-md-3">Предмет:</label>
-                                <div class="col-md-6">
-                                    <select name="lesson_subject" class="form-control select-search">
-                                        {% for subject in subjects %}
-                                            {% if subject.id==lesson.subject_id %}
-                                                <option value="{{ subject.id }}" selected>{{ subject.name }} ({{ subject.subject_type.description }})</option>
-                                            {% else %}
-                                                <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.subject_type.description }})</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
                                 </div>
                             </div>
                             <div class="row">

@@ -2884,7 +2884,7 @@ select.form-control[multiple],
     background-color: #f2f2f2;
 }
 
-.scroll-timetable thead {
+.scroll-timetable thead, #table-report thead {
     position: -webkit-sticky;
     position: sticky;
     top: 0;
@@ -3044,7 +3044,7 @@ div.form-control {
     margin-bottom: 10px;
 }
 
-.table-report>tbody>tr>td {
+#table-report>tbody>tr>td {
     border: 1px solid #ddd;
 }
 

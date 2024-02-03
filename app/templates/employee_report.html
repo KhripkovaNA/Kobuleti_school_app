@@ -9,9 +9,9 @@
                 <h4 class="title">Табель сотудников</h4>
             </div>
             <div class="card-content">
-                <div class="scroll-table">
-                    <input type="text" id="search" placeholder="Поиск в таблице">
-                    <table class="table table-hover">
+                <input type="text" id="search" placeholder="Поиск в таблице">
+                <div class="scroll-timetable">
+                    <table class="table table-hover" id="table-report">
                         <thead class="text-success">
                             <tr>
                                 <th width="25%">Сотрудник</th>
@@ -22,25 +22,21 @@
                                 <th>Всего</th>
                             </tr>
                         </thead>
+                        <tbody>
+                            {% for employee in employees %}
+                                <tr>
+                                    <td width="25%"><b>{{ employee.name }}</b></td>
+                                    <td width="15%">{{ employee.role }}</td>
+                                    {% for date in dates %}
+                                        <td class="hours-count-cell">
+                                            {{ employee.activity.get(date) if employee.activity.get(date) }}
+                                        </td>
+                                    {% endfor %}
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
                     </table>
-                    <div class="scroll-table-body">
-                        <table class="table table-hover table-report">
-                            <tbody>
-                                {% for employee in employees %}
-                                    <tr>
-                                        <td width="25%"><b>{{ employee.name }}</b></td>
-                                        <td width="15%">{{ employee.role }}</td>
-                                        {% for date in dates %}
-                                            <td>
-                                                <input type="number" value="{{ employee.activity.get(date) if employee.activity.get(date) }}">
-                                            </td>
-                                        {% endfor %}
-                                        <td>{{ employee.activity.all }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
@@ -54,6 +50,9 @@
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
                         </button>
+                    </div>
+                    <div class="col-md-3 col-md-offset-3">
+                        <button class="btn btn-sm" id="exportBtn" style="background-color: #4bd1a0;">Скачать таблицу</button>
                     </div>
                 </div>
             </div>

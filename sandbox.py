@@ -3,7 +3,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
     parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
     student_lesson_registered_table, student_lesson_attended_table, student_subject_table, \
     teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
-    SchoolLessonJournal
+    SchoolLessonJournal, Report
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
@@ -1068,17 +1068,7 @@ def add_new_lessons(form):
 # db.session.add(journal_record3)
 # db.session.commit()
 
-math_lesson = Lesson.query.filter_by(id=1677).first()
-math_teacher = math_lesson.teacher
-teacher_roles = [role.role for role in math_teacher.roles]
-person = Person.query.filter_by(last_name="Хрипкова", first_name="Наталья").first()
-
 employees = Person.query.filter(Person.roles.any(Employee.id)).order_by(Person.last_name, Person.first_name).all()
-primary_classes = [sc_cl.id for sc_cl in SchoolClass.query.filter(SchoolClass.school_class < 5)]
-# main_teachers = Person.query.join(teacher_class_table).filter(
-#     teacher_class_table.c.main_teacher,
-#     teacher_class_table.c.class_id.in_([sc_cl.id for sc_cl in SchoolClass.query.filter(SchoolClass.school_class < 5)])
-# ).all()
 
 
 def employee_record(employees):
@@ -1151,13 +1141,78 @@ def employee_record(employees):
     return employees_list
 
 
-#
-print(*employee_record(employees), sep='\n')
-# main_classes = db.session.query(teacher_class_table).filter(
-#     teacher_class_table.c.teacher_id == 23,
-#     teacher_class_table.c.main_teacher,
-#     teacher_class_table.c.class_id.in_(primary_classes)
-# ).all()
-# teacher_classes = [SchoolClass.query.filter(SchoolClass.id == main_class[0]).first().id for main_class in main_classes]
-# classes_dict = {sc_cl: {'all': 0} for sc_cl in teacher_classes}
-# print(main_classes, teacher_classes, classes_dict)
+# primary_classes = SchoolClass.query.filter(SchoolClass.school_class < 5, SchoolClass.main_teacher_id).all()
+# main_teachers = [(sc_cl.id, sc_cl.main_teacher_id) for sc_cl in primary_classes]
+# print(main_teachers)
+
+
+
+def new_employee_record(employees):
+    week_start = get_date(0, 0)
+    week_end = get_date(6, 0)
+    primary_classes = SchoolClass.query.filter(SchoolClass.school_class < 5, SchoolClass.main_teacher_id).all()
+    main_teachers = [(sc_cl.id, sc_cl.main_teacher_id) for sc_cl in primary_classes]
+    employees_list = []
+
+    def add_employee_dict(employee_id, name, role, activity):
+        employees_list.append({
+            'id': employee_id,
+            'name': name,
+            'role': role,
+            'activity': activity
+        })
+    for employee in employees:
+        for role in employee.roles:
+            if role.role != "Учитель":
+
+                add_employee_dict(employee.id, f"{employee.last_name} {employee.first_name}", role.role, {})
+
+        if employee.teacher:
+            teacher_lessons = Lesson.query.filter(
+                Lesson.date >= week_start,
+                Lesson.date <= week_end,
+                Lesson.teacher_id == employee.id
+            ).all()
+            main_teacher = SchoolClass.query.filter(
+                SchoolClass.school_class < 5,
+                SchoolClass.main_teacher_id == employee.id
+            ).all()
+            lessons_dict = {}
+            if main_teacher:
+                teacher_classes_ids = [sc_cl.id for sc_cl in main_teacher]
+                for lesson in teacher_lessons:
+                    lesson_date = f'{lesson.date:%d.%m}'
+                    if len(lesson.school_classes.all()) == 1 and (lesson.school_classes[0].id in teacher_classes_ids):
+                        if lessons_dict.get(lesson.school_classes[0].school_name):
+                            if lessons_dict[lesson.school_classes[0].school_name].get(lesson_date):
+                                lessons_dict[lesson.school_classes[0].school_name][lesson_date] += 1
+                            else:
+                                lessons_dict[lesson.school_classes[0].school_name][lesson_date] = 1
+                        else:
+                            lessons_dict[lesson.school_classes[0].school_name] = {lesson_date: 1}
+                    else:
+                        if lessons_dict.get(lesson.subject.name):
+                            if lessons_dict[lesson.subject.name].get(lesson_date):
+                                lessons_dict[lesson.subject.name][lesson_date] += 1
+                            else:
+                                lessons_dict[lesson.subject.name][lesson_date] = 1
+                        else:
+                            lessons_dict[lesson.subject.name] = {lesson_date: 1}
+            else:
+                for lesson in teacher_lessons:
+                    lesson_date = f'{lesson.date:%d.%m}'
+                    if lessons_dict.get(lesson.subject.name):
+                        if lessons_dict[lesson.subject.name].get(lesson_date):
+                            lessons_dict[lesson.subject.name][lesson_date] += 1
+                        else:
+                            lessons_dict[lesson.subject.name][lesson_date] = 1
+                    else:
+                        lessons_dict[lesson.subject.name] = {lesson_date: 1}
+            for role, activity in lessons_dict.items():
+                add_employee_dict(employee.id, f"{employee.last_name} {employee.first_name}", role, activity)
+
+    return employees_list
+
+
+print(*new_employee_record(employees), sep='\n')
+

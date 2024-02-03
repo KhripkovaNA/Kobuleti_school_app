@@ -423,19 +423,17 @@ def add_lessons():
 @login_required
 def edit_lesson(lesson_id):
     edited_lesson = Lesson.query.filter_by(id=lesson_id).first()
-    # if edited_lesson:
-    if edited_lesson.lesson_type.name in ["school", "after_school"]:
-        return redirect(url_for('school_timetable', week=0, day=0))
+    if not edited_lesson or edited_lesson.lesson_type.name == "after_school":
+        flash("Такого занятия нет.", 'error')
+        return redirect(url_for('timetable', week=0))
 
-    else:
-        rooms = Room.query.all()
-        all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-        extra_school_subjects = Subject.query.filter(
-            Subject.subject_type.has(~SubjectType.name.in_(["school", "after_school"]))
-        ).order_by(Subject.name).all()
+    elif edited_lesson.lesson_type.name == "school":
+        edited_lesson.classes = ', '.join([cl.school_name for cl in sorted(edited_lesson.school_classes,
+                                                                           key=lambda x: x.school_class)])
+    rooms = Room.query.all()
+    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
 
-        return render_template('edit_lesson.html', lesson=edited_lesson, subjects=extra_school_subjects,
-                               rooms=rooms, teachers=all_teachers)
+    return render_template('edit_lesson.html', lesson=edited_lesson, rooms=rooms, teachers=all_teachers)
 
 
 @app.route('/lesson/<string:lesson_id>', methods=['GET', 'POST'])

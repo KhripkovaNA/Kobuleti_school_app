@@ -227,6 +227,7 @@ class SchoolClass(db.Model):
                                       backref='teaching_classes', lazy='dynamic')
     school_subjects = db.relationship('Subject', secondary=subject_class_table,
                                       backref='school_classes', lazy='dynamic')
+    main_teacher_id = db.Column(db.Integer)
 
 
 class SubjectType(db.Model):
@@ -246,17 +247,6 @@ class Employee(db.Model):
     person = db.relationship('Person', backref='roles')
 
 
-# class EmployeeReportCard(db.Model):
-#     __tablename__ = 'employee_duties'
-#
-#     id = db.Column(db.Integer, primary_key=True)
-#     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
-#     person = db.relationship('Person', backref='employee_reports')
-#     duty_date = db.Column(db.Date)
-#     duty_type = db.Column(db.String(50))
-#     duty_hours = db.Column(db.Integer)
-
-
 class SchoolLessonJournal(db.Model):
     __tablename__ = 'school_lessons'
 
@@ -266,4 +256,22 @@ class SchoolLessonJournal(db.Model):
     grade = db.Column(db.Integer)
     lesson_comment = db.Column(db.String(120))
     student = db.relationship('Person', backref='school_lessons')
+    school_class_id = db.Column(db.Integer, db.ForeignKey('school_classes.id'))
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
+    grade_type = db.Column(db.String(50))
+    date = db.Column(db.Date)
 
+
+class Report(db.Model):
+    __tablename__ = 'reports'
+
+    id = db.Column(db.Integer, primary_key=True)
+    person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    person = db.relationship('Person', backref='reports')
+    grade = db.Column(db.Integer)
+    lesson_comment = db.Column(db.String(50))
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
+    grade_type = db.Column(db.String(50))
+    date = db.Column(db.Date)
+    duty_type = db.Column(db.String(50))
+    duty_hours = db.Column(db.Integer)

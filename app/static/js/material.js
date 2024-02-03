@@ -868,4 +868,47 @@ $(document).ready(function(){
         subjectRow.remove();
     });
 
+    $("#exportBtn").click(function(e){
+        var table = $('#table-report');
+        if(table && table.length){
+            var preserveColors = (table.hasClass('colorClass') ? true : false);
+            $(table).table2excel({
+                preserveColors: preserveColors
+            });
+        }
+    });
+
+//    $("#export-btn").click(function(e) {
+//        var table = $('.school-timetable');
+//        var filename = $(".date").text().replace(".", "_").trim();
+//        if(table && table.length){
+//            var preserveColors = (table.hasClass('colorClass') ? true : false);
+//            $(table).table2excel({
+//                preserveColors: preserveColors,
+//                filename: filename,
+//                exclude_links: true
+//            });
+//        }
+//    });
+
+    // Add a click event to the export button
+//    $('#exportBtn').on('click', function () {
+//        var table2excel = new Table2Excel();
+//        table2excel.export($("#table-report"));
+//    });
+
+
+//    $(document).on("click", ".hours-count-cell", function () {
+//        var commentFormContainer = $(this).find(".comment-form-container");
+//        var commentContainer = $(this).find(".comment-container");
+//        commentFormContainer.show();
+//        commentContainer.hide();
+//        if (!commentFormContainer.data("filled")) {
+//            var commentText = commentContainer.text();
+//            commentFormContainer.find("textarea[name='comment']").val(commentText.trim());
+//            commentFormContainer.data("filled", true);
+//        }
+//    });
+
+
 });
