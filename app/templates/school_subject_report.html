@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Журнал. {{ school_subject.name }}. {{ school_class }}</h4>
+            </div>
+            <div class="card-content">
+                <div class="scroll-timetable">
+                    <table class="table table-hover" id="table-report">
+                        <thead class="text-success">
+                            <tr>
+                                <th width="25%">Ученик</th>
+                                {% for date in dates %}
+                                    <th>{{ date }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                                <tr>
+                                    <td width="25%"><b>{{ student.name }}</b></td>
+                                    {% for date in dates %}
+                                        <td>
+                                            {{ student.grades.get(date) if student.grades.get(date) }}
+                                        </td>
+                                    {% endfor %}
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="">
+                                <i class="material-icons">navigate_before</i>Предыдущая неделя
+                            </a>
+                        </button>
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="">
+                                Следующая неделя<i class="material-icons">navigate_next</i>
+                            </a>
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-md-offset-3">
+                        <button class="btn btn-sm" id="exportBtn" style="background-color: #4bd1a0;">Скачать таблицу</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

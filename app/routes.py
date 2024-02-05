@@ -1,6 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, SubscriptionType
+from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
+    SubscriptionType, SchoolLessonJournal
 from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, handle_employee_edit, \
@@ -549,6 +550,7 @@ def school_lesson(lesson_id):
         Person.school_class_id.is_not(None),
         ~Person.id.in_([student.id for student in sc_lesson.lesson_students])
     ).order_by(Person.last_name, Person.first_name).all()
+    grad_types = db.session.query(SchoolLessonJournal.grade_type.distinct()).all()
 
     return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
                            school_students=sc_students)

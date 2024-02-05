@@ -878,6 +878,57 @@ $(document).ready(function(){
         }
     });
 
+    var originalOptions = $(".student-select option").clone();
+
+    $(".add-grad-btn").on("click", function () {
+        var selectedStudent = $(".student-select option:selected");
+        if (selectedStudent.length > 0) {
+            var studentId = selectedStudent.val();
+            var studentName = selectedStudent.text();
+            var grade = $(".student-grade").val();
+            var comment = $(".student-comment").val();
+            var studentGradeText = studentName + ": " + grade + " - " + comment;
+            var gradeInputName = "new_grade_" + studentId;
+            var commenInputtName = "new_comment_" + studentId;
+            selectedStudent.remove();
+
+            var studentGradeRow = `
+                <div class="student-grade-row">${studentGradeText}<a href="#" class="delete-grade" data-student="${studentId}">×</a></div>`;
+
+            var studentInput = `
+                <div id="input-${studentId}">
+                    <input type="hidden" name="${gradeInputName}" value="${grade}">
+                    <input type="hidden" name="${commenInputtName}" value="${comment}">
+                </div>`;
+            $("#grades-container").append(studentGradeRow);
+            $("#input-container").append(studentInput)
+
+            $(".student-comment").val('');
+        }
+    });
+
+    $("#grade-modal").on("hidden.bs.modal", function () {
+        $("#grades-container").empty();
+        $("#input-container").empty();
+        $(".student-select option").remove();
+        $(".student-select").append(originalOptions);
+    });
+
+    $("#grades-container").on("click", ".delete-grade", function (e) {
+        e.preventDefault();
+        var studentId = String($(this).data("student"));
+        $(this).parent().remove();
+        var restoreOption = originalOptions.filter(function() {
+            return $(this).val() === studentId;
+        });
+        if (restoreOption.length > 0){
+            $(".student-select").append(restoreOption);
+        }
+
+        // Remove hidden inputs for grade and comment
+        $("#input-" + studentId).remove();
+    });
+
 //    $("#export-btn").click(function(e) {
 //        var table = $('.school-timetable');
 //        var filename = $(".date").text().replace(".", "_").trim();

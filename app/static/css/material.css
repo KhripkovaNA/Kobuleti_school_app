@@ -3044,6 +3044,13 @@ div.form-control {
     margin-bottom: 10px;
 }
 
+.student-grade-row {
+    display: inline-block;
+    background-color: #F1F2F3;
+    border-radius: 4px;
+    padding: 0 10px;
+}
+
 #table-report>tbody>tr>td {
     border: 1px solid #ddd;
 }

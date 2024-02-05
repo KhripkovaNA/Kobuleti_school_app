@@ -7,6 +7,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types
 from collections import defaultdict
 
@@ -1146,73 +1147,62 @@ def employee_record(employees):
 # print(main_teachers)
 
 
-
-def new_employee_record(employees):
+def student_record(student):
     week_start = get_date(0, 0)
     week_end = get_date(6, 0)
-    primary_classes = SchoolClass.query.filter(SchoolClass.school_class < 5, SchoolClass.main_teacher_id).all()
-    main_teachers = [(sc_cl.id, sc_cl.main_teacher_id) for sc_cl in primary_classes]
-    employees_list = []
+    student_records = SchoolLessonJournal.query.filter(
+        SchoolLessonJournal.date >= week_start,
+        SchoolLessonJournal.date <= week_end,
+        SchoolLessonJournal.student_id == student.id
+    ).all()
+    student_subjects = Subject.query.filter(
+      Subject.subject_type.has(SubjectType.name == "school"),
+      Subject.students.any(Person.id == student.id)
+    ).order_by(Subject.name).all()
+    subjects_dict = {subject.name: {} for subject in student_subjects}
+    for record in student_records:
+        subject = Subject.query.filter_by(id=record.subject_id).first()
+        if subjects_dict.get(subject.name):
+            subjects_dict[subject.name][f'{record.date:%d.%m}'] = (record.grade, record.lesson_comment)
+        else:
+            subjects_dict[subject.name] = {f'{record.date:%d.%m}': (record.grade, record.lesson_comment)}
 
-    def add_employee_dict(employee_id, name, role, activity):
-        employees_list.append({
-            'id': employee_id,
-            'name': name,
-            'role': role,
-            'activity': activity
-        })
-    for employee in employees:
-        for role in employee.roles:
-            if role.role != "Учитель":
-
-                add_employee_dict(employee.id, f"{employee.last_name} {employee.first_name}", role.role, {})
-
-        if employee.teacher:
-            teacher_lessons = Lesson.query.filter(
-                Lesson.date >= week_start,
-                Lesson.date <= week_end,
-                Lesson.teacher_id == employee.id
-            ).all()
-            main_teacher = SchoolClass.query.filter(
-                SchoolClass.school_class < 5,
-                SchoolClass.main_teacher_id == employee.id
-            ).all()
-            lessons_dict = {}
-            if main_teacher:
-                teacher_classes_ids = [sc_cl.id for sc_cl in main_teacher]
-                for lesson in teacher_lessons:
-                    lesson_date = f'{lesson.date:%d.%m}'
-                    if len(lesson.school_classes.all()) == 1 and (lesson.school_classes[0].id in teacher_classes_ids):
-                        if lessons_dict.get(lesson.school_classes[0].school_name):
-                            if lessons_dict[lesson.school_classes[0].school_name].get(lesson_date):
-                                lessons_dict[lesson.school_classes[0].school_name][lesson_date] += 1
-                            else:
-                                lessons_dict[lesson.school_classes[0].school_name][lesson_date] = 1
-                        else:
-                            lessons_dict[lesson.school_classes[0].school_name] = {lesson_date: 1}
-                    else:
-                        if lessons_dict.get(lesson.subject.name):
-                            if lessons_dict[lesson.subject.name].get(lesson_date):
-                                lessons_dict[lesson.subject.name][lesson_date] += 1
-                            else:
-                                lessons_dict[lesson.subject.name][lesson_date] = 1
-                        else:
-                            lessons_dict[lesson.subject.name] = {lesson_date: 1}
-            else:
-                for lesson in teacher_lessons:
-                    lesson_date = f'{lesson.date:%d.%m}'
-                    if lessons_dict.get(lesson.subject.name):
-                        if lessons_dict[lesson.subject.name].get(lesson_date):
-                            lessons_dict[lesson.subject.name][lesson_date] += 1
-                        else:
-                            lessons_dict[lesson.subject.name][lesson_date] = 1
-                    else:
-                        lessons_dict[lesson.subject.name] = {lesson_date: 1}
-            for role, activity in lessons_dict.items():
-                add_employee_dict(employee.id, f"{employee.last_name} {employee.first_name}", role, activity)
-
-    return employees_list
+    return subjects_dict
 
 
-print(*new_employee_record(employees), sep='\n')
+students = Person.query.filter(Person.id.in_([47, 61, 64])).all()
+# for student in students:
+#     print(student_record(student))
+# print(*new_employee_record(employees), sep='\n')
 
+
+def subject_record(subject_id, school_class_id, month_index):
+    result_date = TODAY + relativedelta(months=month_index)
+    first_date = datetime(result_date.year, result_date.month, 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
+    subject = Subject.query.filter_by(id=subject_id).first()
+    school_class = SchoolClass.query.filter_by(id=school_class_id).first()
+    school_class_students = Person.query.filter_by(school_class_id=school_class_id)\
+        .order_by(Person.last_name, Person.first_name).all()
+    subject_records = SchoolLessonJournal.query.filter(
+        SchoolLessonJournal.date >= first_date,
+        SchoolLessonJournal.date <= last_date,
+        SchoolLessonJournal.subject_id == subject_id,
+        SchoolLessonJournal.school_class_id == school_class_id
+    ).all()
+    dates_grade_type_set = set()
+    record_dict = {f"{student.last_name} {student.first_name}": {} for student in school_class_students}
+
+    for record in subject_records:
+        date_string = f"{record.date:%d.%m}"
+        dates_grade_type_set.add((date_string, record.grade_type))
+        student_name = f"{record.student.last_name} {record.student.first_name}"
+        if record.student in school_class_students:
+            record_dict[student_name][(date_string, record.grade_type)] = {
+                "grade": record.grade,
+                "comment": record.lesson_comment
+            }
+
+    dates_grade_type = sorted(list(dates_grade_type_set))
+
+    return record_dict, dates_grade_type
