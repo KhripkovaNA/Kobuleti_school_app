@@ -1206,3 +1206,7 @@ def subject_record(subject_id, school_class_id, month_index):
     dates_grade_type = sorted(list(dates_grade_type_set))
 
     return record_dict, dates_grade_type
+
+
+print([grade_type[0] for grade_type in db.session.query(SchoolLessonJournal.grade_type.distinct()).all()
+      if grade_type[0]])

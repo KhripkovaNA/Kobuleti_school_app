@@ -2403,7 +2403,12 @@ label {
 
 .form-group {
     padding-bottom: 10px;
-    margin: 27px 0 0 0;
+    margin: 15px 30px;
+}
+
+input[type=checkbox][disabled],
+input[type=radio][disabled] {
+    cursor: default;
 }
 
 .form-group .form-control::-moz-placeholder {

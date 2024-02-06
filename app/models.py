@@ -251,23 +251,27 @@ class SchoolLessonJournal(db.Model):
     __tablename__ = 'school_lessons'
 
     id = db.Column(db.Integer, primary_key=True)
-    lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
-    student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    date = db.Column(db.Date)
+    grade_type = db.Column(db.String(50))
     grade = db.Column(db.Integer)
     lesson_comment = db.Column(db.String(120))
-    student = db.relationship('Person', backref='school_lessons')
     school_class_id = db.Column(db.Integer, db.ForeignKey('school_classes.id'))
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
-    grade_type = db.Column(db.String(50))
-    date = db.Column(db.Date)
+
+    student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
+
+    student = db.relationship('Person', backref='school_lessons')
+    lesson = db.relationship('Lesson', backref='lesson_records')
 
 
 class Report(db.Model):
     __tablename__ = 'reports'
 
     id = db.Column(db.Integer, primary_key=True)
-    person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
-    person = db.relationship('Person', backref='reports')
     date = db.Column(db.Date)
     duty_type = db.Column(db.String(50))
     duty_hours = db.Column(db.Integer)
+
+    person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    person = db.relationship('Person', backref='reports')

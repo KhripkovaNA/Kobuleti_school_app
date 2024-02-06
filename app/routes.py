@@ -533,25 +533,29 @@ def school_lesson(lesson_id):
     sc_lesson = show_school_lesson(lesson_id)
 
     if request.method == 'POST':
-        try:
-            message = handle_school_lesson(request.form, sc_lesson)
-            db.session.commit()
-            if message:
-                flash(message, 'success')
+        if 'new_grade_btn' in request.form:
+            return redirect(url_for('subject_journal'))
+        else:
+            try:
+                message = handle_school_lesson(request.form, sc_lesson)
+                db.session.commit()
+                if message:
+                    flash(message, 'success')
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
 
-        return redirect(url_for('school_lesson', lesson_id=sc_lesson.id))
+            return redirect(url_for('school_lesson', lesson_id=sc_lesson.id))
 
     days_dict = {day_num: day for (day_num, day) in enumerate(DAYS_OF_WEEK)}
     sc_students = Person.query.filter(
         Person.school_class_id.is_not(None),
         ~Person.id.in_([student.id for student in sc_lesson.lesson_students])
     ).order_by(Person.last_name, Person.first_name).all()
-    grad_types = db.session.query(SchoolLessonJournal.grade_type.distinct()).all()
+    distinct_grade_types = db.session.query(SchoolLessonJournal.grade_type.distinct()).all()
+    grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
 
     return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
-                           school_students=sc_students)
+                           school_students=sc_students, grade_types=grade_types)
 
