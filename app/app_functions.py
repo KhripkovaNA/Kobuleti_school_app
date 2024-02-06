@@ -4,7 +4,7 @@ from app.models import Person, Contact, parent_child_table, Employee, Subject, S
 from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
-from typing import List, Dict, Any
+from dateutil.relativedelta import relativedelta
 
 DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
 MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
@@ -1334,6 +1334,7 @@ def show_school_lesson(lesson_id):
 
     if sc_lesson:
         classes = [cl.id for cl in sc_lesson.school_classes]
+        sc_lesson.classes_ids = classes
         sc_lesson.classes = ', '.join([cl.school_name for cl in sorted(sc_lesson.school_classes,
                                                                        key=lambda x: x.school_class)])
 
@@ -1411,8 +1412,11 @@ def handle_school_lesson(form, lesson):
                     journal_record.lesson_comment = lesson_comment
                 else:
                     new_journal_record = SchoolLessonJournal(
+                        date=lesson.date,
                         lesson_id=lesson.id,
                         student_id=student.id,
+                        school_class_id=student.school_class_id,
+                        subject_id=lesson.subject_id,
                         grade=grade,
                         lesson_comment=lesson_comment
                     )
@@ -1420,8 +1424,8 @@ def handle_school_lesson(form, lesson):
             else:
                 if journal_record:
                     db.session.delete(journal_record)
+            db.session.flush()
         lesson.lesson_completed = True
-        db.session.flush()
 
         return 'Журнал заполнен.'
 
@@ -1429,6 +1433,26 @@ def handle_school_lesson(form, lesson):
         lesson.lesson_completed = False
 
         return 'Внесение изменений.'
+
+    if 'new_grade_btn' in form:
+        grade_type = form.get('grade_type')
+        grade_date = datetime.strptime(form.get('grade_date'), '%d.%m.%Y').date()
+        for student in lesson.lesson_students:
+            new_grade = form.get(f'new_grade_{student.id}')
+            new_comment = form.get(f'new_comment_{student.id}')
+            if new_grade or new_comment:
+                journal_record = SchoolLessonJournal(
+                    date=grade_date,
+                    grade_type=grade_type,
+                    student_id=student.id,
+                    school_class_id=student.school_class_id,
+                    subject_id=lesson.subject_id,
+                    grade=new_grade,
+                    lesson_comment=new_comment
+                )
+                db.session.add(journal_record)
+                db.session.flush()
+        return "Оценка внесена"
 
 
 def employee_record(employees, week):
@@ -1498,3 +1522,53 @@ def employee_record(employees, week):
     dates = [f"{week_start + timedelta(day):%d.%m}" for day in range(7)]
 
     return employees_list, dates
+
+
+def subject_record(subject_id, school_classes_ids, month_index):
+    result_date = TODAY + relativedelta(months=month_index)
+    first_date = datetime(result_date.year, result_date.month, 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
+    school_students = Person.query.filter(
+        Person.school_class_id.in_(school_classes_ids)
+    ).order_by(Person.last_name, Person.first_name).all()
+    subject_records = SchoolLessonJournal.query.filter(
+        SchoolLessonJournal.date >= first_date,
+        SchoolLessonJournal.date <= last_date,
+        SchoolLessonJournal.subject_id == subject_id,
+        SchoolLessonJournal.school_class_id.in_(school_classes_ids)
+    ).all()
+    dates_topic_set = set()
+    record_dict = {f"{student.last_name} {student.first_name}": {} for student in school_students}
+
+    for record in subject_records:
+        date_string = f"{record.date:%d.%m}"
+        topic = record.grade_type if record.grade_type else record.lesson.lesson_topic
+        dates_topic_set.add((date_string, topic))
+        student_name = f"{record.student.last_name} {record.student.first_name}"
+        if record.student in school_students:
+            record_dict[student_name][(date_string, topic)] = {
+                "grade": record.grade,
+                "comment": record.lesson_comment
+            }
+    subject_lessons = Lesson.query.filter(
+        Lesson.date >= first_date,
+        Lesson.date <= last_date,
+        Lesson.subject_id == subject_id,
+        Lesson.school_classes.any(SchoolClass.id.in_(school_classes_ids)),
+        Lesson.lesson_completed
+    ).all()
+    for lesson in subject_lessons:
+        date_string = f"{lesson.date:%d.%m}"
+        topic = lesson.lesson_topic
+        dates_topic_set.add((date_string, topic))
+
+    dates_topic = sorted(list(dates_topic_set))
+    student_names = record_dict.keys()
+
+    return record_dict, dates_topic, student_names
+
+
+def calc_month_index(date):
+    date1 = date.replace(day=1)
+    date2 = TODAY.replace(day=1)
+    return relativedelta(date1, date2).months

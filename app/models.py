@@ -252,7 +252,7 @@ class SchoolLessonJournal(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date)
-    grade_type = db.Column(db.String(50))
+    grade_type = db.Column(db.String(50), default="")
     grade = db.Column(db.Integer)
     lesson_comment = db.Column(db.String(120))
     school_class_id = db.Column(db.Integer, db.ForeignKey('school_classes.id'))

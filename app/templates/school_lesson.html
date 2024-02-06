@@ -168,7 +168,7 @@
                                                     <label class="control-label" style="padding-left:44px;">Ученик:</label>
                                                 </div>
                                                 <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
-                                                    <select name="student" class="form-control student-select">
+                                                    <select class="form-control student-select">
                                                         {% for student in school_lesson.lesson_students %}
                                                             <option value="{{ student.id }}">{{ student.last_name }} {{ student.first_name }}</option>
                                                         {% endfor %}

@@ -2881,12 +2881,21 @@ select.form-control[multiple],
     font-weight: 300;
 }
 
+.scroll-timetable .fixed-column, .scroll-timetable .fixed-column-next {
+    z-index: 1;
+    background-color: #f2f2f2;
+}
+
 .scroll-timetable .fixed-column {
     position: -webkit-sticky;
     position: sticky;
     left: 0;
-    z-index: 1;
-    background-color: #f2f2f2;
+}
+
+.scroll-timetable .fixed-column-next {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 50px;
 }
 
 .scroll-timetable thead, #table-report thead {

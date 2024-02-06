@@ -9,7 +9,6 @@ from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types
-from collections import defaultdict
 
 app.app_context().push()
 
@@ -1176,37 +1175,50 @@ students = Person.query.filter(Person.id.in_([47, 61, 64])).all()
 # print(*new_employee_record(employees), sep='\n')
 
 
-def subject_record(subject_id, school_class_id, month_index):
+def subject_record(subject_id, school_class_ids, month_index):
     result_date = TODAY + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
-    subject = Subject.query.filter_by(id=subject_id).first()
-    school_class = SchoolClass.query.filter_by(id=school_class_id).first()
-    school_class_students = Person.query.filter_by(school_class_id=school_class_id)\
-        .order_by(Person.last_name, Person.first_name).all()
+    school_students = Person.query.filter(
+        Person.school_class_id.in_(school_class_ids)
+    ).order_by(Person.last_name, Person.first_name).all()
     subject_records = SchoolLessonJournal.query.filter(
         SchoolLessonJournal.date >= first_date,
         SchoolLessonJournal.date <= last_date,
         SchoolLessonJournal.subject_id == subject_id,
-        SchoolLessonJournal.school_class_id == school_class_id
+        SchoolLessonJournal.school_class_id.in_(school_class_ids)
     ).all()
     dates_grade_type_set = set()
-    record_dict = {f"{student.last_name} {student.first_name}": {} for student in school_class_students}
+    record_dict = {f"{student.last_name} {student.first_name}": {} for student in school_students}
 
     for record in subject_records:
         date_string = f"{record.date:%d.%m}"
-        dates_grade_type_set.add((date_string, record.grade_type))
+        grade_type = record.grade_type if record.grade_type else record.lesson.lesson_topic
+        dates_grade_type_set.add((date_string, grade_type))
         student_name = f"{record.student.last_name} {record.student.first_name}"
-        if record.student in school_class_students:
-            record_dict[student_name][(date_string, record.grade_type)] = {
+        if record.student in school_students:
+            record_dict[student_name][(date_string, grade_type)] = {
                 "grade": record.grade,
                 "comment": record.lesson_comment
             }
+    subject_lessons = Lesson.query.filter(
+        Lesson.date >= first_date,
+        Lesson.date <= last_date,
+        Lesson.subject_id == subject_id,
+        Lesson.school_classes.any(SchoolClass.id.in_(school_class_ids)),
+        Lesson.lesson_completed
+    ).all()
+    for lesson in subject_lessons:
+        date_string = f"{lesson.date:%d.%m}"
+        topic = lesson.lesson_topic
+        dates_grade_type_set.add((date_string, topic))
 
     dates_grade_type = sorted(list(dates_grade_type_set))
 
     return record_dict, dates_grade_type
 
 
-print([grade_type[0] for grade_type in db.session.query(SchoolLessonJournal.grade_type.distinct()).all()
-      if grade_type[0]])
+# record_dict, dates_grade_type = subject_record(32, [1], -1)
+# print(record_dict, dates_grade_type)
+
+

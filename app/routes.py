@@ -8,7 +8,7 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, basic_student_info, subscript
     format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, \
     filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, \
     format_school_class_students, format_school_class_subjects, show_school_lesson, handle_school_lesson, \
-    employee_record
+    employee_record, subject_record, calc_month_index
 
 from app import app, db
 from datetime import datetime, timedelta
@@ -531,20 +531,25 @@ def school_timetable(week, day):
 @login_required
 def school_lesson(lesson_id):
     sc_lesson = show_school_lesson(lesson_id)
+    subject_classes = str(sc_lesson.subject_id) + '-' + '-'.join(map(str, sc_lesson.classes_ids))
+    month_index = calc_month_index(sc_lesson.date)
 
     if request.method == 'POST':
-        if 'new_grade_btn' in request.form:
-            return redirect(url_for('subject_journal'))
-        else:
-            try:
-                message = handle_school_lesson(request.form, sc_lesson)
-                db.session.commit()
-                if message:
-                    flash(message, 'success')
+        try:
+            message = handle_school_lesson(request.form, sc_lesson)
+            db.session.commit()
+            if message:
+                flash(message, 'success')
 
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
+
+        if 'new_grade_btn' in request.form:
+
+            return redirect(url_for('school_subject', subject_classes=subject_classes,
+                                    month_index=month_index))
+        else:
 
             return redirect(url_for('school_lesson', lesson_id=sc_lesson.id))
 
@@ -558,4 +563,20 @@ def school_lesson(lesson_id):
 
     return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
                            school_students=sc_students, grade_types=grade_types)
+
+
+@app.route('/school-subject/<subject_classes>/<string:month_index>', methods=['GET', 'POST'])
+@login_required
+def school_subject(subject_classes, month_index):
+    subject_classes_ids = subject_classes.split('-')
+    subject_id = int(subject_classes_ids[0])
+    classes_ids = [int(sc_cl) for sc_cl in subject_classes_ids[1:]]
+    subject_records, dates_topics, sc_students = subject_record(subject_id, classes_ids, int(month_index))
+    subject = Subject.query.filter_by(id=subject_id).first()
+    school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).order_by(SchoolClass.school_class).all()
+    school_classes_names = ', '.join([cl.school_name for cl in school_classes])
+
+    return render_template('school_subject.html', subject_records=subject_records, dates_topics=dates_topics,
+                           students=sc_students, subject=subject, school_classes=school_classes_names)
+
 
