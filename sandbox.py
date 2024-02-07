@@ -1146,12 +1146,13 @@ def employee_record(employees):
 # print(main_teachers)
 
 
-def student_record(student):
-    week_start = get_date(0, 0)
-    week_end = get_date(6, 0)
+def student_record(student, month_index):
+    result_date = TODAY + relativedelta(months=month_index)
+    first_date = datetime(result_date.year, result_date.month, 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
     student_records = SchoolLessonJournal.query.filter(
-        SchoolLessonJournal.date >= week_start,
-        SchoolLessonJournal.date <= week_end,
+        SchoolLessonJournal.date >= first_date,
+        SchoolLessonJournal.date <= last_date,
         SchoolLessonJournal.student_id == student.id
     ).all()
     student_subjects = Subject.query.filter(
@@ -1159,14 +1160,20 @@ def student_record(student):
       Subject.students.any(Person.id == student.id)
     ).order_by(Subject.name).all()
     subjects_dict = {subject.name: {} for subject in student_subjects}
+    dates_grade_type_set = set()
     for record in student_records:
         subject = Subject.query.filter_by(id=record.subject_id).first()
-        if subjects_dict.get(subject.name):
-            subjects_dict[subject.name][f'{record.date:%d.%m}'] = (record.grade, record.lesson_comment)
+        date_str = f'{record.date:%d.%m}'
+        grade_type = record.grade_type if record.grade_type else record.lesson.lesson_topic
+        dates_grade_type_set.add((date_str, grade_type))
+        if subject.name in subjects_dict.keys():
+            subjects_dict[subject.name][(date_str, grade_type)] = (record.grade, record.lesson_comment)
         else:
-            subjects_dict[subject.name] = {f'{record.date:%d.%m}': (record.grade, record.lesson_comment)}
+            subjects_dict[subject.name] = {(date_str, grade_type): (record.grade, record.lesson_comment)}
 
-    return subjects_dict
+    dates_grade_type = sorted(list(dates_grade_type_set))
+
+    return subjects_dict, dates_grade_type
 
 
 students = Person.query.filter(Person.id.in_([47, 61, 64])).all()
@@ -1218,7 +1225,37 @@ def subject_record(subject_id, school_class_ids, month_index):
     return record_dict, dates_grade_type
 
 
-# record_dict, dates_grade_type = subject_record(32, [1], -1)
-# print(record_dict, dates_grade_type)
+def get_after_school_students(month_index):
+    current_period = (TODAY.month, TODAY.year)
+    result_date = TODAY + relativedelta(months=month_index)
+    period = (result_date.month, result_date.year)
+    first_date = datetime(result_date.year, result_date.month, 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
+    after_school_subscriptions = Subscription.query.filter(
+        Subscription.subject.has(Subject.subject_type.has(SubjectType.name == "after_school")),
+        Subscription.purchase_date >= first_date,
+        Subscription.purchase_date <= last_date
+    ).all()
+    after_school_students = [subscription.student for subscription in after_school_subscriptions]
+
+    return after_school_students
 
 
+student = Person.query.filter_by(id=4).first()
+
+# new_subscription = Subscription(
+#     subject_id=1,
+#     student_id=4,
+#     subscription_type_id=4,
+#     purchase_date=TODAY.replace(day=6),
+#     period="day"
+# )
+#
+# db.session.add(new_subscription)
+# db.session.commit()
+# print(*[f"{stud.first_name}: {stud.books}" for stud in after_school_stu], sep='\n')
+
+list1 = [1, 2]
+list2 = []
+list3 = list2 + list1
+print(list3)

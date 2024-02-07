@@ -88,6 +88,11 @@
                                                                             </a>
                                                                         </li>
                                                                         <li>
+                                                                            <a href="{{ url_for('student_school_record', student_id=student.id, month_index=0) }}">
+                                                                                <i class="material-icons" style="color: purple;">newspaper</i>Табель
+                                                                            </a>
+                                                                        </li>
+                                                                        <li>
                                                                             <a href="" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
                                                                                 <i class="material-icons" style="color: purple;">date_range</i>Записать
                                                                             </a>

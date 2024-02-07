@@ -355,6 +355,7 @@ def format_subjects_and_subscriptions(student):
     subscriptions = []
     subscriptions_list = []
     subscriptions_set = set()
+    after_school_list = []
 
     school = [student.school_class.school_name] if student.school_class else []
 
@@ -362,22 +363,38 @@ def format_subjects_and_subscriptions(student):
         subject = subscription.subject
         is_after_school = subject == after_school_subject()
         is_active = subscription.active
+        subscription_dict = {}
 
-        if is_active:
-            subscription_dict = {
-                'subscription_id': subscription.id,
-                'subject_name': subject.name,
-                'lessons_left': subscription.lessons_left if not is_after_school else None,
-                'end_date': f'{subscription.end_date:%d.%m.%Y}' if not is_after_school
-                else MONTHS[subscription.purchase_date.month - 1]
-            }
-            if is_after_school:
-                subscriptions.insert(0, subscription_dict)
-                subscriptions_list.insert(0, f'{subject.name}({subscription_dict["end_date"]})')
-            else:
-                subscriptions.append(subscription_dict)
-                subscriptions_list.append(f'{subject.name}({subscription.lessons_left})')
+        if is_active and not is_after_school:
+            subscription_dict['subscription_id'] = subscription.id
+            subscription_dict['subject_name'] = subject.name
+            subscription_dict['lessons_left'] = subscription.lessons_left
+            subscription_dict['end_date'] = f'{subscription.end_date:%d.%m.%Y}'
+            subscriptions.append(subscription_dict)
+            subscriptions_list.append(f'{subject.name}({subscription.lessons_left})')
             subscriptions_set.add(subject.id)
+
+        elif is_after_school:
+            if is_active:
+                subscription_dict['subscription_id'] = subscription.id
+                subscription_dict['purchase_date'] = subscription.purchase_date
+                subscription_dict['shift'] = subscription.shift
+                subscription_dict['period'] = "месяц"
+                subscription_dict['validity'] = MONTHS[subscription.purchase_date.month - 1]
+                after_school_list.append(subscription_dict)
+                subscriptions_list.insert(0, f'{subject.name} ({subscription_dict["validity"]})')
+                subscriptions_set.add(subject.id)
+            else:
+                day_delta = (subscription.purchase_date - TODAY).days
+                if (-30 <= day_delta <= 30) and subscription.period != "month":
+                    subscription_dict['subscription_id'] = subscription.id
+                    subscription_dict['purchase_date'] = subscription.purchase_date
+                    subscription_dict['shift'] = subscription.shift
+                    subscription_dict['period'] = "день" if subscription.period == "day" else subscription.period
+                    subscription_dict['validity'] = f"{subscription.purchase_date:%d.%m}"
+
+                    after_school_list.append(subscription_dict)
+                    subscriptions_set.add(subject.id)
 
     all_subjects_list = sorted(
         [(subject.name, subject.id) for subject in student.subjects if subject.subject_type.name != "school"])
@@ -387,6 +404,7 @@ def format_subjects_and_subscriptions(student):
     student.extra_subjects = extra_subjects
     student.subjects_info = ', '.join(school + subscriptions_list + extra_subjects)
     student.subscriptions_info = subscriptions
+    student.after_school_info = after_school_list
     student.all_subjects = ([(school[0], 0)] if school else []) + all_subjects_list
 
 
@@ -705,9 +723,6 @@ def format_subscription_types(subscription_types):
             type_of_subscription = f"{subscription_type.lessons} занятий за {subscription_type.price:.0f} " \
                                    f"({subscription_type.duration} дней)"
             types_of_subscription.append((subscription_type.id, type_of_subscription))
-        elif subscription_type.period:
-            type_of_subscription = f"{subscription_type.price:.0f} за {subscription_type.period}"
-            types_of_subscription.append((subscription_type.id, type_of_subscription))
 
     return types_of_subscription
 
@@ -747,7 +762,8 @@ def check_subscription(student, lesson, subject_id):
         if subscription.subject == after_school:
             cond1 = subscription.purchase_date.month == date.month
             cond2 = subscription.purchase_date > date
-            subscription.active = True if (cond1 or (cond2 and cond)) else False
+            cond3 = subscription.period == "month"
+            subscription.active = True if ((cond1 or (cond2 and cond)) and cond3) else False
             db.session.commit()
         else:
             cond1 = subscription.purchase_date <= date
@@ -924,7 +940,8 @@ def prev_next_lessons(lesson):
 
 def show_lesson(lesson_id):
     if not str(lesson_id).isdigit():
-        subject_id = lesson_id.split('-')[1]
+        subject_id_str = lesson_id.split('-')[1]
+        subject_id = int(subject_id_str) if subject_id_str.isdigit() else None
         last_lesson = Lesson.query.filter_by(subject_id=subject_id). \
             order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
         coming_lesson = Lesson.query.filter(Lesson.date >= TODAY,
@@ -932,12 +949,18 @@ def show_lesson(lesson_id):
             order_by(Lesson.date, Lesson.start_time).first()
         subject_lesson = coming_lesson if coming_lesson else last_lesson if last_lesson else None
     else:
-        subject_lesson = Lesson.query.filter_by(id=lesson_id).first()
+        subject_lesson = Lesson.query.filter_by(id=int(lesson_id)).first()
+        subject_id = subject_lesson.subject_id if subject_lesson else None
+
     if subject_lesson:
         subject_lesson.students = get_lesson_students(subject_lesson)
         subject_lesson.prev, subject_lesson.next = prev_next_lessons(subject_lesson)
+        lesson_subject = subject_lesson.subject
 
-    return subject_lesson
+    else:
+        lesson_subject = Subject.query.filter_by(id=subject_id).first() if subject_id else None
+
+    return subject_lesson, lesson_subject
 
 
 def format_school_classes_names(school_classes):
@@ -1318,7 +1341,9 @@ def prev_next_school_lessons(lesson):
 
 def show_school_lesson(lesson_id):
     if not str(lesson_id).isdigit():
-        school_class_id, subject_id = lesson_id.split('-')
+        school_class_id_str, subject_id_str = lesson_id.split('-')
+        school_class_id = int(school_class_id_str) if school_class_id_str.isdigit() else None
+        subject_id = int(subject_id_str) if subject_id_str.isdigit() else None
         last_lesson = Lesson.query.filter(
             Lesson.subject_id == subject_id,
             Lesson.school_classes.any(SchoolClass.id == school_class_id)
@@ -1331,6 +1356,7 @@ def show_school_lesson(lesson_id):
         sc_lesson = coming_lesson if coming_lesson else last_lesson if last_lesson else None
     else:
         sc_lesson = Lesson.query.filter_by(id=int(lesson_id)).first()
+        subject_id = sc_lesson.subject_id if sc_lesson else None
 
     if sc_lesson:
         classes = [cl.id for cl in sc_lesson.school_classes]
@@ -1357,7 +1383,13 @@ def show_school_lesson(lesson_id):
         sc_lesson.lesson_students = lesson_students
         sc_lesson.prev, sc_lesson.next = prev_next_school_lessons(sc_lesson)
 
-    return sc_lesson
+        sc_subject = sc_lesson.subject
+        school_classes = sc_lesson.school_classes.all()
+
+    else:
+        sc_subject = Subject.query.filter_by(id=subject_id).first() if subject_id else None
+
+    return sc_lesson, sc_subject
 
 
 def handle_school_lesson(form, lesson):
@@ -1563,12 +1595,82 @@ def subject_record(subject_id, school_classes_ids, month_index):
         dates_topic_set.add((date_string, topic))
 
     dates_topic = sorted(list(dates_topic_set))
-    student_names = record_dict.keys()
 
-    return record_dict, dates_topic, student_names
+    return record_dict, dates_topic
 
 
 def calc_month_index(date):
     date1 = date.replace(day=1)
     date2 = TODAY.replace(day=1)
+
     return relativedelta(date1, date2).months
+
+
+def student_record(student, month_index):
+    result_date = TODAY + relativedelta(months=month_index)
+    first_date = datetime(result_date.year, result_date.month, 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
+    student_records = SchoolLessonJournal.query.filter(
+        SchoolLessonJournal.date >= first_date,
+        SchoolLessonJournal.date <= last_date,
+        SchoolLessonJournal.student_id == student.id
+    ).all()
+    student_subjects = Subject.query.filter(
+      Subject.subject_type.has(SubjectType.name == "school"),
+      Subject.students.any(Person.id == student.id)
+    ).order_by(Subject.name).all()
+    subjects_dict = {subject.name: {} for subject in student_subjects}
+    dates_grade_type_set = set()
+    for record in student_records:
+        subject = Subject.query.filter_by(id=record.subject_id).first()
+        date_str = f'{record.date:%d.%m}'
+        grade_type = record.grade_type if record.grade_type else record.lesson.lesson_topic
+        dates_grade_type_set.add((date_str, grade_type))
+        if subject.name in subjects_dict.keys():
+            subjects_dict[subject.name][(date_str, grade_type)] = {"grade": record.grade,
+                                                                   "comment": record.lesson_comment}
+        else:
+            subjects_dict[subject.name] = {(date_str, grade_type): {"grade": record.grade,
+                                                                    "comment": record.lesson_comment}}
+
+    dates_grade_type = sorted(list(dates_grade_type_set))
+
+    return subjects_dict, dates_grade_type
+
+
+def get_after_school_students(month_index):
+    current_period = (TODAY.month, TODAY.year)
+    result_date = TODAY + relativedelta(months=month_index)
+    period = (result_date.month, result_date.year)
+    first_date = datetime(period[1], period[0], 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
+    after_school_subscriptions = Subscription.query.filter(
+        Subscription.subject_id == after_school_subject().id,
+        Subscription.purchase_date >= first_date,
+        Subscription.purchase_date <= last_date
+    ).all()
+    after_school_students = []
+    for subscription in after_school_subscriptions:
+        after_school_student = subscription.student
+        if after_school_student not in after_school_students:
+            format_student_info(after_school_student)
+            if period == current_period:
+                activities = sorted([subject.name for subject in after_school_student.subjects
+                                     if subject.subject_type.name not in ["school", "after_school"]])
+                after_school_student.activities = activities
+            if subscription.period == "month":
+                after_school_student.attendance = ["месяц"]
+            elif subscription.period == "day":
+                after_school_student.attendance = [f"день ({subscription.purchase_date:%d.%m})"]
+            else:
+                after_school_student.attendance = [f"{subscription.period} ({subscription.purchase_date:%d.%m})"]
+            after_school_students.append(after_school_student)
+        else:
+            student_ind = after_school_students.index(after_school_student)
+            after_school_student = after_school_students[student_ind]
+            if subscription.period == "day":
+                after_school_student.attendance.append(f"день ({subscription.purchase_date:%d.%m})")
+            else:
+                after_school_student.attendance.append(f"{subscription.period} ({subscription.purchase_date:%d.%m})")
+
+    return after_school_students, period, current_period

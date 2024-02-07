@@ -3065,8 +3065,18 @@ div.form-control {
     padding: 0 10px;
 }
 
+.comment {
+    cursor: pointer;
+}
+
 #table-report>tbody>tr>td {
     border: 1px solid #ddd;
+}
+
+.switch-buttons-row .subsection-btn {
+    width: 120px;
+    text-align:center;
+    padding: 5px 0;
 }
 
 .form-control p {

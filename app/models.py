@@ -163,6 +163,8 @@ class Subscription(db.Model):
     purchase_date = db.Column(db.Date, default=datetime.today().date())
     end_date = db.Column(db.Date)
     active = db.Column(db.Boolean, default=False)
+    shift = db.Column(db.Integer)
+    period = db.Column(db.String(50))
 
 
 class SubscriptionType(db.Model):

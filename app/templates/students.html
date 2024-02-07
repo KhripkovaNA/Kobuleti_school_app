@@ -17,7 +17,7 @@
                                 <th>Фамилия, Имя</th>
                                 <th>Дата рождения, Возраст</th>
                                 <th>Статус</th>
-                                <th>Занятия</th>
+                                <th width="15%">Занятия</th>
                                 <th>Контакт</th>
                                 <th>Комментарий</th>
                                 <th>Действия</th>
@@ -42,7 +42,7 @@
                                                     <p style="color:red"><b>Баланс: {{ student.balance_minus }}</b></p>
                                                 {% endif %}
                                             </td>
-                                            <td>
+                                            <td width="15%">
                                                 {% if student.subjects %}
                                                     {% if student.status=="Лид"%}
                                                         Интересуется:

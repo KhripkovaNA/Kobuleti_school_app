@@ -148,20 +148,25 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Switch buttons between sections *-*-*-*-*-*-*-*-*-* -->
 
-                <div class="row">
-                    <div class="col-md-3">
-                        <button type="button" id="show-contacts-btn" class="btn btn-default" style="background-color: #ff9800;">
+                <div class="row switch-buttons-row">
+                    <div class="col-md-2 col-md-offset-1">
+                        <button type="button" id="show-contacts-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
                             <i class="material-icons">people</i> Контакты
                         </button>
                     </div>
-                    <div class="col-md-3">
-                        <button type="button" id="show-subjects-btn" class="btn btn-default" style="background-color: #ff9800;">
+                    <div class="col-md-2">
+                        <button type="button" id="show-subjects-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
                             <i class="material-icons">school</i> Занятия
                         </button>
                     </div>
-                    <div class="col-md-3">
-                        <button type="button" id="show-subscriptions-btn" class="btn btn-default" style="background-color: #ff9800;">
+                    <div class="col-md-2">
+                        <button type="button" id="show-subscriptions-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
                             <i class="material-icons">ballot</i> Абонементы
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" id="show-after-school-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
+                            <i class="material-icons">diversity_2</i> Продленка
                         </button>
                     </div>
                 </div>
@@ -770,6 +775,7 @@
                         </div>
                     </div>
 
+
             <!-- *-*-*-*-*-*-*-*-*-* Subscriptions information edit *-*-*-*-*-*-*-*-*-* -->
 
                     <div class="form form-subscriptions" data-target="subscriptions" style="display: none;">
@@ -820,6 +826,166 @@
                             </div>
                         </form>
                     </div>
+                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* After-school section *-*-*-*-*-*-*-*-*-* -->
+
+                <div id="show-after-school" style="display: none;">
+                    <h4 class="title" style="margin-left:27px;">Продленка</h4>
+
+            <!-- *-*-*-*-*-*-*-*-*-* After-school information show *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="section section-after-school" data-target="after-school">
+                        <div class="row">
+                            <div class="form-group" style="margin-left:30px;">
+                                {% if student.after_school_info %}
+                                    <div class="row">
+                                        <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                                            <table class="table table-hover" style="table-layout: fixed;">
+                                                <thead class="text-success">
+                                                    <th style="text-align:center;">Смена</th>
+                                                    <th style="text-align:center;">Период</th>
+                                                    <th style="text-align:center;">Срок</th>
+                                                </thead>
+                                                <tbody>
+                                                    {% for after_school_info in student.after_school_info %}
+                                                        <tr>
+                                                            <td style="text-align:center;">{% if after_school_info.shift %}{{ after_school_info.shift }} смена{% else %}Нет{% endif %}</td>
+                                                            <td style="text-align:center;">{{ after_school_info.period }}</td>
+                                                            <td style="text-align:center;">{{ after_school_info.validity }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row" style="margin-left:10px;">
+                                        <p>Не посещает продленку</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                {% if student.subscriptions_info %}
+                                    <div class="col-md-2">
+                                        <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                                    </div>
+                                {% endif %}
+                                <div class="col-md-2">
+                                    <a href="" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#after-school-modal">
+                                        <i class="material-icons">addchart</i> Записать в продленку
+                                    </a>
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student after-school purchase *-*-*-*-*-*-*-*-*-* -->
+
+<!--                                <div class="modal fade" id="subscription-modal" role="dialog">-->
+<!--                                    <div class="modal-dialog">-->
+<!--                                        <div class="modal-content">-->
+<!--                                            <div class="modal-header">-->
+<!--                                                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+<!--                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>-->
+<!--                                            </div>-->
+<!--                                            <div class="modal-body">-->
+<!--                                                <form class="login-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">-->
+<!--                                                    <div class="row">-->
+<!--                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>-->
+<!--                                                        <div class="col-md-7">-->
+<!--                                                            <select name="selected_subject" class="form-control subscription-select">-->
+<!--                                                                {% for subject in subscription_subjects %}-->
+<!--                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>-->
+<!--                                                                {% endfor %}-->
+<!--                                                            </select>-->
+<!--                                                        </div>-->
+<!--                                                    </div>-->
+<!--                                                    <div class="row">-->
+<!--                                                        <label class="control-label col-md-4" style="padding-left:44px;">Тип абонемента:</label>-->
+<!--                                                        <div class="col-md-7">-->
+<!--                                                            <select name="subscription_type" class="form-control subscription-type-select"></select>-->
+<!--                                                        </div>-->
+<!--                                                    </div>-->
+<!--                                                    <div class="row">-->
+<!--                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата покупки:</label>-->
+<!--                                                        <div class="col-md-7">-->
+<!--                                                            <input type="text" name="purchase_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ today }}">-->
+<!--                                                        </div>-->
+<!--                                                    </div>-->
+<!--                                                    <div class="row">-->
+<!--                                                        <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>-->
+<!--                                                        <div class="col-md-7">-->
+<!--                                                            <p class="form-control price-display" style="color:green"></p>-->
+<!--                                                        </div>-->
+<!--                                                    </div>-->
+<!--                                                    <div class="row">-->
+<!--                                                        <div class="col-md-3 col-md-offset-3">-->
+<!--                                                            <button type="submit" class="btn btn-login" data-background-color="main">-->
+<!--                                                                Оплатить-->
+<!--                                                            </button>-->
+<!--                                                        </div>-->
+<!--                                                        <div class="col-md-3">-->
+<!--                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">-->
+<!--                                                                Отмена-->
+<!--                                                            </button>-->
+<!--                                                        </div>-->
+<!--                                                    </div>-->
+<!--                                                </form>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+                            </div>
+                        </div>
+                    </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* After-school information edit *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="form form-after-school" data-target="after-school" style="display: none;">
+                        <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
+                            <div class="row">
+                                <div class="form-group" style="margin-left:30px;">
+                                    {% if student.after_school_info %}
+                                    <div class="row">
+                                        <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                                            <table class="table table-hover" style="table-layout: fixed;">
+                                                <thead class="text-success">
+                                                    <th style="text-align:center;">Смена</th>
+                                                    <th style="text-align:center;">Период</th>
+                                                    <th style="text-align:center;">Срок</th>
+                                                </thead>
+                                                <tbody>
+                                                    {% for after_school_info in student.after_school_info %}
+                                                        <tr>
+                                                            <td style="text-align:center;">{% if after_school_info.shift %}{{ after_school_info.shift }} смена{% else %}Нет{% endif %}</td>
+                                                            <td style="text-align:center;">{{ after_school_info.period }}</td>
+                                                            <td style="text-align:center;">{{ after_school_info.validity }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row" style="margin-left:10px;">
+                                        <p>Не посещает продленку</p>
+                                    </div>
+                                {% endif %}
+                                </div>
+                            </div>
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <button type="button" name="" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                 </div>
             </div>
         </div>

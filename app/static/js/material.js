@@ -400,7 +400,7 @@ $(document).ready(function(){
     }
 
     // Show different sections based on button clicks
-    $('#show-contacts-btn, #show-subjects-btn, #show-subscriptions-btn').click(function () {
+    $('#show-contacts-btn, #show-subjects-btn, #show-subscriptions-btn, #show-after-school-btn').click(function () {
         handleTabButtonClick(this.id);
     });
 
@@ -808,45 +808,6 @@ $(document).ready(function(){
         }
 
     });
-
-//    // Add employee role
-//    $("#employee-roles-container").on("change", "#add-role", function() {
-//        var roleCount = Number($("#role-count").val());
-//        if (roleCount === 1) {
-//            $(".delete-role").prop('disabled', false);
-//        }
-//        var selectedValue = $(this).val();
-//        if (selectedValue === "other") {
-//            var newRoleRow = `
-//            <div class="row employee-role">
-//                <label class="control-label col-md-3"></label>
-//                <div class="col-md-4">
-//                    <input type="text" name="new_roles" class="role-value" placeholder="Новая должность">
-//                </div>
-//                <div class="col-md-1">
-//                    <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
-//                </div>
-//                <input type="hidden" class="role-value" value="other">
-//            </div>`;
-//        } else {
-//            $("option:selected", this ).remove();
-//            var newRoleRow = `
-//                <div class="row employee-role">
-//                    <label class="control-label col-md-3"></label>
-//                    <div class="col-md-4">
-//                        <p class="form-control">${selectedValue}</p>
-//                    </div>
-//                    <div class="col-md-1">
-//                        <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
-//                    </div>
-//                    <input type="hidden" class="role-value" value="${selectedValue}">
-//                </div>`;
-//        }
-//
-//        $("option:first", this).prop('selected', true);
-//        $("#employee-roles").append(newRoleRow);
-//        $("#role-count").val(roleCount + 1);
-//    });
 
     // Delete employee role
     $(".employee-role").on("click", ".delete-role", function() {
