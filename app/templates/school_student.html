@@ -1,0 +1,64 @@
+{% extends "school_base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">{{ student.last_name }} {{ student.first_name }}, {{ student.school_class.school_name }}</h4>
+            </div>
+            <div class="card-content">
+                <div class="scroll-timetable">
+                    <table class="table table-hover" style="width:auto;" id="table-report">
+                        <thead class="text-success">
+                            <tr>
+                                <th class="fixed-column">Предмет</th>
+                                {% for date, topic in dates_topics %}
+                                    <th>{{ date }}
+                                        {% if topic %}
+                                            <div class="comment" title="{{ topic }}" style="display:inline-block;">*</div>
+                                        {% endif %}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in student_subjects %}
+                                <tr>
+                                    <td class="fixed-column">{{ subject }}</td>
+                                    {% for date, topic in dates_topics %}
+                                        <td>
+                                            {% if student_records[subject].get((date, topic)) %}
+                                                <p>{{ student_records[subject][(date, topic)].grade }}</p>
+                                                {% if student_records[subject][(date, topic)].comment %}
+                                                    <div class="comment" title="{{ subject_records[student][(date, topic)].comment }}">ком</div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('student_school_record', student_id=student.id, month_index=month_index-1) }}">
+                                <i class="material-icons">navigate_before</i>Предыдущий месяц
+                            </a>
+                        </button>
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('student_school_record', student_id=student.id, month_index=month_index+1) }}">
+                                Следующая месяц<i class="material-icons">navigate_next</i>
+                            </a>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

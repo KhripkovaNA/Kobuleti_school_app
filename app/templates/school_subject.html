@@ -1,0 +1,62 @@
+{% extends "school-base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Журнал. {{ subject.name }}. {{ school_classes }}</h4>
+            </div>
+            <div class="card-content">
+                <div class="scroll-timetable">
+                    <table class="table table-hover" style="width:auto;" id="table-report">
+                        <thead class="text-success">
+                            <tr>
+                                <th class="fixed-column" style="width:50px;">Дата</th>
+                                <th class="fixed-column-next">Тема урока</th>
+                                {% for student in students %}
+                                    <th>{{ student }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for date, topic in dates_topics %}
+                                <tr>
+                                    <td class="fixed-column">{{ date }}</td>
+                                    <td class="fixed-column-next">{{ topic }}</td>
+                                    {% for student in students %}
+                                        <td>
+                                            {% if subject_records[student].get((date, topic)) %}
+                                                <p>{{ subject_records[student][(date, topic)].grade }}</p>
+                                                {% if subject_records[student][(date, topic)].comment %}
+                                                    <div class="comment" title="{{ subject_records[student][(date, topic)].comment }}">ком</div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="">
+                                <i class="material-icons">navigate_before</i>Предыдущая неделя
+                            </a>
+                        </button>
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="">
+                                Следующая неделя<i class="material-icons">navigate_next</i>
+                            </a>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

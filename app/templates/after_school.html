@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">{{ after_school_subject.name }}</h4>
+            </div>
+            <div class="card-content">
+                <h4 class="title" style="margin-left: 27px;">{{ months[period[0] - 1].capitalize() }} {{ period[1] }}</h4>
+                <div class="form-group" style="margin-left:30px;">
+                    <table class="table table-hover">
+                        <thead class="text-success">
+                            <th>Клиент</th>
+                            <th>Дата рождения, Возраст</th>
+                            <th>Посещение</th>
+                            {% if period == current_period %}
+                                <th>Доп занятия</th>
+                                <th>Баланс</th>
+                            {% endif %}
+                            <th>Действия</th>
+                        </thead>
+                        <tbody>
+                            {% for student in after_school_subject.month_students %}
+                                <tr>
+                                    <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                    <td>
+                                        <p>{{ student.birth_date if student.birth_date }}</p>
+                                        <p>{{ student.age if student.age }}</p>
+                                    </td>
+                                    <td></td>
+                                    {% if period == current_period %}
+                                        <td>
+                                            <p>{{ student.activities }}</p>
+                                        </td>
+                                        <td>
+                                            {% if student.balance_plus %}
+                                                <p style="color:green"><b>Баланс: {{ student.balance_plus }}</b></p>
+                                            {% endif %}
+                                            {% else %}
+                                                <p style="color:red"><b>Баланс: {{ student.balance_minus if student.balance_minus else 0 }}</b></p>
+                                            {% endif %}
+
+                                        </td>
+                                    {% endif %}
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">
+                                                <i class="material-icons" style="color: white;">toc</i>
+                                                <span class="caret"></span>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                        <i class="material-icons" style="color: purple;">info</i>Просмотр
+                                                    </a>
+                                                </li>
+                                                <li class="divider"></li>
+                                                <li>
+                                                    <a href="">
+                                                        <i class="material-icons" style="color: red;">delete_forever</i>Удалить
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <p>Клиентов пока нет</p>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="">
+                                <i class="material-icons">navigate_before</i>Предыдущий месяц
+                            </a>
+                        </button>
+                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', lesson_id=subject_lesson.next) }}">
+                                Следующий месяц<i class="material-icons">navigate_next</i>
+                            </a>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
