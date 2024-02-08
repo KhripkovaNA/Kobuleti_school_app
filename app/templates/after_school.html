@@ -27,7 +27,11 @@
                                 {% for student in after_school_subject.month_students %}
                                     <tr>
                                         <td>{{ student.shift if student.shift < 10 }}</td>
-                                        <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                        <td>
+                                            <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                {{ student.last_name }} {{ student.first_name }}
+                                            </a>
+                                        </td>
                                         <td>
                                             <p>{{ student.birth_date if student.birth_date }}</p>
                                             <p>{{ student.age if student.age }}</p>

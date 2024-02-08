@@ -277,3 +277,14 @@ class Report(db.Model):
 
     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     person = db.relationship('Person', backref='reports')
+
+
+class Finance(db.Model):
+    __tablename__ = 'finances'
+
+    id = db.Column(db.Integer, primary_key=True)
+    person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    person = db.relationship('Person', backref='finances')
+    date = db.Column(db.Date, default=datetime.today().date())
+    amount = db.Column(db.Numeric(8, 2))
+    description = db.Column(db.String(120))

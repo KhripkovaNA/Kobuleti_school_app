@@ -3,7 +3,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
     parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
     student_lesson_registered_table, student_lesson_attended_table, student_subject_table, \
     teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
-    SchoolLessonJournal, Report
+    SchoolLessonJournal, Report, Finance
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
@@ -1253,5 +1253,16 @@ for price_type in after_school_prices:
     else:
         price_dict["period"] = "hour"
     price_types.append(price_dict)
+
+
+new_subscription = Subscription(
+    subject_id=11,
+    student_id=1,
+    subscription_type_id=2,
+    lessons_left=8,
+    purchase_date=TODAY,
+    end_date=TODAY+timedelta(40)
+)
+
 
 

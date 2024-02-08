@@ -1,6 +1,6 @@
 from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, \
     SchoolClass, Room, SubjectType, SubscriptionType, student_lesson_attended_table, teacher_class_table, \
-    SchoolLessonJournal
+    SchoolLessonJournal, Finance
 from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
@@ -538,7 +538,7 @@ def purchase_subscription(form, student_id):
         purchase_date=purchase_date,
         end_date=end_date
     )
-    return new_subscription
+    return new_subscription, subscription_type.price
 
 
 def handle_student_edit(form, student):
@@ -843,9 +843,13 @@ def carry_out_lesson(form, subject, lesson):
                     subscription.lessons_left -= 1
                 else:
                     student.balance -= lesson_price
+                    description = f"Списание за занятие {subject.name}"
+                    finance_operation(student.id, -lesson_price, description, lesson.date)
             else:
-                student.balance -= lesson_school_price if payment_option == 'after_school' \
-                    else lesson_price
+                price = lesson_school_price if payment_option == 'after_school' else lesson_price
+                student.balance -= price
+                description = f"Списание за занятие {subject.name}"
+                finance_operation(student.id, -price, description, lesson.date)
 
             attendance = student_lesson_attended_table.insert().values(
                 student_id=student.id,
@@ -871,7 +875,20 @@ def undo_lesson(form, subject, lesson):
                 subscription = Subscription.query.filter_by(id=subscription_id).first()
                 subscription.lessons_left += 1
             else:
-                student.balance += lesson_school_price if payment_option == 'after_school' else lesson_price
+                price = lesson_school_price if payment_option == 'after_school' else lesson_price
+                student.balance += price
+                record = Finance.query.filter(
+                    Finance.person_id == student.id,
+                    Finance.date == lesson.date,
+                    Finance.amount == -price,
+                    Finance.description == f"Списание за занятие {subject.name}"
+                ).first()
+                if record:
+                    db.session.delete(record)
+                    db.session.flush()
+                else:
+                    description = f"Возврат за занятие {subject.name}"
+                    finance_operation(student.id, price, description, lesson.date)
             lesson.students_attended.remove(student)
 
     lesson.lesson_completed = False
@@ -1733,3 +1750,14 @@ def handle_after_school_adding(student_id, form, period):
     )
 
     return new_after_school_subscription
+
+
+def finance_operation(person_id, amount, description, date=TODAY):
+    new_operation = Finance(
+        person_id=person_id,
+        date=date,
+        amount=amount,
+        description=description
+    )
+    db.session.add(new_operation)
+    db.session.flush()

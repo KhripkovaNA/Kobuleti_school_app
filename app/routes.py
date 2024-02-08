@@ -9,7 +9,7 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, \
     format_school_class_students, format_school_class_subjects, show_school_lesson, handle_school_lesson, \
     employee_record, subject_record, calc_month_index, student_record, get_after_school_students, \
-    get_after_school_prices, handle_after_school_adding
+    get_after_school_prices, handle_after_school_adding, finance_operation
 
 from app import app, db
 from datetime import datetime, timedelta
@@ -86,8 +86,11 @@ def lesson_register(student_id):
 @login_required
 def subscription(student_id):
     try:
-        new_subscription = purchase_subscription(request.form, student_id)
+        new_subscription, price = purchase_subscription(request.form, student_id)
         db.session.add(new_subscription)
+        db.session.flush()
+        description = f"Покупка абонемента {new_subscription.subject.name}"
+        finance_operation(student_id, -price, description)
         db.session.commit()
         flash('Новый абонемент добавлен в систему.', 'success')
 
@@ -107,6 +110,8 @@ def deposit(student_id):
         deposit = int(request.form.get('deposit'))
         student = Person.query.filter_by(id=student_id).first()
         student.balance += deposit
+        description = "Пополнение баланса"
+        finance_operation(student_id, deposit, description)
         db.session.commit()
         flash('Депозит внесен на счет.', 'success')
 
@@ -622,6 +627,10 @@ def after_school(month_index):
             new_attendee_id = int(request.form.get("selected_client"))
             new_after_school = handle_after_school_adding(new_attendee_id, request.form, period)
             db.session.add(new_after_school)
+            db.session.flush()
+            price = new_after_school.subscription_type.price
+            description = "Оплата продленки"
+            finance_operation(new_attendee_id, -price, description)
             db.session.commit()
             flash('Новый клиент записан на продленку', 'success')
 
