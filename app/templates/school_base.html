@@ -67,10 +67,10 @@
                            <p>Все клиенты</p>
                         </a>
                     </li>
-                    <li id="menu-logout">
-                        <a style="cursor:pointer" href="{{ url_for('logout') }}">
-                            <i class="material-icons">exit_to_app</i>
-                            <p>Выход</p>
+                    <li id="menu-after-school">
+                        <a style="cursor:pointer" href="{{ url_for('after_school', month_index=0) }}">
+                            <i class="material-icons">diversity_2</i>
+                            <p>Продленка</p>
                         </a>
                     </li>
                 </ul>
@@ -85,6 +85,15 @@
                                 <a id="toggle-sidebar" href="#pablo" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
                                     <i class="material-icons">menu</i>
                                 <div class="ripple-container"></div></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="navbar-header" style="float:right;">
+                        <ul class="nav">
+                            <li id="menu-logout">
+                                <a style="cursor:pointer" href="{{ url_for('logout') }}">
+                                    <i class="material-icons">exit_to_app</i>Выход
+                                </a>
                             </li>
                         </ul>
                     </div>

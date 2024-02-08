@@ -187,7 +187,7 @@ h2.title {
 .sidebar .nav p,
 .off-canvas-sidebar .nav p {
     margin: 0;
-    line-height: 30px;
+    line-height: 25px;
     font-size: 14px;
 }
 
@@ -2949,7 +2949,6 @@ select.form-control[multiple],
 .table>thead>tr>td,
 .table>tbody>tr>td,
 .table>tfoot>tr>td {
-    padding: 12px 8px;
     vertical-align: middle;
 }
 
@@ -4791,7 +4790,7 @@ footer .btn {
     display: block;
     margin-left: auto;
     margin-right: auto;
-    margin-bottom: 10%;
+    margin-bottom: 0;
     width: 150px;
 }
 

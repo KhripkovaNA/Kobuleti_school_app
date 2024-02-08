@@ -46,6 +46,20 @@ def conjugate_years(number):
         return f"{number} лет"
 
 
+def conjugate_hours(number):
+    last_digit = number % 10
+    last_two_digits = number % 100
+
+    if 10 <= last_two_digits <= 20:
+        return f"{number} часов"
+    elif last_digit == 1:
+        return f"{number} час"
+    elif 2 <= last_digit <= 4:
+        return f"{number} часа"
+    else:
+        return f"{number} часов"
+
+
 def person_age(dob):
     age = TODAY.year - dob.year - ((TODAY.month, TODAY.day) < (dob.month, dob.day))
     return conjugate_years(age)
@@ -1654,6 +1668,7 @@ def get_after_school_students(month_index):
         after_school_student = subscription.student
         if after_school_student not in after_school_students:
             format_student_info(after_school_student)
+            after_school_student.shift = subscription.shift if subscription.shift else 10
             if period == current_period:
                 activities = sorted([subject.name for subject in after_school_student.subjects
                                      if subject.subject_type.name not in ["school", "after_school"]])
@@ -1672,5 +1687,49 @@ def get_after_school_students(month_index):
                 after_school_student.attendance.append(f"день ({subscription.purchase_date:%d.%m})")
             else:
                 after_school_student.attendance.append(f"{subscription.period} ({subscription.purchase_date:%d.%m})")
+    after_school_students = sorted(after_school_students, key=lambda x: (x.shift, x.last_name, x.first_name))
 
     return after_school_students, period, current_period
+
+
+def get_after_school_prices():
+    after_school_prices = SubscriptionType.query.filter(SubscriptionType.period.isnot('')).all()
+    price_types = []
+    for price_type in after_school_prices:
+        price_dict = {
+            "id": price_type.id,
+            "price": float(price_type.price)
+        }
+        if price_type.period == "месяц":
+            price_dict["period"] = "month"
+        elif price_type.period == "день":
+            price_dict["period"] = "day"
+        else:
+            price_dict["period"] = "hour"
+        price_types.append(price_dict)
+
+    return price_types
+
+
+def handle_after_school_adding(student_id, form, period):
+    term = form.get("term")
+    if term == "month":
+        shift = int(form.get("shift"))
+        purchase_date = datetime(period[1], period[0], 1).date()
+    else:
+        shift = None
+        purchase_date = datetime.strptime(form.get("attendance_date"), '%d.%m.%Y').date()
+    if term == "hour":
+        hours = int(form.get("hours"))
+        term = conjugate_hours(hours)
+    subscription_type_id = int(form.get("subscription_type"))
+    new_after_school_subscription = Subscription(
+        subject_id=after_school_subject().id,
+        student_id=student_id,
+        subscription_type_id=subscription_type_id,
+        purchase_date=purchase_date,
+        shift=shift,
+        period=term
+    )
+
+    return new_after_school_subscription

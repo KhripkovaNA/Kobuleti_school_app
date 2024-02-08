@@ -8,7 +8,8 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, \
     filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, \
     format_school_class_students, format_school_class_subjects, show_school_lesson, handle_school_lesson, \
-    employee_record, subject_record, calc_month_index, student_record, get_after_school_students
+    employee_record, subject_record, calc_month_index, student_record, get_after_school_students, \
+    get_after_school_prices, handle_after_school_adding
 
 from app import app, db
 from datetime import datetime, timedelta
@@ -471,7 +472,6 @@ def lesson(lesson_id):
             return redirect(url_for('school-subjects'))
 
 
-
 @app.route('/school-students')
 @login_required
 def school_students():
@@ -578,7 +578,7 @@ def school_lesson(lesson_id):
             return render_template('school_lesson.html', school_lesson=sc_lesson, school_subject=sc_subject)
         else:
             flash("Такого занятия нет.", 'error')
-            return redirect(url_for('school-subjects'))
+            return redirect(url_for('school_subjects'))
 
 
 @app.route('/school-subject/<subject_classes>/<string:month_index>', methods=['GET', 'POST'])
@@ -613,12 +613,35 @@ def student_school_record(student_id, month_index):
 @app.route('/after-school/<string:month_index>', methods=['GET', 'POST'])
 @login_required
 def after_school(month_index):
-
     after_school_subject = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
     month_students, period, current_period = get_after_school_students(int(month_index))
     after_school_subject.month_students = month_students
 
+    if request.method == 'POST':
+        try:
+            new_attendee_id = int(request.form.get("selected_client"))
+            new_after_school = handle_after_school_adding(new_attendee_id, request.form, period)
+            db.session.add(new_after_school)
+            db.session.commit()
+            flash('Новый клиент записан на продленку', 'success')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении клиента: {str(e)}', 'error')
+
+        return redirect(url_for('after_school', month_index=month_index))
+
+    month_students_ids = [student.id for student in month_students]
+    possible_clients = Person.query.filter(
+        ~Person.id.in_(month_students_ids),
+        Person.status.in_(["Клиент", "Лид"]),
+        Person.person_type == "Ребенок"
+    ).order_by(Person.last_name, Person.first_name).all()
+    after_school_prices = get_after_school_prices()
+
     return render_template('after_school.html', after_school_subject=after_school_subject, period=period,
-                           current_period=current_period, months=MONTHS, month_index=int(month_index))
+                           current_period=current_period, months=MONTHS, month_index=int(month_index),
+                           possible_clients=possible_clients, after_school_prices=after_school_prices,
+                           today=f'{TODAY:%d.%m.%Y}')
 
 

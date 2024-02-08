@@ -890,6 +890,53 @@ $(document).ready(function(){
         $("#input-" + studentId).remove();
     });
 
+    $("#after-school-modal").on("change", ".term-selector", function () {
+        term = $(this).val();
+        if (term === "month") {
+            $(".shift-row").show();
+            $(".hours-row, .day-row").hide();
+        } else if (term === "day") {
+            $(".shift-row, .hours-row").hide();
+            $(".day-row").show();
+        } else {
+            $(".shift-row").hide();
+            $(".hours-row, .day-row").show();
+            $(".hour-number").val(1);
+        }
+        var prices = afterSchoolPrices.filter(function(price) {
+            return price.period === term;
+        });
+        $(".price-selector").empty();
+        $.each(prices, function (i, price) {
+            $('.price-selector').append($('<option>', {
+                value: price.id,
+                text : price.price + " Лари"
+            }));
+        });
+    });
+
+    $(".hour-number").on("input", function() {
+        factor = Number($(this).val());
+        if (factor >= 1 && factor <= 4) {
+            var prices = afterSchoolPrices.filter(function(price) {
+                return price.period === term;
+            });
+            $(".price-selector").empty();
+            $.each(prices, function (i, price) {
+                $('.price-selector').append($('<option>', {
+                    value: price.id,
+                    text : price.price*factor + " Лари"
+                }));
+            });
+        }
+    });
+
+    $("#after-school-modal").on('shown.bs.modal', function () {
+        $(".term-selector").trigger("change");
+    });
+
+
+
 //    $("#export-btn").click(function(e) {
 //        var table = $('.school-timetable');
 //        var filename = $(".date").text().replace(".", "_").trim();

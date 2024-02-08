@@ -8,7 +8,8 @@ from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types
+from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
+    get_after_school_students
 
 app.app_context().push()
 
@@ -1225,24 +1226,6 @@ def subject_record(subject_id, school_class_ids, month_index):
     return record_dict, dates_grade_type
 
 
-def get_after_school_students(month_index):
-    current_period = (TODAY.month, TODAY.year)
-    result_date = TODAY + relativedelta(months=month_index)
-    period = (result_date.month, result_date.year)
-    first_date = datetime(result_date.year, result_date.month, 1).date()
-    last_date = first_date + relativedelta(months=+1, days=-1)
-    after_school_subscriptions = Subscription.query.filter(
-        Subscription.subject.has(Subject.subject_type.has(SubjectType.name == "after_school")),
-        Subscription.purchase_date >= first_date,
-        Subscription.purchase_date <= last_date
-    ).all()
-    after_school_students = [subscription.student for subscription in after_school_subscriptions]
-
-    return after_school_students
-
-
-student = Person.query.filter_by(id=4).first()
-
 # new_subscription = Subscription(
 #     subject_id=1,
 #     student_id=4,
@@ -1255,7 +1238,20 @@ student = Person.query.filter_by(id=4).first()
 # db.session.commit()
 # print(*[f"{stud.first_name}: {stud.books}" for stud in after_school_stu], sep='\n')
 
-list1 = [1, 2]
-list2 = []
-list3 = list2 + list1
-print(list3)
+# print_table(SubscriptionType)
+after_school_prices = SubscriptionType.query.filter(SubscriptionType.period.isnot('')).all()
+price_types = []
+for price_type in after_school_prices:
+    price_dict = {
+        "id": price_type.id,
+        "price": float(price_type.price)
+    }
+    if price_type.period == "месяц":
+        price_dict["period"] = "month"
+    elif price_type.period == "день":
+        price_dict["period"] = "day"
+    else:
+        price_dict["period"] = "hour"
+    price_types.append(price_dict)
+
+
