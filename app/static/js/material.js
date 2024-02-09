@@ -829,18 +829,7 @@ $(document).ready(function(){
         subjectRow.remove();
     });
 
-    $("#exportBtn").click(function(e){
-        var table = $('#table-report');
-        if(table && table.length){
-            var preserveColors = (table.hasClass('colorClass') ? true : false);
-            $(table).table2excel({
-                preserveColors: preserveColors
-            });
-        }
-    });
-
-    var originalOptions = $(".student-select option").clone();
-
+    // Create list of student grades in the grade-modal
     $(".add-grad-btn").on("click", function () {
         var selectedStudent = $(".student-select option:selected");
         if (selectedStudent.length > 0) {
@@ -868,6 +857,12 @@ $(document).ready(function(){
         }
     });
 
+    // Save original options of student selector when open the grade-modal
+    $("#grade-modal").on("shown.bs.modal", function () {
+        var originalOptions = $(".student-select option").clone();
+    });
+
+    // Refresh the grade-modal when closing it
     $("#grade-modal").on("hidden.bs.modal", function () {
         $("#grades-container").empty();
         $("#input-container").empty();
@@ -875,6 +870,7 @@ $(document).ready(function(){
         $(".student-select").append(originalOptions);
     });
 
+    // Delete student's grade from the list of grades
     $("#grades-container").on("click", ".delete-grade", function (e) {
         e.preventDefault();
         var studentId = String($(this).data("student"));
@@ -886,10 +882,10 @@ $(document).ready(function(){
             $(".student-select").append(restoreOption);
         }
 
-        // Remove hidden inputs for grade and comment
         $("#input-" + studentId).remove();
     });
 
+    // Handle term selector change when adding an fter-school student
     $("#after-school-modal").on("change", ".term-selector", function () {
         term = $(this).val();
         if (term === "month") {
@@ -915,6 +911,7 @@ $(document).ready(function(){
         });
     });
 
+    // Recount price by changing number of hours
     $(".hour-number").on("input", function() {
         factor = Number($(this).val());
         if (factor >= 1 && factor <= 4) {
@@ -931,43 +928,9 @@ $(document).ready(function(){
         }
     });
 
+    // Trigger term selector on open after-school-modal
     $("#after-school-modal").on('shown.bs.modal', function () {
         $(".term-selector").trigger("change");
     });
-
-
-
-//    $("#export-btn").click(function(e) {
-//        var table = $('.school-timetable');
-//        var filename = $(".date").text().replace(".", "_").trim();
-//        if(table && table.length){
-//            var preserveColors = (table.hasClass('colorClass') ? true : false);
-//            $(table).table2excel({
-//                preserveColors: preserveColors,
-//                filename: filename,
-//                exclude_links: true
-//            });
-//        }
-//    });
-
-    // Add a click event to the export button
-//    $('#exportBtn').on('click', function () {
-//        var table2excel = new Table2Excel();
-//        table2excel.export($("#table-report"));
-//    });
-
-
-//    $(document).on("click", ".hours-count-cell", function () {
-//        var commentFormContainer = $(this).find(".comment-form-container");
-//        var commentContainer = $(this).find(".comment-container");
-//        commentFormContainer.show();
-//        commentContainer.hide();
-//        if (!commentFormContainer.data("filled")) {
-//            var commentText = commentContainer.text();
-//            commentFormContainer.find("textarea[name='comment']").val(commentText.trim());
-//            commentFormContainer.data("filled", true);
-//        }
-//    });
-
 
 });

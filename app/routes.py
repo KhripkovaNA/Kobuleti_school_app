@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, send_file
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
     SubscriptionType, SchoolLessonJournal
@@ -13,6 +13,8 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
 
 from app import app, db
 from datetime import datetime, timedelta
+from io import BytesIO
+import openpyxl
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -189,16 +191,19 @@ def employees():
     return render_template('employees.html', employees=all_employees)
 
 
-@app.route('/employee-report')
+@app.route('/employee-report/<string:week>')
 @login_required
-def employee_report():
+def employee_report(week):
+    week = int(week)
     all_employees = Person.query.filter(
         Person.roles.any(Employee.id)
     ).order_by(Person.last_name, Person.first_name).all()
 
-    employees_list, dates = employee_record(all_employees, 0)
+    employees_list, dates = employee_record(all_employees, week)
+    filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
 
-    return render_template('employee_report.html', employees=employees_list, dates=dates)
+    return render_template('employee_report.html', employees=employees_list, dates=dates,
+                           week=week, filename=filename)
 
 
 @app.route('/add-employee', methods=['GET', 'POST'])
@@ -653,4 +658,67 @@ def after_school(month_index):
                            possible_clients=possible_clients, after_school_prices=after_school_prices,
                            today=f'{TODAY:%d.%m.%Y}')
 
+
+@app.route('/generate-report/<string:week>')
+@login_required
+def generate_employee_report(week):
+    try:
+        all_employees = Person.query.filter(
+            Person.roles.any(Employee.id)
+        ).order_by(Person.last_name, Person.first_name).all()
+
+        employees_list, dates = employee_record(all_employees, int(week))
+        header = ["Имя", "Должность/предмет"] + dates
+
+        filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.append(header)
+
+        for record in employees_list:
+            row = [record["name"], record["role"]]
+            activity = [record["activity"].get(date, 0) for date in dates]
+            row += activity
+            sheet.append(row)
+
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
+        excel_buffer.seek(0)
+        return send_file(excel_buffer, download_name=filename, as_attachment=True)
+
+    except Exception as e:
+        flash(f'Ошибка при скачивании файла: {str(e)}', 'error')
+        return
+
+
+@app.route('/generate-timetable/<string:week>')
+@login_required
+def generate_timtable(week):
+    try:
+        all_employees = Person.query.filter(
+            Person.roles.any(Employee.id)
+        ).order_by(Person.last_name, Person.first_name).all()
+
+        employees_list, dates = employee_record(all_employees, int(week))
+        header = ["Имя", "Должность/предмет"] + dates
+
+        filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.append(header)
+
+        for record in employees_list:
+            row = [record["name"], record["role"]]
+            activity = [record["activity"].get(date, 0) for date in dates]
+            row += activity
+            sheet.append(row)
+
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
+        excel_buffer.seek(0)
+        return send_file(excel_buffer, download_name=filename, as_attachment=True)
+
+    except Exception as e:
+        flash(f'Ошибка при скачивании файла: {str(e)}', 'error')
+        return
 
