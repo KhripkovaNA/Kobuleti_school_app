@@ -10,8 +10,9 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
     get_after_school_students
-import openpyxl
-from openpyxl.styles import Font, Color, Alignment, Border, Side, Fill
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.utils import get_column_letter
 
 app.app_context().push()
 
@@ -1005,3 +1006,60 @@ def add_new_lessons(form):
             messages.append(message)
     week = int((get_weekday_date(0, lesson_date) - get_weekday_date(0, TODAY)).days / 7)
     return messages, week
+
+
+# workbook = Workbook()
+# sheet = workbook.active
+#
+# last_row_ind = 1
+#
+# school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+# for school_class in school_classes:
+#     main_teacher = Person.query.filter_by(id=school_class.main_teacher_id).first()
+#
+#     sheet.cell(last_row_ind, 1).value = school_class.school_name
+#     sheet.cell(last_row_ind, 2).value = "Классный руководитель"
+#     sheet.cell(last_row_ind+1, 1).value = "Имя"
+#     sheet.cell(last_row_ind + 1, 2).value = "Дата рождения"
+#     sheet.cell(last_row_ind + 1, 3).value = "Мама"
+#     sheet.cell(last_row_ind + 1, 4).value = "Контакт"
+#     sheet.cell(last_row_ind + 1, 2).value = "Папа"
+#     sheet.cell(last_row_ind + 1, 2).value = "Контакт"
+#
+#     if main_teacher:
+#         sheet.cell(last_row_ind, 2).value = f"{main_teacher.last_name} {main_teacher.first_name} {main_teacher.patronym}"
+#
+#     school_students = sorted(school_class.school_students, key=lambda x: (x.last_name, x.first_name))
+#     for ind, student in enumerate(school_students, 2):
+#         student_name = f"{student.last_name} {student.first_name} {student.patronym}"
+#         student_dob = f"{student.dob:%d.%m%Y}" if student.dob else None
+#         sheet.cell(last_row_ind + ind, 1).value = student_name
+#         sheet.cell(last_row_ind + ind, 2).value = student_dob
+#         student_mom = db.session.query(parent_child_table).filter(
+#             parent_child_table.c.child_id == student.id,
+#             parent_child_table.c.relation == 'Мама'
+#         ).first()
+#         if student_mom:
+#             parent = Person.query.filter_by(id=student_mom[0]).first()
+#             parent_name = f"{parent.last_name} {parent.first_name} {parent.patronym}"
+#             parent_contact = parent.contacts[0].telegram if parent.contacts[0].telegram \
+#                 else parent.contacts[0].phone if parent.contacts[0].phone else parent.contacts[0].other_contact
+#             sheet.cell(last_row_ind + ind, 3).value = parent_name
+#             sheet.cell(last_row_ind + ind, 4).value = parent_contact
+#         student_dad = db.session.query(parent_child_table).filter(
+#             parent_child_table.c.child_id == student.id,
+#             parent_child_table.c.relation == 'Папа'
+#         ).first()
+#         if student_dad:
+#             parent = Person.query.filter_by(id=student_dad[0]).first()
+#             parent_name = f"{parent.last_name} {parent.first_name} {parent.patronym}"
+#             parent_contact = parent.contacts[0].telegram if parent.contacts[0].telegram \
+#                 else parent.contacts[0].phone if parent.contacts[0].phone else parent.contacts[0].other_contact
+#             sheet.cell(last_row_ind + ind, 5).value = parent_name
+#             sheet.cell(last_row_ind + ind, 6).value = parent_contact
+#
+#     last_row_ind = sheet.max_row + 2
+#
+# workbook.save(filename="school_students.xlsx")
+
+

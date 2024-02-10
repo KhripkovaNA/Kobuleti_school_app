@@ -5,16 +5,16 @@ from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Roo
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, handle_employee_edit, \
-    format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, week_school_lessons_dict, \
+    format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, day_school_lessons_dict, \
     filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, \
     format_school_class_students, format_school_class_subjects, show_school_lesson, handle_school_lesson, \
     employee_record, subject_record, calc_month_index, student_record, get_after_school_students, \
-    get_after_school_prices, handle_after_school_adding, finance_operation
+    get_after_school_prices, handle_after_school_adding, finance_operation, download_timetable, get_date_range
 
 from app import app, db
 from datetime import datetime, timedelta
 from io import BytesIO
-import openpyxl
+from openpyxl import Workbook
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -537,12 +537,17 @@ def school_timetable(week, day):
     week_day = int(day)
     if week_day == 0:
         week_day = TODAY.weekday() + 1
+    if week_day > 6:
+        return redirect(url_for('school_timetable', week=week+1, day=1))
+
     week = int(week)
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-    week_school_lessons = week_school_lessons_dict(week, school_classes, DAYS_OF_WEEK)
+    day_school_lessons = day_school_lessons_dict(week_day, week, school_classes)
+    dates = get_date_range(week)
+    filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
 
     return render_template('school_timetable.html', days=DAYS_OF_WEEK, school_classes=school_classes,
-                           classes=week_school_lessons, week=week, week_day=week_day)
+                           classes=day_school_lessons, week=week, week_day=week_day, filename=filename)
 
 
 @app.route('/school-lesson/<string:lesson_id>', methods=['GET', 'POST'])
@@ -671,7 +676,7 @@ def generate_employee_report(week):
         header = ["Имя", "Должность/предмет"] + dates
 
         filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
-        workbook = openpyxl.Workbook()
+        workbook = Workbook()
         sheet = workbook.active
         sheet.append(header)
 
@@ -693,26 +698,11 @@ def generate_employee_report(week):
 
 @app.route('/generate-timetable/<string:week>')
 @login_required
-def generate_timtable(week):
+def generate_timetable(week):
     try:
-        all_employees = Person.query.filter(
-            Person.roles.any(Employee.id)
-        ).order_by(Person.last_name, Person.first_name).all()
+        workbook, dates = download_timetable(int(week))
 
-        employees_list, dates = employee_record(all_employees, int(week))
-        header = ["Имя", "Должность/предмет"] + dates
-
-        filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
-        workbook = openpyxl.Workbook()
-        sheet = workbook.active
-        sheet.append(header)
-
-        for record in employees_list:
-            row = [record["name"], record["role"]]
-            activity = [record["activity"].get(date, 0) for date in dates]
-            row += activity
-            sheet.append(row)
-
+        filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
         excel_buffer = BytesIO()
         workbook.save(excel_buffer)
         excel_buffer.seek(0)

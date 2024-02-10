@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
 from dateutil.relativedelta import relativedelta
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.utils import get_column_letter
 
 DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
 MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
@@ -1104,24 +1107,22 @@ def week_lessons_dict(week, rooms):
     return week_lessons
 
 
-def week_school_lessons_dict(week, school_classes, days_of_week):
-    week_lessons = {}
-    for day, weekday in enumerate(days_of_week):
-        lessons_date = get_date(day, week)
-        lessons_date_str = f'{lessons_date:%d.%m}'
-        day_lessons = {}
-        for school_class in school_classes:
-            lessons_filtered = Lesson.query.filter(
-                Lesson.lesson_type_id == 1,
-                Lesson.date == lessons_date,
-                Lesson.school_classes.any(SchoolClass.id == school_class.id)
-            ).order_by(Lesson.start_time).all()
-            day_lessons[school_class.school_name] = [create_school_lesson_dict(school_lesson)
-                                                     for school_lesson in lessons_filtered]
+def day_school_lessons_dict(day, week, school_classes):
+    lesson_date = get_date(day-1, week)
+    lesson_date_str = f'{lesson_date:%d.%m}'
+    class_lessons = {}
+    for school_class in school_classes:
+        lessons_filtered = Lesson.query.filter(
+            Lesson.lesson_type_id == 1,
+            Lesson.date == lesson_date,
+            Lesson.school_classes.any(SchoolClass.id == school_class.id)
+        ).order_by(Lesson.start_time).all()
+        class_lessons[school_class.school_name] = [create_school_lesson_dict(school_lesson)
+                                                   for school_lesson in lessons_filtered]
 
-        week_lessons[weekday] = (lessons_date_str, day_lessons)
+    day_lessons = (lesson_date_str, class_lessons)
 
-    return week_lessons
+    return day_lessons
 
 
 def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher):
@@ -1761,3 +1762,91 @@ def finance_operation(person_id, amount, description, date=TODAY):
     )
     db.session.add(new_operation)
     db.session.flush()
+
+
+def download_timetable(week):
+    workbook = Workbook()
+    sheet = workbook.active
+    central = Alignment(horizontal="center")
+    thin_border = Border(left=Side(style='thin'),
+                         right=Side(style='thin'),
+                         top=Side(style='thin'),
+                         bottom=Side(style='thin'))
+    thick_border = Border(left=Side(style='thick'),
+                          right=Side(style='thick'),
+                          top=Side(style='thick'),
+                          bottom=Side(style='thick'))
+    large_font = Font(bold=True, size=16)
+    bold_font = Font(bold=True)
+
+    date_start = get_date(0, week)
+    date_end = get_date(4, week)
+    dates = get_date_range(week)
+    max_length = 1
+    last_row_ind = 1
+
+    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+    for school_class in school_classes:
+        timetable = Lesson.query.filter(
+            Lesson.date >= date_start,
+            Lesson.date <= date_end,
+            Lesson.school_classes.any(SchoolClass.id == school_class.id)
+        ).order_by(Lesson.start_time).all()
+
+        start_end_time = []
+
+        sheet.cell(last_row_ind + 1, 1).value = school_class.school_name
+        sheet.cell(last_row_ind + 1, 1).alignment = central
+        sheet.cell(last_row_ind + 1, 1).border = thick_border
+        sheet.cell(last_row_ind + 1, 1).font = large_font
+
+        for ind, date in enumerate(dates, start=2):
+            sheet.cell(last_row_ind, ind).value = DAYS_OF_WEEK[ind - 2]
+            sheet.cell(last_row_ind, ind).alignment = central
+            sheet.cell(last_row_ind, ind).border = thick_border
+            sheet.cell(last_row_ind, ind).font = bold_font
+            sheet.cell(last_row_ind + 1, ind).value = date
+            sheet.cell(last_row_ind + 1, ind).alignment = central
+            sheet.cell(last_row_ind + 1, ind).border = thick_border
+
+        last_row_ind = sheet.max_row
+
+        for lesson in timetable:
+            lesson_time = f"{lesson.start_time:%H:%M}-{lesson.end_time:%H:%M}"
+            lesson_date = f"{lesson.date:%d.%m}"
+            col_ind = dates.index(lesson_date) + 2
+            if lesson_time not in start_end_time:
+                start_end_time.append(lesson_time)
+                ind = len(start_end_time) + last_row_ind
+                sheet.cell(ind, 1).value = lesson_time
+                sheet.cell(ind, 1).border = thick_border
+                sheet.cell(ind, 1).alignment = central
+            row_ind = start_end_time.index(lesson_time) + last_row_ind + 1
+            sheet.cell(row_ind, col_ind).value = lesson.subject.name
+            color = lesson.room.color.replace('#', '')
+            sheet.cell(row_ind, col_ind).fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
+            sheet.cell(row_ind, col_ind).alignment = central
+
+        new_last_row_ind = sheet.max_row
+
+        for col_ind in range(2, len(dates) + 2):
+            for row_ind in range(last_row_ind + 1, new_last_row_ind + 1):
+                current_cell = sheet.cell(row_ind, col_ind)
+                current_cell.border = thin_border
+                if current_cell.value:
+                    if len(str(current_cell.value)) > max_length:
+                        max_length = len(current_cell.value)
+
+        last_row_ind = new_last_row_ind + 2
+
+    for col in range(1, sheet.max_column + 1):
+        adjusted_width = 12 if col == 1 else max_length + 2
+        sheet.column_dimensions[get_column_letter(col)].width = adjusted_width
+
+    return workbook, dates
+
+
+def get_date_range(week):
+    date_start = get_date(0, week)
+    dates = [f"{date_start + timedelta(day):%d.%m}" for day in range(5)]
+    return dates

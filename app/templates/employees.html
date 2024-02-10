@@ -75,23 +75,25 @@
                             </table>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-2 col-md-offset-9">
-                            <button class="btn btn-sm" data-background-color="purple">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=0) }}">
-                                    <i class="material-icons">summarize</i> Недельный отчет
-                                </a>
-                            </button>
-                        </div>
-                    </div>
                 {% else %}
                     <p>Сотрудников пока нет</p>
                 {% endif %}
-                <button class="btn" style="background-color: #ff9800;">
-                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_employee') }}">
-                        <i class="material-icons">add_box</i>Добавить сотрудника
-                    </a>
-                </button>
+                <div class="row">
+                    <div class="col-md-2">
+                        <button class="btn btn-sm" data-background-color="orange">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_employee') }}">
+                                <i class="material-icons">add_box</i> Добавить сотрудника
+                            </a>
+                        </button>
+                    </div>
+                    <div class="col-md-2 col-md-offset-8">
+                        <button class="btn btn-sm pull-right" data-background-color="purple">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=0) }}">
+                                <i class="material-icons">summarize</i> Недельный отчет
+                            </a>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

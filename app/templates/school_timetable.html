@@ -15,58 +15,56 @@
                                 class="btn btn-sm {{ 'btn-success' if loop.index==week_day else '' }}"
                                 style="width:130px; padding: 5px 5px;">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week=week, day=loop.index) }}">
-                                {{ day }}, {{ classes[day][0] }}
+                                {{ day }}, {{ classes[0] }}
                             </a>
                         </button>
                     {% endfor %}
                 </div>
-                {% for day in days %}
-                    <div class="scroll-timetable" style="{{ 'display:block' if loop.index==week_day else 'display:none' }}; height: 65vh;">
-                        <table class="table school-timetable">
-                            <thead class="text-success">
-                                <tr>
-                                    <th>Время</th>
-                                    {% for school_class in school_classes %}
-                                        <th>{{ school_class.school_name }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th>9:00 - 10:00</th>
-                                    {% for school_class in school_classes %}
-                                        <td rowspan="9">
-                                            {% if classes[day][1][school_class.school_name] %}
-                                                {% for lesson in classes[day][1][school_class.school_name] %}
-                                                    <div class="class-box" id="class-box-{{ lesson.id }}"
-                                                         style="background-color: {{ lesson.room_color }}; top: {{ lesson.start_time/0.75 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.75 - 1 }}px;"
-                                                         onclick="showDropdown({{ lesson.id }}, event)">
-                                                        <p style="color: #660000;">{{ lesson.time }}</p>
-                                                        <p style="color: #003366;">{{ lesson.subject }}</p>
-                                                        <p style="color: #330033;">{{ lesson.teacher }}</p>
-                                                        <div class="dropdown open dropdown-content" id="dropdown-{{ lesson.id }}">
-                                                            <ul class="dropdown-menu">
-                                                                <li><a href="{{ url_for('school_lesson', lesson_id=lesson.id) }}">Просмотр</a></li>
-                                                                <li><a href="{{ url_for('students') }}">Изменить</a></li>
-                                                                <li class="divider"></li>
-                                                                <li><a href="{{ url_for('students') }}">Удалить</a></li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </td>
-                                    {% endfor %}
-                                </tr>
-                                {% for hour in range(10, 18) %}
-                                    <tr>
-                                        <th>{{ hour }}:00 - {{ hour + 1 }}:00</th>
-                                    </tr>
+                <div class="scroll-timetable" style="height: 65vh;">
+                    <table class="table school-timetable">
+                        <thead class="text-success">
+                            <tr>
+                                <th>Время</th>
+                                {% for school_class in school_classes %}
+                                    <th>{{ school_class.school_name }}</th>
                                 {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>9:00 - 10:00</th>
+                                {% for school_class in school_classes %}
+                                    <td rowspan="9">
+                                        {% if classes[1][school_class.school_name] %}
+                                            {% for lesson in classes[1][school_class.school_name] %}
+                                                <div class="class-box" id="class-box-{{ lesson.id }}"
+                                                     style="background-color: {{ lesson.room_color }}; top: {{ lesson.start_time/0.75 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.75 - 1 }}px;"
+                                                     onclick="showDropdown({{ lesson.id }}, event)">
+                                                    <p style="color: #660000;">{{ lesson.time }}</p>
+                                                    <p style="color: #003366;">{{ lesson.subject }}</p>
+                                                    <p style="color: #330033;">{{ lesson.teacher }}</p>
+                                                    <div class="dropdown open dropdown-content" id="dropdown-{{ lesson.id }}">
+                                                        <ul class="dropdown-menu">
+                                                            <li><a href="{{ url_for('school_lesson', lesson_id=lesson.id) }}">Просмотр</a></li>
+                                                            <li><a href="{{ url_for('students') }}">Изменить</a></li>
+                                                            <li class="divider"></li>
+                                                            <li><a href="{{ url_for('students') }}">Удалить</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                            {% for hour in range(10, 18) %}
+                                <tr>
+                                    <th>{{ hour }}:00 - {{ hour + 1 }}:00</th>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn btn-sm" style="background-color: #ff9800;">
@@ -80,8 +78,13 @@
                             </a>
                         </button>
                     </div>
-                    <div class="col-md-3 col-md-offset-3">
-                        <button class="btn btn-sm" style="background-color: #4bd1a0;">
+                    <div class="col-md-6">
+                        <button class="btn btn-sm pull-right" data-background-color="main">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('generate_timetable', week=week) }}" download=" {{ filename }} ">
+                                <i class="material-icons">file_download</i> Скачать
+                            </a>
+                        </button>
+                        <button class="btn btn-sm pull-right" data-background-color="main">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week=week) }}">Все расписание</a>
                         </button>
                     </div>
