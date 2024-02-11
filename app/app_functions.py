@@ -75,9 +75,6 @@ def create_student(form, student_type):
     dob = datetime.strptime(form.get('dob'), '%d.%m.%Y').date() \
         if form.get('dob') else None
     status = form.get('status')
-    pause_date = datetime.strptime(form.get('pause_until'), '%d.%m.%Y').date() \
-        if form.get('pause_until') else None
-    leaving_reason = form.get('leaving_reason')
     person_type = CHILD if student_type == 'child' else ADULT
 
     student = Person(
@@ -86,9 +83,7 @@ def create_student(form, student_type):
         patronym=patronym,
         dob=dob,
         person_type=person_type,
-        status=status,
-        pause_until=pause_date,
-        leaving_reason=leaving_reason
+        status=status
     )
 
     return student

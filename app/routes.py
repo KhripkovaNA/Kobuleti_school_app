@@ -39,6 +39,22 @@ def logout():
     return redirect(url_for('login'))
 
 
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        old_password = request.form.get('old_password')
+        new_password = request.form.get('new_password')
+
+        if current_user.check_password(old_password):
+            current_user.password = current_user.set_password(new_password)
+            db.session.commit()
+            flash('Пароль успешно изменен', 'success')
+            return redirect(url_for('settings'))
+        else:
+            flash('Неправильный пароль', 'error')
+
+
 @app.route('/')
 @app.route('/students')
 @login_required
@@ -50,9 +66,8 @@ def students():
     subscription_subjects = subscription_subjects_data()
     lesson_subjects = lesson_subjects_data()
 
-    return render_template('students.html', students=all_students,
-                           subscription_subjects=subscription_subjects, today=f'{TODAY:%d.%m.%Y}',
-                           lesson_subjects=lesson_subjects)
+    return render_template('students.html', students=all_students, subscription_subjects=subscription_subjects,
+                           today=f'{TODAY:%d.%m.%Y}', lesson_subjects=lesson_subjects, rights=current_user.rights)
 
 
 @app.route('/add-comment', methods=['POST'])
@@ -122,6 +137,32 @@ def deposit(student_id):
         flash(f'Ошибка при внесении депозита: {str(e)}', 'error')
 
     return redirect(url_for('students'))
+
+
+@app.route('/delete-record', methods=['POST'])
+@login_required
+def delete_record():
+    if current_user.rights == 'admin':
+        try:
+            record_type = request.form.get('record_type')
+            if record_type == 'student':
+                student_id = int(request.form.get('student_id'))
+                student = Person.query.filter_by(id=student_id).first()
+                student_name = f"{student.last_name} {student.last_name}"
+                if student:
+                    db.session.delete(student)
+                    db.session.commit()
+                    flash(f"Клиент {student_name} удален", "success")
+                else:
+                    flash("Такого клиента нет", 'error')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при удалении: {str(e)}', 'error')
+
+    else:
+        flash('Необходимо обладать правами администратора', 'error')
+
+    return redirect(request.referrer)
 
 
 @app.route('/add-student', methods=['GET', 'POST'])

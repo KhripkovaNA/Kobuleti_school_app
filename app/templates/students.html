@@ -82,25 +82,31 @@
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
+                                                            <a href="#" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
                                                                 <i class="material-icons" style="color: purple;">date_range</i>Записать
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="" class="subscription-modal-trigger" data-toggle="modal" data-target="#subscription-{{ student.id }}-modal">
+                                                            <a href="#" class="subscription-modal-trigger" data-toggle="modal" data-target="#subscription-{{ student.id }}-modal">
                                                                 <i class="material-icons" style="color: purple;">addchart</i>Абонемент
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="" data-toggle="modal" data-target="#deposit-{{ student.id }}-modal">
+                                                            <a href="#" data-toggle="modal" data-target="#deposit-{{ student.id }}-modal">
                                                                 <i class="material-icons" style="color: purple;">money</i>Пополнить
                                                             </a>
                                                         </li>
                                                         <li class="divider"></li>
                                                         <li>
-                                                            <a href="">
-                                                                <i class="material-icons" style="color: red;">delete_forever</i>Удалить
-                                                            </a>
+                                                            {% if rights != 'admin' %}
+                                                                <a href="#" title="Нет прав администратора">
+                                                                    <i class="material-icons" style="color: red;">delete_forever</i>Удалить
+                                                                </a>
+                                                            {% else %}
+                                                                <a href="#" data-toggle="modal" data-target="#delete-{{ student.id }}-modal">
+                                                                    <i class="material-icons" style="color: red;">delete_forever</i>Удалить
+                                                                </a>
+                                                            {% endif %}
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -233,6 +239,39 @@
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Отмена</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            <!-- *-*-*-*-*-*-*-*-*-* Student delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                                                <div class="modal fade" id="delete-{{ student.id }}-modal" role="dialog">
+                                                    <div class="modal-dialog modal-sm">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление клиента</h4>
+                                                            </div>
+                                                            <div class="modal-body" style="padding-top:10px;">
+                                                                <p class="control-label">
+                                                                    Вы уверены, что хотите полностью удалить клиента {{ student.last_name }} {{ student.first_name }}?
+                                                                </p>
+                                                                <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                                    <input type="hidden" name="record_type" value="student">
+                                                                    <input type="hidden" name="student_id" value="{{ student.id }}">
+                                                                    <div class="row">
+                                                                        <div class="col-md-5 col-md-offset-1">
+                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                                Да
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="col-md-5">
+                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                Нет
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
                                                             </div>
                                                         </div>
                                                     </div>
