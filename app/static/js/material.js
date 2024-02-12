@@ -191,6 +191,9 @@ $(document).ready(function(){
         }
     });
 
+    $(".contact-relation").trigger("change");
+
+
     // Search in table
     $('#search').keyup(function() {
         var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
@@ -285,7 +288,7 @@ $(document).ready(function(){
             personInput.hide();
             personOptionsRow.show();
             personInformation.show();
-            personSelector[0].selectize.trigger( "change" );
+            updatePersonInformation(personSelector, personSection)
         }
     }
 
@@ -315,13 +318,11 @@ $(document).ready(function(){
         updatePersonInformation($(this), ".client-section");
     });
 
-    var contactCount = 1
+    var contactCount = Number($("#contact-count").val());
     // Function to add a new contact section dynamically
     function addContactSection() {
-        contactCount++;
-
         var firstContactSection = $(".contact-section").first()
-        firstContactSection.find('select').each(function() {
+        firstContactSection.find("select").each(function() {
             if ($(this)[0].selectize) {
                 inputValue = $(this)[0].selectize.getValue()
                 $(this)[0].selectize.destroy();
@@ -334,8 +335,6 @@ $(document).ready(function(){
         initializeSelectize(firstSelectizeElement);
         firstSelectizeElement[0].selectize.setValue(inputValue);
 
-        contactSection.find(".contact-radio").prop("checked", false);
-        contactSection.attr("id", "contact-section-" + contactCount);
         contactSection.find(".contact-relation").val("Мама");
         contactSection.find(".relation-other-row").hide();
         contactSection.find(".contact-select").val("Добавить");
@@ -343,23 +342,23 @@ $(document).ready(function(){
         contactSection.find(".contact-input").show();
         contactSection.find(".contact-information").hide();
         var originalTitle = contactSection.find("h5").text();
-        var newTitle = originalTitle.replace("1", contactCount);
+        var newTitle = "Дополнительный контакт " + contactCount;
         contactSection.find("h5").text(newTitle);
 
         contactSection.find("select, input[type='text']").each(function() {
             var originalName = $(this).attr("name");
             if (originalName) {
-                var newName = originalName.replace("_1", "_" + contactCount);
+                var newName = originalName.replace("-0", "-" + contactCount);
                 $(this).attr("name", newName);
-                if ($(this).is("input[type='text']")) {
-                    $(this).val("");
-                }
             }
-        });
-        contactSection.find("input[type='radio']").each(function() {
-            var originalValue = $(this).val();
-            var newValue = originalValue.replace("_1", "_" + contactCount);
-            $(this).val(newValue);
+            var originalId = $(this).attr("id");
+            if (originalId) {
+                var newId = originalId.replace("-0", "-" + contactCount);
+                $(this).attr("id", newId);
+            }
+            if ($(this).is("input[type='text']")) {
+                $(this).val("");
+            }
         });
 
         return contactSection;
@@ -373,6 +372,7 @@ $(document).ready(function(){
         var newSelectizeElement = newContactSection.find(".contact-options.select-search");
         initializeSelectize(newSelectizeElement);
 
+        contactCount++;
         if (contactCount >= 2) {
             $("#remove-contact").show();
         }
@@ -385,11 +385,6 @@ $(document).ready(function(){
         if (contactCount === 1) {
             $("#remove-contact").hide();
         }
-    });
-
-    // Pass contact count information when submitting a new client
-    $("#submit-btn").click(function() {
-        $('#contact-count').val(contactCount);
     });
 
     // Function to switch between different sections based on button clicks

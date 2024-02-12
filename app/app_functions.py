@@ -249,7 +249,9 @@ def add_new_employee(form):
 
 def clients_data(person_type):
     if person_type == 'child':
-        all_clients = Person.query.order_by(Person.last_name, Person.first_name).all()
+        all_clients = Person.query.filter(
+            Person.contacts.any(~Contact.id.is_(None))
+        ).order_by(Person.last_name, Person.first_name).all()
     elif person_type == 'adult':
         all_clients = Person.query.filter(Person.status.is_(None)).order_by(Person.last_name, Person.first_name).all()
     else:
