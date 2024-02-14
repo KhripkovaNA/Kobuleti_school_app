@@ -2,7 +2,8 @@ from flask import render_template, flash, redirect, url_for, request, send_file
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
     SubscriptionType, SchoolLessonJournal
-from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm
+from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
+    EditAddContPersonForm, AddContForm, NewContactPersonForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, handle_employee_edit, \
@@ -144,9 +145,10 @@ def deposit(student_id):
 @app.route('/delete-record', methods=['POST'])
 @login_required
 def delete_record():
+    record_type = request.form.get('record_type')
+
     if current_user.rights == 'admin':
         try:
-            record_type = request.form.get('record_type')
             if record_type == 'student':
                 student_id = int(request.form.get('student_id'))
                 student = Person.query.filter_by(id=student_id).first()
@@ -154,19 +156,38 @@ def delete_record():
                     if student.parents.all():
                         for parent in student.parents:
                             if len(parent.children.all()) == 1 and not parent.status and not parent.roles:
+                                db.session.delete(parent.contacts[0])
                                 db.session.delete(parent)
-                    student_name = f"{student.last_name} {student.last_name}"
+                    student_name = f"{student.last_name} {student.first_name}"
                     db.session.delete(student)
                     db.session.commit()
                     flash(f"Клиент {student_name} удален", "success")
                 else:
                     flash("Такого клиента нет", 'error')
+
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при удалении: {str(e)}', 'error')
 
     else:
         flash('Необходимо обладать правами администратора', 'error')
+
+    if record_type.startswith('contact'):
+        contact_person_id = int(request.form.get('contact_id'))
+        contact_person = Person.query.filter_by(id=contact_person_id).first()
+        if contact_person:
+            if record_type == 'contact':
+                if contact_person.contacts[0]:
+                    db.session.delete(contact_person.contacts[0])
+            if record_type == 'contact_person':
+                if len(contact_person.children.all()) == 1 and not contact_person.status \
+                        and not contact_person.roles:
+                    db.session.delete(contact_person.contacts[0])
+                    db.session.delete(contact_person)
+            db.session.commit()
+            flash("Контактная информация удалена", "success")
+        else:
+            flash("Такого контакта нет", 'error')
 
     return redirect(request.referrer)
 
@@ -216,7 +237,7 @@ def add_student():
 @app.route('/student/<string:student_id>', methods=['GET', 'POST'])
 @login_required
 def show_edit_student(student_id):
-    student = Person.query.filter_by(id=student_id).first()
+    student = Person.query.filter(Person.id == student_id, Person.status.isnot(None)).first()
     if student:
         extensive_student_info(student)
         clients = clients_data('child')
@@ -232,11 +253,50 @@ def show_edit_student(student_id):
             leaving_reason=student.leaving_reason
         )
         if student.primary_contact != student.id:
-            main_contact_form = EditContactPersonForm()
+            main_contact_form = EditContactPersonForm(
+                prefix="main",
+                last_name=student.main_contact.last_name,
+                first_name=student.main_contact.first_name,
+                patronym=student.main_contact.patronym,
+                telegram=student.main_contact.contacts[0].telegram,
+                phone=student.main_contact.contacts[0].phone,
+                other_contact=student.main_contact.contacts[0].other_contact
+            )
         else:
-            main_contact_form = ContactForm()
+            main_contact_form = ContactForm(
+                prefix="main",
+                telegram=student.main_contact.contacts[0].telegram,
+                phone=student.main_contact.contacts[0].phone,
+                other_contact=student.main_contact.contacts[0].other_contact
+            )
 
-        render_type = 'contact_main'
+        add_cont_forms = []
+        if student.additional_contacts:
+            for i, contact in enumerate(student.additional_contacts, 1):
+                if contact.id != student.id:
+                    add_cont_form = EditAddContPersonForm(
+                        prefix=f"contact_{i}",
+                        last_name=contact.last_name,
+                        first_name=contact.first_name,
+                        patronym=contact.patronym,
+                        telegram=contact.contacts[0].telegram,
+                        phone=contact.contacts[0].phone,
+                        other_contact=contact.contacts[0].other_contact
+                    )
+                else:
+                    add_cont_form = AddContForm(
+                        prefix=f"contact_{i}",
+                        telegram=contact.contacts[0].telegram,
+                        phone=contact.contacts[0].phone,
+                        other_contact=contact.contacts[0].other_contact
+                    )
+                add_cont_forms.append(add_cont_form)
+
+        new_contact_form = NewContactPersonForm(prefix="new_contact")
+        new_contact_form.selected_contact.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
+                                                     for person in clients]
+
+        render_type = 'student'
 
         if request.method == 'POST':
             try:
@@ -245,8 +305,36 @@ def show_edit_student(student_id):
                     if student_form.validate_on_submit():
                         handle_student_edit(student_form, student, 'edit_student')
                         db.session.commit()
-                        flash('Изменения внесены.', 'success')
+                        flash('Изменения внесены', 'success')
                         return redirect(url_for('show_edit_student', student_id=student.id))
+                if 'form_main_contact_submit' in request.form:
+                    render_type = 'contact_main_edit'
+                    if main_contact_form.validate_on_submit():
+                        handle_student_edit(main_contact_form, student, 'edit_main_contact')
+                        db.session.commit()
+                        flash('Изменения внесены', 'success')
+                        return redirect(url_for('show_edit_student', student_id=student.id))
+
+                if student.additional_contacts:
+                    for i in range(1, len(student.additional_contacts) + 2):
+                        if f'form_cont_{i}_submit' in request.form:
+                            render_type = f'contact_edit_{i}'
+                            if add_cont_forms[i-1].validate_on_submit():
+                                handle_student_edit(add_cont_forms[i-1], student, f'edit_contact_{i}')
+                                db.session.commit()
+                                flash('Изменения внесены', 'success')
+                                return redirect(url_for('show_edit_student', student_id=student.id))
+
+                if 'form_cont_new_submit' in request.form:
+                    render_type = 'contact_new'
+                    if new_contact_form.validate_on_submit():
+                        handle_student_edit(new_contact_form, student, 'new_contact')
+                        db.session.commit()
+                        flash('Новый контакт добавлен', 'success')
+                        return redirect(url_for('show_edit_student', student_id=student.id))
+
+                flash('Ошибка в форме изменения киента', 'error')
+
             except Exception as e:
                 db.session.rollback()
                 flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
@@ -254,10 +342,11 @@ def show_edit_student(student_id):
 
         return render_template('student.html', student=student, clients=clients, today=f'{TODAY:%d.%m.%Y}',
                                lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects,
-                               edit_student_form=student_form, render_type=render_type, main_contact=main_contact_form)
+                               edit_student_form=student_form, render_type=render_type, main_contact=main_contact_form,
+                               add_cont_forms=add_cont_forms, new_contact_form=new_contact_form)
     else:
         flash("Такого клиента нет", 'error')
-        return redirect(url_for('students.html'))
+        return redirect(url_for('students'))
 
 
 @app.route('/employees')

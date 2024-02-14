@@ -1,6 +1,7 @@
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, PasswordField, SelectField, FormField, FieldList, HiddenField
+from wtforms import StringField, TextAreaField, PasswordField, SelectField, \
+    FormField, FieldList, HiddenField, BooleanField
 from wtforms.validators import ValidationError, DataRequired, Length, InputRequired, Optional
 from app.models import Person
 from app import db
@@ -35,7 +36,7 @@ class ContactForm(FlaskForm):
     other_contact = StringField()
 
 
-class ContactPersonForm(ContactForm):
+class ContForm(ContactForm):
     relation = SelectField(choices=[('Мама', 'Мама'), ('Папа', 'Папа'),
                                     ('Сам ребенок', 'Сам ребенок'), ('Другое', 'Другое контактное лицо')])
     other_relation = StringField()
@@ -44,11 +45,14 @@ class ContactPersonForm(ContactForm):
     parent_last_name = StringField(validators=[validate_parent_name])
     parent_first_name = StringField(validators=[validate_parent_name])
     parent_patronym = StringField()
-    primary_contact = HiddenField()
 
     def validate_selected_contact(self, field):
         if self.contact_select.data == 'Выбрать' and not field.data:
             raise ValidationError('Выберете контакт')
+
+
+class ContactPersonForm(ContForm):
+    primary_contact = HiddenField()
 
 
 class PersonForm(FlaskForm):
@@ -84,4 +88,18 @@ class EditStudentForm(PersonForm):
 
 
 class EditContactPersonForm(PersonForm):
-    contact = FormField(ContactForm)
+    telegram = StringField()
+    phone = StringField()
+    other_contact = StringField()
+
+
+class EditAddContPersonForm(EditContactPersonForm):
+    primary_contact = BooleanField()
+
+
+class AddContForm(ContactForm):
+    primary_contact = BooleanField()
+
+
+class NewContactPersonForm(ContForm):
+    primary_contact = BooleanField()

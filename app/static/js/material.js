@@ -174,7 +174,7 @@ $(document).ready(function(){
         var contactSection = relationSelector.closest(".contact-section");
         var otherRelationRow = contactSection.find(".relation-other-row");
         var contactInfo = contactSection.find(".contact-info");
-        var contactSelection = contactSection.find(".contact_selection");
+        var contactSelection = contactSection.find(".contact-selection");
 
         if (relationSelector.val() === "Другое") {
             otherRelationRow.show();
@@ -183,6 +183,8 @@ $(document).ready(function(){
         } else if (relationSelector.val() === "Сам ребенок") {
             otherRelationRow.hide();
             contactInfo.hide();
+            contactSelection.find(".contact-select").val("Добавить");
+            contactSelection.find(".contact-select").trigger("change");
             contactSelection.hide();
         } else {
             otherRelationRow.hide();
@@ -226,20 +228,20 @@ $(document).ready(function(){
             personInfoBasic.html(`
                 <div class="row">
                     <label class="control-label col-md-3">Фамилия:</label>
-                    <div class="col-md-5">
-                        <p class="form-control">${selectedPerson[0].last_name}</p>
+                    <div class="col-md-6">
+                        <div class="form-control">${selectedPerson[0].last_name}</div>
                     </div>
                 </div>
                 <div class="row">
                     <label class="control-label col-md-3">Имя:</label>
-                    <div class="col-md-5">
-                        <p class="form-control">${selectedPerson[0].first_name}</p>
+                    <div class="col-md-6">
+                        <div class="form-control">${selectedPerson[0].first_name}</div>
                     </div>
                 </div>
                 <div class="row">
                     <label class="control-label col-md-3">Отчество:</label>
-                    <div class="col-md-5">
-                        <p class="form-control">${selectedPerson[0].patronym}</p>
+                    <div class="col-md-6">
+                        <div class="form-control">${selectedPerson[0].patronym}</div>
                     </div>
                 </div>
             `);
@@ -247,20 +249,20 @@ $(document).ready(function(){
             personInfoContacts.html(`
                 <div class="row">
                     <label class="control-label col-md-3">Телеграм:</label>
-                    <div class="col-md-5">
-                        <p class="form-control">${selectedPerson[0].telegram}</p>
+                    <div class="col-md-6">
+                        <div class="form-control">${selectedPerson[0].telegram}</div>
                     </div>
                 </div>
                 <div class="row">
                     <label class="control-label col-md-3">Телефон:</label>
-                    <div class="col-md-5">
-                        <p class="form-control">${selectedPerson[0].phone}</p>
+                    <div class="col-md-6">
+                        <div class="form-control">${selectedPerson[0].phone}</div>
                     </div>
                 </div>
                 <div class="row">
                     <label class="control-label col-md-3">Другое:</label>
-                    <div class="col-md-5">
-                        <p class="form-control">${selectedPerson[0].other_contact}</p>
+                    <div class="col-md-6">
+                        <div class="form-control">${selectedPerson[0].other_contact}</div>
                     </div>
                 </div>
             `);
@@ -360,7 +362,7 @@ $(document).ready(function(){
                 $(this).val("");
             }
             if ($(this).is("input[type='hidden']")) {
-                $(this).val("false");
+                $(this).val("");
             }
         });
 

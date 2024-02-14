@@ -29,7 +29,7 @@
                         <div class="form-group" style="margin-left:30px;">
                             <div class="row {{ 'has-error' if form1.last_name.errors }}">
                                 <label class="control-label col-md-3">Фамилия:</label>
-                                <div class="col-md-5">
+                                <div class="col-md-6">
                                     {{ form1.last_name(class="form-control") }}
                                     {% for error in form1.last_name.errors %}
                                         <span style="color: red;">{{ error }}</span>
@@ -38,7 +38,7 @@
                             </div>
                             <div class="row {{ 'has-error' if form1.first_name.errors }}">
                                 <label class="control-label col-md-3">Имя:</label>
-                                <div class="col-md-5">
+                                <div class="col-md-6">
                                     {{ form1.first_name(class="form-control") }}
                                     {% for error in form1.first_name.errors %}
                                         <span style="color: red;">{{ error }}</span>
@@ -47,13 +47,13 @@
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Отчество:</label>
-                                <div class="col-md-5">
+                                <div class="col-md-6">
                                     {{ form1.patronym(class="form-control") }}
                                 </div>
                             </div>
                             <div class="row {{ 'has-error' if form1.dob.errors }}">
                                 <label class="control-label col-md-3">Дата рождения:</label>
-                                <div class="col-md-3 datepicker-container">
+                                <div class="col-md-2 datepicker-container">
                                     {{ form1.dob(class="form-control datepicker", placeholder="дд.мм.гггг") }}
                                     {% for error in form1.dob.errors %}
                                         <span style="color: red;">{{ error }}</span>
@@ -78,26 +78,26 @@
                                     <div class="form-group" style="margin-left:30px;">
                                         <div class="row">
                                             <label class="control-label col-md-3">Контакт:</label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 {{ contact_form.relation(class="form-control contact-relation") }}
                                             </div>
                                         </div>
                                         <div class="row relation-other-row" style="display: none;">
                                             <label class="control-label col-md-3"></label>
-                                            <div class="col-md-5">
+                                            <div class="col-md-6">
                                                 {{ contact_form.other_relation(class="form-control") }}
                                             </div>
                                         </div>
-                                        <div class="contact_selection">
+                                        <div class="contact-selection">
                                             <div class="row">
                                                 <label class="control-label col-md-3">Данные контактного лица:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     {{ contact_form.contact_select(class="form-control contact-select") }}
                                                 </div>
                                             </div>
                                             <div class="row contact-options-row {{ 'has-error' if contact_form.selected_contact.errors }}" style="display: none; margin-bottom: 10px;">
                                                 <label class="control-label col-md-3"></label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     {{ contact_form.selected_contact(class="form-control contact-options select-search") }}
                                                     {% for error in contact_form.selected_contact.errors %}
                                                         <span style="color: red;">{{ error }}</span>
@@ -111,7 +111,7 @@
                                             <div class="contact-info">
                                                 <div class="row {{ 'has-error' if contact_form.parent_last_name.errors }}">
                                                     <label class="control-label col-md-3">Фамилия:</label>
-                                                    <div class="col-md-5">
+                                                    <div class="col-md-6">
                                                         {{ contact_form.parent_last_name(class="form-control") }}
                                                         {% for error in contact_form.parent_last_name.errors %}
                                                             <span style="color: red;">{{ error }}</span>
@@ -120,7 +120,7 @@
                                                 </div>
                                                 <div class="row {{ 'has-error' if contact_form.parent_first_name.errors }}">
                                                     <label class="control-label col-md-3">Имя:</label>
-                                                    <div class="col-md-5">
+                                                    <div class="col-md-6">
                                                         {{ contact_form.parent_first_name(class="form-control") }}
                                                         {% for error in contact_form.parent_first_name.errors %}
                                                             <span style="color: red;">{{ error }}</span>
@@ -129,26 +129,26 @@
                                                 </div>
                                                 <div class="row">
                                                     <label class="control-label col-md-3">Отчество:</label>
-                                                    <div class="col-md-5">
+                                                    <div class="col-md-6">
                                                         {{ contact_form.parent_patronym(class="form-control") }}
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Телеграм:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     {{ contact_form.telegram(class="form-control") }}
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Телефон:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     {{ contact_form.phone(class="form-control") }}
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <label class="control-label col-md-3">Другое:</label>
-                                                <div class="col-md-5">
+                                                <div class="col-md-6">
                                                     {{ contact_form.other_contact(class="form-control") }}
                                                 </div>
                                             </div>
@@ -156,7 +156,7 @@
                                         {% if loop.first %}
                                             {{ contact_form.primary_contact(value="true") }}
                                         {% else %}
-                                            {{ contact_form.primary_contact(value="false") }}
+                                            {{ contact_form.primary_contact(value="") }}
                                         {% endif %}
                                     </div>
                                 </div>

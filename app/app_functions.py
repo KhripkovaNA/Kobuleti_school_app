@@ -127,12 +127,19 @@ def handle_contact_info(contact_form, student):
     contact_select = contact_form.contact_select.data
     relation_type = contact_form.relation.data
     student_contacts = Contact.query.filter_by(person_id=student.id).first()
-    if relation_type == CHILD_SELF and not student_contacts:
-        contact = create_contact(contact_form)
-        db.session.add(contact)
-        db.session.flush()
+    if relation_type == CHILD_SELF:
+        if not student_contacts:
+            contact = create_contact(contact_form)
+            db.session.add(contact)
+            db.session.flush()
+            student.contacts.append(contact)
 
-        student.contacts.append(contact)
+        else:
+            contact = student.contacts[0]
+            student.contacts[0].telegram = contact_form.telegram.data
+            student.contacts[0].phone = contact_form.phone.data
+            student.contacts[0].other_contact = contact_form.other_contact.data
+
         db.session.flush()
 
     elif relation_type != CHILD_SELF:
@@ -157,7 +164,7 @@ def handle_contact_info(contact_form, student):
     else:
         return
 
-    if contact_form.primary_contact.data == "true":
+    if contact_form.primary_contact.data:
         student.primary_contact = contact.person_id
 
 
@@ -223,7 +230,7 @@ def add_new_employee(form):
             patronym=patronym,
             person_type=ADULT
         )
-        contact = create_contact(form, '')
+        contact = create_contact(form)
         db.session.add(employee)
         db.session.add(contact)
         db.session.flush()
@@ -545,60 +552,61 @@ def purchase_subscription(form, student_id):
 
 def handle_student_edit(form, student, edit_type):
     if edit_type == 'student_edit':
-        student.last_name = form.last_name
-        student.first_name = form.first_name
-        student.patronym = form.patronym
-        student.dob = datetime.strptime(form.dob, '%d.%m.%Y').date() \
-            if form.dob else None
-        student.status = form.status
+        student.last_name = form.last_name.data
+        student.first_name = form.first_name.data
+        student.patronym = form.patronym.data
+        student.dob = datetime.strptime(form.dob.data, '%d.%m.%Y').date() \
+            if form.dob.data else None
+        student.status = form.status.data
         if student.status == "Закрыт":
             student.subjects = []
             student.subscriptions = []
-        student.pause_date = datetime.strptime(form.pause_until, '%d.%m.%Y').date() \
-            if form.pause_until and student.status == "Пауза" else None
+        student.pause_date = datetime.strptime(form.pause_until.data, '%d.%m.%Y').date() \
+            if form.pause_until.data and student.status == "Пауза" else None
 
-        student.leaving_reason = form.leaving_reason if student.status == "Закрыт" else ''
+        student.leaving_reason = form.leaving_reason.data if student.status == "Закрыт" else ''
         db.session.flush()
 
     if edit_type == 'edit_main_contact':
         main_contact = student.main_contact
-        main_contact.contacts[0].telegram = form.get('telegram_main')
-        main_contact.contacts[0].phone = form.get('phone_main')
-        main_contact.contacts[0].other_contact = form.get('other_contact_main')
+        main_contact.contacts[0].telegram = form.telegram.data
+        main_contact.contacts[0].phone = form.phone.data
+        main_contact.contacts[0].other_contact = form.other_contact.data
         if main_contact.id != student.id:
-            main_contact.last_name = form.get('parent_last_name_main')
-            main_contact.first_name = form.get('parent_first_name_main')
-            main_contact.patronym = form.get('parent_patronym_main')
+            main_contact.last_name = form.last_name.data
+            main_contact.first_name = form.first_name.data
+            main_contact.patronym = form.patronym.data
         db.session.flush()
 
-    for i, contact in enumerate(student.additional_contacts, 1):
-        if f'form_cont_{i}_submit' in form:
-            contact.contacts[0].telegram = form.get(f'telegram_{i}')
-            contact.contacts[0].phone = form.get(f'phone_{i}')
-            contact.contacts[0].other_conta = form.get(f'other_contact_{i}')
-            if contact.id != student.id:
-                contact.last_name = form.get(f'parent_last_name_{i}')
-                contact.first_name = form.get(f'parent_first_name_{i}')
-                contact.patronym = form.get(f'parent_patronym_{i}')
-            if form.get(f'primary_contact_{i}') == 'on':
-                student.primary_contact = contact.id
-            db.session.flush()
+    if edit_type.startswith('edit_contact_'):
+        ind = int(edit_type[len('edit_contact_'):])
+        contact = student.additional_contacts[ind - 1]
+        contact.contacts[0].telegram = form.telegram.data
+        contact.contacts[0].phone = form.phone.data
+        contact.contacts[0].other_conta = form.other_contact.data
+        if contact.id != student.id:
+            contact.last_name = form.last_name.data
+            contact.first_name = form.first_name.data
+            contact.patronym = form.patronym.data
+        if form.primary_contact.data:
+            student.primary_contact = contact.id
+        db.session.flush()
 
-    if 'form_cont_new_submit' in form:
+    if edit_type == 'new_contact':
         handle_contact_info(form, student)
-
-    if 'del_subject_btn' in form:
-        del_subject_id = int(form.get('del_subject_btn'))
-        del_subject = Subject.query.filter_by(id=del_subject_id).first()
-        if del_subject in student.subjects:
-            student.subjects.remove(del_subject)
-            db.session.flush()
-
-    if 'form_subscriptions_submit' in form:
-        for subscription in student.subscriptions:
-            subscription.lessons_left = form.get(f'subscription_{subscription.id}_lessons')
-            subscription.end_date = form.get(f'subscription_{subscription.id}_end_date')
-        db.session.flush()
+    #
+    # if 'del_subject_btn' in form:
+    #     del_subject_id = int(form.get('del_subject_btn'))
+    #     del_subject = Subject.query.filter_by(id=del_subject_id).first()
+    #     if del_subject in student.subjects:
+    #         student.subjects.remove(del_subject)
+    #         db.session.flush()
+    #
+    # if 'form_subscriptions_submit' in form:
+    #     for subscription in student.subscriptions:
+    #         subscription.lessons_left = form.get(f'subscription_{subscription.id}_lessons')
+    #         subscription.end_date = form.get(f'subscription_{subscription.id}_end_date')
+    #     db.session.flush()
 
 
 def handle_employee_edit(form, employee):
