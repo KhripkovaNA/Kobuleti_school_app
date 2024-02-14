@@ -1671,7 +1671,7 @@ fieldset[disabled] .navbar .navbar-nav>li>a.btn.btn-rose.active {
 .btn-group-sm .btn,
 .navbar .navbar-nav>li>a.btn.btn-sm,
 .btn-group-sm .navbar .navbar-nav>li>a.btn {
-    padding: 5px 20px;
+    padding: 5px 15px;
     font-size: 11px;
 }
 
@@ -2055,10 +2055,6 @@ label {
 .selectize-dropdown-content {
     position:relative;
     max-height: 100px;
-}
-
-.form-control.selectize-control {
-    margin-bottom: 10px;
 }
 
 .form-control-static {
@@ -3057,7 +3053,6 @@ select.form-control[multiple],
 div.form-control {
     height:auto;
     min-height:34px;
-    margin-bottom: 10px;
 }
 
 .student-grade-row {

@@ -69,13 +69,18 @@ def person_age(dob):
 
 
 def create_student(form, student_type):
-    last_name = form.get('last_name')
-    first_name = form.get('first_name')
-    patronym = form.get('patronym')
-    dob = datetime.strptime(form.get('dob'), '%d.%m.%Y').date() \
-        if form.get('dob') else None
-    status = form.get('status')
-    person_type = CHILD if student_type == 'child' else ADULT
+    last_name = form.last_name.data
+    first_name = form.first_name.data
+    patronym = form.patronym.data
+    status = form.status.data
+    if student_type == 'child':
+        dob = datetime.strptime(form.dob.data, '%d.%m.%Y').date() \
+            if form.dob.data else None
+        person_type = CHILD
+
+    else:
+        dob = None
+        person_type = ADULT
 
     student = Person(
         last_name=last_name,
@@ -89,10 +94,10 @@ def create_student(form, student_type):
     return student
 
 
-def create_contact(form, i):
-    telegram = form.get(f'telegram_{i}')
-    phone = form.get(f'phone_{i}')
-    other_contact = form.get(f'other_contact_{i}')
+def create_contact(form):
+    telegram = form.telegram.data
+    phone = form.phone.data
+    other_contact = form.other_contact.data
 
     contact = Contact(
         telegram=telegram,
@@ -103,10 +108,10 @@ def create_contact(form, i):
     return contact
 
 
-def create_parent(form, i):
-    parent_last_name = form.get(f'parent_last_name_{i}')
-    parent_first_name = form.get(f'parent_first_name_{i}')
-    parent_patronym = form.get(f'parent_patronym_{i}')
+def create_parent(contact_form):
+    parent_last_name = contact_form.parent_last_name.data
+    parent_first_name = contact_form.parent_first_name.data
+    parent_patronym = contact_form.parent_patronym.data
 
     parent = Person(
         last_name=parent_last_name,
@@ -118,26 +123,27 @@ def create_parent(form, i):
     return parent
 
 
-def handle_contact_info(form, student, i):
-    contact_select = form.get(f'contact_select_{i}')
-    relation_type = form.get(f'relation_{i}')
+def handle_contact_info(contact_form, student):
+    contact_select = contact_form.contact_select.data
+    relation_type = contact_form.relation.data
     student_contacts = Contact.query.filter_by(person_id=student.id).first()
     if relation_type == CHILD_SELF and not student_contacts:
-        contact = create_contact(form, i)
+        contact = create_contact(contact_form)
         db.session.add(contact)
         db.session.flush()
 
         student.contacts.append(contact)
+        db.session.flush()
 
     elif relation_type != CHILD_SELF:
         if contact_select == CHOOSE:
-            parent_id = int(form.get(f'selected_contact_{i}'))
+            parent_id = int(contact_form.selected_contact.data)
             parent = Person.query.filter_by(id=parent_id).first()
             contact = Contact.query.filter_by(person_id=parent_id).first()
 
         else:
-            contact = create_contact(form, i)
-            parent = create_parent(form, i)
+            contact = create_contact(contact_form)
+            parent = create_parent(contact_form)
             db.session.add(parent)
             db.session.add(contact)
             db.session.flush()
@@ -146,20 +152,20 @@ def handle_contact_info(form, student, i):
             parent.primary_contact = parent.id
 
         student.parents.append(parent)
-        assign_relation_type(form, student, parent, i)
+        db.session.flush()
+        assign_relation_type(contact_form, student, parent)
     else:
         return
 
-    if form.get('primary_contact') == f'contact_{i}':
+    if contact_form.primary_contact.data == "true":
         student.primary_contact = contact.person_id
-    db.session.flush()
 
 
-def assign_relation_type(form, student, parent, i):
-    relation_type = form.get(f'relation_{i}')
+def assign_relation_type(form, student, parent):
+    relation_type = form.relation.data
 
     if relation_type == OTHER:
-        relation_type = form.get(f'other_relation_{i}')
+        relation_type = form.other_relation.data
 
     relation_entry = parent_child_table.update().where(
         (parent_child_table.c.parent_id == parent.id) &
@@ -174,26 +180,22 @@ def add_child(form):
     db.session.add(student)
     db.session.flush()
 
-    contact_count = int(form.get('contact_count'))
-    for i in range(1, contact_count + 1):
-        handle_contact_info(form, student, i)
+    for contact_form in form.contacts:
+        handle_contact_info(contact_form, student)
 
     return student
 
 
 def add_adult(form):
-    client_select = form.get('client_select')
+    client_select = form.client_select.data
     if client_select == CHOOSE:
-        client_id = int(form.get('selected_client'))
+        client_id = int(form.selected_client.data)
         client = Person.query.filter_by(id=client_id).first()
-        client.status = form.get('status')
-        client.pause_date = datetime.strptime(form.get('pause_until'), '%d.%m.%Y').date() \
-            if form.get('pause_until') else None
-        client.leaving_reason = form.get('leaving_reason')
+        client.status = form.status.data
 
     else:
         client = create_student(form, 'adult')
-        contact = create_contact(form, '')
+        contact = create_contact(form)
         db.session.add(client)
         db.session.add(contact)
         db.session.flush()
@@ -541,23 +543,24 @@ def purchase_subscription(form, student_id):
     return new_subscription, subscription_type.price
 
 
-def handle_student_edit(form, student):
-    if 'form_student_submit' in form:
-        student.last_name = form.get('last_name')
-        student.first_name = form.get('first_name')
-        student.patronym = form.get('patronym')
-        student.dob = datetime.strptime(form.get('dob'), '%d.%m.%Y').date() \
-            if form.get('dob') else None
-        student.status = form.get('status')
+def handle_student_edit(form, student, edit_type):
+    if edit_type == 'student_edit':
+        student.last_name = form.last_name
+        student.first_name = form.first_name
+        student.patronym = form.patronym
+        student.dob = datetime.strptime(form.dob, '%d.%m.%Y').date() \
+            if form.dob else None
+        student.status = form.status
         if student.status == "Закрыт":
             student.subjects = []
             student.subscriptions = []
-        student.pause_date = datetime.strptime(form.get('pause_until'), '%d.%m.%Y').date() \
-            if form.get('pause_until') else None
-        student.leaving_reason = form.get('leaving_reason')
+        student.pause_date = datetime.strptime(form.pause_until, '%d.%m.%Y').date() \
+            if form.pause_until and student.status == "Пауза" else None
+
+        student.leaving_reason = form.leaving_reason if student.status == "Закрыт" else ''
         db.session.flush()
 
-    if 'form_main_contact_submit' in form:
+    if edit_type == 'edit_main_contact':
         main_contact = student.main_contact
         main_contact.contacts[0].telegram = form.get('telegram_main')
         main_contact.contacts[0].phone = form.get('phone_main')
@@ -582,7 +585,7 @@ def handle_student_edit(form, student):
             db.session.flush()
 
     if 'form_cont_new_submit' in form:
-        handle_contact_info(form, student, 'new')
+        handle_contact_info(form, student)
 
     if 'del_subject_btn' in form:
         del_subject_id = int(form.get('del_subject_btn'))

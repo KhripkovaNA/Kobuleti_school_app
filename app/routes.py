@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, send_file
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
     SubscriptionType, SchoolLessonJournal
-from app.forms import LoginForm, ChildForm
+from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
     student_lesson_register, handle_student_edit, format_employee, add_new_employee, handle_employee_edit, \
@@ -150,8 +150,12 @@ def delete_record():
             if record_type == 'student':
                 student_id = int(request.form.get('student_id'))
                 student = Person.query.filter_by(id=student_id).first()
-                student_name = f"{student.last_name} {student.last_name}"
                 if student:
+                    if student.parents.all():
+                        for parent in student.parents:
+                            if len(parent.children.all()) == 1 and not parent.status and not parent.roles:
+                                db.session.delete(parent)
+                    student_name = f"{student.last_name} {student.last_name}"
                     db.session.delete(student)
                     db.session.commit()
                     flash(f"Клиент {student_name} удален", "success")
@@ -167,62 +171,46 @@ def delete_record():
     return redirect(request.referrer)
 
 
-# @app.route('/add-student', methods=['GET', 'POST'])
-# @login_required
-# def add_student():
-#     if request.method == 'POST':
-#         try:
-#             if 'add_child_btn' in request.form:
-#                 student = add_child(request.form)
-#                 db.session.commit()
-#                 flash('Новый клиент добавлен в систему.', 'success')
-#                 return redirect(url_for('show_edit_student', student_id=student.id))
-#
-#             if 'add_adult_btn' in request.form:
-#                 client = add_adult(request.form)
-#                 db.session.commit()
-#                 flash('Новый клиент добавлен в систему.', 'success')
-#                 return redirect(url_for('show_edit_student', student_id=client.id))
-#
-#         except Exception as e:
-#             db.session.rollback()
-#             flash(f'Ошибка при добавлении киента: {str(e)}', 'error')
-#             return redirect(url_for('add_student'))
-#
-#     clients = clients_data('child')
-#     possible_clients = clients_data('adult')
-#
-#     return render_template('add_student.html', clients=clients, possible_clients=possible_clients)
-
-
 @app.route('/add-student', methods=['GET', 'POST'])
 @login_required
 def add_student():
     clients = clients_data('child')
-    form = ChildForm()
-    form.contacts[0].selected_contact.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
-                                                 for person in clients]
+    form1 = ChildForm()
+    form1.contacts[0].selected_contact.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
+                                                  for person in clients]
+
+    possible_clients = clients_data('adult')
+    form2 = AdultForm()
+    form2.selected_client.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
+                                     for person in possible_clients]
+    render_type = 'child'
 
     if request.method == 'POST':
         try:
-            if 'add_child_btn' in request.form and form.validate_on_submit():
-                student = add_child(request.form)
-                db.session.commit()
-                flash('Новый клиент добавлен в систему.', 'success')
-                return redirect(url_for('show_edit_student', student_id=student.id))
+            if 'add_child_btn' in request.form:
+                if form1.validate_on_submit():
+                    student = add_child(form1)
+                    db.session.commit()
+                    flash('Новый клиент добавлен в систему.', 'success')
+                    return redirect(url_for('show_edit_student', student_id=student.id))
 
-            # if 'add_adult_btn' in request.form:
-            #     client = add_adult(request.form)
-            #     db.session.commit()
-            #     flash('Новый клиент добавлен в систему.', 'success')
-            #     return redirect(url_for('show_edit_student', student_id=client.id))
+            if 'add_adult_btn' in request.form:
+                render_type = 'adult'
+                if form2.validate_on_submit():
+                    client = add_adult(form2)
+                    db.session.commit()
+                    flash('Новый клиент добавлен в систему.', 'success')
+                    return redirect(url_for('show_edit_student', student_id=client.id))
+
+            flash('Ошибка в форме добавления киента', 'error')
 
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении киента: {str(e)}', 'error')
             return redirect(url_for('add_student'))
 
-    return render_template('test_wtf.html', clients=clients, form1=form)
+    return render_template('add_student.html', clients=clients, possible_clients=possible_clients,
+                           form1=form1, form2=form2, render_type=render_type)
 
 
 @app.route('/student/<string:student_id>', methods=['GET', 'POST'])
@@ -234,20 +222,39 @@ def show_edit_student(student_id):
         clients = clients_data('child')
         lesson_subjects = lesson_subjects_data()
         subscription_subjects = subscription_subjects_data()
+        student_form = EditStudentForm(
+            last_name=student.last_name,
+            first_name=student.first_name,
+            patronym=student.patronym,
+            dob=f'{student.dob:%d.%m.%Y}' if student.dob else None,
+            status=student.status,
+            pause_until=f'{student.pause_until:%d.%m.%Y}' if student.pause_until else None,
+            leaving_reason=student.leaving_reason
+        )
+        if student.primary_contact != student.id:
+            main_contact_form = EditContactPersonForm()
+        else:
+            main_contact_form = ContactForm()
+
+        render_type = 'contact_main'
 
         if request.method == 'POST':
             try:
-                handle_student_edit(request.form, student)
-                db.session.commit()
-                flash('Изменения внесены.', 'success')
-                return redirect(url_for('show_edit_student', student_id=student.id))
+                if 'form_student_submit' in request.form:
+                    render_type = 'edit_student'
+                    if student_form.validate_on_submit():
+                        handle_student_edit(student_form, student, 'edit_student')
+                        db.session.commit()
+                        flash('Изменения внесены.', 'success')
+                        return redirect(url_for('show_edit_student', student_id=student.id))
             except Exception as e:
                 db.session.rollback()
                 flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
                 return redirect(url_for('show_edit_student', student_id=student.id))
 
         return render_template('student.html', student=student, clients=clients, today=f'{TODAY:%d.%m.%Y}',
-                               lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects)
+                               lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects,
+                               edit_student_form=student_form, render_type=render_type, main_contact=main_contact_form)
     else:
         flash("Такого клиента нет", 'error')
         return redirect(url_for('students.html'))

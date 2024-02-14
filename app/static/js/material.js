@@ -345,7 +345,7 @@ $(document).ready(function(){
         var newTitle = "Дополнительный контакт " + contactCount;
         contactSection.find("h5").text(newTitle);
 
-        contactSection.find("select, input[type='text']").each(function() {
+        contactSection.find("select, input[type='text'], input[type='hidden']").each(function() {
             var originalName = $(this).attr("name");
             if (originalName) {
                 var newName = originalName.replace("-0", "-" + contactCount);
@@ -358,6 +358,9 @@ $(document).ready(function(){
             }
             if ($(this).is("input[type='text']")) {
                 $(this).val("");
+            }
+            if ($(this).is("input[type='hidden']")) {
+                $(this).val("false");
             }
         });
 
