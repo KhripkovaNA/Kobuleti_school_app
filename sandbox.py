@@ -9,7 +9,7 @@ from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
-    get_after_school_students, extensive_student_info
+    get_after_school_students, extensive_student_info, potential_client_subjects
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
@@ -1061,5 +1061,4 @@ def add_new_lessons(form):
 #     last_row_ind = sheet.max_row + 2
 #
 # workbook.save(filename="school_students.xlsx")
-
-print_table(Contact)
+print(*potential_client_subjects(), sep='\n')

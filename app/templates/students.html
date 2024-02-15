@@ -43,13 +43,9 @@
                                                 {% endif %}
                                             </td>
                                             <td width="15%">
-                                                {% if student.subjects %}
-                                                    {% if student.status=="Лид"%}
-                                                        Интересуется:
-                                                        {% for subject in student.subjects %}
-                                                            {{ subject.name }}{{ "," if not loop.last }}
-                                                        {% endfor %}
-                                                    {% else %}
+                                                {% if student.subjects_info %}
+                                                    {% if student.status in ["Клиент", "Лид"] %}
+                                                        {{ 'Интересуется:' if student.status == "Лид" }}
                                                         {{ student.subjects_info if student.subjects_info }}
                                                     {% endif %}
                                                 {% endif %}

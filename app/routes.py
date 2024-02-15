@@ -5,13 +5,14 @@ from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Roo
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
     EditAddContPersonForm, AddContForm, NewContactPersonForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
-    lesson_subjects_data, purchase_subscription, add_child, add_adult, clients_data, extensive_student_info, \
-    student_lesson_register, handle_student_edit, format_employee, add_new_employee, handle_employee_edit, \
-    format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, day_school_lessons_dict, \
-    filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, handle_lesson, \
-    format_school_class_students, format_school_class_subjects, show_school_lesson, handle_school_lesson, \
-    employee_record, subject_record, calc_month_index, student_record, get_after_school_students, \
-    get_after_school_prices, handle_after_school_adding, finance_operation, download_timetable, get_date_range
+    lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
+    extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
+    handle_employee_edit, format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, \
+    day_school_lessons_dict, filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, \
+    handle_lesson, format_school_class_students, format_school_class_subjects, show_school_lesson, \
+    handle_school_lesson, employee_record, subject_record, calc_month_index, student_record, \
+    get_after_school_students, get_after_school_prices, handle_after_school_adding, finance_operation, \
+    download_timetable, get_date_range
 
 from app import app, db
 from datetime import datetime, timedelta
@@ -91,7 +92,7 @@ def lesson_register(student_id):
     try:
         lesson_id = student_lesson_register(request.form, student_id)
         db.session.commit()
-        flash('Клиент записан на занятие.', 'success')
+        flash('Клиент записан на занятие', 'success')
 
         return redirect(url_for('lesson', lesson_id=lesson_id))
 
@@ -99,7 +100,35 @@ def lesson_register(student_id):
         db.session.rollback()
         flash(f'Ошибка при записи клиента: {str(e)}', 'error')
 
-        return redirect(url_for('students'))
+        return redirect(request.referrer)
+
+
+@app.route('/student-subjects/<string:student_id>', methods=['POST'])
+@login_required
+def student_subjects_add(student_id):
+    try:
+        student = Person.query.filter_by(id=student_id, status="Лид").first()
+        selected_subjects = request.form.getlist("selected_subjects")
+        selected_class = request.form.get("selected_class")
+        if student:
+            if selected_subjects:
+                for subject in selected_subjects:
+                    subject_id = int(subject)
+                    potential_subject = Subject.query.filter_by(id=subject_id).first()
+                    if potential_subject not in student.subjects.all():
+                        student.subjects.append(potential_subject)
+                        db.session.flush()
+            if selected_class:
+                student.school_class_id = int(selected_class)
+
+            db.session.commit()
+            flash('Занятия добавлены', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при записи клиента: {str(e)}', 'error')
+
+    return redirect(request.referrer)
 
 
 @app.route('/subscription/<string:student_id>', methods=['POST'])
@@ -242,6 +271,7 @@ def show_edit_student(student_id):
         extensive_student_info(student)
         clients = clients_data('child')
         lesson_subjects = lesson_subjects_data()
+        potential_subjects = potential_client_subjects()
         subscription_subjects = subscription_subjects_data()
         student_form = EditStudentForm(
             last_name=student.last_name,
@@ -295,7 +325,6 @@ def show_edit_student(student_id):
         new_contact_form = NewContactPersonForm(prefix="new_contact")
         new_contact_form.selected_contact.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
                                                      for person in clients]
-
         render_type = 'student'
 
         if request.method == 'POST':
@@ -315,15 +344,14 @@ def show_edit_student(student_id):
                         flash('Изменения внесены', 'success')
                         return redirect(url_for('show_edit_student', student_id=student.id))
 
-                if student.additional_contacts:
-                    for i in range(1, len(student.additional_contacts) + 2):
-                        if f'form_cont_{i}_submit' in request.form:
-                            render_type = f'contact_edit_{i}'
-                            if add_cont_forms[i-1].validate_on_submit():
-                                handle_student_edit(add_cont_forms[i-1], student, f'edit_contact_{i}')
-                                db.session.commit()
-                                flash('Изменения внесены', 'success')
-                                return redirect(url_for('show_edit_student', student_id=student.id))
+                for i in range(1, len(student.additional_contacts) + 2):
+                    if f'form_cont_{i}_submit' in request.form:
+                        render_type = f'contact_edit_{i}'
+                        if add_cont_forms[i-1].validate_on_submit():
+                            handle_student_edit(add_cont_forms[i-1], student, f'edit_contact_{i}')
+                            db.session.commit()
+                            flash('Изменения внесены', 'success')
+                            return redirect(url_for('show_edit_student', student_id=student.id))
 
                 if 'form_cont_new_submit' in request.form:
                     render_type = 'contact_new'
@@ -343,7 +371,8 @@ def show_edit_student(student_id):
         return render_template('student.html', student=student, clients=clients, today=f'{TODAY:%d.%m.%Y}',
                                lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects,
                                edit_student_form=student_form, render_type=render_type, main_contact=main_contact_form,
-                               add_cont_forms=add_cont_forms, new_contact_form=new_contact_form)
+                               add_cont_forms=add_cont_forms, new_contact_form=new_contact_form,
+                               potential_subjects=potential_subjects)
     else:
         flash("Такого клиента нет", 'error')
         return redirect(url_for('students'))

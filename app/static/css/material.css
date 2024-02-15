@@ -579,6 +579,7 @@ fieldset[disabled] .navbar .navbar-nav>li>a.btn.btn-default.focus,
 fieldset[disabled] .navbar .navbar-nav>li>a.btn.btn-default:active,
 fieldset[disabled] .navbar .navbar-nav>li>a.btn.btn-default.active {
     box-shadow: none;
+    cursor: default;
 }
 
 .btn.btn-simple,

@@ -465,6 +465,19 @@ def subscription_subjects_data():
     return subscription_subjects
 
 
+def potential_client_subjects():
+    school_classes = SchoolClass.query.order_by(SchoolClass.school_name).all()
+    potential_classes = [(school_class.id, school_class.school_name) for school_class in school_classes
+                         if school_class.school_name.endswith("класс")]
+    all_subjects = Subject.query.filter(
+        Subject.subject_type.has(SubjectType.name != "school")
+    ).order_by(Subject.name).all()
+    potential_subjects = [(subject.id, f"{subject.name} ({subject.subject_type.description})")
+                          for subject in all_subjects]
+
+    return {"school": potential_classes, "subjects": potential_subjects}
+
+
 def subjects_data():
     all_subjects = Subject.query.order_by(Subject.name).all()
     subjects_teachers = []
@@ -1325,7 +1338,10 @@ def format_school_class_students(school_class):
     school_class.main_teacher = db.session.query(Person).join(teacher_class_table).filter(
         teacher_class_table.c.class_id == school_class.id,
         teacher_class_table.c.main_teacher).first()
-    class_students = Person.query.filter_by(school_class_id=school_class.id).order_by(Person.last_name).all()
+    class_students = Person.query.filter_by(
+        school_class_id=school_class.id,
+        status="Клиент"
+    ).order_by(Person.last_name, Person.last_name).all()
     for student in class_students:
         format_student_info(student)
         format_main_contact(student)
