@@ -607,19 +607,38 @@ def handle_student_edit(form, student, edit_type):
 
     if edit_type == 'new_contact':
         handle_contact_info(form, student)
-    #
-    # if 'del_subject_btn' in form:
-    #     del_subject_id = int(form.get('del_subject_btn'))
-    #     del_subject = Subject.query.filter_by(id=del_subject_id).first()
-    #     if del_subject in student.subjects:
-    #         student.subjects.remove(del_subject)
-    #         db.session.flush()
-    #
-    # if 'form_subscriptions_submit' in form:
-    #     for subscription in student.subscriptions:
-    #         subscription.lessons_left = form.get(f'subscription_{subscription.id}_lessons')
-    #         subscription.end_date = form.get(f'subscription_{subscription.id}_end_date')
-    #     db.session.flush()
+
+    if edit_type == 'del_subject':
+        del_subject_id = int(form.get('del_subject_btn'))
+        if student.status == "Лид" and del_subject_id == 0:
+            student.school_class_id = None
+            db.session.flush()
+        else:
+            del_subject = Subject.query.filter_by(id=del_subject_id).first()
+            if del_subject in student.subjects:
+                student.subjects.remove(del_subject)
+                db.session.flush()
+
+    if edit_type == 'subscription':
+        for subscription_form in form.subscriptions:
+            subscription_id = int(subscription_form.subscription_id.data)
+            subscription = Subscription.query.filter_by(id=subscription_id).first()
+            subscription.lessons_left = subscription_form.lessons.data
+            subscription.end_date = datetime.strptime( subscription_form.end_date.data, '%d.%m.%Y').date()
+        db.session.flush()
+
+    if edit_type == 'del_after_school':
+        del_after_school_id = int(form.get('del_after_school'))
+        del_after_school = Subscription.query.filter_by(id=del_after_school_id).first()
+        if del_after_school:
+            price = del_after_school.subscription_type.price
+            if del_after_school.period not in ["month", "day"]:
+                hours = int(del_after_school.period.split()[0])
+                price *= hours
+            description = "Возврат за продленку"
+            finance_operation(student.id, price, description)
+            db.session.delete(del_after_school)
+            db.session.flush()
 
 
 def handle_employee_edit(form, employee):
@@ -1694,10 +1713,14 @@ def student_record(student, month_index):
     return subjects_dict, dates_grade_type
 
 
-def get_after_school_students(month_index):
-    current_period = (TODAY.month, TODAY.year)
+def get_period(month_index):
     result_date = TODAY + relativedelta(months=month_index)
-    period = (result_date.month, result_date.year)
+    return result_date.month, result_date.year
+
+
+def get_after_school_students(month_index):
+    current_period = get_period(0)
+    period = get_period(month_index)
     first_date = datetime(period[1], period[0], 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
     after_school_subscriptions = Subscription.query.filter(
@@ -1757,7 +1780,8 @@ def handle_after_school_adding(student_id, form, period):
     term = form.get("term")
     if term == "month":
         shift = int(form.get("shift"))
-        purchase_date = datetime(period[1], period[0], 1).date()
+        purchase_month, purchase_year = period.split("-")
+        purchase_date = datetime(int(purchase_year), int(purchase_month), 1).date()
     else:
         shift = None
         purchase_date = datetime.strptime(form.get("attendance_date"), '%d.%m.%Y').date()

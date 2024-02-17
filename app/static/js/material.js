@@ -395,7 +395,7 @@ $(document).ready(function(){
     // Function to switch between different sections based on button clicks
     function handleTabButtonClick(buttonId) {
         var targetId = '#' + buttonId.replace('-btn', '');
-        $('#show-subjects, #show-contacts, #show-subscriptions').hide();
+        $('#show-subjects, #show-contacts, #show-subscriptions, #show-after-school').hide();
         $(targetId).show();
     }
 
@@ -470,13 +470,17 @@ $(document).ready(function(){
             subscriptionTypeSelector.append(`<option value="${index}">${subscriptionType}</option>`);
         });
 
-        subscriptionTypeSelector.change(function () {
-            var subscriptionType = $(this).val();
-            const priceDisplay = $('.price-display');
-            priceDisplay.html(`<b>${selectedSubject[0].price_info[subscriptionType]}</b>`);
-        });
-
         subscriptionTypeSelector.trigger("change");
+    });
+
+    $('.subscription-type-select').change(function () {
+        var subscriptionType = $(this).val();
+        var subjectId = Number($('.subscription-select').val());
+        var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
+            return subject.id === subjectId;
+        });
+        const priceDisplay = $('.price-display');
+        priceDisplay.html(`<b>${selectedSubject[0].price_info[subscriptionType]}</b>`);
     });
 
     // Trigger selectors change when subscription modal is shown
@@ -485,6 +489,72 @@ $(document).ready(function(){
         var subscriptionModal = $(subscriptionModalId);
         var subscriptionSubjectSelector = subscriptionModal.find('.subscription-select');
         subscriptionSubjectSelector.trigger("change");
+    });
+
+    // Function to validate date input
+    function validateDateInput(validatedForm) {
+        var dateInput = validatedForm.find('.date-input');
+        var dateValue = dateInput.val();
+        if (dateInput.hasClass('required')) {
+            var isValidDate = moment(dateValue, 'DD.MM.YYYY', true).isValid();
+            dateDiv = validatedForm.find('.date-div');
+            errorDiv = dateDiv.closest('.row');
+            if (!isValidDate) {
+                errorDiv.addClass("has-error");
+                var errorSpan = `<span class="error-span" style="color:red;">Неправильный формат даты</span>`;
+                var existingErrorSpan = dateDiv.find('.error-span');
+
+                if (existingErrorSpan.length === 0) {
+                    dateDiv.append(errorSpan);
+                }
+            } else {
+                errorDiv.removeClass("has-error");
+                dateDiv.find('.error-span').remove();
+            }
+        }
+    }
+
+    // Function to validate integer input
+    function validateIntegerInput(validatedForm) {
+        var integerInput = validatedForm.find('.integer-input');
+        var integerValue = integerInput.val();
+        if (integerInput.hasClass('required')) {
+            integerDiv = validatedForm.find('.integer-div');
+            errorDiv = integerDiv.closest('.row');
+            if (!integerValue) {
+                errorDiv.addClass("has-error");
+                var errorSpan = `<span class="error-span" style="color:red;">Заполните это поле</span>`;
+                var existingErrorSpan = integerDiv.find('.error-span');
+
+                if (existingErrorSpan.length === 0) {
+                    integerDiv.append(errorSpan);
+                }
+            } else {
+                errorDiv.removeClass("has-error");
+                integerDiv.find('.error-span').remove();
+            }
+        }
+    }
+
+
+    // Validate subscription form
+    $('form.subscription-form').submit(function(event) {
+        var currentForm = $(this);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
+    // Validate after-school form
+    $('form.after-school-form').submit(function(event) {
+        var currentForm = $(this);
+        validateDateInput(currentForm);
+        validateIntegerInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
     });
 
     // Handle the change event for employee selection
@@ -885,19 +955,23 @@ $(document).ready(function(){
         $("#input-" + studentId).remove();
     });
 
-    // Handle term selector change when adding an fter-school student
+    // Handle term selector change when adding after-school student
     $("#after-school-modal").on("change", ".term-selector", function () {
         term = $(this).val();
         if (term === "month") {
             $(".shift-row").show();
             $(".hours-row, .day-row").hide();
+            $(".day-row").find(".date-input").removeClass("required");
         } else if (term === "day") {
             $(".shift-row, .hours-row").hide();
             $(".day-row").show();
+            $(".day-row").find(".date-input").addClass("required");
         } else {
             $(".shift-row").hide();
             $(".hours-row, .day-row").show();
             $(".hour-number").val(1);
+            $(".hours-row").find(".integer-input").addClass("required");
+            $(".day-row").find(".date-input").addClass("required");
         }
         var prices = afterSchoolPrices.filter(function(price) {
             return price.period === term;

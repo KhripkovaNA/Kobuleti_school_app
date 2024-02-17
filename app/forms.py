@@ -1,8 +1,8 @@
 from flask import request
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, Form
 from wtforms import StringField, TextAreaField, PasswordField, SelectField, \
-    FormField, FieldList, HiddenField, BooleanField
-from wtforms.validators import ValidationError, DataRequired, Length, InputRequired, Optional
+    FormField, FieldList, HiddenField, BooleanField, IntegerField
+from wtforms.validators import ValidationError, DataRequired, InputRequired, Optional, NumberRange
 from app.models import Person
 from app import db
 from datetime import datetime
@@ -103,3 +103,15 @@ class AddContForm(ContactForm):
 
 class NewContactPersonForm(ContForm):
     primary_contact = BooleanField()
+
+
+class SubscriptionForm(Form):
+    subscription_id = HiddenField()
+    subject_name = StringField()
+    lessons = IntegerField(validators=[InputRequired(message='Заполните это поле'),
+                                       NumberRange(0, 20, message='Неправильный формат')])
+    end_date = StringField(validators=[InputRequired(message='Заполните это поле'), validate_date_format])
+
+
+class SubscriptionsEditForm(FlaskForm):
+    subscriptions = FieldList(FormField(SubscriptionForm), min_entries=0, max_entries=100)

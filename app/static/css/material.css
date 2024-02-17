@@ -2328,6 +2328,11 @@ fieldset[disabled] .form-group .form-control {
     color: #f44336;
 }
 
+.has-error span {
+    font-size: 12px;
+    color: red;
+}
+
 .form-group.has-success .form-control {
     box-shadow: none;
 }

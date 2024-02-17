@@ -77,21 +77,25 @@
                                                                 <i class="material-icons" style="color: purple;">info</i>Просмотр
                                                             </a>
                                                         </li>
-                                                        <li>
-                                                            <a href="#" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
-                                                                <i class="material-icons" style="color: purple;">date_range</i>Записать
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="#" class="subscription-modal-trigger" data-toggle="modal" data-target="#subscription-{{ student.id }}-modal">
-                                                                <i class="material-icons" style="color: purple;">addchart</i>Абонемент
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="#" data-toggle="modal" data-target="#deposit-{{ student.id }}-modal">
-                                                                <i class="material-icons" style="color: purple;">money</i>Пополнить
-                                                            </a>
-                                                        </li>
+                                                        {% if student.status=="Клиент" %}
+                                                            {% if lesson_subjects %}
+                                                                <li>
+                                                                    <a href="#" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
+                                                                        <i class="material-icons" style="color: purple;">date_range</i>Записать
+                                                                    </a>
+                                                                </li>
+                                                            {% endif %}
+                                                            <li>
+                                                                <a href="#" class="subscription-modal-trigger" data-toggle="modal" data-target="#subscription-{{ student.id }}-modal">
+                                                                    <i class="material-icons" style="color: purple;">addchart</i>Абонемент
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="#" data-toggle="modal" data-target="#deposit-{{ student.id }}-modal">
+                                                                    <i class="material-icons" style="color: purple;">money</i>Пополнить
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
                                                         <li class="divider"></li>
                                                         <li>
                                                             {% if rights != 'admin' %}
@@ -136,12 +140,12 @@
                                                                     </div>
                                                                     <div class="row">
                                                                         <div class="col-md-3 col-md-offset-3">
-                                                                            <button type="submit" class="btn btn-login" data-background-color="main">
+                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
                                                                                 Записать
                                                                             </button>
                                                                         </div>
                                                                         <div class="col-md-3">
-                                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
+                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                                 Отмена
                                                                             </button>
                                                                         </div>
@@ -162,7 +166,8 @@
                                                                 <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form class="login-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">
+                                                                <form class="subscription-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">
+                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                                         <div class="col-md-7">
@@ -181,8 +186,8 @@
                                                                     </div>
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">Дата покупки:</label>
-                                                                        <div class="col-md-7">
-                                                                            <input type="text" name="purchase_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                                        <div class="col-md-7 date-div">
+                                                                            <input type="text" name="purchase_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
                                                                         </div>
                                                                     </div>
                                                                     <div class="row">
@@ -193,12 +198,12 @@
                                                                     </div>
                                                                     <div class="row">
                                                                         <div class="col-md-3 col-md-offset-3">
-                                                                            <button type="submit" class="btn btn-login" data-background-color="main">
+                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
                                                                                 Оплатить
                                                                             </button>
                                                                         </div>
                                                                         <div class="col-md-3">
-                                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
+                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                                 Отмена
                                                                             </button>
                                                                         </div>
@@ -225,16 +230,20 @@
                                                                         <div class="col-md-4">
                                                                             <input type="number" class="form-control" name="deposit" step="10" min="10" max="1000">
                                                                         </div>
-                                                                        <div class="col-md-4">
-                                                                            <button type="submit" class="btn btn-login float-right" data-background-color="main" style="margin:0;">
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <div class="col-md-3 col-md-offset-3">
+                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
                                                                                 Внести
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                Отмена
                                                                             </button>
                                                                         </div>
                                                                     </div>
                                                                 </form>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Отмена</button>
                                                             </div>
                                                         </div>
                                                     </div>

@@ -84,7 +84,7 @@
                                     <div class="col-md-6">
                                         {{ edit_student_form.last_name(class="form-control") }}
                                         {% for error in edit_student_form.last_name.errors %}
-                                            <span style="color: red;">{{ error }}</span>
+                                            <span>{{ error }}</span>
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -93,7 +93,7 @@
                                     <div class="col-md-6">
                                         {{ edit_student_form.first_name(class="form-control") }}
                                         {% for error in edit_student_form.first_name.errors %}
-                                            <span style="color: red;">{{ error }}</span>
+                                            <span>{{ error }}</span>
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -109,7 +109,7 @@
                                         <div class="col-md-2 datepicker-container">
                                             {{ edit_student_form.dob(class="form-control datepicker", placeholder="дд.мм.гггг") }}
                                             {% for error in edit_student_form.dob.errors %}
-                                                <span style="color: red;">{{ error }}</span>
+                                                <span>{{ error }}</span>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -124,7 +124,7 @@
                                         <div class="col-md-2">
                                             <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.pause_date }}">
                                             {% for error in edit_student_form.pause_until.errors %}
-                                                <span style="color: red;">{{ error }}</span>
+                                                <span>{{ error }}</span>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -268,7 +268,7 @@
                                                     <div class="col-md-6">
                                                         {{ main_contact.last_name(class="form-control") }}
                                                         {% for error in main_contact.last_name.errors %}
-                                                            <span style="color: red;">{{ error }}</span>
+                                                            <span>{{ error }}</span>
                                                         {% endfor %}
                                                     </div>
                                                 </div>
@@ -277,7 +277,7 @@
                                                     <div class="col-md-6">
                                                         {{ main_contact.first_name(class="form-control") }}
                                                         {% for error in main_contact.last_name.errors %}
-                                                            <span style="color: red;">{{ error }}</span>
+                                                            <span>{{ error }}</span>
                                                         {% endfor %}
                                                     </div>
                                                 </div>
@@ -439,7 +439,7 @@
                                                         <div class="col-md-6">
                                                             {{ add_cont_forms[loop.index0].last_name(class="form-control") }}
                                                             {% for error in add_cont_forms[loop.index0].last_name.errors %}
-                                                                <span style="color: red;">{{ error }}</span>
+                                                                <span>{{ error }}</span>
                                                             {% endfor %}
                                                         </div>
                                                     </div>
@@ -448,7 +448,7 @@
                                                         <div class="col-md-6">
                                                             {{ add_cont_forms[loop.index0].first_name(class="form-control") }}
                                                             {% for error in add_cont_forms[loop.index0].first_name.errors %}
-                                                                <span style="color: red;">{{ error }}</span>
+                                                                <span>{{ error }}</span>
                                                             {% endfor %}
                                                         </div>
                                                     </div>
@@ -543,7 +543,7 @@
                                             <div class="col-md-6">
                                                 {{ new_contact_form.selected_contact(class="form-control contact-options select-search") }}
                                                 {% for error in new_contact_form.selected_contact.errors %}
-                                                    <span style="color: red;">{{ error }}</span>
+                                                    <span>{{ error }}</span>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -557,7 +557,7 @@
                                                 <div class="col-md-6">
                                                     {{ new_contact_form.parent_last_name(class="form-control") }}
                                                     {% for error in new_contact_form.parent_last_name.errors %}
-                                                        <span style="color: red;">{{ error }}</span>
+                                                        <span>{{ error }}</span>
                                                     {% endfor %}
                                                 </div>
                                             </div>
@@ -566,7 +566,7 @@
                                                 <div class="col-md-6">
                                                     {{ new_contact_form.parent_first_name(class="form-control") }}
                                                     {% for error in new_contact_form.parent_first_name.errors %}
-                                                        <span style="color: red;">{{ error }}</span>
+                                                        <span>{{ error }}</span>
                                                     {% endfor %}
                                                 </div>
                                             </div>
@@ -652,13 +652,13 @@
                                     </div>
                                 {% endif %}
                                 <div class="col-md-2">
-                                    {% if student.status=="Клиент" %}
+                                    {% if student.status=="Клиент" and lesson_subjects %}
                                         <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#lesson-modal">
                                             <i class="material-icons">date_range</i> Записать
                                         </a>
-                                    {% else %}
+                                    {% elif student.status=="Лид"  %}
                                         <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subject-modal">
-                                            <i class="material-icons">library_books</i> Добавить занятие
+                                            <i class="material-icons">post_add</i> Интересующие направления
                                         </a>
                                     {% endif %}
                                 </div>
@@ -693,12 +693,12 @@
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-md-3 col-md-offset-3">
-                                                            <button type="submit" class="btn" data-background-color="main">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
                                                                 Записать
                                                             </button>
                                                         </div>
                                                         <div class="col-md-3">
-                                                            <button type="button" class="btn float-right" data-dismiss="modal" data-background-color="red">
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                 Отмена
                                                             </button>
                                                         </div>
@@ -716,7 +716,7 @@
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Добавить занятие</h4>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Добавить интересующие направления</h4>
                                             </div>
                                             <div class="modal-body">
                                                 <form class="login-form" action="{{ url_for('student_subjects_add', student_id=student.id) }}" method="post">
@@ -749,7 +749,7 @@
                                                             </button>
                                                         </div>
                                                         <div class="col-md-3">
-                                                            <button type="button" class="btn btn-sm float-right" data-dismiss="modal" data-background-color="red">
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                 Отмена
                                                             </button>
                                                         </div>
@@ -775,10 +775,6 @@
                                             <div class="row">
                                                 {% if student.status=="Лид" %}
                                                     <label class="control-label col-md-3">{{ "Интересуется:" if loop.first }}</label>
-                                                {% else %}
-                                                    <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
-                                                {% endif %}
-                                                {% if subject[0] in student.extra_subjects %}
                                                     <div class="col-md-5">
                                                         <p class="form-control" style="border-radius: 4px;">{{ subject[0] }}</p>
                                                     </div>
@@ -786,9 +782,19 @@
                                                         <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger del-btn-sm">Удалить</button>
                                                     </div>
                                                 {% else %}
-                                                    <div class="col-md-6">
-                                                        <p class="form-control">{{ subject[0] }}</p>
-                                                    </div>
+                                                    <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
+                                                    {% if subject[0] in student.extra_subjects %}
+                                                        <div class="col-md-5">
+                                                            <p class="form-control" style="border-radius: 4px;">{{ subject[0] }}</p>
+                                                        </div>
+                                                        <div class="col-md-1">
+                                                            <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger del-btn-sm">Удалить</button>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="col-md-6">
+                                                            <p class="form-control">{{ subject[0] }}</p>
+                                                        </div>
+                                                    {% endif %}
                                                 {% endif %}
                                             </div>
                                         {% endfor %}
@@ -808,12 +814,12 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Subscriptions section *-*-*-*-*-*-*-*-*-* -->
 
-                <div id="show-subscriptions" style="display: none;">
+                <div id="show-subscriptions" style="{{ 'display:block' if render_type == 'subscription' else 'display:none' }};">
                     <h4 class="title" style="margin-left:27px;">Абонементы</h4>
 
             <!-- *-*-*-*-*-*-*-*-*-* Subscriptions information show *-*-*-*-*-*-*-*-*-* -->
 
-                    <div class="section section-subscriptions" data-target="subscriptions">
+                    <div class="section section-subscriptions" data-target="subscriptions" style="{{ 'display:none' if render_type == 'subscription' else 'display:block' }};">
                         <div class="row">
                             <div class="form-group" style="margin-left:30px;">
                                 {% if student.subscriptions_info %}
@@ -828,12 +834,12 @@
                                                 <tbody>
                                                     {% for subscription in student.subscriptions_info %}
                                                         <tr>
-                                                            <td>{{ subscription.subject_name }}</td>
-                                                            <td style="padding: 12px 40px;">
-                                                                <p class="form-control">{{ subscription.lessons_left if subscription.lessons_left }}</p>
+                                                            <td style="padding-top:15px; vertical-align:top;">{{ subscription.subject_name }}</td>
+                                                            <td style="padding: 12px 40px; vertical-align:top;">
+                                                                <div class="form-control">{{ subscription.lessons_left if subscription.lessons_left }}</div>
                                                             </td>
-                                                            <td style="padding: 12px 30px;">
-                                                                <p class="form-control">{{ subscription.end_date }}</p>
+                                                            <td style="padding: 12px 30px; vertical-align:top;">
+                                                                <div class="form-control">{{ subscription.end_date }}</div>
                                                             </td>
                                                         </tr>
                                                     {% endfor %}
@@ -852,11 +858,11 @@
                             <div class="row">
                                 {% if student.subscriptions_info %}
                                     <div class="col-md-2">
-                                        <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                                        <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
                                     </div>
                                 {% endif %}
                                 <div class="col-md-2">
-                                    <a href="" class="btn btn-primary btn-sm subscription-modal-trigger" data-toggle="modal" data-target="#subscription-modal">
+                                    <a href="#" class="btn btn-sm subscription-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subscription-modal">
                                         <i class="material-icons">addchart</i> Купить абонемент
                                     </a>
                                 </div>
@@ -871,7 +877,8 @@
                                                 <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>
                                             </div>
                                             <div class="modal-body">
-                                                <form class="login-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">
+                                                <form class="subscription-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                     <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                         <div class="col-md-7">
@@ -890,8 +897,8 @@
                                                     </div>
                                                     <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Дата покупки:</label>
-                                                        <div class="col-md-7">
-                                                            <input type="text" name="purchase_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                        <div class="col-md-7 date-div">
+                                                            <input type="text" name="purchase_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
                                                         </div>
                                                     </div>
                                                     <div class="row">
@@ -902,12 +909,12 @@
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-md-3 col-md-offset-3">
-                                                            <button type="submit" class="btn btn-login" data-background-color="main">
+                                                            <button type="submit" class="btn btn-sm purchase-subscription" data-background-color="main">
                                                                 Оплатить
                                                             </button>
                                                         </div>
                                                         <div class="col-md-3">
-                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                 Отмена
                                                             </button>
                                                         </div>
@@ -924,33 +931,37 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Subscriptions information edit *-*-*-*-*-*-*-*-*-* -->
 
-                    <div class="form form-subscriptions" data-target="subscriptions" style="display: none;">
-                        <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
+                    <div class="form form-subscriptions" data-target="subscriptions" style="{{ 'display:block' if render_type == 'subscription' else 'display:none' }};">
+                        <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                            {{ subscriptions_form.hidden_tag() }}
                             <div class="row">
                                 <div class="form-group" style="margin-left:30px;">
                                     {% if student.subscriptions_info %}
                                         <div class="row">
                                             <div class="col-md-8 table-responsive" style="padding-left:44px;">
-                                                <table class="table table-hover" style="table-layout: fixed;"> <!--style="table-layout: fixed;"-->
+                                                <table class="table table-hover" style="table-layout: fixed;">
                                                     <thead class="text-success">
                                                         <th>Занятие</th>
                                                         <th style="text-align:center;">Остаток уроков</th>
                                                         <th style="text-align:center;">Срок действия</th>
                                                     </thead>
                                                     <tbody>
-                                                        {% for subscription in student.subscriptions_info %}
+                                                        {% for subscription_form in subscriptions_form.subscriptions %}
                                                             <tr>
-                                                                <td>{{ subscription.subject_name }}</td>
-                                                                <td style="text-align:center; padding: 12px 40px;">
-                                                                    {% if subscription.lessons_left %}
-                                                                        <input type="number" class="form-control" name="subscription_{{ subscription.id }}_lessons" step="1" min="0" max="50" value="{{ subscription.lessons_left }}">
-                                                                    {% endif %}
+                                                                <td style="padding-top:15px; vertical-align:top;">{{ subscription_form.subject_name.data }}</td>
+                                                                <td style="padding: 12px 40px; vertical-align:top;" class="{{ 'has-error' if subscription_form.lessons.errors }}">
+                                                                    {{ subscription_form.lessons(class="form-control") }}
+                                                                    {% for error in subscription_form.lessons.errors %}
+                                                                        <span>{{ error }}</span>
+                                                                    {% endfor %}
                                                                 </td>
-                                                                <td style="text-align:center; padding: 12px 30px;">
-                                                                    {% if subscription.lessons_left %}
-                                                                        <input type="text" name="subscription_{{ subscription.id }}_end_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ subscription.end_date }}">
-                                                                    {% endif %}
+                                                                <td style="padding: 12px 30px; vertical-align:top;" class="{{ 'has-error' if subscription_form.end_date.errors }}">
+                                                                    {{ subscription_form.end_date(class="form-control datepicker", placeholder="дд.мм.гггг") }}
+                                                                    {% for error in subscription_form.end_date.errors %}
+                                                                        <span>{{ error }}</span>
+                                                                    {% endfor %}
                                                                 </td>
+                                                                {{ subscription_form.subscription_id }}
                                                             </tr>
                                                         {% endfor %}
                                                     </tbody>
@@ -963,10 +974,10 @@
                             <div class="footer" style="margin-left:30px;">
                                 <div class="row">
                                     <div class="col-md-2">
-                                        <button type="submit" name="form_subscriptions_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
+                                        <button type="submit" name="form_subscriptions_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
                                     </div>
                                     <div class="col-md-2">
-                                        <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                        <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
                                     </div>
                                 </div>
                             </div>
@@ -1014,73 +1025,95 @@
                         </div>
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
-                                {% if student.subscriptions_info %}
+                                {% if student.after_school_info %}
                                     <div class="col-md-2">
-                                        <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                                        <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
                                     </div>
                                 {% endif %}
                                 <div class="col-md-2">
-                                    <a href="" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#after-school-modal">
+                                    <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#after-school-modal">
                                         <i class="material-icons">addchart</i> Записать на продленку
                                     </a>
                                 </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Student after-school purchase *-*-*-*-*-*-*-*-*-* -->
 
-<!--                                <div class="modal fade" id="subscription-modal" role="dialog">-->
-<!--                                    <div class="modal-dialog">-->
-<!--                                        <div class="modal-content">-->
-<!--                                            <div class="modal-header">-->
-<!--                                                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
-<!--                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>-->
-<!--                                            </div>-->
-<!--                                            <div class="modal-body">-->
-<!--                                                <form class="login-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">-->
-<!--                                                    <div class="row">-->
-<!--                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>-->
-<!--                                                        <div class="col-md-7">-->
-<!--                                                            <select name="selected_subject" class="form-control subscription-select">-->
-<!--                                                                {% for subject in subscription_subjects %}-->
-<!--                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>-->
-<!--                                                                {% endfor %}-->
-<!--                                                            </select>-->
-<!--                                                        </div>-->
-<!--                                                    </div>-->
-<!--                                                    <div class="row">-->
-<!--                                                        <label class="control-label col-md-4" style="padding-left:44px;">Тип абонемента:</label>-->
-<!--                                                        <div class="col-md-7">-->
-<!--                                                            <select name="subscription_type" class="form-control subscription-type-select"></select>-->
-<!--                                                        </div>-->
-<!--                                                    </div>-->
-<!--                                                    <div class="row">-->
-<!--                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата покупки:</label>-->
-<!--                                                        <div class="col-md-7">-->
-<!--                                                            <input type="text" name="purchase_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ today }}">-->
-<!--                                                        </div>-->
-<!--                                                    </div>-->
-<!--                                                    <div class="row">-->
-<!--                                                        <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>-->
-<!--                                                        <div class="col-md-7">-->
-<!--                                                            <p class="form-control price-display" style="color:green"></p>-->
-<!--                                                        </div>-->
-<!--                                                    </div>-->
-<!--                                                    <div class="row">-->
-<!--                                                        <div class="col-md-3 col-md-offset-3">-->
-<!--                                                            <button type="submit" class="btn btn-login" data-background-color="main">-->
-<!--                                                                Оплатить-->
-<!--                                                            </button>-->
-<!--                                                        </div>-->
-<!--                                                        <div class="col-md-3">-->
-<!--                                                            <button type="button" class="btn btn-default float-right" data-dismiss="modal" data-background-color="red">-->
-<!--                                                                Отмена-->
-<!--                                                            </button>-->
-<!--                                                        </div>-->
-<!--                                                    </div>-->
-<!--                                                </form>-->
-<!--                                            </div>-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
+                                <div class="modal fade" id="after-school-modal" role="dialog">-->
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Запись на продленку</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="after-school-form" action="{{ url_for('after_school_purchase') }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <input type="hidden" name="selected_client" value="{{ student.id }}">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Месяц:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="period" class="form-control">
+                                                                {% for month in months %}
+                                                                    <option value="{{ month[0] }}">{{ month[1] }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Срок:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="term" class="form-control term-selector">
+                                                                <option value="month">Месяц</option>
+                                                                <option value="day">День</option>
+                                                                <option value="hour">Часы</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row shift-row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Смена:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="shift" class="form-control">
+                                                                <option value="1">1 смена</option>
+                                                                <option value="2">2 смена</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row hours-row" style="display:none;">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Часы:</label>
+                                                        <div class="col-md-7 integer-div">
+                                                            <input type="number" name="hours" class="form-control integer-input hour-number" min="1" max="4" value="1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row day-row" style="display:none;">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
+                                                        <div class="col-md-7 date-div">
+                                                            <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row price-row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="subscription_type" class="form-control price-selector">
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-3 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Оплатить
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1089,11 +1122,12 @@
 
                     <div class="form form-after-school" data-target="after-school" style="display: none;">
                         <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group" style="margin-left:30px;">
                                     {% if student.after_school_info %}
                                     <div class="row">
-                                        <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                                        <div class="col-md-9 table-responsive" style="padding-left:44px;">
                                             <table class="table table-hover" style="table-layout: fixed;">
                                                 <thead class="text-success">
                                                     <th style="text-align:center;">Смена</th>
@@ -1106,6 +1140,7 @@
                                                             <td style="text-align:center;">{% if after_school_info.shift %}{{ after_school_info.shift }} смена{% else %}Нет{% endif %}</td>
                                                             <td style="text-align:center;">{{ after_school_info.period }}</td>
                                                             <td style="text-align:center;">{{ after_school_info.validity }}</td>
+                                                            <td><button type="submit" name="del_after_school" value="{{ after_school_info.subscription_id }}" class="btn btn-danger del-btn-sm">Удалить</button></td>
                                                         </tr>
                                                     {% endfor %}
                                                 </tbody>
@@ -1122,10 +1157,7 @@
                             <div class="footer" style="margin-left:30px;">
                                 <div class="row">
                                     <div class="col-md-2">
-                                        <button type="button" name="" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                        <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
                                     </div>
                                 </div>
                             </div>
@@ -1141,5 +1173,6 @@
     var clientsData = {{ clients | tojson | safe }};
     var lessonSubjectsData = {{ lesson_subjects | tojson | safe }};
     var subscriptionSubjectsData = {{ subscription_subjects | tojson | safe }};
+    var afterSchoolPrices = {{ after_school_prices | tojson | safe }};
 </script>
 {% endblock %}

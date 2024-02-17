@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
     SubscriptionType, SchoolLessonJournal
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
-    EditAddContPersonForm, AddContForm, NewContactPersonForm
+    EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, SubscriptionForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
@@ -12,7 +12,7 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     handle_lesson, format_school_class_students, format_school_class_subjects, show_school_lesson, \
     handle_school_lesson, employee_record, subject_record, calc_month_index, student_record, \
     get_after_school_students, get_after_school_prices, handle_after_school_adding, finance_operation, \
-    download_timetable, get_date_range
+    download_timetable, get_date_range, get_period
 
 from app import app, db
 from datetime import datetime, timedelta
@@ -149,7 +149,7 @@ def subscription(student_id):
         db.session.rollback()
         flash(f'Ошибка при добавлении абонемента: {str(e)}', 'error')
 
-        return redirect(url_for('students'))
+        return redirect(request.referrer)
 
 
 @app.route('/deposit/<string:student_id>', methods=['POST'])
@@ -273,6 +273,10 @@ def show_edit_student(student_id):
         lesson_subjects = lesson_subjects_data()
         potential_subjects = potential_client_subjects()
         subscription_subjects = subscription_subjects_data()
+        periods = [get_period(0), get_period(1)]
+        months = [(f"{period[0]}-{period[1]}", MONTHS[period[0]-1].capitalize()) for period in periods]
+        after_school_prices = get_after_school_prices()
+
         student_form = EditStudentForm(
             last_name=student.last_name,
             first_name=student.first_name,
@@ -282,6 +286,7 @@ def show_edit_student(student_id):
             pause_until=f'{student.pause_until:%d.%m.%Y}' if student.pause_until else None,
             leaving_reason=student.leaving_reason
         )
+
         if student.primary_contact != student.id:
             main_contact_form = EditContactPersonForm(
                 prefix="main",
@@ -292,6 +297,7 @@ def show_edit_student(student_id):
                 phone=student.main_contact.contacts[0].phone,
                 other_contact=student.main_contact.contacts[0].other_contact
             )
+
         else:
             main_contact_form = ContactForm(
                 prefix="main",
@@ -325,6 +331,17 @@ def show_edit_student(student_id):
         new_contact_form = NewContactPersonForm(prefix="new_contact")
         new_contact_form.selected_contact.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
                                                      for person in clients]
+        data = {'subscriptions': []}
+        if student.subscriptions_info:
+            for subscription in student.subscriptions_info:
+                data['subscriptions'].append({
+                    'subscription_id': subscription["subscription_id"],
+                    'subject_name': subscription["subject_name"],
+                    'lessons': subscription["lessons_left"],
+                    'end_date': subscription["end_date"]
+                })
+        subscriptions_form = SubscriptionsEditForm(data=data)
+
         render_type = 'student'
 
         if request.method == 'POST':
@@ -336,6 +353,7 @@ def show_edit_student(student_id):
                         db.session.commit()
                         flash('Изменения внесены', 'success')
                         return redirect(url_for('show_edit_student', student_id=student.id))
+
                 if 'form_main_contact_submit' in request.form:
                     render_type = 'contact_main_edit'
                     if main_contact_form.validate_on_submit():
@@ -361,7 +379,27 @@ def show_edit_student(student_id):
                         flash('Новый контакт добавлен', 'success')
                         return redirect(url_for('show_edit_student', student_id=student.id))
 
-                flash('Ошибка в форме изменения киента', 'error')
+                if 'del_subject_btn' in request.form:
+                    handle_student_edit(request.form, student, 'del_subject')
+                    db.session.commit()
+                    flash('Изменения внесены', 'success')
+                    return redirect(url_for('show_edit_student', student_id=student.id))
+
+                if 'form_subscriptions_submit' in request.form:
+                    render_type = 'subscription'
+                    if subscriptions_form.validate_on_submit():
+                        handle_student_edit(subscriptions_form, student, 'subscription')
+                        db.session.commit()
+                        flash('Изменения внесены', 'success')
+                        return redirect(url_for('show_edit_student', student_id=student.id))
+
+                if 'del_after_school' in request.form:
+                    handle_student_edit(request.form, student, 'del_after_school')
+                    db.session.commit()
+                    flash('Изменения внесены', 'success')
+                    return redirect(url_for('show_edit_student', student_id=student.id))
+
+                flash('Ошибка в форме изменения клиента', 'error')
 
             except Exception as e:
                 db.session.rollback()
@@ -371,8 +409,9 @@ def show_edit_student(student_id):
         return render_template('student.html', student=student, clients=clients, today=f'{TODAY:%d.%m.%Y}',
                                lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects,
                                edit_student_form=student_form, render_type=render_type, main_contact=main_contact_form,
-                               add_cont_forms=add_cont_forms, new_contact_form=new_contact_form,
-                               potential_subjects=potential_subjects)
+                               add_cont_forms=add_cont_forms, new_contact_form=new_contact_form, months=months,
+                               potential_subjects=potential_subjects, subscriptions_form=subscriptions_form,
+                               after_school_prices=after_school_prices)
     else:
         flash("Такого клиента нет", 'error')
         return redirect(url_for('students'))
@@ -823,31 +862,12 @@ def student_school_record(student_id, month_index):
                                month_index=int(month_index))
 
 
-@app.route('/after-school/<string:month_index>', methods=['GET', 'POST'])
+@app.route('/after-school/<string:month_index>')
 @login_required
 def after_school(month_index):
     after_school_subject = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
     month_students, period, current_period = get_after_school_students(int(month_index))
     after_school_subject.month_students = month_students
-
-    if request.method == 'POST':
-        try:
-            new_attendee_id = int(request.form.get("selected_client"))
-            new_after_school = handle_after_school_adding(new_attendee_id, request.form, period)
-            db.session.add(new_after_school)
-            db.session.flush()
-            price = new_after_school.subscription_type.price
-            description = "Оплата продленки"
-            finance_operation(new_attendee_id, -price, description)
-            db.session.commit()
-            flash('Новый клиент записан на продленку', 'success')
-
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при добавлении клиента: {str(e)}', 'error')
-
-        return redirect(url_for('after_school', month_index=month_index))
-
     month_students_ids = [student.id for student in month_students]
     possible_clients = Person.query.filter(
         ~Person.id.in_(month_students_ids),
@@ -860,6 +880,31 @@ def after_school(month_index):
                            current_period=current_period, months=MONTHS, month_index=int(month_index),
                            possible_clients=possible_clients, after_school_prices=after_school_prices,
                            today=f'{TODAY:%d.%m.%Y}')
+
+
+@app.route('/after-school-purchase', methods=['POST'])
+@login_required
+def after_school_purchase():
+    try:
+        attendee_id = int(request.form.get("selected_client"))
+        period = request.form.get("period")
+        new_after_school = handle_after_school_adding(attendee_id, request.form, period)
+        db.session.add(new_after_school)
+        db.session.flush()
+        price = new_after_school.subscription_type.price
+        if new_after_school.period not in ["month", "day"]:
+            hours = int(new_after_school.period.split()[0])
+            price *= hours
+        description = "Оплата продленки"
+        finance_operation(attendee_id, -price, description)
+        db.session.commit()
+        flash('Клиент записан на продленку', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при записи на продленку: {str(e)}', 'error')
+
+    return redirect(request.referrer)
 
 
 @app.route('/generate-report/<string:week>')

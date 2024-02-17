@@ -32,7 +32,7 @@
                                 <div class="col-md-6">
                                     {{ form1.last_name(class="form-control") }}
                                     {% for error in form1.last_name.errors %}
-                                        <span style="color: red;">{{ error }}</span>
+                                        <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -41,7 +41,7 @@
                                 <div class="col-md-6">
                                     {{ form1.first_name(class="form-control") }}
                                     {% for error in form1.first_name.errors %}
-                                        <span style="color: red;">{{ error }}</span>
+                                        <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -56,7 +56,7 @@
                                 <div class="col-md-2 datepicker-container">
                                     {{ form1.dob(class="form-control datepicker", placeholder="дд.мм.гггг") }}
                                     {% for error in form1.dob.errors %}
-                                        <span style="color: red;">{{ error }}</span>
+                                        <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -100,7 +100,7 @@
                                                 <div class="col-md-6">
                                                     {{ contact_form.selected_contact(class="form-control contact-options select-search") }}
                                                     {% for error in contact_form.selected_contact.errors %}
-                                                        <span style="color: red;">{{ error }}</span>
+                                                        <span>{{ error }}</span>
                                                     {% endfor %}
                                                 </div>
                                             </div>
@@ -114,7 +114,7 @@
                                                     <div class="col-md-6">
                                                         {{ contact_form.parent_last_name(class="form-control") }}
                                                         {% for error in contact_form.parent_last_name.errors %}
-                                                            <span style="color: red;">{{ error }}</span>
+                                                            <span>{{ error }}</span>
                                                         {% endfor %}
                                                     </div>
                                                 </div>
@@ -123,7 +123,7 @@
                                                     <div class="col-md-6">
                                                         {{ contact_form.parent_first_name(class="form-control") }}
                                                         {% for error in contact_form.parent_first_name.errors %}
-                                                            <span style="color: red;">{{ error }}</span>
+                                                            <span>{{ error }}</span>
                                                         {% endfor %}
                                                     </div>
                                                 </div>
@@ -206,7 +206,7 @@
                                         <div class="col-md-5">
                                             {{ form2.selected_client(class="form-control client-options select-search") }}
                                             {% for error in form2.selected_client.errors %}
-                                                <span style="color: red;">{{ error }}</span>
+                                                <span>{{ error }}</span>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -218,7 +218,7 @@
                                         <div class="col-md-5">
                                             {{ form2.last_name(class="form-control") }}
                                             {% for error in form2.last_name.errors %}
-                                                <span style="color: red;">{{ error }}</span>
+                                                <span>{{ error }}</span>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -227,7 +227,7 @@
                                         <div class="col-md-5">
                                             {{ form2.first_name(class="form-control") }}
                                             {% for error in form2.first_name.errors %}
-                                                <span style="color: red;">{{ error }}</span>
+                                                <span>{{ error }}</span>
                                             {% endfor %}
                                         </div>
                                     </div>
