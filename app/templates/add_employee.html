@@ -9,80 +9,75 @@
                 <h4 class="title">Новый сотрудник</h4>
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('add_employee') }}" method="post">
+                <form class="login-form" action="{{ url_for('add_employee') }}" method="post" novalidate>
+                    {{ form.hidden_tag() }}
                     <div class="employee-section">
                         <div class="row">
                             <div class="form-group">
                                 <div class="row contact_selection">
                                     <label class="control-label col-md-3">Данные сотрудника:</label>
-                                    <div class="col-md-3">
-                                        <select name="employee_select" class="form-control employee-select">
-                                            <option value="Добавить">Добавить</option>
-                                            <option value="Выбрать">Выбрать из списка</option>
-                                        </select>
+                                    <div class="col-md-6">
+                                        {{ form.client_select(class="form-control employee-select") }}
                                     </div>
                                 </div>
                                 <div class="employee-options-row" style="display: none;">
-                                    <div class="row" style="margin-bottom: 10px;">
+                                    <div class="row {{ 'has-error' if form.selected_client.errors }}" style="margin-bottom: 10px;">
                                         <label class="control-label col-md-3"></label>
-                                        <div class="col-md-5">
-                                            <select name="selected_person" class="form-control employee-options select-search">
-                                                {% for person in possible_employees %}
-                                                    <option value="{{ person.id }}">{{ person.last_name }} {{ person.first_name }}</option>
-                                                {% endfor %}
-                                            </select>
+                                        <div class="col-md-6">
+                                            {{ form.selected_client(class="form-control employee-options select-search") }}
+                                            {% for error in form.selected_client.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                     <div class="employee-information person-info-basic"></div>
                                 </div>
                                 <div class="employee-input" style="display: none;">
-                                    <div class="row">
+                                    <div class="row {{ 'has-error' if form.last_name.errors }}">
                                         <label class="control-label col-md-3">Фамилия:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="last_name" class="form-control">
+                                        <div class="col-md-6">
+                                            {{ form.last_name(class="form-control") }}
+                                            {% for error in form.last_name.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row {{ 'has-error' if form.first_name.errors }}">
                                         <label class="control-label col-md-3">Имя:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="first_name" class="form-control">
+                                        <div class="col-md-6">
+                                            {{ form.first_name(class="form-control") }}
+                                            {% for error in form.first_name.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                     <div class="row">
                                         <label class="control-label col-md-3">Отчество:</label>
-                                        <div class="col-md-5">
-                                            <input type="text" name="patronym" class="form-control">
+                                        <div class="col-md-6">
+                                            {{ form.patronym(class="form-control") }}
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row">
+                                <div class="row {{ 'has-error' if form.roles.errors }}">
                                     <label class="control-label col-md-3">Должность:</label>
-                                    <div class="col-md-5">
-                                        <select name="roles" id="role-select" placeholder="Выбрать должность" class="form-control select-search-add" multiple>
-                                            <option value="Учитель">Учитель</option>
-                                            {% for role in roles %}
-                                                {% if role[0] != 'Учитель' %}
-                                                    <option value="{{ role[0] }}">{{ role[0] }}</option>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </select>
+                                    <div class="col-md-6">
+                                        {{ form.roles(class="form-control role-select select-search-add", placeholder="Выбрать должность") }}
+                                        {% for error in form.roles.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
                                     </div>
                                 </div>
                                 <div id="subjects-taught" style="display: none;">
                                     <div class="row">
                                         <label class="control-label col-md-3">Предметы:</label>
-                                        <div class="col-md-5">
-                                            <select name="subjects" class="form-control select-search" placeholder="Выбрать предмет" multiple>
-                                                {% for subject in subjects %}
-                                                    <option value="{{ subject[0] }}">{{ subject[1] }}</option>
-                                                {% endfor %}
-                                            </select>
+                                        <div class="col-md-6">
+                                            {{ form.subjects(class="form-control select-search", placeholder="Выбрать предмет") }}
                                         </div>
                                     </div>
                                     <div class="row">
                                         <label class="control-label col-md-3">Цвет в расписании:</label>
-                                        <div class="col-md-5">
-                                            <input type="color" name="teacher_color" value="#D9D9D9">
+                                        <div class="col-md-6">
+                                            {{ form.teacher_color }}
                                         </div>
                                     </div>
                                 </div>
@@ -97,19 +92,19 @@
                                     <div class="row">
                                         <label class="control-label col-md-3">Телеграм:</label>
                                         <div class="col-md-5">
-                                            <input type="text" name="telegram_" class="form-control">
+                                            {{ form.telegram(class="form-control") }}
                                         </div>
                                     </div>
                                     <div class="row">
                                         <label class="control-label col-md-3">Телефон:</label>
                                         <div class="col-md-5">
-                                            <input type="text" name="phone_" class="form-control">
+                                            {{ form.phone(class="form-control") }}
                                         </div>
                                     </div>
                                     <div class="row">
                                         <label class="control-label col-md-3">Другое:</label>
                                         <div class="col-md-5">
-                                            <input type="text" name="other_contact_" class="form-control">
+                                            {{ form.other_contact(class="form-control") }}
                                         </div>
                                     </div>
                                 </div>
@@ -118,11 +113,9 @@
                     </div>
                     <div class="footer">
                         <div class="row">
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Добавить сотрудника</button>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ url_for('employees') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-sm" data-background-color="main">Добавить сотрудника</button>
+                                <a href="{{ url_for('employees') }}" class="btn btn-sm" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

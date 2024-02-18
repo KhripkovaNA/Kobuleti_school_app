@@ -1,7 +1,7 @@
 from flask import request
 from flask_wtf import FlaskForm, Form
 from wtforms import StringField, TextAreaField, PasswordField, SelectField, \
-    FormField, FieldList, HiddenField, BooleanField, IntegerField
+    FormField, FieldList, HiddenField, BooleanField, IntegerField, SelectMultipleField, ColorField
 from wtforms.validators import ValidationError, DataRequired, InputRequired, Optional, NumberRange
 from app.models import Person
 from app import db
@@ -67,17 +67,16 @@ class ChildForm(PersonForm):
     contacts = FieldList(FormField(ContactPersonForm), min_entries=1)
 
 
-class AdultForm(ContactForm):
+class AdultPersonForm(ContactForm):
     client_select = SelectField(choices=[('Добавить', 'Добавить'), ('Выбрать', 'Выбрать из списка')])
     selected_client = selected_contact = SelectField(choices=[], validate_choice=False)
     last_name = StringField(validators=[validate_client_name])
     first_name = StringField(validators=[validate_client_name])
     patronym = StringField()
-    status = SelectField(choices=[('Клиент', 'Клиент'), ('Лид', 'Лид')])
 
-    def validate_selected_client(self, field):
-        if self.client_select.data == 'Выбрать' and not field.data:
-            raise ValidationError('Выберете клиента')
+
+class AdultForm(AdultPersonForm):
+    status = SelectField(choices=[('Клиент', 'Клиент'), ('Лид', 'Лид')])
 
 
 class EditStudentForm(PersonForm):
@@ -115,3 +114,10 @@ class SubscriptionForm(Form):
 
 class SubscriptionsEditForm(FlaskForm):
     subscriptions = FieldList(FormField(SubscriptionForm), min_entries=0, max_entries=100)
+
+
+class EmployeeForm(AdultPersonForm):
+    roles = SelectMultipleField(choices=[], validators=[InputRequired(message='Выберете должность')],
+                                validate_choice=False)
+    subjects = SelectMultipleField(choices=[], validate_choice=False)
+    teacher_color = ColorField(default="#D9D9D9")

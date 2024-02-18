@@ -1,9 +1,9 @@
 from flask import render_template, flash, redirect, url_for, request, send_file
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
-    SubscriptionType, SchoolLessonJournal
+    SubscriptionType, SchoolLessonJournal, Finance
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
-    EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, SubscriptionForm
+    EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
@@ -71,7 +71,7 @@ def students():
     lesson_subjects = lesson_subjects_data()
 
     return render_template('students.html', students=all_students, subscription_subjects=subscription_subjects,
-                           today=f'{TODAY:%d.%m.%Y}', lesson_subjects=lesson_subjects, rights=current_user.rights)
+                           today=f'{TODAY:%d.%m.%Y}', lesson_subjects=lesson_subjects)
 
 
 @app.route('/add-comment', methods=['POST'])
@@ -156,19 +156,21 @@ def subscription(student_id):
 @login_required
 def deposit(student_id):
     try:
-        deposit = int(request.form.get('deposit'))
-        student = Person.query.filter_by(id=student_id).first()
-        student.balance += deposit
-        description = "Пополнение баланса"
-        finance_operation(student_id, deposit, description)
-        db.session.commit()
-        flash('Депозит внесен на счет.', 'success')
+        amount = request.form.get('deposit')
+        if amount:
+            deposit = int(amount)
+            student = Person.query.filter_by(id=student_id).first()
+            student.balance += deposit
+            description = "Пополнение баланса"
+            finance_operation(student_id, deposit, description)
+            db.session.commit()
+            flash('Депозит внесен на счет.', 'success')
 
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при внесении депозита: {str(e)}', 'error')
 
-    return redirect(url_for('students'))
+    return redirect(request.referrer)
 
 
 @app.route('/delete-record', methods=['POST'])
@@ -182,17 +184,35 @@ def delete_record():
                 student_id = int(request.form.get('student_id'))
                 student = Person.query.filter_by(id=student_id).first()
                 if student:
+                    student_name = f"{student.last_name} {student.first_name}"
                     if student.parents.all():
                         for parent in student.parents:
                             if len(parent.children.all()) == 1 and not parent.status and not parent.roles:
                                 db.session.delete(parent.contacts[0])
                                 db.session.delete(parent)
-                    student_name = f"{student.last_name} {student.first_name}"
-                    db.session.delete(student)
+                    if student.children.all() or student.roles:
+                        student.status = None
+                    else:
+                        db.session.delete(student)
                     db.session.commit()
                     flash(f"Клиент {student_name} удален", "success")
                 else:
                     flash("Такого клиента нет", 'error')
+
+            if record_type == 'employee':
+                employee_id = int(request.form.get('employee_id'))
+                employee = Person.query.filter_by(id=employee_id).first()
+                if employee:
+                    employee_name = f"{employee.last_name} {employee.first_name}"
+                    if employee.children.all() or employee.status:
+                        for role in employee.roles:
+                            db.session.delete(role)
+                    else:
+                        db.session.delete(employee)
+                    db.session.commit()
+                    flash(f"Сотрудник {employee_name} удален", "success")
+                else:
+                    flash("Такого сотрудника нет", 'error')
 
         except Exception as e:
             db.session.rollback()
@@ -341,7 +361,8 @@ def show_edit_student(student_id):
                     'end_date': subscription["end_date"]
                 })
         subscriptions_form = SubscriptionsEditForm(data=data)
-
+        student_finances = Finance.query.filter_by(person_id=student.id).order_by(Finance.date.desc()).all()
+        student.finance_operations = student_finances
         render_type = 'student'
 
         if request.method == 'POST':
@@ -446,25 +467,32 @@ def employee_report(week):
 @app.route('/add-employee', methods=['GET', 'POST'])
 @login_required
 def add_employee():
+    possible_employees = clients_data('employee')
+    distinct_roles = db.session.query(Employee.role.distinct()).all()
+    all_subjects = Subject.query.order_by(Subject.name).all()
+    subject_list = [(subj.id, f'{subj.name} ({subj.subject_type.description})') for subj in all_subjects]
+    form = EmployeeForm()
+    form.selected_client.choices = [(person["id"], f"{person['last_name']} {person['first_name']}")
+                                    for person in possible_employees]
+    form.roles.choices = ["Учитель"] + [role[0] for role in distinct_roles]
+    form.subjects.choices = subject_list
+
     if request.method == 'POST':
         try:
-            employee = add_new_employee(request.form)
-            db.session.commit()
-            flash('Новый сотрудник добавлен в систему.', 'success')
-            return redirect(url_for('show_edit_employee', employee_id=employee.id))
+            if form.validate_on_submit():
+                employee = add_new_employee(form)
+                db.session.commit()
+                flash('Новый сотрудник добавлен в систему.', 'success')
+                return redirect(url_for('show_edit_employee', employee_id=employee.id))
+
+            flash('Ошибка в форме добавления киента', 'error')
 
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении сотрудника: {str(e)}', 'error')
             return redirect(url_for('add_employee'))
 
-    possible_employees = clients_data('employee')
-    distinct_roles = db.session.query(Employee.role.distinct()).all()
-    all_subjects = Subject.query.order_by(Subject.name).all()
-    subject_list = [(subj.id, f'{subj.name} ({subj.subject_type.description})') for subj in all_subjects]
-
-    return render_template('add_employee.html', possible_employees=possible_employees, roles=distinct_roles,
-                           subjects=subject_list)
+    return render_template('add_employee.html', possible_employees=possible_employees, form=form)
 
 
 @app.route('/employee/<string:employee_id>', methods=['GET', 'POST'])

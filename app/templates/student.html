@@ -195,6 +195,11 @@
                             </button>
                         </div>
                     {% endif %}
+                    <div class="col-md-2">
+                        <button type="button" id="show-finances-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
+                            <i class="material-icons">request_quote</i> Финансы
+                        </button>
+                    </div>
                 </div>
                 <hr>
 
@@ -1164,6 +1169,109 @@
                         </form>
                     </div>
 
+                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Finance section *-*-*-*-*-*-*-*-*-* -->
+
+                <div id="show-finances" style="display: none;">
+                    <h4 class="title" style="margin-left:27px;">Финансовые операции</h4>
+
+            <!-- *-*-*-*-*-*-*-*-*-* After-school information show *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="section section-finances" data-target="finances">
+                        <div class="row">
+                            <div class="form-group" style="margin-left:30px;">
+                                <div class="row">
+                                    <label class="control-label col-md-3">Баланс:</label>
+                                    <div class="col-md-2">
+                                        <div class="form-control">{{ student.balance|round(1) }} Лари</div>
+                                    </div>
+                                </div>
+                                {% if student.finance_operations %}
+                                    <div style="margin-top:15px;" class="row">
+                                        <div class="col-md-12 table-responsive" style="padding-left:44px;">
+                                            <div class="scroll-timetable" style="height: 25vh;">
+                                                <table class="table table-hover" style="table-layout: fixed;">
+                                                    <thead class="text-success">
+                                                        <th style="text-align:center;">Дата</th>
+                                                        <th style="text-align:center;">Сумма</th>
+                                                        <th style="text-align:center;">Описание</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for operation in student.finance_operations %}
+                                                            <tr>
+                                                                <td style="text-align:center;">{{ operation.date.strftime('%d.%m.%y') }}</td>
+                                                                <td style="text-align:center;">
+                                                                    {% if operation.amount > 0 %}
+                                                                        <p style="color:green"><b>+{{ operation.amount|round(1) }}</b></p>
+                                                                    {% elif operation.amount < 0 %}
+                                                                        <p style="color:red"><b>{{ operation.amount|round(1) }}</b></p>
+                                                                    {% else %}
+                                                                        <p><b>{{ operation.amount|round(1) }}</b></p>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td style="text-align:center;">{{ operation.description }}</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row" style="margin-left:10px;">
+                                        <p>Финансовых операций пока нет</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#deposit-modal">
+                                        <i class="material-icons">money</i> Пополнить баланс
+                                    </a>
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student balance replenishment *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="deposit-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Пополнение депозита</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
+                                                        <div class="col-md-4 integer-div">
+                                                            <input type="number" class="form-control integer-input required" name="deposit" step="10" min="10" max="1000">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-3 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Внести
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

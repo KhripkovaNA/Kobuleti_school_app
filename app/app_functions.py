@@ -215,15 +215,15 @@ def add_adult(form):
 
 
 def add_new_employee(form):
-    employee_select = form.get('employee_select')
+    employee_select = form.client_select.data
     if employee_select == CHOOSE:
-        person_id = int(form.get('selected_person'))
+        person_id = int(form.selected_client.data)
         employee = Person.query.filter_by(id=person_id).first()
 
     else:
-        last_name = form.get('last_name')
-        first_name = form.get('first_name')
-        patronym = form.get('patronym')
+        last_name = form.last_name.data
+        first_name = form.first_name.data
+        patronym = form.patronym.data
         employee = Person(
             last_name=last_name,
             first_name=first_name,
@@ -237,7 +237,7 @@ def add_new_employee(form):
         employee.contacts.append(contact)
         employee.primary_contact = employee.id
 
-    roles = form.getlist('roles')
+    roles = form.roles.data
     if roles:
         for role in roles:
             employee_role = role[0].upper() + role[1:]
@@ -248,10 +248,10 @@ def add_new_employee(form):
             db.session.add(new_employee)
             if role == TEACHER:
                 employee.teacher = True
-                subject_ids = [int(subject_id) for subject_id in form.getlist('subjects')]
+                subject_ids = [int(subject_id) for subject_id in form.subjects.data]
                 subjects = Subject.query.filter(Subject.id.in_(subject_ids)).all()
                 employee.subjects_taught.extend(subjects)
-                employee.color = form.get('teacher_color')
+                employee.color = form.teacher_color.data
 
     return employee
 

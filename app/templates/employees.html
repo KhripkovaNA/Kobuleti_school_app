@@ -50,24 +50,64 @@
                                             </td>
                                             <td>
                                                 <div class="dropdown">
-                                                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">
+                                                    <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-background-color="purple">
                                                         <i class="material-icons" style="color: white;">toc</i>
                                                         <span class="caret"></span>
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
                                                             <a href="{{ url_for('show_edit_employee', employee_id=employee.id) }}">
-                                                                <i class="material-icons" style="color: purple;">info</i>Просмотр
+                                                                <i class="material-icons" style="color: purple;">info</i>Профиль
                                                             </a>
                                                         </li>
                                                         <li class="divider"></li>
                                                         <li>
-                                                            <a href="">
-                                                                <i class="material-icons" style="color: red;">delete_forever</i>Удалить
-                                                            </a>
+                                                            {% if current_user.rights != 'admin' %}
+                                                                <a href="#" title="Нет прав администратора">
+                                                                    <i class="material-icons" style="color: red;">delete_forever</i>Удалить
+                                                                </a>
+                                                            {% else %}
+                                                                <a href="#" data-toggle="modal" data-target="#delete-{{ employee.id }}-modal">
+                                                                    <i class="material-icons" style="color: red;">delete_forever</i>Удалить
+                                                                </a>
+                                                            {% endif %}
                                                         </li>
                                                     </ul>
                                                 </div>
+                                            <!-- *-*-*-*-*-*-*-*-*-* Student delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                                                <div class="modal fade" id="delete-{{ employee.id }}-modal" role="dialog">
+                                                    <div class="modal-dialog modal-sm">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление сотрудника</h4>
+                                                            </div>
+                                                            <div class="modal-body" style="padding-top:10px;">
+                                                                <p class="control-label">
+                                                                    Вы уверены, что хотите полностью удалить сотрудника {{ employee.last_name }} {{ employee.first_name }}?
+                                                                </p>
+                                                                <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                    <input type="hidden" name="record_type" value="employee">
+                                                                    <input type="hidden" name="employee_id" value="{{ employee.id }}">
+                                                                    <div class="row">
+                                                                        <div class="col-md-5 col-md-offset-1">
+                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                                Да
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="col-md-5">
+                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                Нет
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </td>
                                         </tr>
                                     {% endfor %}

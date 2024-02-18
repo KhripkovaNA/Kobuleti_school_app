@@ -395,12 +395,12 @@ $(document).ready(function(){
     // Function to switch between different sections based on button clicks
     function handleTabButtonClick(buttonId) {
         var targetId = '#' + buttonId.replace('-btn', '');
-        $('#show-subjects, #show-contacts, #show-subscriptions, #show-after-school').hide();
+        $('#show-subjects, #show-contacts, #show-subscriptions, #show-after-school, #show-finances').hide();
         $(targetId).show();
     }
 
     // Show different sections based on button clicks
-    $('#show-contacts-btn, #show-subjects-btn, #show-subscriptions-btn, #show-after-school-btn').click(function () {
+    $('#show-contacts-btn, #show-subjects-btn, #show-subscriptions-btn, #show-after-school-btn, #show-finances-btn').click(function () {
         handleTabButtonClick(this.id);
     });
 
@@ -557,6 +557,16 @@ $(document).ready(function(){
         }
     });
 
+    // Validate deposit-form form
+    $('form.deposit-form').submit(function(event) {
+        var currentForm = $(this);
+        validateIntegerInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
     // Handle the change event for employee selection
     $(".employee-section").on("change", ".employee-select", function () {
          personSelectChange($(this), ".employee-section");
@@ -571,7 +581,7 @@ $(document).ready(function(){
     });
 
     // Show subjects selector when checking teacher option
-    $(".employee-section, #role-select-row").on("change", "#role-select", function () {
+    $(".employee-section, #role-select-row").on("change", ".role-select", function () {
         var subjectsTaught = $("#subjects-taught")
         var roleVal = $(this).val();
         var teacher = 'Учитель';

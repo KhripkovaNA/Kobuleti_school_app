@@ -74,7 +74,7 @@
                                                     <ul class="dropdown-menu">
                                                         <li>
                                                             <a href="{{ url_for('show_edit_student', student_id=student.id) }}">
-                                                                <i class="material-icons" style="color: purple;">info</i>Просмотр
+                                                                <i class="material-icons" style="color: purple;">info</i>Профиль
                                                             </a>
                                                         </li>
                                                         {% if student.status=="Клиент" %}
@@ -98,7 +98,7 @@
                                                         {% endif %}
                                                         <li class="divider"></li>
                                                         <li>
-                                                            {% if rights != 'admin' %}
+                                                            {% if current_user.rights != 'admin' %}
                                                                 <a href="#" title="Нет прав администратора">
                                                                     <i class="material-icons" style="color: red;">delete_forever</i>Удалить
                                                                 </a>
@@ -224,11 +224,12 @@
                                                                 <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Пополнение депозита</h4>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                                <form class="deposit-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                                     <div class="row">
                                                                         <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
-                                                                        <div class="col-md-4">
-                                                                            <input type="number" class="form-control" name="deposit" step="10" min="10" max="1000">
+                                                                        <div class="col-md-4 integer-div">
+                                                                            <input type="number" class="form-control integer-input required" name="deposit" step="10" min="10" max="1000">
                                                                         </div>
                                                                     </div>
                                                                     <div class="row">
