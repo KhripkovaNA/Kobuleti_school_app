@@ -141,10 +141,8 @@
                         </div>
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
-                                <div class="col-md-2">
+                                <div class="col-md-6">
                                     <button type="submit" name="form_student_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
-                                </div>
-                                <div class="col-md-2">
                                     <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
                                 </div>
                             </div>
@@ -317,10 +315,8 @@
                             </div>
                             <div class="footer" style="margin-left:30px;">
                                 <div class="row">
-                                    <div class="col-md-2">
+                                    <div class="col-md-6">
                                         <button type="submit" name="form_main_contact_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
-                                    </div>
-                                    <div class="col-md-2">
                                         <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
                                     </div>
                                 </div>
@@ -367,10 +363,8 @@
                                 </div>
                                 <div class="footer" style="margin-left:30px;">
                                     <div class="row">
-                                        <div class="col-md-2">
+                                        <div class="col-md-6">
                                             <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
-                                        </div>
-                                        <div class="col-md-2">
                                             <a class="btn btn-sm" data-background-color="red" href="#" data-toggle="modal" data-target="#delete-contact-{{ contact.id }}-modal">
                                                 <i class="material-icons">delete_forever</i> Удалить
                                             </a>
@@ -487,10 +481,8 @@
                                     </div>
                                     <div class="footer" style="margin-left:30px;">
                                         <div class="row">
-                                            <div class="col-md-2">
+                                            <div class="col-md-6">
                                                 <button type="submit" name="form_cont_{{ loop.index }}_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
-                                            </div>
-                                            <div class="col-md-2">
                                                 <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
                                             </div>
                                         </div>
@@ -605,10 +597,8 @@
                             </div>
                             <div class="footer" style="margin-left:30px;">
                                 <div class="row">
-                                    <div class="col-md-2">
+                                    <div class="col-md-6">
                                         <button type="submit" name="form_cont_new_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
-                                    </div>
-                                    <div class="col-md-2">
                                         <button type="button" id="hide-new-contact-btn" class="btn btn-sm" data-background-color="red">Закрыть</button>
                                     </div>
                                 </div>
@@ -651,12 +641,10 @@
                         </div>
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
-                                {% if student.extra_subjects %}
-                                    <div class="col-md-2">
+                                <div class="col-md-6">
+                                    {% if student.extra_subjects %}
                                         <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
-                                    </div>
-                                {% endif %}
-                                <div class="col-md-2">
+                                    {% endif %}
                                     {% if student.status=="Клиент" and lesson_subjects %}
                                         <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#lesson-modal">
                                             <i class="material-icons">date_range</i> Записать
@@ -861,12 +849,10 @@
                         </div>
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
-                                {% if student.subscriptions_info %}
-                                    <div class="col-md-2">
+                                <div class="col-md-6">
+                                    {% if student.subscriptions_info %}
                                         <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
-                                    </div>
-                                {% endif %}
-                                <div class="col-md-2">
+                                    {% endif %}
                                     <a href="#" class="btn btn-sm subscription-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subscription-modal">
                                         <i class="material-icons">addchart</i> Купить абонемент
                                     </a>
@@ -978,10 +964,8 @@
                             </div>
                             <div class="footer" style="margin-left:30px;">
                                 <div class="row">
-                                    <div class="col-md-2">
+                                    <div class="col-md-6">
                                         <button type="submit" name="form_subscriptions_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
-                                    </div>
-                                    <div class="col-md-2">
                                         <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
                                     </div>
                                 </div>
@@ -1030,12 +1014,10 @@
                         </div>
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
-                                {% if student.after_school_info %}
-                                    <div class="col-md-2">
+                                <div class="col-md-6">
+                                    {% if student.after_school_info %}
                                         <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
-                                    </div>
-                                {% endif %}
-                                <div class="col-md-2">
+                                    {% endif %}
                                     <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#after-school-modal">
                                         <i class="material-icons">addchart</i> Записать на продленку
                                     </a>

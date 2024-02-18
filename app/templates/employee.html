@@ -111,25 +111,32 @@
             <!-- *-*-*-*-*-*-*-*-*-* Employee information edit *-*-*-*-*-*-*-*-*-* -->
 
                 <div class="form form-employee" data-target="employee" style="display: none;">
-                    <form class="login-form" action="{{ url_for('show_edit_employee', employee_id=employee.id) }}" method="post">
+                    <form class="login-form" action="{{ url_for('show_edit_employee', employee_id=employee.id) }}" method="post" novalidate>
+                        {{ form.hidden_tag() }}
                         <div class="row">
                             <div class="form-group" style="margin-left:30px;">
-                                <div class="row">
+                                <div class="row {{ 'has-error' if form.last_name.errors }}">
                                     <label class="control-label col-md-3">Фамилия:</label>
                                     <div class="col-md-6">
-                                        <input type="text" name="last_name" class="form-control" value="{{ employee.last_name }}">
+                                        {{ form.last_name(class="form-control") }}
+                                        {% for error in form.last_name.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
                                     </div>
                                 </div>
-                                <div class="row">
+                                <div class="row {{ 'has-error' if form.first_name.errors }}">
                                     <label class="control-label col-md-3">Имя:</label>
                                     <div class="col-md-6">
-                                        <input type="text" name="first_name" class="form-control" value="{{ employee.first_name }}">
+                                        {{ form.first_name(class="form-control") }}
+                                        {% for error in form.first_name.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="control-label col-md-3">Отчество:</label>
                                     <div class="col-md-6">
-                                        <input type="text" name="patronym" class="form-control" value="{{ employee.patronym }}">
+                                        {{ form.patronym(class="form-control") }}
                                     </div>
                                 </div>
                                 {% for role in employee.roles %}
@@ -145,12 +152,12 @@
                                             <input type="hidden" class="role-value" value="{{ role.role }}">
                                         {% elif employee.future_lessons %}
                                             <div class="col-md-6">
-                                                <p class="form-control">{{ role.role }}</p>
+                                                <div class="form-control">{{ role.role }}</div>
                                             </div>
                                             <input type="hidden" name="role_{{ role.id }}" class="role-value" value="{{ role.role }}">
                                         {% else %}
                                             <div class="col-md-5">
-                                                <p class="form-control">{{ role.role }}</p>
+                                                <div class="form-control">{{ role.role }}</div>
                                             </div>
                                             <div class="col-md-1">
                                                 <button type="button" class="btn btn-danger del-btn-sm delete-role">Удалить</button>
@@ -176,12 +183,12 @@
                                                 <label class="control-label col-md-3">{{ "Предметы:" if loop.first }}</label>
                                                 {% if subject.id in employee.lesson_subjects %}
                                                     <div class="col-md-6">
-                                                        <p class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</p>
+                                                        <div class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</div>
                                                     </div>
                                                     <input type="hidden" name="subject_{{ subject.id }}" class="subject-value" value="{{ subject.id }}">
                                                 {% else %}
                                                     <div class="col-md-5">
-                                                        <p class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</p>
+                                                        <div class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</div>
                                                     </div>
                                                     <div class="col-md-1">
                                                         <button type="button" class="btn btn-danger del-btn-sm delete-subject">Удалить</button>
@@ -252,11 +259,9 @@
                         </div>
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                <div class="col-md-6">
+                                    <button type="submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
+                                    <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
                                 </div>
                             </div>
                         </div>

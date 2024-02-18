@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
     SubscriptionType, SchoolLessonJournal, Finance
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
-    EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm
+    EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
@@ -485,7 +485,7 @@ def add_employee():
                 flash('Новый сотрудник добавлен в систему.', 'success')
                 return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
-            flash('Ошибка в форме добавления киента', 'error')
+            flash('Ошибка в форме добавления сотрудника', 'error')
 
         except Exception as e:
             db.session.rollback()
@@ -502,6 +502,11 @@ def show_edit_employee(employee_id):
 
     if employee and employee.roles:
         format_employee(employee)
+        form = PersonForm(
+            first_name=employee.first_name,
+            last_name=employee.last_name,
+            patronym=employee.patronym
+        )
 
         if employee.teacher:
             future_lessons = Lesson.query.filter(Lesson.date >= TODAY, Lesson.teacher_id == employee_id).all()
@@ -511,9 +516,13 @@ def show_edit_employee(employee_id):
 
         if request.method == 'POST':
             try:
-                handle_employee_edit(request.form, employee)
-                db.session.commit()
-                flash('Изменения внесены.', 'success')
+                if form.validate_on_submit():
+                    handle_employee_edit(request.form, employee)
+                    db.session.commit()
+                    flash('Изменения внесены.', 'success')
+                    return redirect(url_for('show_edit_employee', employee_id=employee.id))
+
+                flash('Ошибка в форме изменения сотрудника', 'error')
 
             except Exception as e:
                 db.session.rollback()
@@ -531,7 +540,7 @@ def show_edit_employee(employee_id):
         ).order_by(Subject.name).all()
         all_subjects = Subject.query.order_by(Subject.name).all()
 
-        return render_template('employee.html', employee=employee, possible_roles=possible_roles,
+        return render_template('employee.html', employee=employee, form=form, possible_roles=possible_roles,
                                possible_subjects=possible_subjects, subjects=all_subjects)
     else:
         flash("Такого сотрудника нет", 'error')
@@ -917,16 +926,21 @@ def after_school_purchase():
         attendee_id = int(request.form.get("selected_client"))
         period = request.form.get("period")
         new_after_school = handle_after_school_adding(attendee_id, request.form, period)
-        db.session.add(new_after_school)
-        db.session.flush()
-        price = new_after_school.subscription_type.price
-        if new_after_school.period not in ["month", "day"]:
-            hours = int(new_after_school.period.split()[0])
-            price *= hours
-        description = "Оплата продленки"
-        finance_operation(attendee_id, -price, description)
-        db.session.commit()
-        flash('Клиент записан на продленку', 'success')
+
+        if not new_after_school:
+            flash('Клиент уже записан на продленку', 'error')
+
+        else:
+            db.session.add(new_after_school)
+            db.session.flush()
+            price = new_after_school.subscription_type.price
+            if new_after_school.period not in ["month", "day"]:
+                hours = int(new_after_school.period.split()[0])
+                price *= hours
+            description = "Оплата продленки"
+            finance_operation(attendee_id, -price, description)
+            db.session.commit()
+            flash('Клиент записан на продленку', 'success')
 
     except Exception as e:
         db.session.rollback()

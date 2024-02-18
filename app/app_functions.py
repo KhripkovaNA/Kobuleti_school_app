@@ -645,6 +645,9 @@ def handle_employee_edit(form, employee):
     employee.last_name = form.get('last_name')
     employee.first_name = form.get('first_name')
     employee.patronym = form.get('patronym')
+    employee.contacts[0].telegram = form.get('telegram')
+    employee.contacts[0].phone = form.get('phone')
+    employee.contacts[0].other_contact = form.get('other_contact')
 
     for role in employee.roles:
         if not form.get(f'role_{role.id}'):
@@ -1789,16 +1792,28 @@ def handle_after_school_adding(student_id, form, period):
         hours = int(form.get("hours"))
         term = conjugate_hours(hours)
     subscription_type_id = int(form.get("subscription_type"))
-    new_after_school_subscription = Subscription(
+
+    check_after_school = Subscription.query.filter_by(
         subject_id=after_school_subject().id,
         student_id=student_id,
-        subscription_type_id=subscription_type_id,
         purchase_date=purchase_date,
-        shift=shift,
         period=term
-    )
+    ).first()
 
-    return new_after_school_subscription
+    if check_after_school:
+        return
+
+    else:
+        new_after_school_subscription = Subscription(
+            subject_id=after_school_subject().id,
+            student_id=student_id,
+            subscription_type_id=subscription_type_id,
+            purchase_date=purchase_date,
+            shift=shift,
+            period=term
+        )
+
+        return new_after_school_subscription
 
 
 def finance_operation(person_id, amount, description, date=TODAY):

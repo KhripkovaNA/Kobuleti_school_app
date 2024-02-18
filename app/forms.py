@@ -121,3 +121,4 @@ class EmployeeForm(AdultPersonForm):
                                 validate_choice=False)
     subjects = SelectMultipleField(choices=[], validate_choice=False)
     teacher_color = ColorField(default="#D9D9D9")
+
