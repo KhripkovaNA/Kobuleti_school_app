@@ -6,77 +6,92 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Расписание</h4>
+                <h4 class="title">Расписание. {{ week_dates[0] }} - {{ week_dates[-1] }}</h4>
             </div>
             <div class="card-content">
-                <div class="scroll-timetable">
-                    <table class="table timetable">
-                        <thead class="text-success">
-                            <tr>
-                                <th rowspan="3" width="3%" class="fixed-column">Время</th>
-                                {% for day in days %}
-                                    <th colspan="{{ rooms|length }}">{{ day }}</th>
-                                {% endfor %}
-                            </tr>
-                            <tr style="color: green;">
-                                {% for day in days %}
-                                    <th colspan="{{ rooms|length }}">{{ classes[day][0] }}</th>
-                                {% endfor %}
-                            </tr>
-                            <tr style="color: green; font-size: 80%;">
-                                {% for day in days %}
-                                    {% for room in rooms %}
-                                        <th>{{ room.name }}</th>
-                                    {% endfor %}
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th class="fixed-column">9:00 - 10:00</th>
-                                {% for day in days %}
-                                    {% for room in rooms %}
-                                        <td rowspan="11">
-                                            {% if classes[day][1][room.name] %}
-                                                {% for lesson in classes[day][1][room.name] %}
-                                                    <div class="class-box" id="class-box-{{ lesson.id }}"
-                                                         style="background-color: {{ lesson.color }}; top: {{ lesson.start_time/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;"
-                                                         onclick="showDropdown({{ lesson.id }}, event)">
-                                                        <p style="color: #660000;">{{ lesson.time }}</p>
-                                                        {% if lesson.lesson_type %}
-                                                            <p style="color: #003300;">{{ lesson.lesson_type }}</p>
-                                                        {% endif %}
-                                                        {% for subject in lesson.subject %}
-                                                            <p style="color: #003366;">{{ subject }}</p>
-                                                        {% endfor %}
-                                                        <p style="color: #330033;">{{ lesson.teacher }}</p>
-                                                        <div class="dropdown open dropdown-content" id="dropdown-{{ lesson.id }}">
-                                                            <ul class="dropdown-menu">
-                                                                {% if lesson.lesson_type_name not in ["school", "after_school"] %}
-                                                                    <li><a href="{{ url_for('lesson', lesson_id=lesson.id) }}">Занятие</a></li>
-                                                                    <li><a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">Изменить</a></li>
-                                                                {% elif lesson.lesson_type_name=="school" %}
-                                                                    <li><a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">Школьное расписание</a></li>
-                                                                {% endif %}
-                                                                <li class="divider"></li>
-                                                                <li><a href="{{ url_for('students') }}">Отменить занятие</a></li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </td>
-                                    {% endfor %}
-                                {% endfor %}
-                            </tr>
-                            {% for hour in range(10, 20) %}
+                {% if classes %}
+                    <div class="scroll-timetable">
+                        <table class="table timetable">
+                            <thead class="text-success">
                                 <tr>
-                                    <th class="fixed-column">{{ hour }}:00 - {{ hour + 1 }}:00</th>
+                                    <th rowspan="3" width="3%" class="fixed-column">Время</th>
+                                    {% for day in days %}
+                                        <th colspan="{{ rooms|length }}">{{ day }}</th>
+                                    {% endfor %}
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                <tr style="color: green;">
+                                    {% for day in days %}
+                                        <th colspan="{{ rooms|length }}">{{ week_dates[loop.index0] }}</th>
+                                    {% endfor %}
+                                </tr>
+                                <tr style="color: green; font-size: 80%;">
+                                    {% for day in days %}
+                                        {% for room in rooms %}
+                                            <th>{{ room }}</th>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th class="fixed-column">{{ start_time }}:00 - {{ start_time + 1 }}:00</th>
+                                    {% for day in days %}
+                                        {% for room in rooms %}
+                                            <td rowspan="{{ end_time - start_time + 1 }}">
+                                                {% if classes.get(day) %}
+                                                    {% if classes[day].get(room) %}
+                                                        {% for lesson in classes[day][room] %}
+                                                            <div class="class-box" id="class-box-{{ lesson.id }}"
+                                                                 style="background-color: {{ lesson.color }}; top: {{ (lesson.start_time + 60 * start_time - 540)/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;"
+                                                                 onclick="showDropdown({{ lesson.id }}, event)">
+                                                                <p style="color: #660000;">{{ lesson.time }}</p>
+                                                                {% if lesson.lesson_type %}
+                                                                    <p style="color: #003300;">{{ lesson.lesson_type }}</p>
+                                                                {% endif %}
+                                                                {% for subject in lesson.subject %}
+                                                                    <p style="color: #003366;">{{ subject }}</p>
+                                                                {% endfor %}
+                                                                <p style="color: #330033;">{{ lesson.teacher }}</p>
+                                                                <div class="dropdown open dropdown-content" id="dropdown-{{ lesson.id }}">
+                                                                    <ul class="dropdown-menu">
+                                                                        {% if lesson.lesson_type_name not in ["school", "after_school"] %}
+                                                                            <li><a href="{{ url_for('lesson', lesson_id=lesson.id) }}">Занятие</a></li>
+                                                                            {% if not lesson.completed and lesson.month_index >= -1  %}
+                                                                                <li><a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">Изменить</a></li>
+                                                                            {% endif %}
+                                                                        {% elif lesson.lesson_type_name=="school" %}
+                                                                            <li><a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">Школьное расписание</a></li>
+                                                                        {% elif lesson.lesson_type_name=="after_school" %}
+                                                                            <li><a href="{{ url_for('after_school', month_index=lesson.month_index) }}">Продленка</a></li>
+                                                                        {% endif %}
+                                                                        <li class="divider"></li>
+                                                                        {% if lesson.lesson_type_name!="school" and not lesson.completed and lesson.month_index >= -1  %}
+                                                                            <li><a href="{{ url_for('students') }}">Отменить занятие</a></li>
+                                                                        {% endif %}
+                                                                    </ul>
+                                                                </div>
+
+
+
+                                                            </div>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                                {% for hour in range(start_time + 1, end_time) %}
+                                    <tr>
+                                        <th class="fixed-column">{{ hour }}:00 - {{ hour + 1 }}:00</th>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>Нет занятий в расписании</p>
+                {% endif %}
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn btn-sm" style="background-color: #ff9800;">
@@ -91,14 +106,12 @@
                         </button>
                     </div>
                     <div class="col-md-3 col-md-offset-3">
-                        <div class="dropdown pull-right">
+                        <div class="dropup pull-right">
                             <button class="btn btn-sm dropdown-toggle" style="background-color: #4bd1a0;" data-toggle="dropdown">Составить расписание</button>
-                            <div class="dropup">
-                                <ul class="dropdown-menu">
-                                    <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
-                                    <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
-                                </ul>
-                            </div>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
+                                <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>

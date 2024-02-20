@@ -1,8 +1,8 @@
 from flask import request
 from flask_wtf import FlaskForm, Form
-from wtforms import StringField, TextAreaField, PasswordField, SelectField, \
-    FormField, FieldList, HiddenField, BooleanField, IntegerField, SelectMultipleField, ColorField
-from wtforms.validators import ValidationError, DataRequired, InputRequired, Optional, NumberRange
+from wtforms import StringField, TextAreaField, PasswordField, SelectField, FormField, FieldList, \
+    HiddenField, BooleanField, IntegerField, SelectMultipleField, ColorField, DecimalField
+from wtforms.validators import ValidationError, DataRequired, InputRequired, Optional, NumberRange, StopValidation
 from app.models import Person
 from app import db
 from datetime import datetime
@@ -27,6 +27,17 @@ def validate_parent_name(form, field):
 
 def validate_client_name(form, field):
     if form.client_select.data == 'Добавить' and not field.data:
+        raise ValidationError('Заполните это поле')
+
+
+def validate_subject_school_price(form, field):
+    if form.no_subject_school_price.data:
+        field.errors[:] = []
+        raise StopValidation()
+
+
+def validate_subscription_types(form, field):
+    if not form.no_subscription.data and not field.data:
         raise ValidationError('Заполните это поле')
 
 
@@ -113,7 +124,7 @@ class SubscriptionForm(Form):
 
 
 class SubscriptionsEditForm(FlaskForm):
-    subscriptions = FieldList(FormField(SubscriptionForm), min_entries=0, max_entries=100)
+    subscriptions = FieldList(FormField(SubscriptionForm), min_entries=0, max_entries=5)
 
 
 class EmployeeForm(AdultPersonForm):
@@ -122,3 +133,28 @@ class EmployeeForm(AdultPersonForm):
     subjects = SelectMultipleField(choices=[], validate_choice=False)
     teacher_color = ColorField(default="#D9D9D9")
 
+
+class SubjectForm(FlaskForm):
+    subject_name = StringField(validators=[InputRequired(message='Заполните это поле')])
+    subject_short_name = StringField(validators=[InputRequired(message='Заполните это поле')])
+    teachers = SelectMultipleField(choices=[])
+
+
+class EditExtraSubjectForm(SubjectForm):
+    subject_price = DecimalField(places=1, default=20.0,
+                                 validators=[InputRequired(message='Заполните это поле'),
+                                             NumberRange(0, 1000, message='Неправильный формат')])
+    subject_school_price = DecimalField(places=1, default=20.0,
+                                        validators=[validate_subject_school_price,
+                                                    InputRequired(message='Заполните это поле'),
+                                                    NumberRange(0, 1000, message='Неправильный формат')])
+
+    no_subject_school_price = BooleanField()
+
+
+class ExtraSubjectForm(EditExtraSubjectForm):
+    subject_type = SelectField(choices=[])
+    subscription_types = SelectMultipleField(choices=[], validators=[validate_subscription_types])
+    no_subscription = BooleanField()
+
+# class SchoolSubjectForm(SubjectForm):

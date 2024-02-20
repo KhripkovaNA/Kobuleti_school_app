@@ -43,10 +43,10 @@
                                             </td>
                                             <td style="padding-left:40px;">
                                                 {% if subject.one_time_price %}
-                                                    <p>{{ subject.one_time_price | round(1) }}</p>
+                                                    <p>{{ subject.one_time_price|round(1) }}</p>
                                                 {% endif %}
                                                 {% if subject.school_price %}
-                                                    <p>{{ subject.school_price | round(1) }} (Продленка)</p>
+                                                    <p>{{ subject.school_price|round(1) }} (Продленка)</p>
                                                 {% endif %}
                                             </td>
                                             <td>
@@ -58,7 +58,7 @@
                                             </td>
                                             <td>
                                                 <div class="dropdown">
-                                                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" style="background-color: #4bd1a0;">
+                                                    <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-background-color="purple">
                                                         <i class="material-icons" style="color: white;">toc</i>
                                                         <span class="caret"></span>
                                                     </button>
@@ -75,12 +75,47 @@
                                                         </li>
                                                         <li class="divider"></li>
                                                         <li>
-                                                            <a href="">
+                                                            <a href="#" data-toggle="modal" data-target="#delete-{{ subject.id }}-modal">
                                                                 <i class="material-icons" style="color: red;">delete_forever</i>Удалить
                                                             </a>
                                                         </li>
                                                     </ul>
                                                 </div>
+
+                                            <!-- *-*-*-*-*-*-*-*-*-* Subject delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                                                <div class="modal fade" id="delete-{{ subject.id }}-modal" role="dialog">
+                                                    <div class="modal-dialog modal-sm">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление предмета</h4>
+                                                            </div>
+                                                            <div class="modal-body" style="padding-top:10px;">
+                                                                <p class="control-label">
+                                                                    Вы уверены, что хотите полностью удалить предмет {{ subject.name }} ({{ subject.subject_type.description }})?
+                                                                </p>
+                                                                <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                    <input type="hidden" name="record_type" value="subject">
+                                                                    <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                                                                    <div class="row">
+                                                                        <div class="col-md-5 col-md-offset-1">
+                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                                Да
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="col-md-5">
+                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                Нет
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -91,7 +126,7 @@
                 {% else %}
                     <p>Занятий пока нет</p>
                 {% endif %}
-                <button class="btn" data-background-color="orange">
+                <button class="btn btn-sm" data-background-color="orange">
                     <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_subject') }}">
                         <i class="material-icons">add_box</i> Добавить предмет
                     </a>

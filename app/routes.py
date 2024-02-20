@@ -3,7 +3,8 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
     SubscriptionType, SchoolLessonJournal, Finance
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
-    EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm
+    EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm, \
+    ExtraSubjectForm, EditExtraSubjectForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
@@ -193,6 +194,8 @@ def delete_record():
                     if student.children.all() or student.roles:
                         student.status = None
                     else:
+                        if student.contacts:
+                            db.session.delete(student.contacts[0])
                         db.session.delete(student)
                     db.session.commit()
                     flash(f"Клиент {student_name} удален", "success")
@@ -202,15 +205,29 @@ def delete_record():
             if record_type == 'employee':
                 employee_id = int(request.form.get('employee_id'))
                 employee = Person.query.filter_by(id=employee_id).first()
+
                 if employee:
                     employee_name = f"{employee.last_name} {employee.first_name}"
-                    if employee.children.all() or employee.status:
-                        for role in employee.roles:
-                            db.session.delete(role)
+                    future_lessons = []
+
+                    if employee.teacher:
+                        future_lessons = Lesson.query.filter(
+                            Lesson.date >= TODAY,
+                            Lesson.teacher_id == employee_id
+                        ).all()
+
+                    if future_lessons:
+                        flash(f"Сотрудник {employee_name} не может быть удален", 'error')
+
                     else:
-                        db.session.delete(employee)
-                    db.session.commit()
-                    flash(f"Сотрудник {employee_name} удален", "success")
+                        if employee.children.all() or employee.status:
+                            for role in employee.roles:
+                                db.session.delete(role)
+                        else:
+                            db.session.delete(employee.contacts[0])
+                            db.session.delete(employee)
+                        db.session.commit()
+                        flash(f"Сотрудник {employee_name} удален", "success")
                 else:
                     flash("Такого сотрудника нет", 'error')
 
@@ -237,6 +254,19 @@ def delete_record():
             flash("Контактная информация удалена", "success")
         else:
             flash("Такого контакта нет", 'error')
+
+    if record_type == 'subject':
+        subject_id = int(request.form.get('subject_id'))
+        subject = Subject.query.filter_by(id=subject_id).first()
+        if subject:
+            subject_name = f"{subject.name} ({subject.subject_type.description})"
+            subject_lessons = Lesson.query.filter_by(subject_id=subject.id).all()
+            if subject_lessons:
+                flash(f"Предмет {subject_name} не может быть удален", 'error')
+            else:
+                db.session.delete(subject)
+                db.session.commit()
+                flash(f"Предмет {subject_name} удален", 'success')
 
     return redirect(request.referrer)
 
@@ -514,8 +544,11 @@ def show_edit_employee(employee_id):
             employee.future_lessons = future_lessons
             employee.lesson_subjects = lesson_subjects
 
+        render_type = 'show'
+
         if request.method == 'POST':
             try:
+                render_type = 'edit'
                 if form.validate_on_submit():
                     handle_employee_edit(request.form, employee)
                     db.session.commit()
@@ -541,7 +574,7 @@ def show_edit_employee(employee_id):
         all_subjects = Subject.query.order_by(Subject.name).all()
 
         return render_template('employee.html', employee=employee, form=form, possible_roles=possible_roles,
-                               possible_subjects=possible_subjects, subjects=all_subjects)
+                               possible_subjects=possible_subjects, subjects=all_subjects, render_type=render_type)
     else:
         flash("Такого сотрудника нет", 'error')
         return redirect(url_for('employees'))
@@ -566,36 +599,32 @@ def subjects():
 @app.route('/add-subject', methods=['GET', 'POST'])
 @login_required
 def add_subject():
-    if request.method == 'POST':
-        subject_type_id = request.form.get("subject_type")
-        school_type = SubjectType.query.filter_by(name="school").first()
-        subject_type = "school" if subject_type_id == school_type else "extra_school"
-        try:
-            new_subject = add_new_subject(request.form, subject_type)
-            db.session.add(new_subject)
-            db.session.commit()
-            flash('Новый предмет добавлен в систему.', 'success')
-
-            if subject_type == "school":
-                return redirect(url_for('school_subjects'))
-            else:
-                return redirect(url_for('subjects'))
-
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при добавлении занятия: {str(e)}', 'error')
-
-            if subject_type == "school":
-                return redirect(url_for('school_subjects'))
-            else:
-                return redirect(url_for('add_subject'))
-
     subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school'])).all()
     subscription_types = format_subscription_types(SubscriptionType.query.all())
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+    form = ExtraSubjectForm()
+    form.subject_type.choices = [(subject_type.id, subject_type.description) for subject_type in subject_types]
+    form.subscription_types.choices = [(type_of_subscription[0], type_of_subscription[1])
+                                       for type_of_subscription in subscription_types]
+    form.teachers.choices = [(teacher.id, f"{teacher.last_name} { teacher.first_name }") for teacher in all_teachers]
+    if request.method == 'POST':
+        try:
+            if form.validate_on_submit():
+                subject_type = "extra_school"
+                new_subject = add_new_subject(form, subject_type)
+                db.session.add(new_subject)
+                db.session.commit()
+                return redirect(url_for('subjects'))
 
-    return render_template('add_subject.html', subject_types=subject_types, subscription_types=subscription_types,
-                           teachers=all_teachers)
+            flash(f'Ошибка в форме добавления предмета', 'error')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении предмета: {str(e)}', 'error')
+
+            return redirect(url_for('add_subject'))
+
+    return render_template('add_subject.html', form=form)
 
 
 @app.route('/subject/<string:subject_id>', methods=['GET', 'POST'])
@@ -603,26 +632,43 @@ def add_subject():
 def edit_subject(subject_id):
     subject = Subject.query.filter_by(id=subject_id).first()
     if subject:
-        if request.method == 'POST':
-            try:
-                handle_subject_edit(subject, request.form)
-                db.session.commit()
-                flash('Изменения внесены.', 'success')
+        if subject.subject_type.name == "school":
+            return redirect(url_for('school_subjects'))
+        elif subject.subject_type.name == "after_school":
+            return redirect(url_for('after_school', month_index=0))
+        else:
+            form = EditExtraSubjectForm(
+                subject_name=subject.name,
+                subject_short_name=subject.short_name,
+                subject_price=round(subject.one_time_price, 1),
+                subject_school_price=round(subject.school_price, 1) if subject.school_price else None,
+                no_subject_school_price=True if not subject.school_price else False
+            )
+            subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
+            filtered_subscription_types = SubscriptionType.query.filter(
+                ~SubscriptionType.subjects.any(Subject.id == subject.id)
+            ).all()
 
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+            subscription_types = format_subscription_types(filtered_subscription_types)
 
-            return redirect(url_for('edit_subject', subject_id=subject_id))
+            if request.method == 'POST':
+                try:
+                    if form.validate_on_submit():
+                        handle_subject_edit(subject, request.form)
+                        db.session.commit()
+                        flash('Изменения внесены.', 'success')
+                        return redirect(url_for('subjects'))
 
-        subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
-        filtered_subscription_types = SubscriptionType.query.filter(
-            ~SubscriptionType.subjects.any(Subject.id == subject.id)
-        ).all()
+                    flash(f'Ошибка в форме изменения предмета', 'error')
 
-        subscription_types = format_subscription_types(filtered_subscription_types)
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
 
-        return render_template('edit_subject.html', subject=subject, subscription_types=subscription_types)
+                    return redirect(url_for('edit_subject', subject_id=subject_id))
+
+            return render_template('edit_subject.html', subject=subject, form=form,
+                                   subscription_types=subscription_types)
 
     else:
         flash("Такого занятия нет.", 'error')
@@ -634,10 +680,11 @@ def edit_subject(subject_id):
 def timetable(week):
     week = int(week)
     rooms = Room.query.all()
-    week_lessons = week_lessons_dict(week, rooms)
+    week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, rooms)
+    rooms = [room.name for room in rooms if room.name in used_rooms]
 
-    return render_template('timetable.html', days=DAYS_OF_WEEK, rooms=rooms,
-                           classes=week_lessons, week=week)
+    return render_template('timetable.html', days=DAYS_OF_WEEK, rooms=rooms, start_time=time_range[0],
+                           end_time=time_range[1], classes=week_lessons, week=week, week_dates=week_dates)
 
 
 @app.route('/copy-lessons', methods=['GET', 'POST'])

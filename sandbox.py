@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
-    lesson_subjects_data
+    lesson_subjects_data, week_lessons_dict
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
@@ -445,23 +445,23 @@ def day_lessons_list(day_room_lessons):
     return lessons_for_day
 
 
-def week_lessons_dict(week):
-    rooms = Room.query.all()
-    days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
-    week_lessons = {}
-
-    for day, weekday in enumerate(days_of_week):
-        lessons_date = get_date(week, day)
-        lessons_date_str = f'{lessons_date:%d.%m}'
-        day_lessons = {}
-        for room in rooms:
-            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).order_by(
-                Lesson.start_time).all()
-            day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
-
-        week_lessons[weekday] = (lessons_date_str, day_lessons)
-
-    return week_lessons
+# def week_lessons_dict(week):
+#     rooms = Room.query.all()
+#     days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+#     week_lessons = {}
+#
+#     for day, weekday in enumerate(days_of_week):
+#         lessons_date = get_date(week, day)
+#         lessons_date_str = f'{lessons_date:%d.%m}'
+#         day_lessons = {}
+#         for room in rooms:
+#             lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).order_by(
+#                 Lesson.start_time).all()
+#             day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
+#
+#         week_lessons[weekday] = (lessons_date_str, day_lessons)
+#
+#     return week_lessons
 
 
 def week_school_lessons_dict(week):
@@ -1062,6 +1062,8 @@ def add_new_lessons(form):
 #     last_row_ind = sheet.max_row + 2
 #
 # workbook.save(filename="school_students.xlsx")
-
-
+# teachers_data = []
+# teacher_ids = [int(teacher) for teacher in teachers_data]
+# teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
+# print(teachers)
 

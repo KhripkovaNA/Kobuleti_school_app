@@ -11,7 +11,7 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Employee information show *-*-*-*-*-*-*-*-*-* -->
 
-                <div class="section section-employee" data-target="employee">
+                <div class="section section-employee" data-target="employee" style="{{ 'display:none' if render_type == 'edit' else 'display:block' }};">
                     <div class="row">
                         <h4 class="title" style="margin-bottom:27px;">{{ employee.last_name }} {{ employee.first_name }} {{ employee.patronym }}</h4>
                         <div class="form-group" style="margin-left:30px;">
@@ -110,7 +110,7 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Employee information edit *-*-*-*-*-*-*-*-*-* -->
 
-                <div class="form form-employee" data-target="employee" style="display: none;">
+                <div class="form form-employee" data-target="employee" style="{{ 'display:block' if render_type == 'edit' else 'display:none' }};">
                     <form class="login-form" action="{{ url_for('show_edit_employee', employee_id=employee.id) }}" method="post" novalidate>
                         {{ form.hidden_tag() }}
                         <div class="row">

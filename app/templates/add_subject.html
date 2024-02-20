@@ -9,84 +9,86 @@
                 <h4 class="title">Новый предмет</h4>
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('add_subject') }}" method="post">
+                <form class="login-form" action="{{ url_for('add_subject') }}" method="post" novalidate>
+                    {{ form.hidden_tag() }}
                     <div class="row">
                         <div class="form-group" style="margin-left:30px;">
-                            <div class="row">
+                            <div class="row {{ 'has-error' if form.subject_name.errors }}">
                                 <label class="control-label col-md-3">Название:</label>
-                                <div class="col-md-5">
-                                    <input type="text" name="subject_name" class="form-control">
+                                <div class="col-md-6">
+                                    {{ form.subject_name(class="form-control") }}
+                                    {% for error in form.subject_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row {{ 'has-error' if form.subject_short_name.errors }}">
                                 <label class="control-label col-md-3">Короткое название:</label>
-                                <div class="col-md-5">
-                                    <input type="text" name="subject_short_name" class="form-control">
+                                <div class="col-md-6">
+                                    {{ form.subject_short_name(class="form-control") }}
+                                    {% for error in form.subject_short_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Тип занятия:</label>
-                                <div class="col-md-5">
-                                    <select name="subject_type" class="form-control">
-                                        {% for subject_type in subject_types %}
-                                            <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
-                                        {% endfor %}
-                                    </select>
+                                <div class="col-md-6">
+                                    {{ form.subject_type(class="form-control") }}
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row {{ 'has-error' if form.subject_price.errors }}">
                                 <label class="control-label col-md-3">Цена разового занятия:</label>
                                 <div class="col-md-3">
-                                    <input type="number" class="form-control float-field" name="subject_price" step="1" min="0" value="{{ 20|float }}">
+                                    {{ form.subject_price(class="form-control float-field") }}
+                                    {% for error in form.subject_price.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            <div class="row price_row">
+                            <div class="row price_row {{ 'has-error' if form.subject_school_price.errors }}">
                                 <label class="control-label col-md-3">Специальная цена (Продленка):</label>
                                 <div class="col-md-3 optional-field">
-                                    <input type="number" class="form-control float-field" name="subject_school_price" step="1" min="0" value="{{ 20|float }}">
+                                    {{ form.subject_school_price(class="form-control float-field") }}
+                                    {% for error in form.subject_school_price.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                                 <div class="col-md-2 checkbox-option">
                                     <label class="contact-radio-label">Нет
-                                        <input type="checkbox" name="no_subject_school_price">
+                                        {{ form.no_subject_school_price }}
                                         <span class="custom-checkbox"></span>
                                     </label>
                                 </div>
                             </div>
-                            <div class="row subscription-row">
+                            <div class="row subscription-row {{ 'has-error' if form.subscription_types.errors }}">
                                 <label class="control-label col-md-3">Абонемент:</label>
-                                <div class="col-md-5 optional-field">
-                                    <select class="form-control select-search" name="subscription_types" multiple placeholder="Добавить абонемент">
-                                        {% for type_of_subscription in subscription_types %}
-                                            <option value="{{ type_of_subscription[0] }}">{{ type_of_subscription[1] }}</option>
-                                        {% endfor %}
-                                    </select>
+                                <div class="col-md-6 optional-field">
+                                    {{ form.subscription_types(class="form-control select-search", placeholder="Добавить абонемент") }}
+                                    {% for error in form.subscription_types.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                                 <div class="col-md-2 checkbox-option">
                                     <label class="contact-radio-label">Нет
-                                        <input type="checkbox" name="no_subscription">
+                                        {{ form.no_subscription }}
                                         <span class="custom-checkbox"></span>
                                     </label>
                                 </div>
                             </div>
                             <div class="row">
                                 <label class="control-label col-md-3">Учителя:</label>
-                                <div class="col-md-5">
-                                    <select class="form-control select-search" name="teachers" multiple placeholder="Добавить учителя">
-                                        {% for teacher in teachers %}
-                                            <option value="{{ teacher.id }}">{{ teacher.last_name}} {{ teacher.first_name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                <div class="col-md-6">
+                                    {{ form.teachers(class="form-control select-search", placeholder="Добавить учителя") }}
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="footer">
                         <div class="row">
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Добавить занятие</button>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ url_for('subjects') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-sm" data-background-color="main">Добавить занятие</button>
+                                <a href="{{ url_for('subjects') }}" class="btn btn-sm" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

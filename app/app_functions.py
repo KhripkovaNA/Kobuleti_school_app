@@ -728,16 +728,16 @@ def format_employee(employee):
 
 
 def add_new_subject(form, subject_type):
-    name = form.get("subject_name")
+    name = form.subject_name.data
     subject_name = name[0].upper() + name[1:]
-    short_name = form.get("subject_short_name")
+    short_name = form.subject_short_name.data
     subject_short_name = short_name[0].upper() + short_name[1:]
-    teacher_ids = [int(teacher) for teacher in form.getlist('teachers')]
-    teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
-    subject_type_id = form.get("subject_type")
+    teacher_ids = [int(teacher) for teacher in form.teachers.data]
+    teachers = Person.query.filter(Person.id.in_(teacher_ids), Person.teacher).all()
+    subject_type_id = int(form.subject_type.data)
 
     if subject_type == "school":
-        classes = [int(school_class) for school_class in form.getlist('school_classes')]
+        classes = [int(school_class) for school_class in form.school_classes.data]
         school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
 
         new_subject = Subject(
@@ -748,18 +748,17 @@ def add_new_subject(form, subject_type):
         new_subject.school_classes.extend(school_classes)
 
     else:
-        subject_price = float(form.get('subject_price'))
-        one_time_price = subject_price if int(subject_price) > 0 else None
-        if not form.get('no_subject_school_price'):
-            subject_school_price = float(form.get('subject_school_price'))
+        one_time_price = float(form.subject_price.data)
+        if not form.no_subject_school_price.data:
+            subject_school_price = float(form.subject_school_price.data)
             school_price = subject_school_price if int(subject_school_price) > 0 else None
         else:
             school_price = None
-        if not form.get('no_subscription'):
-            subscription_type_ids = [int(st) for st in form.getlist('subscription_types')]
+        if not form.no_subscription.data:
+            subscription_type_ids = [int(st) for st in form.subscription_types.data]
             subscription_types = SubscriptionType.query.filter(SubscriptionType.id.in_(subscription_type_ids)).all()
         else:
-            subscription_types = None
+            subscription_types = []
 
         new_subject = Subject(
             name=subject_name,
@@ -769,7 +768,6 @@ def add_new_subject(form, subject_type):
             school_price=school_price,
         )
         new_subject.subscription_types.extend(subscription_types)
-        subject_type = "extra_school"
 
     new_subject.teachers.extend(teachers)
 
@@ -1072,10 +1070,12 @@ def create_lesson_dict(lesson):
         'start_time': start_time,
         'end_time': end_time,
         'subject': lesson.subject_names,
-        'teacher': lesson.teacher.first_name,
+        'teacher': lesson.teacher.first_name if lesson.teacher else '-',
         'color': lesson.teacher.color,
         'lesson_type': lesson_type,
-        'lesson_type_name': lesson.lesson_type.name
+        'lesson_type_name': lesson.lesson_type.name,
+        'completed': lesson.lesson_completed,
+        'month_index': calc_month_index(lesson.date)
     }
 
 
@@ -1136,18 +1136,30 @@ def get_week_dates():
 
 def week_lessons_dict(week, rooms):
     week_lessons = {}
+    used_rooms = set()
+    week_dates = []
+    week_start_hour = 10
+    week_end_hour = 17
     for day, weekday in enumerate(DAYS_OF_WEEK):
         lessons_date = get_date(day, week)
         lessons_date_str = f'{lessons_date:%d.%m}'
+        week_dates.append(lessons_date_str)
         day_lessons = {}
         for room in rooms:
-            lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id). \
-                order_by(Lesson.start_time).all()
-            day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
+            lessons_filtered = Lesson.query.filter_by(
+                date=lessons_date, room_id=room.id
+            ).order_by(Lesson.start_time).all()
+            if lessons_filtered:
+                start_hour = lessons_filtered[0].start_time.hour
+                week_start_hour = start_hour if start_hour < week_start_hour else week_start_hour
+                end_hour = lessons_filtered[-1].end_time.hour + 1 * bool(lessons_filtered[-1].end_time.minute)
+                week_end_hour = end_hour if end_hour > week_end_hour else week_end_hour
+                used_rooms.add(room.name)
+                day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
+        if day_lessons:
+            week_lessons[weekday] = day_lessons
 
-        week_lessons[weekday] = (lessons_date_str, day_lessons)
-
-    return week_lessons
+    return week_lessons, week_dates, used_rooms, (week_start_hour, week_end_hour)
 
 
 def day_school_lessons_dict(day, week, school_classes):
