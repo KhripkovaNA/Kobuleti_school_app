@@ -1053,30 +1053,33 @@ def format_school_classes_names(school_classes):
     return formatted_school_classes
 
 
-def create_lesson_dict(lesson):
+def create_lesson_dict(lesson, timetable_type):
     start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
     end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
 
-    if lesson.lesson_type.name == 'school':
-        lesson_type = format_school_classes_names(lesson.school_classes)
-    elif lesson.lesson_type.name == 'individual':
-        lesson_type = 'индив'
-    else:
-        lesson_type = ''
-
-    return {
+    lesson_dict = {
         'id': lesson.id,
         'time': f'{lesson.start_time:%H:%M} - {lesson.end_time:%H:%M}',
         'start_time': start_time,
         'end_time': end_time,
-        'subject': lesson.subject_names,
         'teacher': lesson.teacher.first_name if lesson.teacher else '-',
-        'color': lesson.teacher.color,
-        'lesson_type': lesson_type,
-        'lesson_type_name': lesson.lesson_type.name,
         'completed': lesson.lesson_completed,
-        'month_index': calc_month_index(lesson.date)
+        'month_index': calc_month_index(lesson.date),
+        'subject_full': lesson.subject.name
     }
+    if timetable_type == 'general':
+        if lesson.lesson_type.name == 'school':
+            lesson_type = format_school_classes_names(lesson.school_classes)
+        elif lesson.lesson_type.name == 'individual':
+            lesson_type = 'индив'
+        else:
+            lesson_type = ''
+        lesson_dict['lesson_type'] = lesson_type
+        lesson_dict['color'] = lesson.teacher.color
+        lesson_dict['subject'] = lesson.subject_names
+        lesson_dict['lesson_type_name'] = lesson.lesson_type.name
+
+    return lesson_dict
 
 
 def create_school_lesson_dict(lesson):
@@ -1110,11 +1113,11 @@ def day_lessons_list(day_room_lessons):
                 current_lesson.subject_names.append(next_lesson.subject.short_name)
             current_lesson.end_time = next_lesson.end_time
         else:
-            lessons_for_day.append(create_lesson_dict(current_lesson))
+            lessons_for_day.append(create_lesson_dict(current_lesson, 'general'))
             next_lesson.subject_names = [next_lesson.subject.short_name]
             current_lesson = next_lesson
 
-    lessons_for_day.append(create_lesson_dict(current_lesson))
+    lessons_for_day.append(create_lesson_dict(current_lesson, 'general'))
 
     return lessons_for_day
 
@@ -1925,3 +1928,137 @@ def get_date_range(week):
     date_start = get_date(0, week)
     dates = [f"{date_start + timedelta(day):%d.%m}" for day in range(5)]
     return dates
+
+
+def del_record(form, record_type):
+    if record_type == 'student':
+        student_id = int(form.get('student_id'))
+        student = Person.query.filter_by(id=student_id).first()
+        if student:
+            student_name = f"{student.last_name} {student.first_name}"
+            if student.parents.all():
+                for parent in student.parents:
+                    if len(parent.children.all()) == 1 and not parent.status and not parent.roles:
+                        db.session.delete(parent.contacts[0])
+                        db.session.delete(parent)
+                db.session.flush()
+            if student.children.all() or student.roles:
+                student.status = None
+                db.session.flush()
+            else:
+                if student.contacts:
+                    db.session.delete(student.contacts[0])
+                    db.session.delete(student)
+            db.session.flush()
+            message = (f"Клиент {student_name} удален", "success")
+        else:
+            message = ("Такого клиента нет", 'error')
+
+        return message
+
+    if record_type == 'employee':
+        employee_id = int(form.get('employee_id'))
+        employee = Person.query.filter_by(id=employee_id).first()
+
+        if employee:
+            employee_name = f"{employee.last_name} {employee.first_name}"
+            future_lessons = []
+
+            if employee.teacher:
+                future_lessons = Lesson.query.filter(
+                    Lesson.date >= TODAY,
+                    Lesson.teacher_id == employee_id
+                ).all()
+
+            if future_lessons:
+                message = (f"Сотрудник {employee_name} не может быть удален", 'error')
+
+            else:
+                if employee.children.all() or employee.status:
+                    for role in employee.roles:
+                        db.session.delete(role)
+                else:
+                    db.session.delete(employee.contacts[0])
+                    db.session.delete(employee)
+                db.session.flush()
+                message = (f"Сотрудник {employee_name} удален", "success")
+        else:
+            message = ("Такого сотрудника нет", 'error')
+
+        return message
+
+    if record_type == 'contact':
+        contact_person_id = int(form.get('contact_id'))
+        student_id = int(form.get('student_id'))
+        contact_person = Person.query.filter_by(id=contact_person_id).first()
+        if contact_person:
+            if contact_person_id == student_id:
+                if contact_person.contacts[0]:
+                    db.session.delete(contact_person.contacts[0])
+                    db.session.flush()
+            else:
+                if len(contact_person.children.all()) == 1 and not contact_person.status \
+                        and not contact_person.roles:
+                    db.session.delete(contact_person.contacts[0])
+                    db.session.delete(contact_person)
+                    db.session.flush()
+                else:
+                    student = Person.query.filter_by(id=student_id).first()
+                    student.parents.remove(contact_person)
+                    db.session.flush()
+
+            message = ("Контактная информация удалена", "success")
+        else:
+            message = ("Такого контакта нет", 'error')
+
+        return message
+
+    if record_type == 'subject':
+        subject_id = int(form.get('subject_id'))
+        subject = Subject.query.filter_by(id=subject_id).first()
+        if subject:
+            subject_name = f"{subject.name} ({subject.subject_type.description})"
+            subject_lessons = Lesson.query.filter_by(subject_id=subject.id).all()
+            if subject_lessons:
+                message = (f"Предмет {subject_name} не может быть удален", 'error')
+            else:
+                db.session.delete(subject)
+                db.session.flush()
+                message = (f"Предмет {subject_name} удален", 'success')
+
+        else:
+            message = ("Такого предмета нет", 'error')
+
+        return message
+
+    if record_type == 'lessons':
+        lesson_ids = [int(lesson) for lesson in form.getlist('lesson_id')]
+        lessons = Lesson.query.filter(Lesson.id.in_(lesson_ids)).all()
+        if lessons:
+            les = len(lessons)
+            del_les = 0
+            for lesson in lessons:
+                if not lesson.lesson_completed:
+                    db.session.delete(lesson)
+                    del_les += 1
+                    db.session.flush()
+
+            if les == 1:
+                if del_les == les:
+                    message = ("Занятие отменено", 'success')
+                else:
+                    message = ("Невозможно отменить занятие", 'error')
+            else:
+                if del_les == les:
+                    message = ("Все занятия отменены", 'success')
+                elif del_les != 0:
+                    message1 = (f"{conjugate_lessons(del_les)} отменено", 'success')
+                    message2 = (f"{conjugate_lessons(del_les)} невозможно отменить", 'error')
+                    message = [message1, message2]
+                else:
+                    message = ("Занятия невозможно отменить", 'error')
+
+        else:
+            message = ("Занятия невозможно отменить", 'error')
+
+        return message

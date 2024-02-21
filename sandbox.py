@@ -382,108 +382,12 @@ def print_classes():
     print(*existing_classes, sep='\n')
 
 
-def create_lesson_dict(lesson):
-    start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
-    end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
-
-    if lesson.lesson_type == 'school':
-        lesson_type = '-'.join([str(cl.school_class) for cl in lesson.school_classes.all()]) + ' класс'
-    elif lesson.lesson_type == 'individual':
-        lesson_type = 'индив'
-    else:
-        lesson_type = ''
-
-    return {
-        'time': f'{lesson.start_time:%H:%M} - {lesson.end_time:%H:%M}',
-        'start_time': start_time,
-        'end_time': end_time,
-        'subject': lesson.subject_names,
-        'teacher': lesson.teacher.first_name,
-        'lesson_type': lesson_type,
-    }
-
-
-def create_school_lesson_dict(lesson):
-    start_time = (lesson.start_time.hour - 9) * 60 + lesson.start_time.minute
-    end_time = (lesson.end_time.hour - 9) * 60 + lesson.end_time.minute
-    return {
-        'time': f'{lesson.start_time:%H:%M} - {lesson.end_time:%H:%M}',
-        'start_time': start_time,
-        'end_time': end_time,
-        'subject': lesson.subject.short_name,
-        'teacher': lesson.teacher.first_name,
-        'room': lesson.room.name,
-        'room_color': lesson.room.color
-    }
-
-
 def get_date(day_of_week, week=0):
     today = datetime.now().date()
     day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week * timedelta(weeks=1)
     return day_of_week_date
 
 
-def day_lessons_list(day_room_lessons):
-    lessons_for_day = []
-    current_lesson = day_room_lessons[0]
-    current_lesson.subject_names = [current_lesson.subject.short_name]
-
-    for next_lesson in day_room_lessons[1:]:
-        if (
-                current_lesson.teacher.id == next_lesson.teacher.id
-                and current_lesson.school_classes.all() == next_lesson.school_classes.all()
-        ):
-            current_lesson.subject_names.append(next_lesson.subject.short_name)
-            current_lesson.end_time = next_lesson.end_time
-        else:
-            lessons_for_day.append(create_lesson_dict(current_lesson))
-            next_lesson.subject_names = [next_lesson.subject.short_name]
-            current_lesson = next_lesson
-
-    lessons_for_day.append(create_lesson_dict(current_lesson))
-
-    return lessons_for_day
-
-
-# def week_lessons_dict(week):
-#     rooms = Room.query.all()
-#     days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
-#     week_lessons = {}
-#
-#     for day, weekday in enumerate(days_of_week):
-#         lessons_date = get_date(week, day)
-#         lessons_date_str = f'{lessons_date:%d.%m}'
-#         day_lessons = {}
-#         for room in rooms:
-#             lessons_filtered = Lesson.query.filter_by(date=lessons_date, room_id=room.id).order_by(
-#                 Lesson.start_time).all()
-#             day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
-#
-#         week_lessons[weekday] = (lessons_date_str, day_lessons)
-#
-#     return week_lessons
-
-
-def week_school_lessons_dict(week):
-    school_classes = SchoolClass.query.all()
-    days_of_week = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]
-    week_lessons = {}
-    for day, weekday in enumerate(days_of_week):
-        lessons_date = get_date(day, week)
-        lessons_date_str = f'{lessons_date:%d.%m}'
-        day_lessons = {}
-        for school_class in school_classes:
-            lessons_filtered = Lesson.query.filter(
-                Lesson.lesson_type_id == 1,
-                Lesson.date == lessons_date,
-                Lesson.school_classes.any(SchoolClass.id == school_class.id)
-            ).order_by(Lesson.start_time).all()
-            day_lessons[school_class.school_name] = [create_school_lesson_dict(school_lesson)
-                                                     for school_lesson in lessons_filtered]
-
-        week_lessons[weekday] = (lessons_date_str, day_lessons)
-
-    return week_lessons
 
 
 new_student_info = {
@@ -947,68 +851,6 @@ lesson_dict = {
 }
 
 
-def create_check_lesson(lesson_date, form, i):
-    start_time = datetime.strptime(form.get(f'lesson_start_time_{i}'), '%H : %M').time()
-    end_time = datetime.strptime(form.get(f'lesson_end_time_{i}'), '%H : %M').time()
-    subject_id, lesson_type_id = form.get(f'subject_{i}').split('-')
-    room_id = int(form.get(f'room_{i}'))
-    school_classes = [int(school_class) for school_class in form.get(f'school_classes_{i}')]
-    teacher_id = int(form.get(f'teacher_{i}'))
-
-    conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
-                                                    school_classes, room_id, teacher_id)
-    intersection = set()
-    if conflicting_lessons:
-        for conflict in conflicting_lessons:
-            if conflict.room_id == room_id:
-                alert = 'кабинету (' + conflict.room.name + ')'
-                intersection.add(alert)
-            if conflict.teacher_id == teacher_id:
-                alert = 'учителю (' + f'{conflict.teacher.last_name} {conflict.teacher.first_name}' + ')'
-                intersection.add(alert)
-            conflict_classes = set([school_class.id for school_class in conflict.school_classes])
-            intersected_classes = conflict_classes.intersection(school_classes)
-            if intersected_classes:
-                inter_classes = SchoolClass.query.filter(SchoolClass.id.in_(intersected_classes)).all()
-                alert = 'классам (' + ', '.join([school_class.school_name for school_class in inter_classes]) + ')'
-                intersection.add(alert)
-        message_text = f'Занятие {i} не добавлено в расписание. Пересечения по ' + ', '.join(intersection) + '.'
-        lesson = None
-    else:
-        lesson = Lesson(
-            date=lesson_date,
-            start_time=start_time,
-            end_time=end_time,
-            lesson_type_id=int(lesson_type_id),
-            room_id=room_id,
-            subject_id=int(subject_id),
-            teacher_id=teacher_id,
-        )
-        school_classes = SchoolClass.query.filter(SchoolClass.id.in_(school_classes)).all()
-        lesson.school_classes.extend(school_classes)
-        message_text = f'Занятие {i} добавлено в расписание.'
-
-    return lesson, message_text
-
-
-def add_new_lessons(form):
-    lesson_date = datetime.strptime(form.get(f'lesson_date'), '%d.%m.%Y').date()
-    lesson_count = int(form.get('lesson_count'))
-    messages = []
-    for i in range(1, lesson_count + 1):
-        new_lesson, text = create_check_lesson(lesson_date, form, i)
-        if new_lesson:
-            message = {'text': text, 'type': 'success'}
-            messages.append(message)
-            db.session.add(new_lesson)
-            db.session.commit()
-        else:
-            message = {'text': text, 'type': 'error'}
-            messages.append(message)
-    week = int((get_weekday_date(0, lesson_date) - get_weekday_date(0, TODAY)).days / 7)
-    return messages, week
-
-
 # workbook = Workbook()
 # sheet = workbook.active
 #
@@ -1066,4 +908,7 @@ def add_new_lessons(form):
 # teacher_ids = [int(teacher) for teacher in teachers_data]
 # teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
 # print(teachers)
+rooms = Room.query.all()
 
+tmtbl = week_lessons_dict(-3, rooms)
+print(tmtbl)

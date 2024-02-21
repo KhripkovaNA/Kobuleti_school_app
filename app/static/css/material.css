@@ -2998,7 +2998,7 @@ select.form-control[multiple],
     border: 1px solid #ddd;
 }
 
-.timetable td, .school-timetable td {
+.timetable .class-box, .school-timetable .class-box {
     hyphens: auto;
     font-size: 9px;
     font-weight: 400;
@@ -3535,6 +3535,7 @@ fieldset[disabled] .form-group.is-focused .togglebutton label {
     padding-right: 24px;
     padding-bottom: 16px;
     padding-left: 24px;
+    text-align: justify;
 }
 
 .modal-body .row {

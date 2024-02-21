@@ -414,21 +414,6 @@ $(document).ready(function(){
         $("#clientSelector, #add-client-btn").toggle();
     });
 
-    // Show dropdown by clicking on a specific object
-    window.showDropdown = function(objectId, event) {
-        $('.dropdown-content').hide();
-        $(`#dropdown-${objectId}`).toggle().css({
-            top: event.offsetY,
-            left: event.offsetX
-        });
-        event.stopPropagation();
-    }
-
-    // Hide dropdown when clicking anywhere
-    $(document).on('click', function () {
-        $('.dropdown-content').hide();
-    });
-
     // Handle the change event for lesson subject selector
     $('.lesson-subjects-select').change(function () {
         var subjectId = Number($(this).val());

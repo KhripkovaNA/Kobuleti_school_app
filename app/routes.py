@@ -13,7 +13,7 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     handle_lesson, format_school_class_students, format_school_class_subjects, show_school_lesson, \
     handle_school_lesson, employee_record, subject_record, calc_month_index, student_record, \
     get_after_school_students, get_after_school_prices, handle_after_school_adding, finance_operation, \
-    download_timetable, get_date_range, get_period
+    download_timetable, get_date_range, get_period, del_record
 
 from app import app, db
 from datetime import datetime, timedelta
@@ -179,94 +179,28 @@ def deposit(student_id):
 def delete_record():
     record_type = request.form.get('record_type')
 
-    if current_user.rights == 'admin':
-        try:
-            if record_type == 'student':
-                student_id = int(request.form.get('student_id'))
-                student = Person.query.filter_by(id=student_id).first()
-                if student:
-                    student_name = f"{student.last_name} {student.first_name}"
-                    if student.parents.all():
-                        for parent in student.parents:
-                            if len(parent.children.all()) == 1 and not parent.status and not parent.roles:
-                                db.session.delete(parent.contacts[0])
-                                db.session.delete(parent)
-                    if student.children.all() or student.roles:
-                        student.status = None
-                    else:
-                        if student.contacts:
-                            db.session.delete(student.contacts[0])
-                        db.session.delete(student)
-                    db.session.commit()
-                    flash(f"Клиент {student_name} удален", "success")
-                else:
-                    flash("Такого клиента нет", 'error')
-
-            if record_type == 'employee':
-                employee_id = int(request.form.get('employee_id'))
-                employee = Person.query.filter_by(id=employee_id).first()
-
-                if employee:
-                    employee_name = f"{employee.last_name} {employee.first_name}"
-                    future_lessons = []
-
-                    if employee.teacher:
-                        future_lessons = Lesson.query.filter(
-                            Lesson.date >= TODAY,
-                            Lesson.teacher_id == employee_id
-                        ).all()
-
-                    if future_lessons:
-                        flash(f"Сотрудник {employee_name} не может быть удален", 'error')
-
-                    else:
-                        if employee.children.all() or employee.status:
-                            for role in employee.roles:
-                                db.session.delete(role)
-                        else:
-                            db.session.delete(employee.contacts[0])
-                            db.session.delete(employee)
-                        db.session.commit()
-                        flash(f"Сотрудник {employee_name} удален", "success")
-                else:
-                    flash("Такого сотрудника нет", 'error')
-
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при удалении: {str(e)}', 'error')
-
-    else:
-        flash('Необходимо обладать правами администратора', 'error')
-
-    if record_type.startswith('contact'):
-        contact_person_id = int(request.form.get('contact_id'))
-        contact_person = Person.query.filter_by(id=contact_person_id).first()
-        if contact_person:
-            if record_type == 'contact':
-                if contact_person.contacts[0]:
-                    db.session.delete(contact_person.contacts[0])
-            if record_type == 'contact_person':
-                if len(contact_person.children.all()) == 1 and not contact_person.status \
-                        and not contact_person.roles:
-                    db.session.delete(contact_person.contacts[0])
-                    db.session.delete(contact_person)
-            db.session.commit()
-            flash("Контактная информация удалена", "success")
-        else:
-            flash("Такого контакта нет", 'error')
-
-    if record_type == 'subject':
-        subject_id = int(request.form.get('subject_id'))
-        subject = Subject.query.filter_by(id=subject_id).first()
-        if subject:
-            subject_name = f"{subject.name} ({subject.subject_type.description})"
-            subject_lessons = Lesson.query.filter_by(subject_id=subject.id).all()
-            if subject_lessons:
-                flash(f"Предмет {subject_name} не может быть удален", 'error')
-            else:
-                db.session.delete(subject)
+    try:
+        if record_type in ['student', 'employee']:
+            if current_user.rights == 'admin':
+                message = del_record(request.form, record_type)
                 db.session.commit()
-                flash(f"Предмет {subject_name} удален", 'success')
+                flash(message[0], message[1])
+
+            else:
+                flash('Необходимо обладать правами администратора', 'error')
+
+        else:
+            message = del_record(request.form, record_type)
+            db.session.commit()
+            if type(message) == list:
+                for mes in message:
+                    flash(mes[0], mes[1])
+            else:
+                flash(message[0], message[1])
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при удалении: {str(e)}', 'error')
 
     return redirect(request.referrer)
 

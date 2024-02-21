@@ -41,39 +41,91 @@
                                                 {% if classes.get(day) %}
                                                     {% if classes[day].get(room) %}
                                                         {% for lesson in classes[day][room] %}
-                                                            <div class="class-box" id="class-box-{{ lesson.id }}"
-                                                                 style="background-color: {{ lesson.color }}; top: {{ (lesson.start_time + 60 * start_time - 540)/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;"
-                                                                 onclick="showDropdown({{ lesson.id }}, event)">
-                                                                <p style="color: #660000;">{{ lesson.time }}</p>
-                                                                {% if lesson.lesson_type %}
-                                                                    <p style="color: #003300;">{{ lesson.lesson_type }}</p>
-                                                                {% endif %}
-                                                                {% for subject in lesson.subject %}
-                                                                    <p style="color: #003366;">{{ subject }}</p>
-                                                                {% endfor %}
-                                                                <p style="color: #330033;">{{ lesson.teacher }}</p>
-                                                                <div class="dropdown open dropdown-content" id="dropdown-{{ lesson.id }}">
-                                                                    <ul class="dropdown-menu">
+                                                            <div class="dropdown">
+                                                                <div class="class-box dropdown-toggle" data-toggle="dropdown" id="class-box-{{ lesson.id }}"
+                                                                     style="background-color: {{ lesson.color }}; top: {{ (lesson.start_time + 60 * start_time - 540)/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;">
+                                                                    <ul class="dropdown-menu" style="top: 50px;">
                                                                         {% if lesson.lesson_type_name not in ["school", "after_school"] %}
-                                                                            <li><a href="{{ url_for('lesson', lesson_id=lesson.id) }}">Занятие</a></li>
+                                                                            <li>
+                                                                                <a href="{{ url_for('lesson', lesson_id=lesson.id) }}">
+                                                                                    <i class="material-icons" style="color: purple;">info</i>Занятие
+                                                                                </a>
+                                                                            </li>
                                                                             {% if not lesson.completed and lesson.month_index >= -1  %}
-                                                                                <li><a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">Изменить</a></li>
+                                                                                <li>
+                                                                                    <a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">
+                                                                                        <i class="material-icons" style="color: purple;">edit</i>Изменить
+                                                                                    </a>
+                                                                                </li>
                                                                             {% endif %}
                                                                         {% elif lesson.lesson_type_name=="school" %}
-                                                                            <li><a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">Школьное расписание</a></li>
+                                                                            <li>
+                                                                                <a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">
+                                                                                    <i class="material-icons" style="color: purple;">date_range</i>Школьное расписание
+                                                                                </a>
+                                                                            </li>
                                                                         {% elif lesson.lesson_type_name=="after_school" %}
-                                                                            <li><a href="{{ url_for('after_school', month_index=lesson.month_index) }}">Продленка</a></li>
+                                                                            <li>
+                                                                                <a href="{{ url_for('after_school', month_index=lesson.month_index) }}">
+                                                                                    <i class="material-icons" style="color: purple;">diversity_2</i>Продленка
+                                                                                </a>
+                                                                            </li>
                                                                         {% endif %}
-                                                                        <li class="divider"></li>
                                                                         {% if lesson.lesson_type_name!="school" and not lesson.completed and lesson.month_index >= -1  %}
-                                                                            <li><a href="{{ url_for('students') }}">Отменить занятие</a></li>
+                                                                            <li class="divider"></li>
+                                                                            <li>
+                                                                                <a href="#" data-toggle="modal" data-target="#delete-{{ lesson.id }}-modal">
+                                                                                    <i class="material-icons" style="color: red;">delete_forever</i>Отменить
+                                                                                </a>
+                                                                            </li>
                                                                         {% endif %}
                                                                     </ul>
+                                                                    <p style="color: #660000;">{{ lesson.time }}</p>
+                                                                    {% if lesson.lesson_type %}
+                                                                        <p style="color: #003300;">{{ lesson.lesson_type }}</p>
+                                                                    {% endif %}
+                                                                    {% for subject in lesson.subject %}
+                                                                        <p style="color: #003366;">{{ subject }}</p>
+                                                                    {% endfor %}
+                                                                    <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                                 </div>
-
-
-
                                                             </div>
+
+
+                                            <!-- *-*-*-*-*-*-*-*-*-* Lesson delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                                                            <div class="modal fade" id="delete-{{ lesson.id }}-modal" role="dialog">
+                                                                <div class="modal-dialog modal-sm">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <h4 class="modal-title alert alert-danger" style="text-align:center;">Отмена занятия</h4>
+                                                                        </div>
+                                                                        <div class="modal-body" style="padding-top:10px;">
+                                                                            <p class="control-label">
+                                                                                Вы уверены, что хотите отменить занятие {{ lesson.subject_full }}?
+                                                                            </p>
+                                                                            <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                                <input type="hidden" name="record_type" value="lessons">
+                                                                                <input type="hidden" name="lesson_id" value="{{ lesson.id }}">
+                                                                                <div class="row">
+                                                                                    <div class="col-md-5 col-md-offset-1">
+                                                                                        <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                                            Да
+                                                                                        </button>
+                                                                                    </div>
+                                                                                    <div class="col-md-5">
+                                                                                        <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                            Нет
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}
