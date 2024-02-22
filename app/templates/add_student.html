@@ -26,7 +26,7 @@
                     {{ form1.hidden_tag() }}
                     <div class="row">
                         <h4 class="title" style="margin-left: 27px;">Ребенок</h4>
-                        <div class="form-group" style="margin-left:30px;">
+                        <div class="form-group">
                             <div class="row {{ 'has-error' if form1.last_name.errors }}">
                                 <label class="control-label col-md-3">Фамилия:</label>
                                 <div class="col-md-6">
@@ -75,7 +75,7 @@
                             {% for contact_form in form1.contacts %}
                                 <div class="contact-section">
                                     <h5 class="title" style="margin-left: 54px;">{% if loop.first %}Основной контакт{% else %}Дополнилельный контакт {{ loop.index0 }}{% endif %}</h5>
-                                    <div class="form-group" style="margin-left:30px;">
+                                    <div class="form-group">
                                         <div class="row">
                                             <label class="control-label col-md-3">Контакт:</label>
                                             <div class="col-md-6">
@@ -165,13 +165,11 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div id="add-contact">
-                            <div class="col-md-2">
+                        <div class="col-md-6">
+                            <div id="add-contact">
                                 <button type="button" id="add-contact-btn" class="btn btn-sm" data-background-color="orange">Добавить контакт</button>
                             </div>
-                        </div>
-                        <div id="remove-contact" style="{{ 'display:none' if form1.contacts|length == 1 else 'display:block' }};">
-                            <div class="col-md-2">
+                            <div id="remove-contact" style="{{ 'display:none' if form1.contacts|length == 1 else 'display:block' }};">
                                 <button type="button" id="remove-contact-btn" class="btn btn-sm" data-background-color="red">Удалить контакт</button>
                             </div>
                         </div>
@@ -191,7 +189,7 @@
                     <div class="client-section">
                         <div class="row">
                             <h4 class="title" style="margin-left:27px;">Взрослый</h4>
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 <div class="row contact_selection">
                                     <label class="control-label col-md-3">Данные клиента:</label>
                                     <div class="col-md-5">
@@ -247,7 +245,7 @@
                         <hr>
                         <div class="row">
                             <h4 class="title" style="margin-left:27px;">Контакты</h4>
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 <div class="client-information person-info-contacts" style="display: none;"></div>
                                 <div class="client-input" style="display: none;">
                                     <div class="row">

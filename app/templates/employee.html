@@ -14,7 +14,7 @@
                 <div class="section section-employee" data-target="employee" style="{{ 'display:none' if render_type == 'edit' else 'display:block' }};">
                     <div class="row">
                         <h4 class="title" style="margin-bottom:27px;">{{ employee.last_name }} {{ employee.first_name }} {{ employee.patronym }}</h4>
-                        <div class="form-group" style="margin-left:30px;">
+                        <div class="form-group">
                             {% if employee.roles %}
                                 <div class="row">
                                     <label class="control-label col-md-3">Должность:</label>
@@ -78,7 +78,7 @@
                         </div>
                         <hr>
                         <h4 class="title" style="margin-left: 27px;">Kонтакты</h4>
-                        <div class="form-group" style="margin-left:30px;">
+                        <div class="form-group">
                             <div class="row">
                                 <label class="control-label col-md-3">Телеграм:</label>
                                 <div class="col-md-6">
@@ -114,7 +114,7 @@
                     <form class="login-form" action="{{ url_for('show_edit_employee', employee_id=employee.id) }}" method="post" novalidate>
                         {{ form.hidden_tag() }}
                         <div class="row">
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 <div class="row {{ 'has-error' if form.last_name.errors }}">
                                     <label class="control-label col-md-3">Фамилия:</label>
                                     <div class="col-md-6">
@@ -236,7 +236,7 @@
                             </div>
                             <hr>
                             <h4 class="title" style="margin-left: 27px;">Kонтакты</h4>
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 <div class="row">
                                     <label class="control-label col-md-3">Телеграм:</label>
                                     <div class="col-md-6">

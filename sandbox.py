@@ -908,7 +908,7 @@ lesson_dict = {
 # teacher_ids = [int(teacher) for teacher in teachers_data]
 # teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
 # print(teachers)
-rooms = Room.query.all()
-
-tmtbl = week_lessons_dict(-3, rooms)
-print(tmtbl)
+weekdays = []
+dates = [int(day) for day in weekdays if weekdays]
+fil_les = Lesson.query.filter(Lesson.date.in_(dates)).all()
+print(fil_les)

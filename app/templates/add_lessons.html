@@ -9,91 +9,89 @@
                 <h4 class="title">Новое занятие</h4>
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
-                    <div id="lesson-sections">
-                        <div class="row">
-                            <div class="form-group" style="margin-left:30px;margin-top:0">
-                                <div class="row">
+                <form class="login-form" action="{{ url_for('add_lessons') }}" method="post" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="row">
+                        <div id="lesson-sections">
+                            <div class="form-group">
+                                <div class="row {{ 'has-error' if form.lesson_date.errors }}">
                                     <label class="control-label col-md-3">Дата:</label>
                                     <div class="col-md-3">
-                                        <input type="text" name="lesson_date" id="lesson-date" class="form-control datepicker" placeholder="дд.мм.гггг">
+                                        {{ form.lesson_date(class="form-control datepicker", placeholder="дд.мм.гггг") }}
+                                        {% for error in form.lesson_date.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
-                            <div class="lesson-section">
-                                <h5 class="title" style="margin-left: 27px;">Занятие 1</h5>
-                                <div class="form-group" style="margin-left:30px;">
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Начало:</label>
-                                        <div class="col-md-3">
-                                            <input type="text" name="lesson_start_time_1" class="form-control timepicker">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Конец:</label>
-                                        <div class="col-md-3">
-                                            <input type="text" name="lesson_end_time_1" class="form-control timepicker">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Предмет:</label>
-                                        <div class="col-md-6">
-                                            <select name="subject_1" class="form-control subject-select select-search">
-                                                {% for subject in subjects %}
-                                                    <option value="{{ subject.id }}-{{ subject.subject_type }}">{{ subject.name }} ({{ subject.description }})</option>
+                            {% for lesson_form in form.lessons %}
+                                <div class="lesson-section">
+                                    <h4 class="title" style="text-align: center;">Занятие {{ loop.index }}</h4>
+                                    <div class="form-group">
+                                        <div class="row {{ 'has-error' if lesson_form.start_time.errors }}">
+                                            <label class="control-label col-md-3">Начало:</label>
+                                            <div class="col-md-3">
+                                                <input type="text" name="lesson_start_time-0" class="form-control timepicker-input">
+                                                {{ lesson_form.start_time(class="timepicker-value") }}
+                                                {% for error in lesson_form.start_time.errors %}
+                                                    <span>{{ error }}</span>
                                                 {% endfor %}
-                                            </select>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="row school-class-row" style="display: none;">
-                                        <label class="control-label col-md-3">Класс:</label>
-                                        <div class="col-md-6">
-                                            <select name="school_classes_1" placeholder="Выбрать классы" class="form-control classes-select select-search" multiple></select>
-                                        </div>
-                                        <button type="button" class="btn btn-success btn-xs add-classes-btn" style="margin: 4px 0;">Все классы</button>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Кабинет:</label>
-                                        <div class="col-md-6">
-                                            <select name="room_1" class="form-control select-search">
-                                                {% for room in rooms %}
-                                                    <option value="{{ room.id }}">{{ room.name }}</option>
+                                        <div class="row {{ 'has-error' if lesson_form.end_time.errors }}">
+                                            <label class="control-label col-md-3">Конец:</label>
+                                            <div class="col-md-3">
+                                                <input type="text" name="lesson_end_time-0" class="form-control timepicker-input">
+                                                {{ lesson_form.end_time(class="timepicker-value") }}
+                                                {% for error in lesson_form.end_time.errors %}
+                                                    <span>{{ error }}</span>
                                                 {% endfor %}
-                                            </select>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-3">Учитель:</label>
-                                        <div class="col-md-6">
-                                            <select name="teacher_1" class="form-control teacher-select select-search"></select>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Предмет:</label>
+                                            <div class="col-md-6">
+                                                {{ lesson_form.subject(class="form-control subject-select select-search") }}
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-success btn-xs add-teachers-btn" style="margin: 4px 0;">Все учителя</button>
+                                        <div class="row school-class-row" style="display: none;">
+                                            <label class="control-label col-md-3">Класс:</label>
+                                            <div class="col-md-6">
+                                                {{ lesson_form.school_classes(class="form-control classes-select select-search", placeholder="Выбрать классы") }}
+                                            </div>
+                                            <button type="button" class="btn btn-success btn-xs add-classes-btn" style="margin: 4px 0;">Все классы</button>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Кабинет:</label>
+                                            <div class="col-md-6">
+                                                {{ lesson_form.room(class="form-control select-search") }}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Учитель:</label>
+                                            <div class="col-md-6">
+                                                {{ lesson_form.teacher(class="form-control teacher-select select-search") }}
+                                            </div>
+                                            <button type="button" class="btn btn-success btn-xs add-teachers-btn" style="margin: 4px 0;">Все учителя</button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            {% endfor %}
+                            <input type="hidden" id="lesson-count" value="{{ form.lessons|length }}">
                         </div>
                     </div>
-                    <input type="hidden" name="lesson_count" id="lesson-count" value="">
                     <input type="hidden" id="school-type" value="{{ school.id }}">
                     <div class="row">
-                        <div id="add-lesson">
-                            <div class="col-md-2">
-                                <button type="button" id="add-lesson-btn" class="btn btn-sm btn-default" style="background-color: #ff9800;">Добавить занятие</button>
-                            </div>
-                        </div>
-                        <div id="remove-lesson" style="display: none;">
-                            <div class="col-md-2">
-                                <button type="button" id="remove-lesson-btn" class="btn btn-sm btn-danger">Удалить занятие</button>
-                            </div>
+                        <div class="col-md-6">
+                            <button type="button" id="add-lesson-btn" class="btn btn-sm btn-default" style="background-color: #ff9800;">Добавить занятие</button>
+                            <button type="button" id="remove-lesson-btn" class="btn btn-sm btn-danger" style="display: none;">Удалить занятие</button>
                         </div>
                     </div>
                     <div class="footer">
                         <div class="row">
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" id="submit-lesson-btn" style="background-color:#4BD1A0;">Добавить в расписание</button>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-sm" id="submit-lesson-btn" data-background-color="main">Добавить в расписание</button>
+                                <a href="{{ url_for('timetable', week=0) }}" class="btn btn-sm" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

@@ -43,7 +43,7 @@
                                                         {% for lesson in classes[day][room] %}
                                                             <div class="dropdown">
                                                                 <div class="class-box dropdown-toggle" data-toggle="dropdown" id="class-box-{{ lesson.id }}"
-                                                                     style="background-color: {{ lesson.color }}; top: {{ (lesson.start_time + 60 * start_time - 540)/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 1 }}px;">
+                                                                     style="background-color: {{ lesson.color }}; top: {{ (lesson.start_time + 60 * start_time - 540)/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 4 }}px;">
                                                                     <ul class="dropdown-menu" style="top: 50px;">
                                                                         {% if lesson.lesson_type_name not in ["school", "after_school"] %}
                                                                             <li>
@@ -163,6 +163,7 @@
                             <ul class="dropdown-menu">
                                 <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
                                 <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
+                                <li><a href="">Отменить занятия</a></li>
                             </ul>
                         </div>
                     </div>

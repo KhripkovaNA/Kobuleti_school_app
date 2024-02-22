@@ -12,7 +12,7 @@
                 {% if subject_lesson %}
                     <h4 class="title" style="margin-left: 27px;">Дата: {{ subject_lesson.date.strftime('%d.%m') }}, время: {{ subject_lesson.start_time.strftime('%H:%M') }}, учитель: {{ subject_lesson.teacher.last_name }} {{ subject_lesson.teacher.first_name }}</h4>
                     <form action="{{ url_for('lesson', lesson_id=subject_lesson.id) }}" method="post">
-                        <div class="form-group" style="margin-left:30px;">
+                        <div class="form-group">
                             <table class="table table-hover">
                                 <thead class="text-success">
                                     <th>Клиент</th>

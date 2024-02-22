@@ -1295,7 +1295,7 @@ def filter_lessons(form):
     next_week = int((next_start_date - get_weekday_date(0, TODAY)).days / 7)
 
     weekday = form.get('lessons_days')
-    weekdays = form.getlist('lessons_days_specific') if form.getlist('lessons_days_specific') else "all"
+    weekdays = form.getlist('lessons_days_specific')
 
     subject_types = form.get('subject_types')
     school_classes = form.getlist('school_classes')
@@ -1303,26 +1303,28 @@ def filter_lessons(form):
     teachers = form.get('teachers')
     school_type_id = SubjectType.query.filter_by(name='school').first().id
 
-    if (weekday == "all") or (weekdays == "all"):
+    if weekday == "all":
         end_date = get_weekday_date(6, start_date)
         query = Lesson.query.filter(Lesson.date >= start_date,
                                     Lesson.date <= end_date)
     else:
-        lessons_dates = [get_weekday_date(int(day), start_date) for day in weekdays]
+        lessons_dates = [get_weekday_date(int(day), start_date) for day in weekdays if weekdays]
         query = Lesson.query.filter(Lesson.date.in_(lessons_dates))
 
-    if rooms != "all" and form.getlist('rooms_specific'):
-        rooms_list = [int(room) for room in form.getlist('rooms_specific')]
+    if rooms != "all":
+        rooms_list = [int(room) for room in form.getlist('rooms_specific') if form.getlist('rooms_specific')]
         query = query.filter(Lesson.room_id.in_(rooms_list))
-    if subject_types != "all" and form.getlist('subject_types_specific'):
-        subject_types_list = [int(room) for room in form.getlist('subject_types_specific')]
+    if subject_types != "all":
+        subject_types_list = [int(room) for room in form.getlist('subject_types_specific')
+                              if form.getlist('subject_types_specific')]
         query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
-        if school_classes != 'all' and form.getlist('school_classes_specific') and (
-                school_type_id in subject_types_list):
-            school_classes_list = [int(school_class) for school_class in form.getlist('school_classes_specific')]
+        if school_classes != 'all' and (school_type_id in subject_types_list):
+            school_classes_list = [int(school_class) for school_class in form.getlist('school_classes_specific')
+                                   if form.getlist('school_classes_specific')]
             query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(school_classes_list)))
-    if teachers != "all" and form.getlist('teachers_specific'):
-        teachers_list = [int(teacher) for teacher in form.getlist('teachers_specific')]
+    if teachers != "all":
+        teachers_list = [int(teacher) for teacher in form.getlist('teachers_specific')
+                         if form.getlist('teachers_specific')]
         query = query.filter(Lesson.lesson_type_id.in_(teachers_list))
 
     filtered_lessons = query.all()

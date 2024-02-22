@@ -131,10 +131,30 @@ $(document).ready(function(){
     });
 
     // set value of wickedpicker
+    $('#lesson-sections').find('.timepicker-value').each(function() {
+        var timepickerVal = $(this).val();
+        var timepickerRow = $(this).closest('.row');
+        if (timepickerVal) {
+            timepickerRow.find('.timepicker-input').wickedpicker({now: timepickerStartVal});
+        } else {
+            timepickerRow.find('.timepicker-input').wickedpicker({now: '09 : 00'});
+        }
+    });
+
+    $('.timepicker-input').change(function () {
+        var timepickerVal = $(this).val();
+        var timepickerRow = $(this).closest('.row');
+        timepickerRow.find('.timepicker-value').val(timepickerVal);
+    });
+
+    $('.timepicker-input').trigger('change');
+
     var timepickerStartVal = $(".timepicker-start-value").val();
     $('.timepicker-start').wickedpicker({now: timepickerStartVal});
+
     var timepickerEndVal = $(".timepicker-end-value").val();
     $('.timepicker-end').wickedpicker({now: timepickerEndVal});
+
 
 
     // function to handle the change event for the status select dropdown
@@ -478,25 +498,30 @@ $(document).ready(function(){
 
     // Function to validate date input
     function validateDateInput(validatedForm) {
-        var dateInput = validatedForm.find('.date-input');
-        var dateValue = dateInput.val();
-        if (dateInput.hasClass('required')) {
-            var isValidDate = moment(dateValue, 'DD.MM.YYYY', true).isValid();
-            dateDiv = validatedForm.find('.date-div');
-            errorDiv = dateDiv.closest('.row');
-            if (!isValidDate) {
-                errorDiv.addClass("has-error");
-                var errorSpan = `<span class="error-span" style="color:red;">Неправильный формат даты</span>`;
-                var existingErrorSpan = dateDiv.find('.error-span');
+        validatedForm.find('.date-input').each(function() {
+            var dateInput = $(this);
+            var dateValue = dateInput.val();
+            var dateDiv = dateInput.closest('.date-div');
+            var errorDiv = dateInput.closest('.row');
+            if (dateInput.hasClass('required')) {
+                var isValidDate = moment(dateValue, 'DD.MM.YYYY', true).isValid();
+                if (!isValidDate) {
+                    errorDiv.addClass("has-error");
+                    var errorSpan = `<span class="error-span" style="color:red;">Неправильный формат даты</span>`;
+                    var existingErrorSpan = dateDiv.find('.error-span');
 
-                if (existingErrorSpan.length === 0) {
-                    dateDiv.append(errorSpan);
+                    if (existingErrorSpan.length === 0) {
+                        dateDiv.append(errorSpan);
+                    }
+                } else {
+                    errorDiv.removeClass("has-error");
+                    dateDiv.find('.error-span').remove();
                 }
             } else {
                 errorDiv.removeClass("has-error");
                 dateDiv.find('.error-span').remove();
             }
-        }
+        });
     }
 
     // Function to validate integer input
@@ -525,6 +550,7 @@ $(document).ready(function(){
     // Validate subscription form
     $('form.subscription-form').submit(function(event) {
         var currentForm = $(this);
+        validateDateInput(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
@@ -546,6 +572,16 @@ $(document).ready(function(){
     $('form.deposit-form').submit(function(event) {
         var currentForm = $(this);
         validateIntegerInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
+    // Validate subscription form
+    $('form.copy-lessons-form').submit(function(event) {
+        var currentForm = $(this);
+        validateDateInput(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
@@ -583,8 +619,14 @@ $(document).ready(function(){
         var secondarySelectorDiv = parentDiv.find(".secondary-selector-div");
         if ($(this).val() === 'specific') {
             secondarySelectorDiv.show();
+            if (secondarySelectorDiv.hasClass("date-div")) {
+                secondarySelectorDiv.find(".date-input").addClass("required");
+            }
         } else {
             secondarySelectorDiv.hide();
+            if (secondarySelectorDiv.hasClass("date-div")) {
+                secondarySelectorDiv.find(".date-input").removeClass("required");
+            }
         }
     });
 
@@ -604,25 +646,28 @@ $(document).ready(function(){
     // Function to format date in datepicker
     function formatDate(date) {
         var day = date.getDate();
-        var month = date.getMonth() + 1; // Months are zero-based
+        var month = date.getMonth() + 1;
         return (day < 10 ? '0' : '') + day + '.' + (month < 10 ? '0' : '') + month;
     }
 
     $(".selectors-group").on("change", ".datepicker", function() {
         var selectedDate = $(this).datepicker('getDate');
-        var dayOfWeek = selectedDate.getDay();
+        var isValidDate = moment(selectedDate, 'DD.MM.YYYY', true).isValid();
+        if (isValidDate) {
+            var dayOfWeek = selectedDate.getDay();
 
-        var startOfWeek = new Date(selectedDate);
-        startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+            var startOfWeek = new Date(selectedDate);
+            startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
 
-        var endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
+            var endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-        var formattedStartDate = formatDate(startOfWeek);
-        var formattedEndDate = formatDate(endOfWeek);
+            var formattedStartDate = formatDate(startOfWeek);
+            var formattedEndDate = formatDate(endOfWeek);
 
-        var pContainer = $(this).closest(".selectors-group").find(".week-range")
-        pContainer.html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
+            var weekRangeContainer = $(this).closest(".selectors-group").find(".week-range")
+            weekRangeContainer.html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
+        }
     });
 
     // Function to initialize search in select options
@@ -661,11 +706,9 @@ $(document).ready(function(){
     initializeSelectize('.select-search', ['remove_button']);
 
 
-    var lessonCount = 1
+    var lessonCount = Number($("#lesson-count").val());
     // Function to add a new lesson section dynamically
     function addLessonSection() {
-        lessonCount++;
-
         var firstLessonSection = $(".lesson-section").first()
         var selectizeElements = {};
         firstLessonSection.find('select').each(function() {
@@ -689,18 +732,23 @@ $(document).ready(function(){
 
         lessonSection.attr("id", "lesson-section-" + lessonCount);
         lessonSection.find(".school-class-row").hide();
-        var originalTitle = lessonSection.find("h5").text();
-        var newTitle = originalTitle.replace("1", lessonCount);
-        lessonSection.find("h5").text(newTitle);
+        var originalTitle = lessonSection.find("h4").text();
+        var newTitle = originalTitle.replace("1", lessonCount + 1);
+        lessonSection.find("h4").text(newTitle);
 
         lessonSection.find("select, input[type='text']").each(function() {
             var originalName = $(this).attr("name");
             if (originalName) {
-                var newName = originalName.replace("_1", "_" + lessonCount);
+                var newName = originalName.replace("-0", "-" + lessonCount);
                 $(this).attr("name", newName);
                 if ($(this).is("input[type='text']")) {
                     $(this).val("");
                 }
+            }
+            var originalId = $(this).attr("id");
+            if (originalId) {
+                var newId = originalId.replace("-0", "-" + lessonCount);
+                $(this).attr("id", newId);
             }
         });
 
@@ -717,17 +765,18 @@ $(document).ready(function(){
 
         newLessonSection.find(".subject-select")[0].selectize.trigger("change");
 
+        lessonCount++;
         if (lessonCount >= 2) {
-            $("#remove-lesson").show();
+            $("#remove-lesson-btn").show();
         }
     });
 
     // Remove last lesson section when adding new lessons
-    $("#remove-lesson").click(function() {
+    $("#remove-lesson-btn").click(function() {
         $("#lesson-sections .lesson-section:last").remove();
         lessonCount--;
         if (lessonCount === 1) {
-            $("#remove-lesson").hide();
+            $("#remove-lesson-btn").hide();
         }
     });
 

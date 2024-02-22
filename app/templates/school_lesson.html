@@ -11,7 +11,7 @@
                 {% if school_lesson %}
                     <h4 class="title" style="margin-left: 27px;">Дата: {{ school_lesson.date.strftime('%d.%m') }}, {{ days_dict[school_lesson.date.weekday()]}}, учитель: {{ school_lesson.teacher.last_name }} {{ school_lesson.teacher.first_name }}</h4>
                     <form action="{{ url_for('school_lesson', lesson_id=school_lesson.id) }}" method="post">
-                        <div class="form-group" style="margin-left:30px;">
+                        <div class="form-group">
                             <div class="row">
                                 <label class="control-label col-md-2">Тема урока:</label>
                                 <div class="col-md-7">

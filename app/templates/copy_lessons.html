@@ -9,7 +9,8 @@
                 <h4 class="title">Новое расписание</h4>
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('copy_lessons') }}" method="post">
+                <form class="copy-lessons-form" action="{{ url_for('copy_lessons') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="form-group">
                         <div class="selectors-group">
                             <div class="row">
@@ -21,14 +22,14 @@
                                         <option value="specific">Выбрать неделю</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4 datepicker-container secondary-selector-div" style="display: none;">
-                                    <input type="text" name="week_specific" class="form-control datepicker" placeholder="Неделя, с которой перенести...">
+                                <div class="col-md-4 date-div datepicker-container secondary-selector-div" style="display: none;">
+                                    <input type="text" name="week_specific" class="form-control date-input datepicker" placeholder="Неделя, с которой перенести...">
                                 </div>
                             </div>
                             <div class="row secondary-selector-div" style="display: none;">
                                 <label class="control-label col-md-3">Выбранная неделя:</label>
                                 <div class="col-md-3">
-                                    <p class="form-control week-range"></p>
+                                    <div class="form-control week-range"></div>
                                 </div>
                             </div>
                         </div>
@@ -42,14 +43,14 @@
                                         <option value="specific">Выбрать неделю</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4 datepicker-container secondary-selector-div" style="display: none;">
-                                    <input type="text" name="next_week_specific" class="form-control datepicker" placeholder="Неделя, на которую перенести...">
+                                <div class="col-md-4 date-div datepicker-container secondary-selector-div" style="display: none;">
+                                    <input type="text" name="next_week_specific" class="form-control date-input datepicker" placeholder="Неделя, на которую перенести...">
                                 </div>
                             </div>
                             <div class="row secondary-selector-div" style="display: none;">
                                 <label class="control-label col-md-3">Выбранная неделя:</label>
                                 <div class="col-md-3">
-                                    <p class="form-control week-range"></p>
+                                    <div class="form-control week-range"></div>
                                 </div>
                             </div>
                         </div>
@@ -137,11 +138,9 @@
                     </div>
                     <div class="footer">
                         <div class="row">
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" id="submit-btn" style="background-color:#4BD1A0;">Заполнить расписание</button>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ url_for('timetable', week=0) }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-sm" data-background-color="main">Заполнить расписание</button>
+                                <a href="{{ url_for('timetable', week=0) }}" class="btn btn-sm" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

@@ -12,7 +12,7 @@
                 <form class="login-form" action="{{ url_for('add_subject') }}" method="post" novalidate>
                     {{ form.hidden_tag() }}
                     <div class="row">
-                        <div class="form-group" style="margin-left:30px;">
+                        <div class="form-group">
                             <div class="row {{ 'has-error' if form.subject_name.errors }}">
                                 <label class="control-label col-md-3">Название:</label>
                                 <div class="col-md-6">

@@ -14,7 +14,7 @@
                 <div class="section section-student" data-target="student" style="{{ 'display:none' if render_type == 'edit_student' else 'display:block' }};">
                     <div class="row">
                         <h4 class="title" style="margin-left:27px;">{{ student.last_name }} {{ student.first_name }} {{ student.patronym }}</h4>
-                        <div class="form-group" style="margin-left:30px;">
+                        <div class="form-group">
                             {% if student.person_type == 'Ребенок' %}
                             <div class="row">
                                 <label class="control-label col-md-3">Дата рождения:</label>
@@ -78,7 +78,7 @@
                     <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post" novalidate>
                         {{ edit_student_form.hidden_tag() }}
                         <div class="row">
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 <div class="row {{ 'has-error' if edit_student_form.last_name.errors }}">
                                     <label class="control-label col-md-3">Фамилия:</label>
                                     <div class="col-md-6">
@@ -219,7 +219,7 @@
                                     {{ student.main_contact.type }}
                                 </h5>
                             {% endif %}
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 <div class="row">
                                     <label class="control-label col-md-3">Телеграм:</label>
                                     <div class="col-md-6">
@@ -256,7 +256,7 @@
                             {{ main_contact.hidden_tag() }}
                             <div class="row">
                                 <h5 class="title" style="margin-left:54px;">Изменить контакт</h5>
-                                <div class="form-group" style="margin-left:30px;">
+                                <div class="form-group">
                                     {% if student.person_type == 'Ребенок' %}
                                         <div class="row">
                                             <label class="control-label col-md-3">Контакт:</label>
@@ -340,7 +340,7 @@
                                             {{ contact.type }}
                                         </h5>
                                     {% endif %}
-                                    <div class="form-group" style="margin-left:30px;">
+                                    <div class="form-group">
                                         <div class="row">
                                             <label class="control-label col-md-3">Телеграм:</label>
                                             <div class="col-md-6">
@@ -419,7 +419,7 @@
                                     {{ add_cont_forms[loop.index0].hidden_tag() }}
                                     <div class="row">
                                         <h5 class="title" style="margin-left:54px;">Изменить контакт</h5>
-                                        <div class="form-group" style="margin-left:30px;">
+                                        <div class="form-group">
                                             <div class="row">
                                                 <label class="control-label col-md-3">Контакт:</label>
                                                 <div class="col-md-6">
@@ -510,7 +510,7 @@
                             {{ new_contact_form.hidden_tag() }}
                             <div class="row">
                                 <h5 class="title" style="margin-left:54px;">Добавить контакт</h5>
-                                <div class="form-group" style="margin-left:30px;">
+                                <div class="form-group">
                                     <div class="row">
                                         <label class="control-label col-md-3">Контакт:</label>
                                         <div class="col-md-6">
@@ -617,7 +617,7 @@
 
                     <div class="section section-subjects" data-target="subjects">
                         <div class="row">
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 {% if student.all_subjects %}
                                     <div class="row">
                                         {% if student.status=="Лид"%}
@@ -763,7 +763,7 @@
                         <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
-                                <div class="form-group" style="margin-left:30px;">
+                                <div class="form-group">
                                     {% if student.all_subjects %}
                                         {% for subject in student.all_subjects %}
                                             <div class="row">
@@ -815,7 +815,7 @@
 
                     <div class="section section-subscriptions" data-target="subscriptions" style="{{ 'display:none' if render_type == 'subscription' else 'display:block' }};">
                         <div class="row">
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 {% if student.subscriptions_info %}
                                     <div class="row">
                                         <div class="col-md-8 table-responsive" style="padding-left:44px;">
@@ -927,7 +927,7 @@
                         <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post" novalidate>
                             {{ subscriptions_form.hidden_tag() }}
                             <div class="row">
-                                <div class="form-group" style="margin-left:30px;">
+                                <div class="form-group">
                                     {% if student.subscriptions_info %}
                                         <div class="row">
                                             <div class="col-md-8 table-responsive" style="padding-left:44px;">
@@ -984,7 +984,7 @@
 
                     <div class="section section-after-school" data-target="after-school">
                         <div class="row">
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 {% if student.after_school_info %}
                                     <div class="row">
                                         <div class="col-md-8 table-responsive" style="padding-left:44px;">
@@ -1112,7 +1112,7 @@
                         <form class="login-form" action="{{ url_for('show_edit_student', student_id=student.id) }}" method="post">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
-                                <div class="form-group" style="margin-left:30px;">
+                                <div class="form-group">
                                     {% if student.after_school_info %}
                                     <div class="row">
                                         <div class="col-md-9 table-responsive" style="padding-left:44px;">
@@ -1163,7 +1163,7 @@
 
                     <div class="section section-finances" data-target="finances">
                         <div class="row">
-                            <div class="form-group" style="margin-left:30px;">
+                            <div class="form-group">
                                 <div class="row">
                                     <label class="control-label col-md-3">Баланс:</label>
                                     <div class="col-md-2">

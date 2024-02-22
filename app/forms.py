@@ -8,16 +8,18 @@ from app import db
 from datetime import datetime
 
 
-class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(message='Заполните это поле')])
-    password = PasswordField(validators=[DataRequired(message='Заполните это поле')])
-
-
 def validate_date_format(form, field):
     try:
         datetime.strptime(field.data, '%d.%m.%Y')
     except ValueError:
         raise ValidationError('Неправильный формат даты')
+
+
+def validate_time_format(form, field):
+    try:
+        datetime.strptime(field.data, '%H : %M')
+    except ValueError:
+        raise ValidationError('Неправильный формат')
 
 
 def validate_parent_name(form, field):
@@ -39,6 +41,11 @@ def validate_subject_school_price(form, field):
 def validate_subscription_types(form, field):
     if not form.no_subscription.data and not field.data:
         raise ValidationError('Заполните это поле')
+
+
+class LoginForm(FlaskForm):
+    username = StringField(validators=[InputRequired(message='Заполните это поле')])
+    password = PasswordField(validators=[DataRequired(message='Заполните это поле')])
 
 
 class ContactForm(FlaskForm):
@@ -158,3 +165,18 @@ class ExtraSubjectForm(EditExtraSubjectForm):
     no_subscription = BooleanField()
 
 # class SchoolSubjectForm(SubjectForm):
+
+
+class LessonForm(FlaskForm):
+    start_time = HiddenField(validators=[InputRequired(message='Заполните это поле'), validate_time_format])
+    end_time = HiddenField(validators=[InputRequired(message='Заполните это поле'), validate_time_format])
+    subject = SelectField(choices=[])
+    school_classes = SelectMultipleField(choices=[])
+    room = SelectField(choices=[])
+    teacher = SelectField(choices=[])
+
+
+class AddLessonsForm(FlaskForm):
+    lesson_date = StringField(validators=[InputRequired(message='Заполните это поле'), validate_date_format])
+    lessons = FieldList(FormField(LessonForm), min_entries=1)
+

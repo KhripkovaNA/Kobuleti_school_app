@@ -4,7 +4,7 @@ from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Roo
     SubscriptionType, SchoolLessonJournal, Finance
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
     EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm, \
-    ExtraSubjectForm, EditExtraSubjectForm
+    ExtraSubjectForm, EditExtraSubjectForm, AddLessonsForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
@@ -170,37 +170,6 @@ def deposit(student_id):
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при внесении депозита: {str(e)}', 'error')
-
-    return redirect(request.referrer)
-
-
-@app.route('/delete-record', methods=['POST'])
-@login_required
-def delete_record():
-    record_type = request.form.get('record_type')
-
-    try:
-        if record_type in ['student', 'employee']:
-            if current_user.rights == 'admin':
-                message = del_record(request.form, record_type)
-                db.session.commit()
-                flash(message[0], message[1])
-
-            else:
-                flash('Необходимо обладать правами администратора', 'error')
-
-        else:
-            message = del_record(request.form, record_type)
-            db.session.commit()
-            if type(message) == list:
-                for mes in message:
-                    flash(mes[0], mes[1])
-            else:
-                flash(message[0], message[1])
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Ошибка при удалении: {str(e)}', 'error')
 
     return redirect(request.referrer)
 
@@ -662,28 +631,37 @@ def copy_lessons():
 @app.route('/add-lessons', methods=['GET', 'POST'])
 @login_required
 def add_lessons():
+    all_subjects = subjects_data()
+    rooms = Room.query.all()
+    form = AddLessonsForm()
+    form.lessons[0].subject.choices = [(f"{subject['id']}-{subject['subject_type']}",
+                                        f"{subject['name']} ({subject['description']})")
+                                       for subject in all_subjects]
+    form.lessons[0].room.choices = [(room.id, room.name) for room in rooms]
     if request.method == 'POST':
         try:
-            messages, week = add_new_lessons(request.form)
-            db.session.commit()
-            for message in messages:
-                flash(message['text'], message['type'])
-            return redirect(url_for('timetable', week=week))
+            if form.validate_on_submit():
+                # messages, week = add_new_lessons(request.form)
+                # db.session.commit()
+                # for message in messages:
+                #     flash(message['text'], message['type'])
+                # return redirect(url_for('timetable', week=week))
+                flash('Прокатило', 'success')
+                return redirect(url_for('add_lessons'))
+            flash(f'Ошибка в форме добавления занятий', 'error')
 
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
             return redirect(url_for('add_lessons'))
 
-    all_subjects = subjects_data()
-    rooms = Room.query.all()
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
     school_classes_data = [{school_class.id: school_class.school_name} for school_class in school_classes]
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
     teachers_data = [{teacher.id: f"{teacher.last_name} {teacher.first_name}"} for teacher in all_teachers]
     school = SubjectType.query.filter_by(name='school').first()
     return render_template('add_lessons.html', subjects=all_subjects, school_classes=school_classes_data,
-                           rooms=rooms, teachers=teachers_data, school=school)
+                           form=form, teachers=teachers_data, school=school)
 
 
 @app.route('/edit-lesson/<string:lesson_id>', methods=['GET', 'POST'])
@@ -977,4 +955,36 @@ def generate_timetable(week):
     except Exception as e:
         flash(f'Ошибка при скачивании файла: {str(e)}', 'error')
         return
+
+
+
+@app.route('/delete-record', methods=['POST'])
+@login_required
+def delete_record():
+    record_type = request.form.get('record_type')
+
+    try:
+        if record_type in ['student', 'employee']:
+            if current_user.rights == 'admin':
+                message = del_record(request.form, record_type)
+                db.session.commit()
+                flash(message[0], message[1])
+
+            else:
+                flash('Необходимо обладать правами администратора', 'error')
+
+        else:
+            message = del_record(request.form, record_type)
+            db.session.commit()
+            if type(message) == list:
+                for mes in message:
+                    flash(mes[0], mes[1])
+            else:
+                flash(message[0], message[1])
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при удалении: {str(e)}', 'error')
+
+    return redirect(request.referrer)
 
