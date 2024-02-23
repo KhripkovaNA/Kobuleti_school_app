@@ -135,13 +135,13 @@ $(document).ready(function(){
         var timepickerVal = $(this).val();
         var timepickerRow = $(this).closest('.row');
         if (timepickerVal) {
-            timepickerRow.find('.timepicker-input').wickedpicker({now: timepickerStartVal});
+            timepickerRow.find('.timepicker-input').wickedpicker({now: timepickerVal});
         } else {
             timepickerRow.find('.timepicker-input').wickedpicker({now: '09 : 00'});
         }
     });
 
-    $('.timepicker-input').change(function () {
+    $('#lesson-sections').on("change", '.timepicker-input', function () {
         var timepickerVal = $(this).val();
         var timepickerRow = $(this).closest('.row');
         timepickerRow.find('.timepicker-value').val(timepickerVal);
@@ -736,12 +736,12 @@ $(document).ready(function(){
         var newTitle = originalTitle.replace("1", lessonCount + 1);
         lessonSection.find("h4").text(newTitle);
 
-        lessonSection.find("select, input[type='text']").each(function() {
+        lessonSection.find("select, input[type='text'], input[type='hidden']").each(function() {
             var originalName = $(this).attr("name");
             if (originalName) {
                 var newName = originalName.replace("-0", "-" + lessonCount);
                 $(this).attr("name", newName);
-                if ($(this).is("input[type='text']")) {
+                if ($(this).is("input[type='text']") || $(this).is("input[type='hidden']")) {
                     $(this).val("");
                 }
             }
@@ -764,6 +764,9 @@ $(document).ready(function(){
         initializeSelectize(newSelectElements);
 
         newLessonSection.find(".subject-select")[0].selectize.trigger("change");
+
+        newLessonSection.find('.timepicker-input').wickedpicker({now: '09 : 00'});
+        newLessonSection.find('.timepicker-input').trigger("change");
 
         lessonCount++;
         if (lessonCount >= 2) {

@@ -48,10 +48,13 @@
                                                 {% endfor %}
                                             </div>
                                         </div>
-                                        <div class="row">
+                                        <div class="row {{ 'has-error' if lesson_form.subject.errors }}">
                                             <label class="control-label col-md-3">Предмет:</label>
                                             <div class="col-md-6">
                                                 {{ lesson_form.subject(class="form-control subject-select select-search") }}
+                                                {% for error in lesson_form.subject.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
                                             </div>
                                         </div>
                                         <div class="row school-class-row" style="display: none;">
@@ -61,16 +64,22 @@
                                             </div>
                                             <button type="button" class="btn btn-success btn-xs add-classes-btn" style="margin: 4px 0;">Все классы</button>
                                         </div>
-                                        <div class="row">
+                                        <div class="row {{ 'has-error' if lesson_form.room.errors }}">
                                             <label class="control-label col-md-3">Кабинет:</label>
                                             <div class="col-md-6">
                                                 {{ lesson_form.room(class="form-control select-search") }}
+                                                {% for error in lesson_form.room.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
                                             </div>
                                         </div>
-                                        <div class="row">
+                                        <div class="row {{ 'has-error' if lesson_form.teacher.errors }}">
                                             <label class="control-label col-md-3">Учитель:</label>
                                             <div class="col-md-6">
                                                 {{ lesson_form.teacher(class="form-control teacher-select select-search") }}
+                                                {% for error in lesson_form.teacher.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
                                             </div>
                                             <button type="button" class="btn btn-success btn-xs add-teachers-btn" style="margin: 4px 0;">Все учителя</button>
                                         </div>
@@ -80,7 +89,7 @@
                             <input type="hidden" id="lesson-count" value="{{ form.lessons|length }}">
                         </div>
                     </div>
-                    <input type="hidden" id="school-type" value="{{ school.id }}">
+                    <input type="hidden" id="school-type" value="{{ school_type }}">
                     <div class="row">
                         <div class="col-md-6">
                             <button type="button" id="add-lesson-btn" class="btn btn-sm btn-default" style="background-color: #ff9800;">Добавить занятие</button>

@@ -633,6 +633,7 @@ def copy_lessons():
 def add_lessons():
     all_subjects = subjects_data()
     rooms = Room.query.all()
+    school_type = SubjectType.query.filter_by(name='school').first().id
     form = AddLessonsForm()
     form.lessons[0].subject.choices = [(f"{subject['id']}-{subject['subject_type']}",
                                         f"{subject['name']} ({subject['description']})")
@@ -641,14 +642,14 @@ def add_lessons():
     if request.method == 'POST':
         try:
             if form.validate_on_submit():
-                # messages, week = add_new_lessons(request.form)
-                # db.session.commit()
-                # for message in messages:
-                #     flash(message['text'], message['type'])
-                # return redirect(url_for('timetable', week=week))
-                flash('Прокатило', 'success')
-                return redirect(url_for('add_lessons'))
-            flash(f'Ошибка в форме добавления занятий', 'error')
+                messages, week, new_lessons = add_new_lessons(form)
+                db.session.commit()
+                for message in messages:
+                    flash(message[0], message[1])
+                if new_lessons > 0:
+                    return redirect(url_for('timetable', week=week))
+            else:
+                flash(f'Ошибка в форме добавления занятий', 'error')
 
         except Exception as e:
             db.session.rollback()
@@ -659,9 +660,9 @@ def add_lessons():
     school_classes_data = [{school_class.id: school_class.school_name} for school_class in school_classes]
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
     teachers_data = [{teacher.id: f"{teacher.last_name} {teacher.first_name}"} for teacher in all_teachers]
-    school = SubjectType.query.filter_by(name='school').first()
+
     return render_template('add_lessons.html', subjects=all_subjects, school_classes=school_classes_data,
-                           form=form, teachers=teachers_data, school=school)
+                           form=form, teachers=teachers_data, school_type=school_type)
 
 
 @app.route('/edit-lesson/<string:lesson_id>', methods=['GET', 'POST'])

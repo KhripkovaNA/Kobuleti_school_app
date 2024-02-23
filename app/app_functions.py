@@ -1211,12 +1211,23 @@ def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher
 
 
 def create_check_lesson(lesson_date, form, i):
-    start_time = datetime.strptime(form.get(f'lesson_start_time_{i}'), '%H : %M').time()
-    end_time = datetime.strptime(form.get(f'lesson_end_time_{i}'), '%H : %M').time()
-    subject_id, lesson_type_id = form.get(f'subject_{i}').split('-')
-    room_id = int(form.get(f'room_{i}'))
-    classes = [int(school_class) for school_class in form.getlist(f'school_classes_{i}')]
-    teacher_id = int(form.get(f'teacher_{i}'))
+    start_time = datetime.strptime(form.start_time.data, '%H : %M').time()
+    end_time = datetime.strptime(form.end_time.data, '%H : %M').time()
+    subject_id, lesson_type_id = form.subject.data.split('-')
+    room_id = int(form.room.data)
+    classes = [int(school_class) for school_class in form.school_classes.data]
+    teacher_id = int(form.teacher.data)
+    school_type = SubjectType.query.filter_by(name='school').first().id
+
+    if end_time <= start_time:
+        lesson = None
+        message_text = f'Занятие {i} не добавлено в расписание. Ошибка во времени проведения'
+        return lesson, message_text
+
+    if int(lesson_type_id) == school_type and not classes:
+        lesson = None
+        message_text = f'Занятие {i} не добавлено в расписание. Классы не выбраны'
+        return lesson, message_text
 
     conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
                                                     classes, room_id, teacher_id)
@@ -1258,21 +1269,22 @@ def create_check_lesson(lesson_date, form, i):
 
 
 def add_new_lessons(form):
-    lesson_date = datetime.strptime(form.get(f'lesson_date'), '%d.%m.%Y').date()
-    lesson_count = int(form.get('lesson_count'))
+    lesson_date = datetime.strptime(form.lesson_date.data, '%d.%m.%Y').date()
     messages = []
-    for i in range(1, lesson_count + 1):
-        new_lesson, text = create_check_lesson(lesson_date, form, i)
+    for i, lesson_form in enumerate(form.lessons, 1):
+        new_lesson, text = create_check_lesson(lesson_date, lesson_form, i)
+        new_lessons = 0
         if new_lesson:
-            message = {'text': text, 'type': 'success'}
+            new_lessons += 1
+            message = (text, 'success')
             messages.append(message)
             db.session.add(new_lesson)
             db.session.flush()
         else:
-            message = {'text': text, 'type': 'error'}
+            message = (text, 'error')
             messages.append(message)
     week = int((get_weekday_date(0, lesson_date) - get_weekday_date(0, TODAY)).days / 7)
-    return messages, week
+    return messages, week, new_lessons
 
 
 def filter_lessons(form):

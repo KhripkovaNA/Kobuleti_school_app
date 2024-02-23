@@ -170,10 +170,11 @@ class ExtraSubjectForm(EditExtraSubjectForm):
 class LessonForm(FlaskForm):
     start_time = HiddenField(validators=[InputRequired(message='Заполните это поле'), validate_time_format])
     end_time = HiddenField(validators=[InputRequired(message='Заполните это поле'), validate_time_format])
-    subject = SelectField(choices=[])
-    school_classes = SelectMultipleField(choices=[])
-    room = SelectField(choices=[])
-    teacher = SelectField(choices=[])
+    subject = SelectField(choices=[], validators=[InputRequired(message='Заполните это поле')], validate_choice=False)
+    school_classes = SelectMultipleField(choices=[], validators=[Optional()],
+                                         validate_choice=False)
+    room = SelectField(choices=[], validators=[InputRequired(message='Заполните это поле')], validate_choice=False)
+    teacher = SelectField(choices=[], validators=[InputRequired(message='Заполните это поле')], validate_choice=False)
 
 
 class AddLessonsForm(FlaskForm):
