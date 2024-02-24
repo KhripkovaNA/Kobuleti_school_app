@@ -13,68 +13,65 @@
                 {% endif %}
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('add_lessons') }}" method="post">
+                <form class="lesson-form" action="{{ url_for('edit_lesson', lesson_id=lesson.id) }}" method="post" novalidate>
+                    {{ form.hidden_tag() }}
                     <div class="row">
                         <h4 class="title" style="margin-left:27px;">Изменить занятие</h4>
                         <div class="form-group">
-                            <div class="row">
+                            <div class="row {{ 'has-error' if form.lesson_date.errors }}">
                                 <label class="control-label col-md-3">Дата:</label>
                                 <div class="col-md-3">
-                                    <input type="text" name="lesson_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ lesson.date.strftime('%d.%m.%Y') }}">
+                                    {{ form.lesson_date(class="form-control datepicker", placeholder="дд.мм.гггг") }}
+                                    {% for error in form.lesson_date.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                             </div>
-
-                            <div class="row">
+                            <div class="row {{ 'has-error' if form.start_time.errors }}">
                                 <label class="control-label col-md-3">Начало:</label>
                                 <div class="col-md-3">
-                                    <input type="text" name="lesson_start_time_1" class="form-control timepicker-start">
-                                    <input type="hidden" class="timepicker-start-value" value="{{ lesson.start_time.strftime('%H : %M') }}">
+                                    <input type="text" class="form-control timepicker-input">
+                                    {{ form.start_time(class="timepicker-value", style="display:none;") }}
+                                    {% for error in form.start_time.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row {{ 'has-error' if form.end_time.errors }}">
                                 <label class="control-label col-md-3">Конец:</label>
                                 <div class="col-md-3">
-                                    <input type="text" name="lesson_end_time_1" class="form-control timepicker-end">
-                                    <input type="hidden" class="timepicker-end-value" value="{{ lesson.end_time.strftime('%H : %M') }}">
+                                    <input type="text" class="form-control timepicker-input">
+                                    {{ form.end_time(class="timepicker-value", style="display:none;") }}
+                                    {% for error in form.end_time.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row {{ 'has-error' if form.room.errors }}">
                                 <label class="control-label col-md-3">Кабинет:</label>
                                 <div class="col-md-6">
-                                    <select name="lesson_room" class="form-control select-search">
-                                        {% for room in rooms %}
-                                            {% if room.id==lesson.room_id %}
-                                                <option value="{{ room.id }}" selected>{{ room.name }}</option>
-                                            {% else %}
-                                                <option value="{{ room.id }}">{{ room.name }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
+                                    {{ form.room(class="form-control select-search") }}
+                                    {% for error in form.room.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row {{ 'has-error' if form.teacher.errors }}">
                                 <label class="control-label col-md-3">Учитель:</label>
                                 <div class="col-md-6">
-                                    <select name="lesson_teacher" class="form-control teacher-select select-search">
-                                        {% for teacher in teachers %}
-                                            {% if teacher.id==lesson.teacher_id %}
-                                                <option value="{{ teacher.id }}" selected>{{ teacher.last_name }} {{ teacher.first_name }}</option>
-                                            {% else %}
-                                                <option value="{{ teacher.id }}">{{ teacher.last_name }} {{ teacher.first_name }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
+                                    {{ form.teacher(class="form-control select-search") }}
+                                    {% for error in form.teacher.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="footer">
                         <div class="row">
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-login" style="background-color:#4BD1A0;">Изменить занятие</button>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ url_for('students') }}" class="btn btn-default" style="background-color:#ef5350;">Закрыть</a>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-sm" data-background-color="main">Изменить занятие</button>
+                                <a href="{{ url_for('timetable', week=week) }}" class="btn btn-sm" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

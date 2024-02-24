@@ -1141,8 +1141,8 @@ def week_lessons_dict(week, rooms):
     week_lessons = {}
     used_rooms = set()
     week_dates = []
-    week_start_hour = 10
-    week_end_hour = 17
+    week_start_hour = 22
+    week_end_hour = 8
     for day, weekday in enumerate(DAYS_OF_WEEK):
         lessons_date = get_date(day, week)
         lessons_date_str = f'{lessons_date:%d.%m}'
@@ -1210,6 +1210,26 @@ def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher
     return conflicting_lessons
 
 
+def analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes):
+    intersection = set()
+
+    for conflict in conflicting_lessons:
+        if conflict.room_id == room_id:
+            alert = 'кабинету (' + conflict.room.name + ')'
+            intersection.add(alert)
+        if conflict.teacher_id == teacher_id:
+            alert = 'учителю (' + f'{conflict.teacher.last_name} {conflict.teacher.first_name}' + ')'
+            intersection.add(alert)
+        conflict_classes = set([school_class.id for school_class in conflict.school_classes])
+        intersected_classes = conflict_classes.intersection(classes)
+        if intersected_classes:
+            inter_classes = SchoolClass.query.filter(SchoolClass.id.in_(intersected_classes)).all()
+            alert = 'классам (' + ', '.join([school_class.school_name for school_class in inter_classes]) + ')'
+            intersection.add(alert)
+
+    return intersection
+
+
 def create_check_lesson(lesson_date, form, i):
     start_time = datetime.strptime(form.start_time.data, '%H : %M').time()
     end_time = datetime.strptime(form.end_time.data, '%H : %M').time()
@@ -1231,23 +1251,11 @@ def create_check_lesson(lesson_date, form, i):
 
     conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
                                                     classes, room_id, teacher_id)
-    intersection = set()
 
     if conflicting_lessons:
-        for conflict in conflicting_lessons:
-            if conflict.room_id == room_id:
-                alert = 'кабинету (' + conflict.room.name + ')'
-                intersection.add(alert)
-            if conflict.teacher_id == teacher_id:
-                alert = 'учителю (' + f'{conflict.teacher.last_name} {conflict.teacher.first_name}' + ')'
-                intersection.add(alert)
-            conflict_classes = set([school_class.id for school_class in conflict.school_classes])
-            intersected_classes = conflict_classes.intersection(classes)
-            if intersected_classes:
-                inter_classes = SchoolClass.query.filter(SchoolClass.id.in_(intersected_classes)).all()
-                alert = 'классам (' + ', '.join([school_class.school_name for school_class in inter_classes]) + ')'
-                intersection.add(alert)
-        message_text = f'Занятие {i} не добавлено в расписание. Пересечения по ' + ', '.join(intersection) + '.'
+        intersection = analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes)
+
+        message_text = f'Занятие {i} не добавлено в расписание. Пересечения по ' + ', '.join(intersection)
         lesson = None
 
     else:
@@ -1263,17 +1271,21 @@ def create_check_lesson(lesson_date, form, i):
 
         school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
         lesson.school_classes.extend(school_classes)
-        message_text = f'Занятие {i} добавлено в расписание.'
+        message_text = f'Занятие {i} добавлено в расписание'
 
     return lesson, message_text
+
+
+def calculate_week(date):
+    return int((get_weekday_date(0, date) - get_weekday_date(0, TODAY)).days / 7)
 
 
 def add_new_lessons(form):
     lesson_date = datetime.strptime(form.lesson_date.data, '%d.%m.%Y').date()
     messages = []
+    new_lessons = 0
     for i, lesson_form in enumerate(form.lessons, 1):
         new_lesson, text = create_check_lesson(lesson_date, lesson_form, i)
-        new_lessons = 0
         if new_lesson:
             new_lessons += 1
             message = (text, 'success')
@@ -1283,8 +1295,39 @@ def add_new_lessons(form):
         else:
             message = (text, 'error')
             messages.append(message)
-    week = int((get_weekday_date(0, lesson_date) - get_weekday_date(0, TODAY)).days / 7)
+    week = calculate_week(lesson_date)
     return messages, week, new_lessons
+
+
+def lesson_edit(form, lesson):
+    lesson_date = datetime.strptime(form.lesson_date.data, '%d.%m.%Y').date()
+    start_time = datetime.strptime(form.start_time.data, '%H : %M').time()
+    end_time = datetime.strptime(form.end_time.data, '%H : %M').time()
+    room_id = int(form.room.data)
+    classes = [school_class.id for school_class in lesson.school_classes]
+    teacher_id = int(form.teacher.data)
+
+    if end_time <= start_time:
+        message = ('Ошибка во времени проведения', 'error')
+        return message
+
+    conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time, classes, room_id, teacher_id)
+
+    if conflicting_lessons:
+        intersection = analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes)
+
+        message = ('Занятие не изменено. Пересечения по ' + ', '.join(intersection), 'error')
+
+    else:
+        lesson.date = lesson_date
+        lesson.start_time = start_time
+        lesson.end_time = end_time
+        lesson.room_id = room_id
+        lesson.teacher_id = teacher_id
+
+        message = ('Занятие изменено', 'success')
+
+    return message
 
 
 def filter_lessons(form):

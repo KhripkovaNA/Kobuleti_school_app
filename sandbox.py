@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
-    lesson_subjects_data, week_lessons_dict
+    lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
@@ -908,7 +908,13 @@ lesson_dict = {
 # teacher_ids = [int(teacher) for teacher in teachers_data]
 # teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
 # print(teachers)
-weekdays = []
-dates = [int(day) for day in weekdays if weekdays]
-fil_les = Lesson.query.filter(Lesson.date.in_(dates)).all()
-print(fil_les)
+
+
+les = Lesson.query.filter_by(id=2091).first()
+new_date = datetime(2024, 2, 22).date()
+conflicting_lessons = check_conflicting_lessons(new_date, les.start_time, les.end_time, [], les.room_id, les.teacher_id)
+if conflicting_lessons:
+    intersection = analyze_conflicts(conflicting_lessons, les.room_id, les.teacher_id, [])
+
+    message = f'Занятие не изменено. Пересечения по ' + ', '.join(intersection)
+print(message)

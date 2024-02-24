@@ -14,14 +14,9 @@
                         <table class="table timetable">
                             <thead class="text-success">
                                 <tr>
-                                    <th rowspan="3" width="3%" class="fixed-column">Время</th>
+                                    <th rowspan="2" width="3%" class="fixed-column">Время</th>
                                     {% for day in days %}
-                                        <th colspan="{{ rooms|length }}">{{ day }}</th>
-                                    {% endfor %}
-                                </tr>
-                                <tr style="color: green;">
-                                    {% for day in days %}
-                                        <th colspan="{{ rooms|length }}">{{ week_dates[loop.index0] }}</th>
+                                        <th colspan="{{ rooms|length }}">{{ day }} {{ week_dates[loop.index0] }}</th>
                                     {% endfor %}
                                 </tr>
                                 <tr style="color: green; font-size: 80%;">
@@ -43,43 +38,7 @@
                                                         {% for lesson in classes[day][room] %}
                                                             <div class="dropdown">
                                                                 <div class="class-box dropdown-toggle" data-toggle="dropdown" id="class-box-{{ lesson.id }}"
-                                                                     style="background-color: {{ lesson.color }}; top: {{ (lesson.start_time + 60 * start_time - 540)/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 4 }}px;">
-                                                                    <ul class="dropdown-menu" style="top: 50px;">
-                                                                        {% if lesson.lesson_type_name not in ["school", "after_school"] %}
-                                                                            <li>
-                                                                                <a href="{{ url_for('lesson', lesson_id=lesson.id) }}">
-                                                                                    <i class="material-icons" style="color: purple;">info</i>Занятие
-                                                                                </a>
-                                                                            </li>
-                                                                            {% if not lesson.completed and lesson.month_index >= -1  %}
-                                                                                <li>
-                                                                                    <a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">
-                                                                                        <i class="material-icons" style="color: purple;">edit</i>Изменить
-                                                                                    </a>
-                                                                                </li>
-                                                                            {% endif %}
-                                                                        {% elif lesson.lesson_type_name=="school" %}
-                                                                            <li>
-                                                                                <a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">
-                                                                                    <i class="material-icons" style="color: purple;">date_range</i>Школьное расписание
-                                                                                </a>
-                                                                            </li>
-                                                                        {% elif lesson.lesson_type_name=="after_school" %}
-                                                                            <li>
-                                                                                <a href="{{ url_for('after_school', month_index=lesson.month_index) }}">
-                                                                                    <i class="material-icons" style="color: purple;">diversity_2</i>Продленка
-                                                                                </a>
-                                                                            </li>
-                                                                        {% endif %}
-                                                                        {% if lesson.lesson_type_name!="school" and not lesson.completed and lesson.month_index >= -1  %}
-                                                                            <li class="divider"></li>
-                                                                            <li>
-                                                                                <a href="#" data-toggle="modal" data-target="#delete-{{ lesson.id }}-modal">
-                                                                                    <i class="material-icons" style="color: red;">delete_forever</i>Отменить
-                                                                                </a>
-                                                                            </li>
-                                                                        {% endif %}
-                                                                    </ul>
+                                                                     style="background-color: {{ lesson.color }}; top: {{ (lesson.start_time - 60 * start_time + 540)/0.6 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/0.6 - 4 }}px;">
                                                                     <p style="color: #660000;">{{ lesson.time }}</p>
                                                                     {% if lesson.lesson_type %}
                                                                         <p style="color: #003300;">{{ lesson.lesson_type }}</p>
@@ -89,8 +48,50 @@
                                                                     {% endfor %}
                                                                     <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                                 </div>
+                                                                <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ (lesson.start_time - 60 * start_time + 540)/0.6 + 50 }}px;">
+                                                                    {% if lesson.lesson_type_name not in ["school", "after_school"] %}
+                                                                        <li>
+                                                                            <a href="{{ url_for('lesson', lesson_id=lesson.id) }}">
+                                                                                <i class="material-icons" style="color: purple;">info</i>Занятие
+                                                                            </a>
+                                                                        </li>
+                                                                        {% if not lesson.completed and lesson.month_index >= -1  %}
+                                                                            <li>
+                                                                                <a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">
+                                                                                    <i class="material-icons" style="color: purple;">edit</i>Изменить
+                                                                                </a>
+                                                                            </li>
+                                                                        {% endif %}
+                                                                    {% elif lesson.lesson_type_name=="school" %}
+                                                                        <li>
+                                                                            <a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">
+                                                                                <i class="material-icons" style="color: purple;">date_range</i>Школьное расписание
+                                                                            </a>
+                                                                        </li>
+                                                                    {% elif lesson.lesson_type_name=="after_school" %}
+                                                                        <li>
+                                                                            <a href="{{ url_for('after_school', month_index=lesson.month_index) }}">
+                                                                                <i class="material-icons" style="color: purple;">diversity_2</i>Продленка
+                                                                            </a>
+                                                                        </li>
+                                                                        {% if lesson.month_index >= -1  %}
+                                                                            <li>
+                                                                                <a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">
+                                                                                    <i class="material-icons" style="color: purple;">edit</i>Изменить
+                                                                                </a>
+                                                                            </li>
+                                                                        {% endif %}
+                                                                    {% endif %}
+                                                                    {% if lesson.lesson_type_name!="school" and not lesson.completed and lesson.month_index >= -1  %}
+                                                                        <li class="divider"></li>
+                                                                        <li>
+                                                                            <a href="#" data-toggle="modal" data-target="#delete-{{ lesson.id }}-modal">
+                                                                                <i class="material-icons" style="color: red;">delete_forever</i>Отменить
+                                                                            </a>
+                                                                        </li>
+                                                                    {% endif %}
+                                                                </ul>
                                                             </div>
-
 
                                             <!-- *-*-*-*-*-*-*-*-*-* Lesson delete conformation *-*-*-*-*-*-*-*-*-* -->
 
@@ -109,12 +110,10 @@
                                                                                 <input type="hidden" name="record_type" value="lessons">
                                                                                 <input type="hidden" name="lesson_id" value="{{ lesson.id }}">
                                                                                 <div class="row">
-                                                                                    <div class="col-md-5 col-md-offset-1">
+                                                                                    <div class="col-md-10 col-md-offset-1">
                                                                                         <button type="submit" class="btn btn-sm" data-background-color="main">
                                                                                             Да
                                                                                         </button>
-                                                                                    </div>
-                                                                                    <div class="col-md-5">
                                                                                         <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                                             Нет
                                                                                         </button>

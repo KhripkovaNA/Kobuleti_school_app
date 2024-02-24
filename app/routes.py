@@ -4,14 +4,14 @@ from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Roo
     SubscriptionType, SchoolLessonJournal, Finance
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
     EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm, \
-    ExtraSubjectForm, EditExtraSubjectForm, AddLessonsForm
+    ExtraSubjectForm, EditExtraSubjectForm, AddLessonsForm, EditLessonForm
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
     handle_employee_edit, format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, \
-    day_school_lessons_dict, filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, show_lesson, \
-    handle_lesson, format_school_class_students, format_school_class_subjects, show_school_lesson, \
-    handle_school_lesson, employee_record, subject_record, calc_month_index, student_record, \
+    day_school_lessons_dict, filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, calculate_week, \
+    lesson_edit, show_lesson, handle_lesson, format_school_class_students, format_school_class_subjects, \
+    show_school_lesson, handle_school_lesson, employee_record, subject_record, calc_month_index, student_record, \
     get_after_school_students, get_after_school_prices, handle_after_school_adding, finance_operation, \
     download_timetable, get_date_range, get_period, del_record
 
@@ -431,9 +431,9 @@ def add_employee():
 @app.route('/employee/<string:employee_id>', methods=['GET', 'POST'])
 @login_required
 def show_edit_employee(employee_id):
-    employee = Person.query.filter_by(id=int(employee_id)).first()
+    employee = Person.query.filter(Person.id == employee_id, Person.roles.any(Employee.id)).first()
 
-    if employee and employee.roles:
+    if employee:
         format_employee(employee)
         form = PersonForm(
             first_name=employee.first_name,
@@ -669,17 +669,51 @@ def add_lessons():
 @login_required
 def edit_lesson(lesson_id):
     edited_lesson = Lesson.query.filter_by(id=lesson_id).first()
-    if not edited_lesson or edited_lesson.lesson_type.name == "after_school":
+    if not edited_lesson:
         flash("Такого занятия нет.", 'error')
         return redirect(url_for('timetable', week=0))
 
     elif edited_lesson.lesson_type.name == "school":
         edited_lesson.classes = ', '.join([cl.school_name for cl in sorted(edited_lesson.school_classes,
                                                                            key=lambda x: x.school_class)])
+    week = calculate_week(edited_lesson.date)
     rooms = Room.query.all()
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+    form = EditLessonForm(
+        lesson_date=f'{edited_lesson.date:%d.%m.%Y}',
+        start_time=f'{edited_lesson.start_time:%H : %M}',
+        end_time=f'{edited_lesson.end_time:%H : %M}',
+        room=edited_lesson.room_id,
+        teacher=edited_lesson.teacher_id
+    )
+    form.subject.validators = []
+    form.room.choices = [(room.id, room.name) for room in rooms]
+    form.teacher.choices = [(teacher.id, f'{teacher.last_name} {teacher.first_name}') for teacher in all_teachers]
 
-    return render_template('edit_lesson.html', lesson=edited_lesson, rooms=rooms, teachers=all_teachers)
+    if request.method == 'POST':
+        try:
+            if form.validate_on_submit():
+                message = lesson_edit(form, edited_lesson)
+                if message[1] == 'error':
+                    flash(message[0], message[1])
+                    return redirect(url_for('edit_lesson', lesson_id=edited_lesson.id))
+
+                if message[1] == 'success':
+                    db.session.commit()
+                    week = calculate_week(edited_lesson.date)
+                    flash(message[0], message[1])
+
+                    return redirect(url_for('timetable', week=week))
+
+            else:
+                flash('Ошибка в форме изменения занятия', 'error')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+            return redirect(url_for('edit_lesson', lesson_id=edited_lesson.id))
+
+    return render_template('edit_lesson.html', lesson=edited_lesson, form=form, week=week)
 
 
 @app.route('/lesson/<string:lesson_id>', methods=['GET', 'POST'])
@@ -956,7 +990,6 @@ def generate_timetable(week):
     except Exception as e:
         flash(f'Ошибка при скачивании файла: {str(e)}', 'error')
         return
-
 
 
 @app.route('/delete-record', methods=['POST'])

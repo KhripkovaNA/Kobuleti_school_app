@@ -9,7 +9,7 @@
                 <h4 class="title">Новое занятие</h4>
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('add_lessons') }}" method="post" novalidate>
+                <form class="lesson-form" action="{{ url_for('add_lessons') }}" method="post" novalidate>
                     {{ form.hidden_tag() }}
                     <div class="row">
                         <div id="lesson-sections">
@@ -32,7 +32,7 @@
                                             <label class="control-label col-md-3">Начало:</label>
                                             <div class="col-md-3">
                                                 <input type="text" name="lesson_start_time-0" class="form-control timepicker-input">
-                                                {{ lesson_form.start_time(class="timepicker-value") }}
+                                                {{ lesson_form.start_time(class="timepicker-value", style="display: none;") }}
                                                 {% for error in lesson_form.start_time.errors %}
                                                     <span>{{ error }}</span>
                                                 {% endfor %}
@@ -42,7 +42,7 @@
                                             <label class="control-label col-md-3">Конец:</label>
                                             <div class="col-md-3">
                                                 <input type="text" name="lesson_end_time-0" class="form-control timepicker-input">
-                                                {{ lesson_form.end_time(class="timepicker-value") }}
+                                                {{ lesson_form.end_time(class="timepicker-value", style="display: none;") }}
                                                 {% for error in lesson_form.end_time.errors %}
                                                     <span>{{ error }}</span>
                                                 {% endfor %}

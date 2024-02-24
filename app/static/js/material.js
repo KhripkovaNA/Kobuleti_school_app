@@ -128,10 +128,13 @@ $(document).ready(function(){
         if ($(".timepicker").wickedpicker("widget").is(":visible")) {
             $(".timepicker").wickedpicker("hide");
         }
+        if ($(".timepicker-input").wickedpicker("widget").is(":visible")) {
+            $(".timepicker-input").wickedpicker("hide");
+        }
     });
 
-    // set value of wickedpicker
-    $('#lesson-sections').find('.timepicker-value').each(function() {
+    // Set value of wickedpicker in lesson-form
+    $('.lesson-form').find('.timepicker-value').each(function() {
         var timepickerVal = $(this).val();
         var timepickerRow = $(this).closest('.row');
         if (timepickerVal) {
@@ -141,21 +144,13 @@ $(document).ready(function(){
         }
     });
 
-    $('#lesson-sections').on("change", '.timepicker-input', function () {
+    $('.lesson-form').on("change", '.timepicker-input', function () {
         var timepickerVal = $(this).val();
         var timepickerRow = $(this).closest('.row');
         timepickerRow.find('.timepicker-value').val(timepickerVal);
     });
 
     $('.timepicker-input').trigger('change');
-
-    var timepickerStartVal = $(".timepicker-start-value").val();
-    $('.timepicker-start').wickedpicker({now: timepickerStartVal});
-
-    var timepickerEndVal = $(".timepicker-end-value").val();
-    $('.timepicker-end').wickedpicker({now: timepickerEndVal});
-
-
 
     // function to handle the change event for the status select dropdown
     function handleStatusChange(statusSelect, pauseDateId, leavingReasonId) {
