@@ -425,8 +425,8 @@ $(document).ready(function(){
     });
 
     // Toggle client selector based on button clicks
-    $("#add-client-btn, #cancel-add-client-btn").click(function() {
-        $("#clientSelector, #add-client-btn").toggle();
+    $(".add-client-btn, .close-client-btn").click(function() {
+        $(".add-client-btn, .add-client-form").toggle();
     });
 
     // Handle the change event for lesson subject selector
@@ -519,28 +519,30 @@ $(document).ready(function(){
         });
     }
 
-    // Function to validate integer input
-    function validateIntegerInput(validatedForm) {
-        var integerInput = validatedForm.find('.integer-input');
-        var integerValue = integerInput.val();
-        if (integerInput.hasClass('required')) {
-            integerDiv = validatedForm.find('.integer-div');
-            errorDiv = integerDiv.closest('.row');
-            if (!integerValue) {
+    // Function to validate input
+    function validateFieldInput(validatedForm) {
+        var fieldInput = validatedForm.find('.field-input');
+        var fieldValue = fieldInput.val();
+        if (fieldInput.hasClass('required')) {
+            fieldDiv = validatedForm.find('.field-div');
+            errorDiv = fieldDiv.closest('.row');
+            if (!fieldValue) {
                 errorDiv.addClass("has-error");
                 var errorSpan = `<span class="error-span" style="color:red;">Заполните это поле</span>`;
-                var existingErrorSpan = integerDiv.find('.error-span');
+                var existingErrorSpan = fieldDiv.find('.error-span');
 
                 if (existingErrorSpan.length === 0) {
-                    integerDiv.append(errorSpan);
+                    fieldDiv.append(errorSpan);
                 }
             } else {
                 errorDiv.removeClass("has-error");
-                integerDiv.find('.error-span').remove();
+                fieldDiv.find('.error-span').remove();
             }
+        } else {
+            errorDiv.removeClass("has-error");
+            fieldDiv.find('.error-span').remove();
         }
     }
-
 
     // Validate subscription form
     $('form.subscription-form').submit(function(event) {
@@ -556,27 +558,37 @@ $(document).ready(function(){
     $('form.after-school-form').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
-        validateIntegerInput(currentForm);
+        validateFieldInput(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
         }
     });
 
-    // Validate deposit-form form
+    // Validate deposit form
     $('form.deposit-form').submit(function(event) {
         var currentForm = $(this);
-        validateIntegerInput(currentForm);
+        validateFieldInput(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
         }
     });
 
-    // Validate subscription form
+    // Validate copy-lessons form
     $('form.copy-lessons-form').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
+    // Validate school-subject form
+    $('form.school-subject-form').submit(function(event) {
+        var currentForm = $(this);
+        validateFieldInput(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
@@ -598,13 +610,13 @@ $(document).ready(function(){
 
     // Show subjects selector when checking teacher option
     $(".employee-section, #role-select-row").on("change", ".role-select", function () {
-        var subjectsTaught = $("#subjects-taught")
+        var subjectsTaught = $("#subjects-taught");
         var roleVal = $(this).val();
         var teacher = 'Учитель';
         if (roleVal && roleVal.indexOf(teacher) !== -1) {
-            subjectsTaught.show()
+            subjectsTaught.show();
         } else {
-            subjectsTaught.hide()
+            subjectsTaught.hide();
         }
     });
 
@@ -666,7 +678,7 @@ $(document).ready(function(){
     });
 
     // Function to initialize search in select options
-    function initializeSelectize(selector, plugins = [], create = false) {
+    function initializeSelectize(selector, create = false) {
         const selectizeOptions = {
             onDropdownOpen: function ($dropdown) {
                 $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
@@ -674,7 +686,7 @@ $(document).ready(function(){
             onDropdownClose: function ($dropdown) {
                 $dropdown.find('.selectize-dropdown-content').perfectScrollbar('destroy');
             },
-            plugins: plugins
+            plugins: ['remove_button', 'auto_position']
         };
 
         if (create) {
@@ -695,10 +707,10 @@ $(document).ready(function(){
     }
 
     // Search in select options with adding new options
-    initializeSelectize('.select-search-add', ['remove_button'], true);
+    initializeSelectize('.select-search-add', true);
 
     // Search in select options without adding new options
-    initializeSelectize('.select-search', ['remove_button']);
+    initializeSelectize('.select-search');
 
 
     var lessonCount = Number($("#lesson-count").val());
@@ -1012,7 +1024,7 @@ $(document).ready(function(){
             $(".shift-row").hide();
             $(".hours-row, .day-row").show();
             $(".hour-number").val(1);
-            $(".hours-row").find(".integer-input").addClass("required");
+            $(".hours-row").find(".field-input").addClass("required");
             $(".day-row").find(".date-input").addClass("required");
         }
         var prices = afterSchoolPrices.filter(function(price) {
@@ -1047,6 +1059,20 @@ $(document).ready(function(){
     // Trigger term selector on open after-school-modal
     $("#after-school-modal").on('shown.bs.modal', function () {
         $(".term-selector").trigger("change");
+    });
+
+    // Switch between main-teacher div and main-teacher form
+    $(".main-teacher-btn").on("click", function() {
+        $(".main-teacher, .main-teacher-form").toggle();
+    });
+
+
+    $('#school-class-select').on('change', function() {
+        var schoolClass = $('#school_class').val()
+        var selectorVal = $(this).val();
+        if (selectorVal.indexOf(schoolClass) === -1) {
+            $(this)[0].selectize.addItem(schoolClass);
+        }
     });
 
 });

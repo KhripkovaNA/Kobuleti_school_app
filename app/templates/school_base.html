@@ -38,7 +38,7 @@
             <div class="sidebar-wrapper">
                 <ul class="nav">
                     <li id="menu-students">
-                        <a style="cursor:pointer" href="{{ url_for('school_students') }}">
+                        <a style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">
                             <i class="material-icons">school</i>
                             <p>Классы</p>
                         </a>
@@ -50,7 +50,7 @@
                         </a>
                     </li>
                     <li id="menu-subjects">
-                        <a style="cursor:pointer" href="{{ url_for('school_subjects') }}">
+                        <a style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">
                             <i class="material-icons">library_books</i>
                             <p>Школьные занятия</p>
                         </a>
@@ -88,30 +88,25 @@
                             </li>
                         </ul>
                     </div>
-                    <div class="navbar-header" style="float:right;">
-                        <ul class="nav">
-                            <li id="menu-logout">
-                                <a style="cursor:pointer" href="{{ url_for('logout') }}">
-                                    <i class="material-icons">exit_to_app</i>Выход
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <br>
+                    <ul class="nav navbar-nav navbar-right" style="margin-right:20px;">
+                        <li id="">
+                            <a style="cursor:pointer" href="">
+                                <i class="material-icons">settings</i>
+                            </a>
+                        </li>
+                        <li id="menu-logout">
+                            <a style="cursor:pointer" href="{{ url_for('logout') }}">
+                                <i class="material-icons">exit_to_app</i>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </nav>
             <div class="content">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
-                            <div class="alert alert-with-icon">
-                                {% if category == 'error' %}
-                                    <div class="alert alert-danger alert-with-icon" data-notify="container"></div>
-                                {% elif category == 'success' %}
-                                    <div class="alert alert-success alert-with-icon" data-notify="container"></div>
-                                {% else %}
-                                    <div class="alert alert-info alert-with-icon" data-notify="container"></div>
-                                {% endif %}
+                            <div class="alert {{ 'alert-danger' if category == 'error' else 'alert-success' if category == 'success' else 'alert-info' }} alert-with-icon" data-notify="container">
                                 <button type="button" aria-hidden="true" class="close" onclick="$('.alert').hide();">×</button>
                                 <i data-notify="icon" class="material-icons">add_alert</i>
                                 <span data-notify="message">

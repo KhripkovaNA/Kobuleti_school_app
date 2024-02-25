@@ -514,13 +514,13 @@ def add_subject():
     if request.method == 'POST':
         try:
             if form.validate_on_submit():
-                subject_type = "extra_school"
-                new_subject = add_new_subject(form, subject_type)
+                new_subject = add_new_subject(form, "extra_school")
                 db.session.add(new_subject)
                 db.session.commit()
+                flash('Новый предмет добавлен в систему', 'success')
                 return redirect(url_for('subjects'))
 
-            flash(f'Ошибка в форме добавления предмета', 'error')
+            flash('Ошибка в форме добавления предмета', 'error')
 
         except Exception as e:
             db.session.rollback()
@@ -764,57 +764,95 @@ def lesson(lesson_str):
             return render_template('lesson.html', subject_lesson=subject_lesson, lesson_subject=lesson_subject,
                                    other_lessons=other_lessons)
         else:
-            flash("Такого занятия нет.", 'error')
+            flash("Такого занятия нет", 'error')
             return redirect(url_for('subjects'))
 
 
-@app.route('/school-students')
+@app.route('/school-students/<string:school_class>', methods=['GET', 'POST'])
 @login_required
-def school_students():
-    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-    for school_class in school_classes:
-        format_school_class_students(school_class)
+def school_students(school_class):
+    school_classes = SchoolClass.query.order_by(
+        SchoolClass.school_class,
+        SchoolClass.school_name
+    ).all()
 
-    lesson_subjects = lesson_subjects_data()
+    school_class = int(school_class) if str(school_class).isdigit() else None
+    school = school_classes[0] if school_class == 0 else SchoolClass.query.filter_by(id=school_class).first()
+    if school:
+        format_school_class_students(school)
+    else:
+        flash("Такого класса нет", 'error')
+        return redirect(url_for('school_students', school_class=0))
+
+    if request.method == 'POST':
+        if 'add_client_btn' in request.form:
+            try:
+                added_student_id = int(request.form.get('added_student_id')) if request.form.get('added_student_id') else None
+                if added_student_id:
+                    new_school_student = Person.query.filter_by(id=added_student_id).first()
+                    new_school_student.school_class_id = school.id
+                    db.session.commit()
+                    flash(f'Новый ученик добавлен в класс', 'success')
+                else:
+                    flash('Ученик не выбран', 'error')
+
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при добавлении нового ученика: {str(e)}', 'error')
+
+        if 'change_teacher_btn' in request.form:
+            try:
+                main_teacher = int(request.form.get('main_teacher')) if request.form.get('main_teacher') else None
+                school.main_teacher_id = main_teacher
+                db.session.commit()
+                flash('Классный руководитель изменен', 'success')
+
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+
+        return redirect(request.referrer)
+
     possible_students = Person.query.filter(
         Person.person_type == 'Ребенок',
         Person.status == 'Клиент',
         Person.school_class_id.is_(None)
     ).order_by(Person.last_name, Person.first_name).all()
+    teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
 
-    return render_template('school.html', school_classes=school_classes, lesson_subjects=lesson_subjects,
-                           possible_students=possible_students, render_type="students")
+    return render_template('school.html', school_classes=school_classes, school_class=school,
+                           possible_students=possible_students, teachers=teachers, render_type="students")
 
 
-@app.route('/add-school-student', methods=['POST'])
+@app.route('/school-subjects/<string:school_class>', methods=['GET', 'POST'])
 @login_required
-def add_school_student():
-    try:
-        added_student_id = int(request.form.get('added_student_id'))
-        new_school_student = Person.query.filter_by(id=added_student_id).first()
-        school_class_id = int(request.form.get('school_class_id'))
-        new_school_student.school_class_id = school_class_id
-        db.session.commit()
-        school_class = SchoolClass.query.filter_by(id=school_class_id).first()
-        flash(f'Новый ученик добавлен класс ({school_class.school_name}).', 'success')
+def school_subjects(school_class):
+    school_classes = SchoolClass.query.order_by(
+        SchoolClass.school_class,
+        SchoolClass.school_name
+    ).all()
 
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Ошибка при добавлении нового ученика: {str(e)}', 'error')
+    school_class = int(school_class) if str(school_class).isdigit() else None
+    school = school_classes[0] if school_class == 0 else SchoolClass.query.filter_by(id=school_class).first()
+    if school:
+        format_school_class_subjects(school)
 
-    return redirect(url_for('school_students'))
+    if request.method == 'POST':
+        try:
+            new_subject = add_new_subject(request.form, "school")
+            db.session.add(new_subject)
+            db.session.commit()
+            flash('Новый предмет добавлен в систему', 'success')
 
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
 
-@app.route('/school-subjects')
-@login_required
-def school_subjects():
-    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-    for school_class in school_classes:
-        format_school_class_subjects(school_class)
+        return redirect(request.referrer)
+
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-    school_type = SubjectType.query.filter_by(name="school").first()
-    return render_template('school.html', school_classes=school_classes, teachers=all_teachers,
-                           school_type=school_type, render_type="subjects")
+    return render_template('school.html', school_classes=school_classes, school_class=school, teachers=all_teachers,
+                           render_type="subjects")
 
 
 @app.route('/school-timetable/<string:week>/<string:day>')
@@ -1016,7 +1054,7 @@ def delete_record():
     record_type = request.form.get('record_type')
 
     try:
-        if record_type in ['student', 'employee']:
+        if record_type in ['student', 'employee', 'school_student']:
             if current_user.rights == 'admin':
                 message = del_record(request.form, record_type)
                 db.session.commit()

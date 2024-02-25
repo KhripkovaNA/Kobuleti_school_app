@@ -910,6 +910,3 @@ lesson_dict = {
 # print(teachers)
 
 
-les = Lesson.query.filter_by(id=1956).first()
-
-print(les.students_registered.all())

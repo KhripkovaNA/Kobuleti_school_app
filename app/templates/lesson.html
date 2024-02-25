@@ -113,16 +113,15 @@
                                             {% endfor %}
                                             <tr>
                                                 <td>
-                                                    <button type="button" id="add-client-btn" class="btn btn-xs" data-background-color="orange">Добавить клиента</button>
-                                                    <div id="clientSelector" style="display: none;">
-                                                        <select name="added_client_id">
+                                                    <button type="button" id="add-client-btn" class="btn btn-xs add-client-btn" data-background-color="orange">Добавить клиента</button>
+                                                    <div class="add-client-form" style="display: none;">
+                                                        <select name="added_client_id" class="form-control select-search">
                                                             {% for client in clients %}
                                                                 <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
                                                             {% endfor %}
                                                         </select>
-                                                        <br>
-                                                        <button type="submit" name="add_client_btn" class="btn btn-xs" data-background-color="main">Добавить</button>
-                                                        <button type="button" id="cancel-add-client-btn" class="btn btn-xs" data-background-color="red">Отменить</button>
+                                                        <button type="submit" name="add_client_btn" class="btn btn-success btn-xs">Добавить</button>
+                                                        <button type="button" class="btn btn-danger btn-xs close-client-btn">Отменить</button>
                                                     </div>
                                                 </td>
                                                 <td></td>
@@ -183,10 +182,43 @@
                             </div>
                             {% if not subject_lesson.students_registered.all() %}
                                 <button class="btn btn-sm pull-right" data-background-color="red">
-                                    <a style="cursor:pointer; color: #FFFFFF;" href="">
+                                    <a href="#" data-toggle="modal" data-target="#delete-modal">
                                         <i class="material-icons">delete_forever</i> Отменить занятие
                                     </a>
                                 </button>
+
+                            <!-- *-*-*-*-*-*-*-*-*-* Lesson delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="delete-modal" role="dialog">
+                                    <div class="modal-dialog modal-sm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title alert alert-danger" style="text-align:center;">Отмена занятия</h4>
+                                            </div>
+                                            <div class="modal-body" style="padding-top:10px;">
+                                                <p class="control-label">
+                                                    Вы уверены, что хотите отменить занятие {{ lesson_subject.name }}?
+                                                </p>
+                                                <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <input type="hidden" name="record_type" value="lessons">
+                                                    <input type="hidden" name="lesson_id" value="{{ subject_lesson.id }}">
+                                                    <div class="row">
+                                                        <div class="col-md-10 col-md-offset-1">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Да
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Нет
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             {% endif %}
                         </div>
                     </div>

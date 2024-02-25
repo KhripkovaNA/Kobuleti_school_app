@@ -1,6 +1,5 @@
 from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, \
-    SchoolClass, Room, SubjectType, SubscriptionType, student_lesson_attended_table, teacher_class_table, \
-    SchoolLessonJournal, Finance
+    SchoolClass, SubjectType, SubscriptionType, student_lesson_attended_table, SchoolLessonJournal, Finance
 from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
@@ -728,26 +727,14 @@ def format_employee(employee):
 
 
 def add_new_subject(form, subject_type):
-    name = form.subject_name.data
-    subject_name = name[0].upper() + name[1:]
-    short_name = form.subject_short_name.data
-    subject_short_name = short_name[0].upper() + short_name[1:]
-    teacher_ids = [int(teacher) for teacher in form.teachers.data]
-    teachers = Person.query.filter(Person.id.in_(teacher_ids), Person.teacher).all()
-    subject_type_id = int(form.subject_type.data)
-
-    if subject_type == "school":
-        classes = [int(school_class) for school_class in form.school_classes.data]
-        school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
-
-        new_subject = Subject(
-            name=subject_name,
-            short_name=subject_short_name,
-            subject_type_id=subject_type_id
-        )
-        new_subject.school_classes.extend(school_classes)
-
-    else:
+    if subject_type == "extra_school":
+        name = form.subject_name.data
+        subject_name = name[0].upper() + name[1:]
+        short_name = form.subject_short_name.data
+        subject_short_name = short_name[0].upper() + short_name[1:]
+        teacher_ids = [int(teacher) for teacher in form.teachers.data]
+        teachers = Person.query.filter(Person.id.in_(teacher_ids), Person.teacher).all()
+        subject_type_id = int(form.subject_type.data)
         one_time_price = float(form.subject_price.data)
         if not form.no_subject_school_price.data:
             subject_school_price = float(form.subject_school_price.data)
@@ -768,10 +755,30 @@ def add_new_subject(form, subject_type):
             school_price=school_price,
         )
         new_subject.subscription_types.extend(subscription_types)
+        new_subject.teachers.extend(teachers)
 
-    new_subject.teachers.extend(teachers)
+        return new_subject
 
-    return new_subject
+    elif subject_type == "school":
+        name = form.get("subject_name")
+        subject_name = name[0].upper() + name[1:]
+        short_name = form.get("subject_short_name")
+        subject_short_name = short_name[0].upper() + short_name[1:]
+        teacher_ids = [int(teacher) for teacher in form.getlist("teachers") if form.getlist("teachers")]
+        teachers = Person.query.filter(Person.id.in_(teacher_ids), Person.teacher).all()
+        school_type = SubjectType.query.filter_by(name="school").first()
+        classes = [int(school_class) for school_class in form.getlist("school_classes")]
+        school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
+
+        new_subject = Subject(
+            name=subject_name,
+            short_name=subject_short_name,
+            subject_type_id=school_type.id
+        )
+        new_subject.school_classes.extend(school_classes)
+        new_subject.teachers.extend(teachers)
+
+        return new_subject
 
 
 def format_subscription_types(subscription_types):
@@ -960,11 +967,14 @@ def handle_lesson(form, subject, lesson):
         return 'Клиент удален', 'success'
 
     if 'add_client_btn' in form:
-        new_client_id = int(form.get('added_client_id'))
-        new_client = Person.query.filter_by(id=new_client_id).first()
-        subject.students.append(new_client)
-        db.session.flush()
-        return 'Клиент добавлен', 'success'
+        new_client_id = int(form.get('added_client_id')) if form.get('added_client_id') else None
+        if new_client_id:
+            new_client = Person.query.filter_by(id=new_client_id).first()
+            subject.students.append(new_client)
+            db.session.flush()
+            return 'Клиент добавлен', 'success'
+        else:
+            return 'Клиент не выбран', 'error'
 
     if 'registered_btn' in form:
         for student in lesson.students:
@@ -1456,9 +1466,7 @@ def copy_filtered_lessons(filtered_lessons, week_diff):
 
 
 def format_school_class_students(school_class):
-    school_class.main_teacher = db.session.query(Person).join(teacher_class_table).filter(
-        teacher_class_table.c.class_id == school_class.id,
-        teacher_class_table.c.main_teacher).first()
+    school_class.main_teacher = Person.query.filter_by(id=school_class.main_teacher_id).first()
     class_students = Person.query.filter_by(
         school_class_id=school_class.id,
         status="Клиент"
@@ -1470,6 +1478,7 @@ def format_school_class_students(school_class):
 
 
 def format_school_class_subjects(school_class):
+    school_class.main_teacher = Person.query.filter_by(id=school_class.main_teacher_id).first()
     school_class_subjects = Subject.query.filter(
         Subject.school_classes.any(SchoolClass.id == school_class.id)
     ).order_by(Subject.name).all()
@@ -1478,7 +1487,7 @@ def format_school_class_subjects(school_class):
             Person.lessons.any(
                 and_(
                     Lesson.subject_id == school_subject.id,
-                    Lesson.school_classes.any(SchoolClass.id == 2)
+                    Lesson.school_classes.any(SchoolClass.id == school_class.id)
                 )
             ),
             Person.subjects_taught.any(Subject.id == school_subject.id)
@@ -2144,5 +2153,21 @@ def del_record(form, record_type):
 
         else:
             message = ("Занятия невозможно отменить", 'error')
+
+        return message
+
+    if record_type == 'school_student':
+        student_id = int(form.get('student_id'))
+        student = Person.query.filter(Person.id == student_id, Person.school_class_id).first()
+        if student:
+            student_name = f"{student.last_name} {student.first_name}"
+            student.school_class_id = None
+            for subject in student.subjects.all():
+                if subject.subject_type.name == "school":
+                    student.subjects.remove(subject)
+            db.session.flush()
+            message = (f"Ученик {student_name} удален из класса", "success")
+        else:
+            message = ("Такого ученика нет", 'error')
 
         return message

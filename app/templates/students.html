@@ -61,7 +61,7 @@
                                                 <div class="form-group comment-form-container text-center" style="display:none; margin:0;">
                                                     <form class="comment-form" method="post" data-person-id="{{ student.id }}">
                                                         <textarea class="form-control" name="comment" rows="3" cols="8"></textarea>
-                                                        <button type="submit" class="btn btn-sm" data-background-color="main">Добавить</button>
+                                                        <button type="submit" class="btn btn-xs" data-background-color="main">Добавить</button>
                                                     </form>
                                                 </div>
                                             </td>
@@ -228,8 +228,8 @@
                                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                                     <div class="row">
                                                                         <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
-                                                                        <div class="col-md-4 integer-div">
-                                                                            <input type="number" class="form-control integer-input required" name="deposit" step="10" min="10" max="1000">
+                                                                        <div class="col-md-4 field-div">
+                                                                            <input type="number" class="form-control field-input required" name="deposit" step="10" min="10" max="1000">
                                                                         </div>
                                                                     </div>
                                                                     <div class="row">
@@ -267,12 +267,10 @@
                                                                     <input type="hidden" name="record_type" value="student">
                                                                     <input type="hidden" name="student_id" value="{{ student.id }}">
                                                                     <div class="row">
-                                                                        <div class="col-md-5 col-md-offset-1">
+                                                                        <div class="col-md-10 col-md-offset-1">
                                                                             <button type="submit" class="btn btn-sm" data-background-color="main">
                                                                                 Да
                                                                             </button>
-                                                                        </div>
-                                                                        <div class="col-md-5">
                                                                             <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                                 Нет
                                                                             </button>

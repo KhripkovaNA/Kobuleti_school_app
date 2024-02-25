@@ -2056,7 +2056,7 @@ label {
 
 .selectize-dropdown-content {
     position:relative;
-    max-height: 100px;
+    /*max-height: 100px;*/
 }
 
 .form-control-static {
@@ -3071,6 +3071,11 @@ div.form-control {
 
 .comment {
     cursor: pointer;
+}
+
+.comment-form-container {
+    padding-bottom: 0;
+    margin: 0px 30px;
 }
 
 #table-report>tbody>tr>td {
