@@ -51,7 +51,7 @@
                                                                 <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ (lesson.start_time - 60 * start_time + 540)/0.6 + 50 }}px;">
                                                                     {% if lesson.lesson_type_name not in ["school", "after_school"] %}
                                                                         <li>
-                                                                            <a href="{{ url_for('lesson', lesson_id=lesson.id) }}">
+                                                                            <a href="{{ url_for('lesson', lesson_str='1-'+lesson.id|string) }}">
                                                                                 <i class="material-icons" style="color: purple;">info</i>Занятие
                                                                             </a>
                                                                         </li>
@@ -145,12 +145,12 @@
                 {% endif %}
                 <div class="row">
                     <div class="col-md-6">
-                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                        <button class="btn btn-sm" data-background-color="orange">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week - 1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущая неделя
                             </a>
                         </button>
-                        <button class="btn btn-sm" style="background-color: #ff9800;">
+                        <button class="btn btn-sm" data-background-color="orange">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week = week + 1) }}">
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
@@ -158,7 +158,10 @@
                     </div>
                     <div class="col-md-3 col-md-offset-3">
                         <div class="dropup pull-right">
-                            <button class="btn btn-sm dropdown-toggle" style="background-color: #4bd1a0;" data-toggle="dropdown">Составить расписание</button>
+                            <button class="btn btn-sm dropdown-toggle" data-background-color="main" data-toggle="dropdown">
+                                Составить расписание
+                                <span class="caret"></span>
+                            </button>
                             <ul class="dropdown-menu">
                                 <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
                                 <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>

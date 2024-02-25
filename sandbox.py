@@ -910,11 +910,6 @@ lesson_dict = {
 # print(teachers)
 
 
-les = Lesson.query.filter_by(id=2091).first()
-new_date = datetime(2024, 2, 22).date()
-conflicting_lessons = check_conflicting_lessons(new_date, les.start_time, les.end_time, [], les.room_id, les.teacher_id)
-if conflicting_lessons:
-    intersection = analyze_conflicts(conflicting_lessons, les.room_id, les.teacher_id, [])
+les = Lesson.query.filter_by(id=1956).first()
 
-    message = f'Занятие не изменено. Пересечения по ' + ', '.join(intersection)
-print(message)
+print(les.students_registered.all())

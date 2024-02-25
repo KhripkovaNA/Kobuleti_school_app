@@ -95,7 +95,7 @@ def lesson_register(student_id):
         db.session.commit()
         flash('Клиент записан на занятие', 'success')
 
-        return redirect(url_for('lesson', lesson_id=lesson_id))
+        return redirect(url_for('lesson', lesson_str=f'1-{lesson_id}'))
 
     except Exception as e:
         db.session.rollback()
@@ -486,8 +486,9 @@ def show_edit_employee(employee_id):
 @app.route('/subjects')
 @login_required
 def subjects():
-    school = SubjectType.query.filter_by(name='school').first()
-    all_subjects = Subject.query.filter(Subject.subject_type_id != school.id).order_by(Subject.name).all()
+    all_subjects = Subject.query.filter(
+        Subject.subject_type.has(SubjectType.name != 'school')
+    ).order_by(Subject.name).all()
     for subject in all_subjects:
         subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
 
@@ -716,38 +717,55 @@ def edit_lesson(lesson_id):
     return render_template('edit_lesson.html', lesson=edited_lesson, form=form, week=week)
 
 
-@app.route('/lesson/<string:lesson_id>', methods=['GET', 'POST'])
+@app.route('/lesson/<string:lesson_str>', methods=['GET', 'POST'])
 @login_required
-def lesson(lesson_id):
-    subject_lesson, lesson_subject = show_lesson(lesson_id)
+def lesson(lesson_str):
+    subject_lesson, lesson_subject = show_lesson(lesson_str)
 
     if subject_lesson:
         if request.method == 'POST':
             try:
                 message = handle_lesson(request.form, lesson_subject, subject_lesson)
-                db.session.commit()
                 if message:
-                    flash(message, 'success')
+                    if message[1] == 'success':
+                        db.session.commit()
+                        flash(message[0], message[1])
+                    else:
+                        db.session.rollback()
+                        flash(message[0], message[1])
+                else:
+                    db.session.commit()
 
             except Exception as e:
                 db.session.rollback()
                 flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
 
-            return redirect(url_for('lesson', lesson_id=subject_lesson.id))
+            return redirect(url_for('lesson', lesson_str=f'1-{subject_lesson.id}'))
 
         all_clients = Person.query.filter(Person.status.in_(["Клиент", "Лид"])).order_by(Person.last_name,
                                                                                          Person.first_name).all()
         possible_clients = [client for client in all_clients if client not in subject_lesson.students]
 
+        other_lessons = Subject.query.filter(
+            Subject.id != lesson_subject.id,
+            Subject.subject_type.has(SubjectType.name != 'school')
+        ).order_by(Subject.name).all()
+
         return render_template('lesson.html', subject_lesson=subject_lesson, clients=possible_clients,
-                               lesson_subject=lesson_subject)
+                               lesson_subject=lesson_subject, other_lessons=other_lessons, today=TODAY)
 
     else:
         if lesson_subject:
-            return render_template('lesson.html', subject_lesson=subject_lesson, lesson_subject=lesson_subject)
+            other_lessons = Subject.query.filter(
+                Subject.id != lesson_subject.id,
+                Subject.subject_type.has(SubjectType.name != 'school')
+            ).order_by(Subject.name).all()
+
+            return render_template('lesson.html', subject_lesson=subject_lesson, lesson_subject=lesson_subject,
+                                   other_lessons=other_lessons)
         else:
             flash("Такого занятия нет.", 'error')
-            return redirect(url_for('school-subjects'))
+            return redirect(url_for('subjects'))
 
 
 @app.route('/school-students')

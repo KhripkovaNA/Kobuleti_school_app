@@ -877,7 +877,10 @@ def get_payment_options(student, subject_id, lesson):
 def carry_out_lesson(form, subject, lesson):
     lesson_price = subject.one_time_price
     lesson_school_price = subject.school_price if subject.school_price else lesson_price
-    for student in lesson.students:
+    if not lesson.students_registered.all():
+        return 'Нет записанных клиентов', 'error'
+
+    for student in lesson.students_registered.all():
         if form.get(f'attending_status_{student.id}') in ['attend', 'unreasonable']:
             payment_option = form.get(f'payment_option_{student.id}')
             if payment_option.startswith('subscription'):
@@ -886,14 +889,20 @@ def carry_out_lesson(form, subject, lesson):
                 if subscription.lessons_left > 0:
                     subscription.lessons_left -= 1
                 else:
-                    student.balance -= lesson_price
-                    description = f"Списание за занятие {subject.name}"
-                    finance_operation(student.id, -lesson_price, description, lesson.date)
+                    if student.balance >= lesson_price:
+                        student.balance -= lesson_price
+                        description = f"Списание за занятие {subject.name}"
+                        finance_operation(student.id, -lesson_price, description, lesson.date)
+                    else:
+                        return f'Не достаточно средств у клиента {student.last_name} {student.first_name}', 'error'
             else:
                 price = lesson_school_price if payment_option == 'after_school' else lesson_price
-                student.balance -= price
-                description = f"Списание за занятие {subject.name}"
-                finance_operation(student.id, -price, description, lesson.date)
+                if student.balance >= price:
+                    student.balance -= price
+                    description = f"Списание за занятие {subject.name}"
+                    finance_operation(student.id, -price, description, lesson.date)
+                else:
+                    return f'Не достаточно средств у клиента {student.last_name} {student.first_name}', 'error'
 
             attendance = student_lesson_attended_table.insert().values(
                 student_id=student.id,
@@ -902,6 +911,7 @@ def carry_out_lesson(form, subject, lesson):
             )
             db.session.execute(attendance)
     lesson.lesson_completed = True
+    return 'Занятие проведено', 'success'
 
 
 def undo_lesson(form, subject, lesson):
@@ -947,11 +957,15 @@ def handle_lesson(form, subject, lesson):
         if del_client in lesson.students_registered:
             lesson.students_registered.remove(del_client)
         db.session.flush()
+        return 'Клиент удален', 'success'
+
     if 'add_client_btn' in form:
         new_client_id = int(form.get('added_client_id'))
         new_client = Person.query.filter_by(id=new_client_id).first()
         subject.students.append(new_client)
         db.session.flush()
+        return 'Клиент добавлен', 'success'
+
     if 'registered_btn' in form:
         for student in lesson.students:
             if (
@@ -966,12 +980,12 @@ def handle_lesson(form, subject, lesson):
                 lesson.students_registered.remove(student)
 
     if 'attended_btn' in form:
-        carry_out_lesson(form, subject, lesson)
-        return 'Занятие проведено.'
+        message = carry_out_lesson(form, subject, lesson)
+        return message
 
     if 'change_btn' in form:
         undo_lesson(form, subject, lesson)
-        return 'Занятие отменено.'
+        return 'Проведение занятия отменено', 'success'
 
 
 def get_lesson_students(lesson):
@@ -1013,19 +1027,32 @@ def prev_next_lessons(lesson):
     return prev_id, next_id
 
 
-def show_lesson(lesson_id):
-    if not str(lesson_id).isdigit():
-        subject_id_str = lesson_id.split('-')[1]
-        subject_id = int(subject_id_str) if subject_id_str.isdigit() else None
-        last_lesson = Lesson.query.filter_by(subject_id=subject_id). \
-            order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
-        coming_lesson = Lesson.query.filter(Lesson.date >= TODAY,
-                                            Lesson.subject_id == subject_id). \
-            order_by(Lesson.date, Lesson.start_time).first()
-        subject_lesson = coming_lesson if coming_lesson else last_lesson if last_lesson else None
+def show_lesson(lesson_str):
+    lesson_id_split = lesson_str.split('-')
+    if len(lesson_id_split) != 2:
+        subject_lesson = None
+        subject_id = None
     else:
-        subject_lesson = Lesson.query.filter_by(id=int(lesson_id)).first()
-        subject_id = subject_lesson.subject_id if subject_lesson else None
+        if lesson_id_split[0] == '0':
+            subject_id_str = lesson_str.split('-')[1]
+            subject_id = int(lesson_id_split[1]) if lesson_id_split[1].isdigit() else None
+            last_lesson = Lesson.query.filter(
+                Lesson.subject_id == subject_id,
+                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school"]))
+            ).order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
+            coming_lesson = Lesson.query.filter(
+                Lesson.date >= TODAY,
+                Lesson.subject_id == subject_id,
+                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school"]))
+            ).order_by(Lesson.date, Lesson.start_time).first()
+            subject_lesson = coming_lesson if coming_lesson else last_lesson if last_lesson else None
+        else:
+            lesson_id = int(lesson_id_split[1]) if lesson_id_split[1].isdigit() else None
+            subject_lesson = Lesson.query.filter(
+                Lesson.id == lesson_id,
+                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school"]))
+            ).first()
+            subject_id = subject_lesson.subject_id if subject_lesson else None
 
     if subject_lesson:
         subject_lesson.students = get_lesson_students(subject_lesson)
@@ -1033,7 +1060,7 @@ def show_lesson(lesson_id):
         lesson_subject = subject_lesson.subject
 
     else:
-        lesson_subject = Subject.query.filter_by(id=subject_id).first() if subject_id else None
+        lesson_subject = Subject.query.filter_by(id=subject_id).first()
 
     return subject_lesson, lesson_subject
 
