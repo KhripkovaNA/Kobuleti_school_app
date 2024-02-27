@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
-    lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts
+    lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
@@ -918,5 +918,8 @@ lesson_dict = {
 
 # student = Person.query.filter_by(id=20).first()
 # print(student, student.subjects.all())
+
+
+# print(subject_record(32, [1], -1))
 
 

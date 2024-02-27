@@ -76,7 +76,7 @@
                                                         </label>
                                                     </td>
                                                     <td>
-                                                        <input type="number" name="grade_{{ student.id }}" value="{{ student.grade }}" min="1" max="5" style="width: 60px;">
+                                                        <input type="number" name="grade_{{ student.id }}" value="{{ student.grade if student.grade }}" min="1" max="5" style="width: 60px;">
                                                     </td>
                                                     <td>
                                                         <input type="text" name="lesson_comment_{{ student.id }}" value="{{ student.lesson_comment if student.lesson_comment }}">
@@ -102,7 +102,11 @@
                                                     <td></td>
                                                 {% else %}
                                                     <td>
-                                                        <button type="submit" name="complete_btn" class="btn btn-xs" data-background-color="orange">Заполнить журнал</button>
+                                                        {% if school_lesson.date > today %}
+                                                            <button type="submit" name="complete_btn" class="btn btn-xs" data-background-color="orange" disabled>Заполнить журнал</button>
+                                                        {% else %}
+                                                            <button type="submit" name="complete_btn" class="btn btn-xs" data-background-color="orange">Заполнить журнал</button>
+                                                        {% else %}
                                                     </td>
                                                 {% endif %}
                                             </tr>
@@ -129,90 +133,105 @@
                                 </button>
                             {% endif %}
                         </div>
-                        <div class="col-md-3 col-md-offset-3">
-                            <a href="" class="btn btn-sm pull-right" data-toggle="modal" data-target="#grade-modal" data-background-color="purple">
+                        <div class="col-md-6">
+                            <button class="btn btn-sm pull-right" data-background-color="purple">
+                                <a style="color: #FFFFFF;" href="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index) }}">
+                                    <i class="material-icons">article</i> Журнал
+                                </a>
+                            </button>
+                            <button class="btn btn-sm pull-right" data-background-color="main" data-toggle="modal" data-target="#grade-modal">
                                 <i class="material-icons">grade</i> Добавить оценку
-                            </a>
-                        </div>
-                        <div class="modal fade" id="grade-modal" role="dialog">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h4 class="modal-title">{{ school_lesson.subject.name }}. {{ school_lesson.classes }}. Оценки</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="login-form" action="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.id|string) }}" method="post">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                            <div class="row">
-                                                <label class="control-label col-md-2" style="padding-left:44px;">Тип оценки:</label>
-                                                <div class="col-md-5">
-                                                    <select name="grade_type" class="form-control select-search-add">
-                                                        {% for grade_type in grade_types %}
-                                                            <option value="{{ grade_type }}">{{ grade_type }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                                <label class="control-label col-md-2" style="padding-left:44px;">Дата:</label>
-                                                <div class="col-md-2">
-                                                    <input type="text" name="grade_date" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ school_lesson.date.strftime('%d.%m.%Y') }}">
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-5">
-                                                    <div class="row">
-                                                        <label class="control-label" style="padding-left:44px;">Ученик:</label>
+                            </button>
+
+                        <!-- *-*-*-*-*-*-*-*-*-* Grade modal *-*-*-*-*-*-*-*-*-* -->
+
+                            <div class="modal fade" id="grade-modal" role="dialog">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">{{ school_lesson.subject.name }}. {{ school_lesson.classes }}. Оценки</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="grade-form" action="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index) }}" method="post">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <div class="row">
+                                                    <div class="col-md-7">
+                                                        <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Оценка за:</label>
+                                                            <div class="col-md-8">
+                                                                <select name="grade_type" class="form-control select-search-add">
+                                                                    {% for grade_type in grade_types %}
+                                                                        <option value="{{ grade_type }}">{{ grade_type }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
-                                                        <select class="form-control student-select">
-                                                            {% for student in school_lesson.lesson_students %}
-                                                                <option value="{{ student.id }}">{{ student.last_name }} {{ student.first_name }}</option>
-                                                            {% endfor %}
-                                                        </select>
+                                                    <div class="col-md-5">
+                                                        <div class="row">
+                                                            <label class="control-label col-md-3" style="padding-left:44px;">Дата:</label>
+                                                            <div class="col-md-5 date-div">
+                                                                <input type="text" name="grade_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ school_lesson.date.strftime('%d.%m.%Y') }}">
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-2">
-                                                    <div class="row">
-                                                        <label class="control-label" style="padding-left:44px;">Оценка:</label>
+                                                <div class="row">
+                                                    <div class="col-md-5">
+                                                        <div class="row">
+                                                            <label class="control-label" style="padding-left:44px;">Ученик:</label>
+                                                        </div>
+                                                        <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
+                                                            <select class="form-control student-select">
+                                                                {% for student in school_lesson.lesson_students %}
+                                                                    <option value="{{ student.id }}">{{ student.last_name }} {{ student.first_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
                                                     </div>
-                                                    <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
-                                                        <input type="number" class="student-grade" min="1" max="5">
+                                                    <div class="col-md-2">
+                                                        <div class="row">
+                                                            <label class="control-label" style="padding-left:44px;">Оценка:</label>
+                                                        </div>
+                                                        <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
+                                                            <input type="number" class="student-grade" min="1" max="5">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="row">
+                                                            <label class="control-label" style="padding-left:44px;">Комментарий:</label>
+                                                        </div>
+                                                        <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
+                                                            <input type="text" class="student-comment">
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-5">
-                                                    <div class="row">
-                                                        <label class="control-label" style="padding-left:44px;">Комментарий:</label>
+                                                <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
+                                                    <div class="col-md-2">
+                                                        <button type="button" class="btn btn-sm add-grad-btn" data-background-color="orange">
+                                                            Добавить
+                                                        </button>
                                                     </div>
-                                                    <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
-                                                        <input type="text" class="student-comment">
+                                                </div>
+                                                <div class="grades-container" style="padding: 0 20px 0 44px; margin-top:0;"></div>
+                                                <div class="input-container"></div>
+                                                <div class="row">
+                                                    <div class="col-md-6 col-md-offset-3">
+                                                        <button type="submit" name="new_grade_btn" class="btn btn-sm" data-background-color="main">
+                                                            Выставить оценки
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                            Отмена
+                                                        </button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-2">
-                                                    <button type="button" class="btn btn-sm add-grad-btn" data-background-color="orange">
-                                                        Добавить
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div id="grades-container"></div>
-                                            <div id="input-container"></div>
-                                            <div class="row">
-                                                <div class="col-md-3 col-md-offset-3">
-                                                    <button type="submit" name="new_grade_btn" class="btn btn-login" data-background-color="main">
-                                                        Выставить оценки
-                                                    </button>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">
-                                                        Отмена
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 {% else %}

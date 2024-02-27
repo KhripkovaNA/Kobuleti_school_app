@@ -1669,26 +1669,6 @@ def handle_school_lesson(form, lesson):
 
         return 'Внесение изменений.'
 
-    if 'new_grade_btn' in form:
-        grade_type = form.get('grade_type')
-        grade_date = datetime.strptime(form.get('grade_date'), '%d.%m.%Y').date()
-        for student in lesson.lesson_students:
-            new_grade = form.get(f'new_grade_{student.id}')
-            new_comment = form.get(f'new_comment_{student.id}')
-            if new_grade or new_comment:
-                journal_record = SchoolLessonJournal(
-                    date=grade_date,
-                    grade_type=grade_type,
-                    student_id=student.id,
-                    school_class_id=student.school_class_id,
-                    subject_id=lesson.subject_id,
-                    grade=new_grade,
-                    lesson_comment=new_comment
-                )
-                db.session.add(journal_record)
-                db.session.flush()
-        return "Оценка внесена"
-
 
 def employee_record(employees, week):
     week_start = get_date(0, week)
@@ -1770,7 +1750,8 @@ def subject_record(subject_id, school_classes_ids, month_index):
         SchoolLessonJournal.date >= first_date,
         SchoolLessonJournal.date <= last_date,
         SchoolLessonJournal.subject_id == subject_id,
-        SchoolLessonJournal.school_class_id.in_(school_classes_ids)
+        SchoolLessonJournal.school_class_id.in_(school_classes_ids),
+        ~SchoolLessonJournal.final_grade
     ).all()
     dates_topic_set = set()
     record_dict = {f"{student.last_name} {student.first_name}": {} for student in school_students}
@@ -1778,13 +1759,15 @@ def subject_record(subject_id, school_classes_ids, month_index):
     for record in subject_records:
         date_string = f"{record.date:%d.%m}"
         topic = record.grade_type if record.grade_type else record.lesson.lesson_topic
-        dates_topic_set.add((date_string, topic))
+        lesson_id = record.lesson_id if record.lesson_id else 0
+        dates_topic_set.add((date_string, topic, lesson_id))
         student_name = f"{record.student.last_name} {record.student.first_name}"
         if record.student in school_students:
-            record_dict[student_name][(date_string, topic)] = {
+            record_dict[student_name][(date_string, topic, lesson_id)] = {
                 "grade": record.grade,
                 "comment": record.lesson_comment
             }
+
     subject_lessons = Lesson.query.filter(
         Lesson.date >= first_date,
         Lesson.date <= last_date,
@@ -1795,11 +1778,133 @@ def subject_record(subject_id, school_classes_ids, month_index):
     for lesson in subject_lessons:
         date_string = f"{lesson.date:%d.%m}"
         topic = lesson.lesson_topic
-        dates_topic_set.add((date_string, topic))
+        dates_topic_set.add((date_string, topic, lesson.id))
 
     dates_topic = sorted(list(dates_topic_set))
 
-    return record_dict, dates_topic
+    school_start_year = first_date.year if 9 <= first_date.month <= 12 else first_date.year - 1
+    final_grades = SchoolLessonJournal.query.filter(
+        SchoolLessonJournal.date >= datetime(school_start_year, 9, 1).date(),
+        SchoolLessonJournal.date <= datetime(school_start_year + 1, 7, 1).date(),
+        SchoolLessonJournal.subject_id == subject_id,
+        SchoolLessonJournal.school_class_id.in_(school_classes_ids),
+        SchoolLessonJournal.final_grade
+    ).order_by(SchoolLessonJournal.date).all()
+
+    final_grades_list = []
+    if final_grades:
+        final_grades_set = set()
+        for final_grade in final_grades:
+            date_string = f"{final_grade.date:%d.%m}"
+            topic = final_grade.grade_type
+            lesson_id = 0
+            final_grades_set.add((date_string, topic, lesson_id))
+            student_name = f"{final_grade.student.last_name} {final_grade.student.first_name}"
+            if final_grade.student in school_students:
+                record_dict[student_name][(date_string, topic, lesson_id)] = {
+                    "grade": final_grade.grade,
+                    "comment": final_grade.lesson_comment
+                }
+
+        final_grades_list = sorted(list(final_grades_set))
+
+    return record_dict, dates_topic, school_students, final_grades_list
+
+
+def add_new_grade(form, students, subject_id, grade):
+    grade_type = form.get('grade_type')
+    grade_date = datetime.strptime(form.get('grade_date'), '%d.%m.%Y').date()
+    for student in students:
+        new_grade = form.get(f'new_grade_{student.id}')
+        new_comment = form.get(f'new_comment_{student.id}')
+        if new_grade or new_comment:
+            journal_record = SchoolLessonJournal(
+                date=grade_date,
+                grade_type=grade_type,
+                student_id=student.id,
+                school_class_id=student.school_class_id,
+                subject_id=subject_id,
+                grade=new_grade,
+                lesson_comment=new_comment
+            )
+            if grade == "final":
+                journal_record.final_grade = True
+            db.session.add(journal_record)
+            db.session.flush()
+    month_index = calc_month_index(grade_date)
+
+    return month_index
+
+
+def change_grade(form, subject_id, classes_ids, month_index):
+    result_date = TODAY + relativedelta(months=month_index)
+    month, year = (result_date.month, result_date.year)
+    grade_date_topic = form.get('grade_date_topic')
+    if not grade_date_topic:
+        return 'Оценка не выбрана', 'error'
+
+    date, topic, lesson_id = grade_date_topic.split('-')
+    if lesson_id != 'final':
+        record_date = datetime(year, month, int(date.split('.')[0])).date()
+        lesson_id = int(lesson_id) if lesson_id.isdigit() and lesson_id != '0' else None
+        final_grade = False
+    else:
+        school_start_year = year if 9 <= month <= 12 else year - 1
+        record_day, record_month = map(int, date.split('.'))
+        record_year = school_start_year if 9 <= record_month <= 12 else school_start_year + 1
+        record_date = datetime(record_year, record_month, record_day).date()
+        lesson_id = None
+        final_grade = True
+    if form.get('change_mode') == 'delete':
+        records = SchoolLessonJournal.query.filter(
+            SchoolLessonJournal.date == record_date,
+            SchoolLessonJournal.grade_type == topic,
+            SchoolLessonJournal.subject_id == subject_id,
+            SchoolLessonJournal.school_class_id.in_(classes_ids),
+            SchoolLessonJournal.lesson_id == lesson_id,
+            SchoolLessonJournal.final_grade == final_grade
+        ).all()
+        [db.session.delete(record) for record in records]
+        db.session.flush()
+        return 'Оценки удалены', 'success'
+
+    else:
+        student_id = int(form.get('student_id')) if form.get('student_id') else None
+        if not student_id:
+            return 'Ученик не выбран', 'error'
+        student = Person.query.filter_by(id=student_id).first()
+        new_grade = int(form.get('grade')) if form.get('grade') and form.get('grade').isdigit() else None
+        new_comment = form.get('comment')
+        if not new_comment and not new_grade:
+            return 'Нет новой оценки или комментария', 'error'
+        record = SchoolLessonJournal.query.filter(
+            SchoolLessonJournal.date == record_date,
+            SchoolLessonJournal.student_id == student_id,
+            SchoolLessonJournal.grade_type == topic,
+            SchoolLessonJournal.subject_id == subject_id,
+            SchoolLessonJournal.lesson_id == lesson_id,
+            SchoolLessonJournal.final_grade == final_grade
+        ).first()
+        if record:
+            record.grade = new_grade
+            record.lesson_comment = new_comment
+            db.session.flush()
+        else:
+            new_record = SchoolLessonJournal(
+                date=record_date,
+                student_id=student_id,
+                grade_type=topic,
+                subject_id=subject_id,
+                lesson_id=lesson_id,
+                school_class_id=student.school_class_id,
+                final_grade=final_grade,
+                grade=new_grade,
+                lesson_comment=new_comment
+            )
+            db.session.add(new_record)
+            db.session.flush()
+
+        return 'Изменения внесены', 'success'
 
 
 def calc_month_index(date):

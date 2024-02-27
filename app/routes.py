@@ -11,9 +11,9 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     handle_employee_edit, format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, \
     day_school_lessons_dict, filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, calculate_week, \
     lesson_edit, show_lesson, handle_lesson, format_school_class_students, format_school_class_subjects, \
-    show_school_lesson, handle_school_lesson, employee_record, subject_record, calc_month_index, student_record, \
-    get_after_school_students, get_after_school_prices, handle_after_school_adding, finance_operation, \
-    download_timetable, get_date_range, get_period, del_record
+    show_school_lesson, handle_school_lesson, employee_record, subject_record, add_new_grade, change_grade, \
+    calc_month_index, student_record, get_after_school_students, get_after_school_prices, handle_after_school_adding, \
+    finance_operation, download_timetable, get_date_range, get_period, del_record
 
 from app import app, db
 from datetime import datetime, timedelta
@@ -907,13 +907,7 @@ def school_lesson(lesson_str):
                 db.session.rollback()
                 flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
 
-            if 'new_grade_btn' in request.form:
-
-                return redirect(url_for('school_subject', subject_classes=subject_classes,
-                                        month_index=month_index))
-            else:
-
-                return redirect(url_for('school_lesson', lesson_str=f'0-{sc_lesson.id}'))
+            return redirect(url_for('school_lesson', lesson_str=f'0-{sc_lesson.id}'))
 
         sc_students = Person.query.filter(
             Person.school_class_id.is_not(None),
@@ -924,13 +918,14 @@ def school_lesson(lesson_str):
         days_dict = {day_num: day for (day_num, day) in enumerate(DAYS_OF_WEEK)}
 
         return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
-                               school_students=sc_students, grade_types=grade_types, school_subject=sc_subject)
+                               school_students=sc_students, grade_types=grade_types, school_subject=sc_subject,
+                               subject_classes=subject_classes, month_index=month_index)
 
     else:
         if sc_subject:
             return render_template('school_lesson.html', school_lesson=sc_lesson, school_subject=sc_subject)
         else:
-            flash("Такого занятия нет.", 'error')
+            flash("Такого занятия нет", 'error')
             return redirect(url_for('school_subjects'))
 
 
@@ -938,16 +933,57 @@ def school_lesson(lesson_str):
 @login_required
 def school_subject(subject_classes, month_index):
     subject_classes_ids = subject_classes.split('-')
-    subject_id = int(subject_classes_ids[0])
-    classes_ids = [int(sc_cl) for sc_cl in subject_classes_ids[1:]]
-    subject_records, dates_topics = subject_record(subject_id, classes_ids, int(month_index))
-    sc_students = subject_records.keys()
+    subject_id = int(subject_classes_ids[0]) if subject_classes_ids[0].isdigit() else None
+    classes_ids = [int(sc_cl) for sc_cl in subject_classes_ids[1:] if sc_cl.isdigit()]
+    month_index = int(month_index) if str(month_index).lstrip('-').isdigit() else None
+    if not subject_id or not classes_ids or month_index is None:
+        flash("Журнал не найден", 'error')
+        return redirect(url_for('school_subjects', school_class=0))
+
+    subject_records, dates_topics, sc_students, final_grades_list = subject_record(subject_id, classes_ids, month_index)
     subject = Subject.query.filter_by(id=subject_id).first()
     school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).order_by(SchoolClass.school_class).all()
     school_classes_names = ', '.join([cl.school_name for cl in school_classes])
+    distinct_grade_types = db.session.query(SchoolLessonJournal.grade_type.distinct()).all()
+    grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
+
+    if request.method == 'POST':
+        try:
+            if 'new_grade_btn' in request.form:
+                grade_month_index = add_new_grade(request.form, sc_students, subject_id, "grade")
+
+                db.session.commit()
+                flash("Оценки выставлены", 'success')
+
+                return redirect(url_for('school_subject', subject_classes=subject_classes,
+                                        month_index=grade_month_index))
+
+            if 'new_final_grade_btn' in request.form:
+                add_new_grade(request.form, sc_students, subject_id, "final")
+                db.session.commit()
+                flash("Оценки выставлены", 'success')
+
+                return redirect(url_for('school_subject', subject_classes=subject_classes,
+                                        month_index=month_index))
+            if 'change_grade_btn' in request.form:
+                message = change_grade(request.form, subject_id, classes_ids, month_index)
+                db.session.commit()
+                flash(message[0], message[1])
+
+                return redirect(url_for('school_subject', subject_classes=subject_classes,
+                                        month_index=month_index))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при выставлении оценок: {str(e)}', 'error')
+
+            return redirect(url_for('school_subject', subject_classes=subject_classes,
+                                    month_index=month_index))
 
     return render_template('school_subject.html', subject_records=subject_records, dates_topics=dates_topics,
-                           students=sc_students, subject=subject, school_classes=school_classes_names)
+                           final_grades_list=final_grades_list, students=sc_students, subject=subject,
+                           school_classes=school_classes_names, month_index=month_index, today=TODAY,
+                           subject_classes=subject_classes, grade_types=grade_types)
 
 
 @app.route('/student-record/<string:student_id>/<string:month_index>', methods=['GET', 'POST'])

@@ -595,6 +595,16 @@ $(document).ready(function(){
         }
     });
 
+    // Validate grade form
+    $('form.grade-form').submit(function(event) {
+        var currentForm = $(this);
+        validateDateInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
     // Handle the change event for employee selection
     $(".employee-section").on("change", ".employee-select", function () {
          personSelectChange($(this), ".employee-section");
@@ -954,59 +964,71 @@ $(document).ready(function(){
     });
 
     // Create list of student grades in the grade-modal
-    $(".add-grad-btn").on("click", function () {
-        var selectedStudent = $(".student-select option:selected");
+    $("#grade-modal, #final-grade-modal").on("click", ".add-grad-btn", function () {
+        var gradeForm = $(this).closest(".grade-form");
+        var selectedStudent = gradeForm.find(".student-select option:selected");
         if (selectedStudent.length > 0) {
             var studentId = selectedStudent.val();
             var studentName = selectedStudent.text();
-            var grade = $(".student-grade").val();
-            var comment = $(".student-comment").val();
-            var studentGradeText = studentName + ": " + grade + " - " + comment;
-            var gradeInputName = "new_grade_" + studentId;
-            var commenInputtName = "new_comment_" + studentId;
-            selectedStudent.remove();
+            var grade = gradeForm.find(".student-grade").val();
+            var comment = gradeForm.find(".student-comment").val();
+            if (grade || comment) {
+                var studentGradeText = studentName + ": " + grade + " - " + comment;
+                var gradeInputName = "new_grade_" + studentId;
+                var commentInputName = "new_comment_" + studentId;
+                selectedStudent.remove();
 
-            var studentGradeRow = `
-                <div class="student-grade-row">${studentGradeText}<a href="#" class="delete-grade" data-student="${studentId}">×</a></div>`;
+                var studentGradeRow = `
+                    <div class="student-grade-row">${studentGradeText}<a href="#" class="delete-grade" data-student="${studentId}">×</a></div>`;
 
-            var studentInput = `
-                <div id="input-${studentId}">
-                    <input type="hidden" name="${gradeInputName}" value="${grade}">
-                    <input type="hidden" name="${commenInputtName}" value="${comment}">
-                </div>`;
-            $("#grades-container").append(studentGradeRow);
-            $("#input-container").append(studentInput)
+                var studentInput = `
+                    <div id="input-${studentId}">
+                        <input type="hidden" name="${gradeInputName}" value="${grade}">
+                        <input type="hidden" name="${commentInputName}" value="${comment}">
+                    </div>`;
+                gradeForm.find(".grades-container").append(studentGradeRow);
+                gradeForm.find(".input-container").append(studentInput);
 
-            $(".student-comment").val('');
+                $(".student-comment").val('');
+            }
         }
     });
 
-    // Save original options of student selector when open the grade-modal
-    $("#grade-modal").on("shown.bs.modal", function () {
-        var originalOptions = $(".student-select option").clone();
-    });
+    // Save original options of student selector
+    var originalOptions = $(".student-select option").clone();
 
     // Refresh the grade-modal when closing it
-    $("#grade-modal").on("hidden.bs.modal", function () {
-        $("#grades-container").empty();
-        $("#input-container").empty();
+    $("#grade-modal, #final-grade-modal").on("hidden.bs.modal", function () {
+        $(".grades-container").empty();
+        $(".input-container").empty();
         $(".student-select option").remove();
         $(".student-select").append(originalOptions);
     });
 
     // Delete student's grade from the list of grades
-    $("#grades-container").on("click", ".delete-grade", function (e) {
+    $(".grades-container").on("click", ".delete-grade", function (e) {
         e.preventDefault();
+        var gradeForm = $(this).closest(".grade-form");
         var studentId = String($(this).data("student"));
         $(this).parent().remove();
         var restoreOption = originalOptions.filter(function() {
             return $(this).val() === studentId;
         });
         if (restoreOption.length > 0){
-            $(".student-select").append(restoreOption);
+            gradeForm.find(".student-select").append(restoreOption);
         }
 
-        $("#input-" + studentId).remove();
+        $(".#input-" + studentId).remove();
+    });
+
+    // Handle change of grade change-mode selector
+    $("#change-grade-modal").on("change", ".change_mode_select", function () {
+        var changeMode = $(this).val();
+        if (changeMode === 'delete') {
+            $(".change-grade-row").hide();
+        } else {
+            $(".change-grade-row").show();
+        }
     });
 
     // Handle term selector change when adding after-school student

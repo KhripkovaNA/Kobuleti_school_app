@@ -2884,7 +2884,7 @@ select.form-control[multiple],
 
 .table>thead>tr>th {
     font-size: 1em;
-    font-weight: 300;
+    font-weight: 500;
 }
 
 .scroll-timetable .fixed-column, .scroll-timetable .fixed-column-next {
@@ -3066,7 +3066,7 @@ div.form-control {
     display: inline-block;
     background-color: #F1F2F3;
     border-radius: 4px;
-    padding: 0 10px;
+    padding: 0 5px;
 }
 
 .comment {
