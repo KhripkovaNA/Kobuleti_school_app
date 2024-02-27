@@ -909,4 +909,14 @@ lesson_dict = {
 # teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
 # print(teachers)
 
+# print(SchoolClass.query.filter_by(id=1).first().school_subjects.all())
+# student = Person.query.filter_by(id=1).first()
+#
+# subjects = Subject.query.filter(Subject.id.in_([32, 25])).all()
+# student.subjects.extend(subjects)
+# db.session.commit()
+
+# student = Person.query.filter_by(id=20).first()
+# print(student, student.subjects.all())
+
 

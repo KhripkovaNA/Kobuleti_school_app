@@ -704,8 +704,11 @@ def edit_lesson(lesson_id):
                     week = calculate_week(edited_lesson.date)
                     flash(message[0], message[1])
 
-                    return redirect(url_for('timetable', week=week))
-
+                    if edited_lesson.lesson_type.name == "school":
+                        day = edited_lesson.date.weekday() + 1
+                        return redirect(url_for('school_timetable', week=week, day=day))
+                    else:
+                        return redirect(url_for('timetable', week=week))
             else:
                 flash('Ошибка в форме изменения занятия', 'error')
 
@@ -791,6 +794,9 @@ def school_students(school_class):
                 if added_student_id:
                     new_school_student = Person.query.filter_by(id=added_student_id).first()
                     new_school_student.school_class_id = school.id
+                    for subject in school.school_subjects:
+                        if subject not in new_school_student.subjects.all():
+                            new_school_student.subjects.append(subject)
                     db.session.commit()
                     flash(f'Новый ученик добавлен в класс', 'success')
                 else:
@@ -858,26 +864,34 @@ def school_subjects(school_class):
 @app.route('/school-timetable/<string:week>/<string:day>')
 @login_required
 def school_timetable(week, day):
-    week_day = int(day)
+    week = int(week) if str(week).lstrip('-').isdigit() else None
+    week_day = int(day) if str(day).isdigit() else None
+    if week is None or week_day is None:
+        flash(f'Неправильный адрес сайта', 'error')
+        return redirect(url_for('school_students', school_class=0))
+
     if week_day == 0:
         week_day = TODAY.weekday() + 1
     if week_day > 6:
         return redirect(url_for('school_timetable', week=week+1, day=1))
 
-    week = int(week)
-    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-    day_school_lessons = day_school_lessons_dict(week_day, week, school_classes)
+    school_classes = SchoolClass.query.order_by(
+        SchoolClass.school_class,
+        SchoolClass.school_name
+    ).all()
+    day_school_lessons, date_str, time_range = day_school_lessons_dict(week_day, week, school_classes)
     dates = get_date_range(week)
     filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
 
     return render_template('school_timetable.html', days=DAYS_OF_WEEK, school_classes=school_classes,
-                           classes=day_school_lessons, week=week, week_day=week_day, filename=filename)
+                           classes=day_school_lessons, date=date_str, start_time=time_range[0], end_time=time_range[1],
+                           week=week, week_day=week_day, filename=filename)
 
 
-@app.route('/school-lesson/<string:lesson_id>', methods=['GET', 'POST'])
+@app.route('/school-lesson/<string:lesson_str>', methods=['GET', 'POST'])
 @login_required
-def school_lesson(lesson_id):
-    sc_lesson, sc_subject = show_school_lesson(lesson_id)
+def school_lesson(lesson_str):
+    sc_lesson, sc_subject = show_school_lesson(lesson_str)
     if sc_lesson:
         subject_classes = str(sc_lesson.subject_id) + '-' + '-'.join(map(str, sc_lesson.classes_ids))
         month_index = calc_month_index(sc_lesson.date)
@@ -899,7 +913,7 @@ def school_lesson(lesson_id):
                                         month_index=month_index))
             else:
 
-                return redirect(url_for('school_lesson', lesson_id=sc_lesson.id))
+                return redirect(url_for('school_lesson', lesson_str=f'0-{sc_lesson.id}'))
 
         sc_students = Person.query.filter(
             Person.school_class_id.is_not(None),

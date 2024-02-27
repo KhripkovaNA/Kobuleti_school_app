@@ -9,8 +9,9 @@
             </div>
             <div class="card-content">
                 {% if school_lesson %}
-                    <h4 class="title" style="margin-left: 27px;">Дата: {{ school_lesson.date.strftime('%d.%m') }}, {{ days_dict[school_lesson.date.weekday()]}}, учитель: {{ school_lesson.teacher.last_name }} {{ school_lesson.teacher.first_name }}</h4>
-                    <form action="{{ url_for('school_lesson', lesson_id=school_lesson.id) }}" method="post">
+                    <h4 class="title" style="margin-left: 27px;">{{ days_dict[school_lesson.date.weekday()] }}, {{ school_lesson.date.strftime('%d.%m') }}. Учитель: {{ school_lesson.teacher.last_name }} {{ school_lesson.teacher.first_name }}</h4>
+                    <form action="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.id|string) }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group">
                             <div class="row">
                                 <label class="control-label col-md-2">Тема урока:</label>
@@ -84,16 +85,15 @@
                                             {% endfor %}
                                             <tr>
                                                 <td>
-                                                    <button type="button" id="add-client-btn" class="btn btn-xs" style="background-color: #ff9800;">Добавить ученика</button>
-                                                    <div id="clientSelector" style="display: none;">
-                                                        <select name="added_student_id">
+                                                    <button type="button" id="add-client-btn" class="btn btn-xs add-client-btn" data-background-color="orange">Добавить ученика</button>
+                                                    <div class="add-client-form" style="display: none;">
+                                                        <select name="added_client_id" class="form-control select-search">
                                                             {% for student in school_students %}
                                                                 <option value="{{ student.id }}">{{ student.last_name }} {{ student.first_name }}</option>
                                                             {% endfor %}
                                                         </select>
-                                                        <br>
-                                                        <button type="submit" name="add_student_btn" class="btn btn-xs" style="background-color: #ff9800;">Добавить</button>
-                                                        <button type="button" id="cancel-add-client-btn" class="btn btn-danger btn-xs">Отменить</button>
+                                                        <button type="submit" name="add_student_btn" class="btn btn-success btn-xs">Добавить</button>
+                                                        <button type="button" class="btn btn-danger btn-xs close-client-btn">Отменить</button>
                                                     </div>
                                                 </td>
                                                 <td></td>
@@ -102,7 +102,7 @@
                                                     <td></td>
                                                 {% else %}
                                                     <td>
-                                                        <button type="submit" name="complete_btn" class="btn btn-xs" style="background-color: #ff9800; float: right;">Заполнить журнал</button>
+                                                        <button type="submit" name="complete_btn" class="btn btn-xs" data-background-color="orange">Заполнить журнал</button>
                                                     </td>
                                                 {% endif %}
                                             </tr>
@@ -115,22 +115,22 @@
                     <div class="row">
                         <div class="col-md-6">
                             {% if school_lesson.prev %}
-                                <button class="btn btn-sm" style="background-color: #ff9800;">
-                                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_lesson', lesson_id=school_lesson.prev) }}">
+                                <button class="btn btn-sm" data-background-color="orange">
+                                    <a style="color: #FFFFFF;" href="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.prev|string) }}">
                                         <i class="material-icons">navigate_before</i>Предыдущee занятие
                                     </a>
                                 </button>
                             {% endif %}
                             {% if school_lesson.next %}
-                                <button class="btn btn-sm" style="background-color: #ff9800;">
-                                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_lesson', lesson_id=school_lesson.next) }}">
+                                <button class="btn btn-sm" data-background-color="orange">
+                                    <a style="color: #FFFFFF;" href="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.next|string) }}">
                                         Следующее занятие<i class="material-icons">navigate_next</i>
                                     </a>
                                 </button>
                             {% endif %}
                         </div>
                         <div class="col-md-3 col-md-offset-3">
-                            <a href="" class="btn btn-primary btn-sm pull-right" data-toggle="modal" data-target="#grade-modal">
+                            <a href="" class="btn btn-sm pull-right" data-toggle="modal" data-target="#grade-modal" data-background-color="purple">
                                 <i class="material-icons">grade</i> Добавить оценку
                             </a>
                         </div>
@@ -142,7 +142,8 @@
                                         <h4 class="modal-title">{{ school_lesson.subject.name }}. {{ school_lesson.classes }}. Оценки</h4>
                                     </div>
                                     <div class="modal-body">
-                                        <form class="login-form" action="{{ url_for('school_lesson', lesson_id=school_lesson.id) }}" method="post">
+                                        <form class="login-form" action="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.id|string) }}" method="post">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <div class="row">
                                                 <label class="control-label col-md-2" style="padding-left:44px;">Тип оценки:</label>
                                                 <div class="col-md-5">
