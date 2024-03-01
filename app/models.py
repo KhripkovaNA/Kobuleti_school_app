@@ -266,6 +266,7 @@ class SchoolLessonJournal(db.Model):
 
     student = db.relationship('Person', backref='school_lessons')
     lesson = db.relationship('Lesson', backref='lesson_records')
+    subject = db.relationship('Subject', backref='lesson_records')
 
 
 class Report(db.Model):

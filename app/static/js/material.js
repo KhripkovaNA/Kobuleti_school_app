@@ -519,29 +519,65 @@ $(document).ready(function(){
         });
     }
 
-    // Function to validate input
-    function validateFieldInput(validatedForm) {
-        var fieldInput = validatedForm.find('.field-input');
-        var fieldValue = fieldInput.val();
-        if (fieldInput.hasClass('required')) {
-            fieldDiv = validatedForm.find('.field-div');
-            errorDiv = fieldDiv.closest('.row');
-            if (!fieldValue) {
+    // Function to validate date input range
+    function validateDateInputRange(validatedForm) {
+        var dateInput = validatedForm.find('.date-input');
+        var dateDiv = dateInput.closest('.date-div');
+        var errorDiv = dateInput.closest('.row');
+
+        if (dateInput.hasClass('required')) {
+            var periodValue = validatedForm.find('.period').val();
+            var dateValue = dateInput.val();
+            var periodParts = periodValue.split('-');
+            var dateParts = dateValue.split('.');
+            var isWithinPeriod = (
+                parseInt(dateParts[1]) === parseInt(periodParts[0]) &&
+                parseInt(dateParts[2]) === parseInt(periodParts[1])
+            );
+            if (!isWithinPeriod) {
                 errorDiv.addClass("has-error");
-                var errorSpan = `<span class="error-span" style="color:red;">Заполните это поле</span>`;
-                var existingErrorSpan = fieldDiv.find('.error-span');
+                var errorSpan = `<span class="error-span" style="color:red;">Выберете дату в выбранном месяце</span>`;
+                var existingErrorSpan = dateDiv.find('.error-span');
 
                 if (existingErrorSpan.length === 0) {
-                    fieldDiv.append(errorSpan);
+                    dateDiv.append(errorSpan);
+                }
+            } else {
+                errorDiv.removeClass("has-error");
+                dateDiv.find('.error-span').remove();
+            }
+        } else {
+            errorDiv.removeClass("has-error");
+            dateDiv.find('.error-span').remove();
+        }
+    }
+
+    // Function to validate input
+    function validateFieldInput(validatedForm) {
+        validatedForm.find('.field-input').each(function() {
+            var fieldInput = $(this);
+            var fieldValue = fieldInput.val();
+            var fieldDiv = fieldInput.closest('.field-div');
+            var errorDiv = fieldInput.closest('.row');
+
+            if (fieldInput.hasClass('required')) {
+                if (!fieldValue) {
+                    errorDiv.addClass("has-error");
+                    var errorSpan = `<span class="error-span" style="color:red;">Заполните это поле</span>`;
+                    var existingErrorSpan = fieldDiv.find('.error-span');
+
+                    if (existingErrorSpan.length === 0) {
+                        fieldDiv.append(errorSpan);
+                    }
+                } else {
+                    errorDiv.removeClass("has-error");
+                    fieldDiv.find('.error-span').remove();
                 }
             } else {
                 errorDiv.removeClass("has-error");
                 fieldDiv.find('.error-span').remove();
             }
-        } else {
-            errorDiv.removeClass("has-error");
-            fieldDiv.find('.error-span').remove();
-        }
+        });
     }
 
     // Validate subscription form
@@ -554,11 +590,22 @@ $(document).ready(function(){
         }
     });
 
+    // Validate finance form
+    $('form.finance-form').submit(function(event) {
+        var currentForm = $(this);
+        validateFieldInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
     // Validate after-school form
     $('form.after-school-form').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
         validateFieldInput(currentForm);
+        validateDateInputRange(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
@@ -589,6 +636,16 @@ $(document).ready(function(){
     $('form.school-subject-form').submit(function(event) {
         var currentForm = $(this);
         validateFieldInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
+    // Validate change-lessons form
+    $('form.change-lessons-form').submit(function(event) {
+        var currentForm = $(this);
+        validateDateInput(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Финансовые операции</h4>
+            </div>
+            <div class="card-content table-responsive">
+                {% if finance_operations %}
+                    <div class="scroll-table">
+                        <input type="text" id="search" placeholder="Поиск в таблице">
+                        <table class="table table-hover">
+                            <thead class="text-success">
+                                <th style="text-align:center;">Дата</th>
+                                <th width="20%">Клиент</th>
+                                <th style="text-align:center;">Сумма</th>
+                                <th width="35%">Описание</th>
+                                <th width="5%"></th>
+                            </thead>
+                        </table>
+                        <div class="scroll-table-body">
+                            <table class="table table-hover">
+                                <tbody>
+                                    {% for operation in finance_operations %}
+                                        <tr>
+                                            <td style="text-align:center;">{{ operation.date.strftime('%d.%m.%Y') }}</td>
+                                            <td width="20%">{{ operation.person.last_name }} {{ operation.person.first_name }}</td>
+                                            <td style="text-align:center;">
+                                                {% if operation.amount > 0 %}
+                                                    <p style="color:red"><b>-{{ operation.amount|round(1) }}</b></p>
+                                                {% elif operation.amount < 0 %}
+                                                    <p style="color:green"><b>+{{ operation.amount|abs|round(1) }}</b></p>
+                                                {% else %}
+                                                    <p><b>{{ operation.amount|round(1) }}</b></p>
+                                                {% endif %}
+                                            </td>
+                                            <td width="35%">{{ operation.description }}</td>
+                                            <td width="5%">
+                                                <a href="#" data-toggle="modal" data-target="#change-{{ operation.id }}-modal">
+                                                    <i class="material-icons">edit</i>
+                                                </a>
+
+                                            <!-- *-*-*-*-*-*-*-*-*-* Operation change modal *-*-*-*-*-*-*-*-*-* -->
+
+                                                <div class="modal fade" id="change-{{ operation.id }}-modal" role="dialog">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h4 class="modal-title">Изменить финансовую операцию</h4>
+                                                            </div>
+                                                            <div class="modal-body" style="padding-top:10px;">
+                                                                <form class="change-finance-form" action="{{ url_for('finances') }}" method="post">
+                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                    <input type="hidden" name="operation_id" value="{{ operation.id }}">
+                                                                    <div class="row">
+                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Дата:</label>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-control">{{ operation.date.strftime('%d.%m.%Y') }}</div>
+                                                                        </div>
+                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Сумма:</label>
+                                                                        <div class="col-md-2">
+                                                                            {% if operation.amount > 0 %}
+                                                                                <div class="form-control" style="color:red"><b>-{{ operation.amount|round(1) }}</b></div>
+                                                                            {% elif operation.amount < 0 %}
+                                                                                <div class="form-control" style="color:green"><b>+{{ operation.amount|abs|round(1) }}</b></div>
+                                                                            {% else %}
+                                                                                <div class="form-control"><b>{{ operation.amount|round(1) }}</b></div>
+                                                                            {% endif %}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Описание:</label>
+                                                                        <div class="col-md-8 field-div">
+                                                                            <input type="text" name="description" class="form-control field-input" value="{{ operation.description }}">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <div class="col-md-6 col-md-offset-3">
+                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                                Изменить
+                                                                            </button>
+                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                Отмена
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>Финансовых операций пока нет</p>
+                {% endif %}
+                <button class="btn btn-sm" data-background-color="purple">
+                    <a href="#" data-toggle="modal" data-target="#finance-modal">
+                        <i class="material-icons">attach_money</i> Финансовая операция
+                    </a>
+                </button>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Finance operation modal *-*-*-*-*-*-*-*-*-* -->
+
+                <div class="modal fade" id="finance-modal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Финансовая операция</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <div class="row">
+                                        <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
+                                        <div class="col-md-7">
+                                            <select name="person_id" class="form-control select-search">
+                                                {% for person in all_persons %}
+                                                    <option value="{{ person.id }}">{{ person.last_name }} {{ person.first_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
+                                        <div class="col-md-7">
+                                            <select name="operation_type" class="form-control">
+                                                <option value="minus">Оплата</option>
+                                                <option value="plus">Возврат</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-4" style="padding-left:44px;">Описание:</label>
+                                        <div class="col-md-7 field-div">
+                                            <input type="text" name="description" class="form-control field-input required">
+                                        </div>
+                                    </div>
+                                     <div class="row">
+                                        <label class="control-label col-md-4" style="padding-left:44px;">Сумма:</label>
+                                        <div class="col-md-4 field-div">
+                                            <input type="number" name="amount" class="form-control field-input required" step="5" min="5" max="10000">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 col-md-offset-3">
+                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                Провести
+                                            </button>
+                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                Отмена
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
-    lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record
+    lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record, \
+    conjugate_lessons, calculate_week
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
@@ -920,6 +921,52 @@ lesson_dict = {
 # print(student, student.subjects.all())
 
 
-# print(subject_record(32, [1], -1))
+# # print(subject_record(32, [1], -1))
+# lessons_week = '0'
+# subject_types = 'specific'
+# lessons_date = '27.02'
+# subject_types_specific = ['3']
+#
+#
+# lessons_week = int(lessons_week)
+# lessons_date = lessons_date
+# lessons_day, lessons_month = map(int, lessons_date.split('.'))
+# start_year = get_date(0, lessons_week).year
+# end_year = get_date(6, lessons_week).year
+# lessons_year = start_year if start_year == end_year else start_year if lessons_month == 12 else end_year
+# date = datetime(lessons_year, lessons_month, lessons_day).date()
+# query = Lesson.query.filter(Lesson.date == date)
+# subject_types = subject_types
+# if subject_types != "all":
+#     subject_types_list = [int(subject_type) for subject_type in subject_types_specific if subject_types_specific]
+#     query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
+# del_lessons = query.all()
+# if del_lessons:
+#     les = len(del_lessons)
+#     del_les = 0
+#     for lesson in del_lessons:
+#         if not lesson.lesson_completed:
+#             db.session.delete(lesson)
+#             del_les += 1
+#             db.session.flush()
+#
+#     if del_les == les:
+#         print("Все занятия отменены", 'success')
+#
+#     elif del_les != 0:
+#         message1 = (f"{conjugate_lessons(del_les)} отменено", 'success')
+#         message2 = (f"{conjugate_lessons(del_les)} невозможно отменить", 'error')
+#         print([message1, message2])
+#
+#     else:
+#         print("Занятия невозможно отменить", 'error')
+#
+# else:
+#     print("Нет занятий,  удовлетворяющих критериям", 'error')
+#
+# db.session.rollback()
 
 
+# delete_record(Finance, 8)
+# delete_record(Finance, 7)
+# print_table(Finance)

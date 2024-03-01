@@ -9,14 +9,14 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
     handle_employee_edit, format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, \
-    day_school_lessons_dict, filter_lessons, copy_filtered_lessons, add_new_lessons, subjects_data, calculate_week, \
-    lesson_edit, show_lesson, handle_lesson, format_school_class_students, format_school_class_subjects, \
-    show_school_lesson, handle_school_lesson, employee_record, subject_record, add_new_grade, change_grade, \
-    calc_month_index, student_record, get_after_school_students, get_after_school_prices, handle_after_school_adding, \
-    finance_operation, download_timetable, get_date_range, get_period, del_record
+    change_lessons_date, day_school_lessons_dict, filter_lessons, copy_filtered_lessons, add_new_lessons, \
+    subjects_data, calculate_week, lesson_edit, show_lesson, handle_lesson, format_school_class_students, \
+    format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, subject_record, \
+    add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
+    handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, finance_operation, \
+    del_record
 
 from app import app, db
-from datetime import datetime, timedelta
 from io import BytesIO
 from openpyxl import Workbook
 
@@ -586,9 +586,33 @@ def timetable(week):
     rooms = Room.query.all()
     week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, rooms)
     rooms = [room.name for room in rooms if room.name in used_rooms]
+    days = DAYS_OF_WEEK[:len(week_dates)]
+    subject_types = SubjectType.query.all()
 
-    return render_template('timetable.html', days=DAYS_OF_WEEK, rooms=rooms, start_time=time_range[0],
-                           end_time=time_range[1], classes=week_lessons, week=week, week_dates=week_dates)
+    return render_template('timetable.html', days=days, rooms=rooms, start_time=time_range[0], end_time=time_range[1],
+                           classes=week_lessons, week=week, week_dates=week_dates, subject_types=subject_types)
+
+
+@app.route('/change-lessons', methods=['POST'])
+@login_required
+def change_lessons():
+    try:
+        new_week, message = change_lessons_date(request.form)
+        db.session.commit()
+        for msg in message:
+            flash(msg[0], msg[1])
+        if new_week is not None:
+            db.session.commit()
+            return redirect(url_for('timetable', week=new_week))
+
+        else:
+            return redirect(request.referrer)
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при переносе занятий: {str(e)}', 'error')
+
+        return redirect(request.referrer)
 
 
 @app.route('/copy-lessons', methods=['GET', 'POST'])
@@ -919,7 +943,7 @@ def school_lesson(lesson_str):
 
         return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
                                school_students=sc_students, grade_types=grade_types, school_subject=sc_subject,
-                               subject_classes=subject_classes, month_index=month_index)
+                               subject_classes=subject_classes, month_index=month_index, today=TODAY)
 
     else:
         if sc_subject:
@@ -986,17 +1010,24 @@ def school_subject(subject_classes, month_index):
                            subject_classes=subject_classes, grade_types=grade_types)
 
 
-@app.route('/student-record/<string:student_id>/<string:month_index>', methods=['GET', 'POST'])
+@app.route('/student-record/<string:student_id>/<string:month_index>')
 @login_required
 def student_school_record(student_id, month_index):
+    student_id = int(student_id) if str(student_id).isdigit() else None
+    month_index = int(month_index) if str(month_index).lstrip('-').isdigit() else None
     school_student = Person.query.filter_by(id=int(student_id)).first()
-    if school_student:
-        student_records, dates_topics = student_record(school_student, int(month_index))
-        student_subjects = student_records.keys()
+    if school_student and month_index is not None:
+        student_records, dates_topics, finals = student_record(school_student, int(month_index))
+        student_subjects = list(student_records.keys())
 
         return render_template('school_student.html', student=school_student, dates_topics=dates_topics,
                                student_records=student_records, student_subjects=student_subjects,
-                               month_index=int(month_index))
+                               finals=finals, month_index=month_index)
+
+    else:
+        flash("Такого ученика нет", 'error')
+
+        return redirect(url_for('school_students', school_class=0))
 
 
 @app.route('/after-school/<string:month_index>')
@@ -1023,7 +1054,11 @@ def after_school(month_index):
 @login_required
 def after_school_purchase():
     try:
-        attendee_id = int(request.form.get("selected_client"))
+        attendee_id = int(request.form.get("selected_client")) if request.form.get("selected_client") else None
+        if not attendee_id:
+            flash('Клиент не выбран', 'error')
+            return redirect(request.referrer)
+
         period = request.form.get("period")
         new_after_school = handle_after_school_adding(attendee_id, request.form, period)
 
@@ -1098,6 +1133,55 @@ def generate_timetable(week):
         return
 
 
+@app.route('/finance-operation', methods=['POST'])
+@login_required
+def add_finance_operation():
+    try:
+        person_id = request.form.get('person_id')
+        if not person_id:
+            flash('Клиент не выбран', 'error')
+            return redirect(request.referrer)
+
+        description = request.form.get('description')
+        amount = float(request.form.get('amount'))
+        if request.form.get('operation_type') == 'minus':
+            amount = -amount
+        finance_operation(person_id, amount, description, date=TODAY)
+        db.session.commit()
+        flash('Финансовая операция проведена', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при проведении финансовой операции: {str(e)}', 'error')
+
+    return redirect(request.referrer)
+
+
+@app.route('/finances', methods=['GET', 'POST'])
+@login_required
+def finances():
+    finance_operations = Finance.query.order_by(Finance.date.desc()).all()
+    all_persons = Person.query.order_by(Person.last_name, Person.first_name).all()
+
+    if request.method == 'POST':
+        try:
+            operation_id = request.form.get('operation_id')
+            fin_operation = Finance.query.filter_by(id=operation_id).first()
+            description = request.form.get('description')
+            fin_operation.description = description
+            db.session.commit()
+
+            flash('Финансовая операция изменена', 'success')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при изменении финансовой операции: {str(e)}', 'error')
+
+        return redirect(url_for('finances'))
+
+    return render_template('finances.html', finance_operations=finance_operations, all_persons=all_persons)
+
+
 @app.route('/delete-record', methods=['POST'])
 @login_required
 def delete_record():
@@ -1127,4 +1211,5 @@ def delete_record():
         flash(f'Ошибка при удалении: {str(e)}', 'error')
 
     return redirect(request.referrer)
+
 

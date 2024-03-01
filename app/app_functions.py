@@ -8,7 +8,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
 
-DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
           "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
 CHILD = "Ребенок"
@@ -1189,7 +1189,10 @@ def week_lessons_dict(week, rooms):
                 day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
         if day_lessons:
             week_lessons[weekday] = day_lessons
-
+    if not week_lessons.get(DAYS_OF_WEEK[-1]):
+        week_dates.pop(-1)
+        if not week_lessons.get(DAYS_OF_WEEK[-2]):
+            week_dates.pop(-1)
     return week_lessons, week_dates, used_rooms, (week_start_hour, week_end_hour)
 
 
@@ -1918,11 +1921,14 @@ def student_record(student, month_index):
     result_date = TODAY + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
+
     student_records = SchoolLessonJournal.query.filter(
         SchoolLessonJournal.date >= first_date,
         SchoolLessonJournal.date <= last_date,
-        SchoolLessonJournal.student_id == student.id
+        SchoolLessonJournal.student_id == student.id,
+        ~SchoolLessonJournal.final_grade
     ).all()
+
     student_subjects = Subject.query.filter(
       Subject.subject_type.has(SubjectType.name == "school"),
       Subject.students.any(Person.id == student.id)
@@ -1930,20 +1936,38 @@ def student_record(student, month_index):
     subjects_dict = {subject.name: {} for subject in student_subjects}
     dates_grade_type_set = set()
     for record in student_records:
-        subject = Subject.query.filter_by(id=record.subject_id).first()
         date_str = f'{record.date:%d.%m}'
         grade_type = record.grade_type if record.grade_type else record.lesson.lesson_topic
         dates_grade_type_set.add((date_str, grade_type))
-        if subject.name in subjects_dict.keys():
-            subjects_dict[subject.name][(date_str, grade_type)] = {"grade": record.grade,
-                                                                   "comment": record.lesson_comment}
+        if record.subject.name in subjects_dict.keys():
+            subjects_dict[record.subject.name][(date_str, grade_type)] = {"grade": record.grade,
+                                                                          "comment": record.lesson_comment}
         else:
-            subjects_dict[subject.name] = {(date_str, grade_type): {"grade": record.grade,
-                                                                    "comment": record.lesson_comment}}
+            subjects_dict[record.subject.name] = {(date_str, grade_type): {"grade": record.grade,
+                                                                           "comment": record.lesson_comment}}
 
     dates_grade_type = sorted(list(dates_grade_type_set))
 
-    return subjects_dict, dates_grade_type
+    school_start_year = first_date.year if 9 <= first_date.month <= 12 else first_date.year - 1
+    final_grades = SchoolLessonJournal.query.filter(
+        SchoolLessonJournal.date >= datetime(school_start_year, 9, 1).date(),
+        SchoolLessonJournal.date <= datetime(school_start_year + 1, 7, 1).date(),
+        SchoolLessonJournal.student_id == student.id,
+        SchoolLessonJournal.final_grade
+    ).order_by(SchoolLessonJournal.date).all()
+
+    final_grade_types = []
+    for final_grade in final_grades:
+        if final_grade.grade_type not in final_grade_types:
+            final_grade_types.append(final_grade.grade_type)
+        if final_grade.subject.name in subjects_dict.keys():
+            subjects_dict[final_grade.subject.name][final_grade.grade_type] = {"grade": final_grade.grade,
+                                                                               "comment": final_grade.lesson_comment}
+        else:
+            subjects_dict[final_grade.subject.name] = {final_grade.grade_type: {"grade": final_grade.grade,
+                                                                                "comment": final_grade.lesson_comment}}
+
+    return subjects_dict, dates_grade_type, final_grade_types
 
 
 def get_period(month_index):
@@ -2145,6 +2169,25 @@ def get_date_range(week):
     return dates
 
 
+def filter_day_lessons(form):
+    lessons_week = int(form.get('lessons_week'))
+    lessons_date = form.get('lessons_date')
+    lessons_day, lessons_month = map(int, lessons_date.split('.'))
+    start_year = get_date(0, lessons_week).year
+    end_year = get_date(6, lessons_week).year
+    lessons_year = start_year if start_year == end_year else start_year if lessons_month == 12 else end_year
+    date = datetime(lessons_year, lessons_month, lessons_day).date()
+    query = Lesson.query.filter(Lesson.date == date)
+    subject_types = form.get('subject_types')
+    if subject_types != "all":
+        subject_types_list = [int(subject_type) for subject_type in form.getlist('subject_types_specific')
+                              if form.getlist('subject_types_specific')]
+        query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
+    lessons = query.all()
+
+    return lessons
+
+
 def del_record(form, record_type):
     if record_type == 'student':
         student_id = int(form.get('student_id'))
@@ -2246,37 +2289,45 @@ def del_record(form, record_type):
 
         return message
 
+    if record_type == 'lesson':
+        lesson_id = int(form.get('lesson_id')) if form.get('lesson_id') else None
+        lesson = Lesson.query.filter_by(id=lesson_id).first()
+        if lesson:
+            if not lesson.lesson_completed:
+                db.session.delete(lesson)
+                db.session.flush()
+                return "Занятие отменено", 'success'
+
+            else:
+                return "Невозможно отменить занятие", 'error'
+
+        else:
+            return "Такого занятия нет", 'error'
+
     if record_type == 'lessons':
-        lesson_ids = [int(lesson) for lesson in form.getlist('lesson_id')]
-        lessons = Lesson.query.filter(Lesson.id.in_(lesson_ids)).all()
-        if lessons:
-            les = len(lessons)
+        del_lessons = filter_day_lessons(form)
+        if del_lessons:
+            les = len(del_lessons)
             del_les = 0
-            for lesson in lessons:
+            for lesson in del_lessons:
                 if not lesson.lesson_completed:
                     db.session.delete(lesson)
                     del_les += 1
                     db.session.flush()
 
-            if les == 1:
-                if del_les == les:
-                    message = ("Занятие отменено", 'success')
-                else:
-                    message = ("Невозможно отменить занятие", 'error')
+            if del_les == les:
+                return "Все занятия отменены", 'success'
+
+            elif del_les != 0:
+                message1 = (f"{conjugate_lessons(del_les)} отменено", 'success')
+                message2 = (f"{conjugate_lessons(del_les)} невозможно отменить", 'error')
+                return [message1, message2]
+
             else:
-                if del_les == les:
-                    message = ("Все занятия отменены", 'success')
-                elif del_les != 0:
-                    message1 = (f"{conjugate_lessons(del_les)} отменено", 'success')
-                    message2 = (f"{conjugate_lessons(del_les)} невозможно отменить", 'error')
-                    message = [message1, message2]
-                else:
-                    message = ("Занятия невозможно отменить", 'error')
+                return "Занятия невозможно отменить", 'error'
 
         else:
-            message = ("Занятия невозможно отменить", 'error')
-
-        return message
+            return "Нет занятий,  удовлетворяющих критериям", 'error'
 
     if record_type == 'school_student':
         student_id = int(form.get('student_id'))
@@ -2293,3 +2344,43 @@ def del_record(form, record_type):
             message = ("Такого ученика нет", 'error')
 
         return message
+
+
+def change_lessons_date(form):
+    change_lessons = filter_day_lessons(form)
+    new_date = datetime.strptime(form.get('new_date'), '%d.%m.%Y').date()
+    new_week = calculate_week(new_date)
+    if change_lessons:
+        les = len(change_lessons)
+        change_les = 0
+        for lesson in change_lessons:
+            if not lesson.lesson_completed:
+                start_time = lesson.start_time
+                end_time = lesson.end_time
+                classes = [cl.id for cl in lesson.school_classes]
+                room = lesson.room_id
+                teacher = lesson.teacher_id
+
+                conflicting_lessons = check_conflicting_lessons(new_date, start_time, end_time, classes, room, teacher)
+                if not conflicting_lessons:
+                    lesson.date = new_date
+                    change_les += 1
+                    db.session.flush()
+
+        if change_les == les:
+            message = [("Все занятия перенесены", 'success')]
+
+        elif change_les != 0:
+            message1 = (f"{conjugate_lessons(change_les)} перенесено", 'success')
+            message2 = (f"{conjugate_lessons(change_les)} невозможно перенести", 'error')
+            message = [message1, message2]
+
+        else:
+            new_week = None
+            message = [("Занятия невозможно перенести", 'error')]
+
+    else:
+        new_week = None
+        message = [("Нет занятий,  удовлетворяющих критериям", 'error')]
+
+    return new_week, message

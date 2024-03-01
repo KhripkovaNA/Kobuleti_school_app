@@ -1040,7 +1040,7 @@
                                                     <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Месяц:</label>
                                                         <div class="col-md-7">
-                                                            <select name="period" class="form-control">
+                                                            <select name="period" class="form-control period">
                                                                 {% for month in months %}
                                                                     <option value="{{ month[0] }}">{{ month[1] }}</option>
                                                                 {% endfor %}
@@ -1102,6 +1102,7 @@
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -1159,7 +1160,7 @@
                 <div id="show-finances" style="display: none;">
                     <h4 class="title" style="margin-left:27px;">Финансовые операции</h4>
 
-            <!-- *-*-*-*-*-*-*-*-*-* After-school information show *-*-*-*-*-*-*-*-*-* -->
+            <!-- *-*-*-*-*-*-*-*-*-* Finance information show *-*-*-*-*-*-*-*-*-* -->
 
                     <div class="section section-finances" data-target="finances">
                         <div class="row">
@@ -1210,9 +1211,12 @@
                         </div>
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
-                                <div class="col-md-2">
+                                <div class="col-md-6">
                                     <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#deposit-modal">
                                         <i class="material-icons">money</i> Пополнить баланс
+                                    </a>
+                                    <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#finance-modal">
+                                        <i class="material-icons">attach_money</i> Финансовая операция
                                     </a>
                                 </div>
 
@@ -1241,6 +1245,56 @@
                                                             </button>
                                                         </div>
                                                         <div class="col-md-3">
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student finance operation *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="finance-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Финансовая операция</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <input type="hidden" name="person_id" value="{{ student.id }}">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="operation_type" class="form-control">
+                                                                <option value="minus">Оплата</option>
+                                                                <option value="plus">Возврат</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Описание:</label>
+                                                        <div class="col-md-7 field-div">
+                                                            <input type="text" name="description" class="form-control field-input required">
+                                                        </div>
+                                                    </div>
+                                                     <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Сумма:</label>
+                                                        <div class="col-md-4 field-div">
+                                                            <input type="number" name="amount" class="form-control field-input required" step="5" min="5" max="10000">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Провести
+                                                            </button>
                                                             <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                 Отмена
                                                             </button>

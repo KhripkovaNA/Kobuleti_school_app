@@ -21,6 +21,9 @@
                                         {% endif %}
                                     </th>
                                 {% endfor %}
+                                {% for final in finals %}
+                                    <th><b>{{ final }}</b></th>
+                                {% endfor %}
                             </tr>
                         </thead>
                         <tbody>
@@ -32,7 +35,17 @@
                                             {% if student_records[subject].get((date, topic)) %}
                                                 <p>{{ student_records[subject][(date, topic)].grade }}</p>
                                                 {% if student_records[subject][(date, topic)].comment %}
-                                                    <div class="comment" title="{{ subject_records[student][(date, topic)].comment }}">ком</div>
+                                                    <div class="comment" title="{{ student_records[subject][(date, topic)].comment }}">ком</div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                    {% for final in finals %}
+                                        <td>
+                                            {% if student_records[subject].get(final) %}
+                                                <p><b>{{ student_records[subject][final].grade }}</b></p>
+                                                {% if student_records[subject][final].comment %}
+                                                    <div class="comment" title="{{ student_records[subject][final].comment }}">ком</div>
                                                 {% endif %}
                                             {% endif %}
                                         </td>

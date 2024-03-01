@@ -65,7 +65,7 @@
                 {% endif %}
                 {% if month_index >= 0 %}
                     <div class="row" style="margin-left:45px;">
-                        <button class="btn btn-sm" style="background-color: #ff9800;" data-toggle="modal" data-target="#after-school-modal">
+                        <button class="btn btn-xs" data-background-color="orange" data-toggle="modal" data-target="#after-school-modal">
                             <i class="material-icons">add_box</i> Добавить клиента
                         </button>
                         <div class="modal fade" id="after-school-modal" role="dialog">
@@ -78,11 +78,11 @@
                                     <div class="modal-body">
                                         <form class="after-school-form" action="{{ url_for('after_school_purchase') }}" method="post">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                            <input type="hidden" name="period" value="{{ period[0] }}-{{ period[1] }}">
+                                            <input type="hidden" class="period" name="period" value="{{ period[0] }}-{{ period[1] }}">
                                             <div class="row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
-                                                <div class="col-md-7 field-div">
-                                                    <select name="selected_client" class="form-control select-search field-input required">
+                                                <div class="col-md-7">
+                                                    <select name="selected_client" class="form-control select-search">
                                                         {% for client in possible_clients %}
                                                             <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
                                                         {% endfor %}
@@ -123,8 +123,7 @@
                                             <div class="row price-row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
                                                 <div class="col-md-7">
-                                                    <select name="subscription_type" class="form-control price-selector">
-                                                    </select>
+                                                    <select name="subscription_type" class="form-control price-selector"></select>
                                                 </div>
                                             </div>
                                             <div class="row">
