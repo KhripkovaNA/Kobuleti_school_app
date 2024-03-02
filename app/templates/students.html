@@ -122,6 +122,7 @@
                                                             </div>
                                                             <div class="modal-body">
                                                                 <form class="login-form" action="{{ url_for('lesson_register', student_id=student.id) }}" method="post">
+                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                                         <div class="col-md-7">

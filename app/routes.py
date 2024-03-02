@@ -44,20 +44,28 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/change_password', methods=['GET', 'POST'])
+@app.route('/settings')
+@login_required
+def settings():
+
+    return render_template('settings.html')
+
+
+@app.route('/change_password', methods=['POST'])
 @login_required
 def change_password():
-    if request.method == 'POST':
-        old_password = request.form.get('old_password')
-        new_password = request.form.get('new_password')
+    old_password = request.form.get('old_password')
+    new_password = request.form.get('new_password')
 
-        if current_user.check_password(old_password):
-            current_user.password = current_user.set_password(new_password)
-            db.session.commit()
-            flash('Пароль успешно изменен', 'success')
-            return redirect(url_for('settings'))
-        else:
-            flash('Неправильный пароль', 'error')
+    if current_user.check_password(old_password):
+        current_user.password = current_user.set_password(new_password)
+        db.session.commit()
+        flash('Пароль успешно изменен', 'success')
+
+    else:
+        flash('Неправильный пароль', 'error')
+
+    return redirect(url_for('settings'))
 
 
 @app.route('/')
@@ -91,11 +99,17 @@ def add_comment():
 @login_required
 def lesson_register(student_id):
     try:
-        lesson_id = student_lesson_register(request.form, student_id)
-        db.session.commit()
-        flash('Клиент записан на занятие', 'success')
+        student_id = int(student_id) if str(student_id).isdigit() else None
+        lesson_id, message = student_lesson_register(request.form, student_id)
+        if lesson_id:
+            db.session.commit()
+            flash(message, 'success')
 
-        return redirect(url_for('lesson', lesson_str=f'1-{lesson_id}'))
+            return redirect(url_for('lesson', lesson_str=f'1-{lesson_id}'))
+
+        else:
+            flash(message, 'error')
+            return redirect(request.referrer)
 
     except Exception as e:
         db.session.rollback()
@@ -303,7 +317,7 @@ def show_edit_student(student_id):
                 if 'form_student_submit' in request.form:
                     render_type = 'edit_student'
                     if student_form.validate_on_submit():
-                        handle_student_edit(student_form, student, 'edit_student')
+                        handle_student_edit(student_form, student, 'edit_student', current_user.rights)
                         db.session.commit()
                         flash('Изменения внесены', 'success')
                         return redirect(url_for('show_edit_student', student_id=student.id))
@@ -753,15 +767,21 @@ def lesson(lesson_str):
         if request.method == 'POST':
             try:
                 message = handle_lesson(request.form, lesson_subject, subject_lesson)
-                if message:
-                    if message[1] == 'success':
-                        db.session.commit()
-                        flash(message[0], message[1])
-                    else:
-                        db.session.rollback()
-                        flash(message[0], message[1])
-                else:
+                if 'registered_btn' in request.form:
                     db.session.commit()
+                    if message:
+                        flash(message[0], message[1])
+
+                else:
+                    if message:
+                        if message[1] == 'success':
+                            db.session.commit()
+                            flash(message[0], message[1])
+                        else:
+                            db.session.rollback()
+                            flash(message[0], message[1])
+                    else:
+                        db.session.commit()
 
             except Exception as e:
                 db.session.rollback()
@@ -896,7 +916,7 @@ def school_timetable(week, day):
 
     if week_day == 0:
         week_day = TODAY.weekday() + 1
-    if week_day > 6:
+    if week_day > 7:
         return redirect(url_for('school_timetable', week=week+1, day=1))
 
     school_classes = SchoolClass.query.order_by(
@@ -925,7 +945,7 @@ def school_lesson(lesson_str):
                 message = handle_school_lesson(request.form, sc_lesson)
                 db.session.commit()
                 if message:
-                    flash(message, 'success')
+                    flash(message[0], message[1])
 
             except Exception as e:
                 db.session.rollback()

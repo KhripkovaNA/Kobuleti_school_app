@@ -10,7 +10,7 @@
             </div>
             <div class="card-content">
                 <div class="row" style="margin-left:30px;">
-                    {% for day in days %}
+                    {% for day in days[:5] %}
                         <button type="button"
                                 class="btn btn-sm {{ 'btn-success' if loop.index==week_day else '' }}"
                                 style="width:130px; padding: 5px 5px;">
@@ -19,6 +19,23 @@
                             </a>
                         </button>
                     {% endfor %}
+                    <div class="dropdown" style="display:inline;">
+                        <button class="btn btn-sm dropdown-toggle {{ 'btn-success' if week_day in [6, 7] else '' }}" data-toggle="dropdown" style="width:130px; padding: 5px 5px;">
+                            Выходные
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="{{ url_for('school_timetable', week=week, day=6) }}">
+                                    {{ days[5] }}, {{ date }}
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('school_timetable', week=week, day=7) }}">
+                                    {{ days[6] }}, {{ date }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 {% if classes %}
                     <div class="scroll-timetable" style="height: 60vh;">

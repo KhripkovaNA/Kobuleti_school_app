@@ -117,7 +117,11 @@
                                 <div class="row">
                                     <label class="control-label col-md-3">Статус:</label>
                                     <div class="col-md-3">
-                                        {{ edit_student_form.status(class="form-control", id="status-select") }}
+                                        {% if current_user.rights != 'admin' %}
+                                            {{ edit_student_form.status(class="form-control", id="status-select", disabled=True, style="cursor:default; background-color:#eee;", title="Нет прав администратора") }}
+                                        {% else %}
+                                            {{ edit_student_form.status(class="form-control", id="status-select") }}
+                                        {% endif %}
                                     </div>
                                     <div id="pause-date" style="display: none;" class="{{ 'has-error' if edit_student_form.pause_until.errors }}">
                                         <label class="control-label col-md-1">до:</label>
