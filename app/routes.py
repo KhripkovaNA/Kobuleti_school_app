@@ -51,19 +51,55 @@ def settings():
     return render_template('settings.html')
 
 
+@app.route('/create-user', methods=['POST'])
+@login_required
+def create_user():
+    try:
+        if current_user.rights == 'admin':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            repeat_password = request.form.get('repeat_password')
+            rights = request.form.get('rights')
+            if password == repeat_password:
+                same_username = User.query.filter_by(username=username).all()
+                if not same_username:
+                    new_user = User(username=username, rights=rights)
+                    new_user.set_password(password)
+                    db.session.add(new_user)
+                    db.session.commit()
+                    flash(f'Новыйпользователь {new_user.username} зарегистрирован', 'success')
+                else:
+                    flash(f'Пользователь {username} уже существует. Выберете другое имя пользователя', 'error')
+            else:
+                flash('Пароли не совпадают', 'error')
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении пользователя: {str(e)}', 'error')
+
+    return redirect(url_for('settings'))
+
+
 @app.route('/change_password', methods=['POST'])
 @login_required
 def change_password():
-    old_password = request.form.get('old_password')
-    new_password = request.form.get('new_password')
+    try:
+        old_password = request.form.get('old_password')
+        new_password = request.form.get('new_password')
+        if current_user.check_password(old_password):
+            current_user.password = current_user.set_password(new_password)
+            db.session.commit()
+            flash('Пароль успешно изменен', 'success')
 
-    if current_user.check_password(old_password):
-        current_user.password = current_user.set_password(new_password)
-        db.session.commit()
-        flash('Пароль успешно изменен', 'success')
+        else:
+            flash('Неправильный пароль', 'error')
 
-    else:
-        flash('Неправильный пароль', 'error')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при изменении пароля: {str(e)}', 'error')
 
     return redirect(url_for('settings'))
 

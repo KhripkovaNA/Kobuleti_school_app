@@ -3,8 +3,6 @@ from flask_wtf import FlaskForm, Form
 from wtforms import StringField, TextAreaField, PasswordField, SelectField, FormField, FieldList, \
     HiddenField, BooleanField, IntegerField, SelectMultipleField, ColorField, DecimalField
 from wtforms.validators import ValidationError, DataRequired, InputRequired, Optional, NumberRange, StopValidation
-from app.models import Person
-from app import db
 from datetime import datetime
 
 
@@ -163,8 +161,6 @@ class ExtraSubjectForm(EditExtraSubjectForm):
     subject_type = SelectField(choices=[])
     subscription_types = SelectMultipleField(choices=[], validators=[validate_subscription_types])
     no_subscription = BooleanField()
-
-# class SchoolSubjectForm(SubjectForm):
 
 
 class LessonForm(FlaskForm):

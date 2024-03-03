@@ -580,6 +580,63 @@ $(document).ready(function(){
         });
     }
 
+    // Function to validate password input and repeat-password field
+    function validatePasswordInput(validatedForm) {
+        var passwordInput = validatedForm.find('.password-input');
+        var passwordValue = passwordInput.val();
+        var passwordDiv = passwordInput.closest('.password-div');
+        var errorDiv = passwordInput.closest('.row');
+
+        var isValidPassword = /^(?=.*[\d])(?=.*[!@#$%^&*])[\w!@#$%^&*]{7,20}$/.test(passwordValue);
+
+        if (!isValidPassword) {
+            errorDiv.addClass("has-error");
+            var errorSpan = `<span class="error-span" style="color:red;">Не менее 7 символов, латинские буквы, символы и цифры</span>`;
+            var existingErrorSpan = passwordDiv.find('.error-span');
+
+            if (existingErrorSpan.length === 0) {
+                passwordDiv.append(errorSpan);
+            }
+        } else {
+            errorDiv.removeClass("has-error");
+            passwordDiv.find('.error-span').remove();
+        }
+    }
+
+    // Function to validate repeat-password field
+    function validateRepeatPassword(validatedForm) {
+        var repeatPasswordInput = validatedForm.find('.repeat-password-input');
+        var repeatPasswordValue = repeatPasswordInput.val();
+        var passwordValue = validatedForm.find('.password-input').val();
+        var repeatPasswordDiv = repeatPasswordInput.closest('.repeat-password-div');
+        var errorDiv = repeatPasswordInput.closest('.row');
+
+        if (passwordValue !== repeatPasswordValue) {
+            errorDiv.addClass("has-error");
+            var errorSpan = `<span class="error-span" style="color:red;">Пароли не совпадают</span>`;
+            var existingErrorSpan = repeatPasswordDiv.find('.error-span');
+
+            if (existingErrorSpan.length === 0) {
+                repeatPasswordDiv.append(errorSpan);
+            }
+        } else {
+            errorDiv.removeClass("has-error");
+            errorDiv.find('.error-span').remove();
+        }
+    }
+
+    // Validate add-user form
+    $('form.add-user-form, form.change-password-form').submit(function(event) {
+        var currentForm = $(this);
+        validateFieldInput(currentForm);
+        validatePasswordInput(currentForm);
+        validateRepeatPassword(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
     // Validate subscription form
     $('form.subscription-form').submit(function(event) {
         var currentForm = $(this);
