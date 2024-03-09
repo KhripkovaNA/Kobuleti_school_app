@@ -9,6 +9,50 @@
                 <h4 class="title">Настройки</h4>
             </div>
             <div class="card-content table-responsive">
+
+                <div class="row" style="margin-left:30px;">
+                    <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
+                        <a href="#" data-toggle="collapse" data-target="#edit-password">
+                            <i class="material-icons">lock_reset</i> Изменить пароль
+                        </a>
+                    </button>
+                </div>
+                <div  class="collapse" id="edit-password">
+                    <form class="change-password-form" method="post" action="{{ url_for('change_password') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="row">
+                            <div class="form-group">
+                                <div class="row">
+                                    <label class="control-label col-md-3">Старый пароль:</label>
+                                    <div class="col-md-4 field-div">
+                                        <input type="password" name="old_password" class="form-control field-input">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Новый пароль:</label>
+                                    <div class="col-md-4 password-div">
+                                        <input type="password" name="new_password" class="form-control password-input">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Повторить пароль:</label>
+                                    <div class="col-md-4 repeat-password-div">
+                                        <input type="password" name="password_repeat" class="form-control repeat-password-input">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="footer">
+                            <div class="row" style="margin-left:30px;">
+                                <div class="col-md-6">
+                                    <button type="submit" class="btn btn-sm" data-background-color="main">Изменить</button>
+                                    <button type="button" class="btn btn-sm" data-background-color="red" data-toggle="collapse" data-target="#add-user">Закрыть</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 {% if current_user.rights == 'admin' %}
                     <div class="row" style="margin-left:30px;">
                         <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
@@ -61,50 +105,9 @@
                             </div>
                         </form>
                     </div>
+
                 {% endif %}
 
-                <div class="row" style="margin-left:30px;">
-                    <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
-                        <a href="#" data-toggle="collapse" data-target="#edit-password">
-                            <i class="material-icons">lock_reset</i> Изменить пароль
-                        </a>
-                    </button>
-                </div>
-                <div  class="collapse" id="edit-password">
-                    <form class="change-password-form" method="post" action="{{ url_for('change_password') }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <div class="row">
-                            <div class="form-group">
-                                <div class="row">
-                                    <label class="control-label col-md-3">Старый пароль:</label>
-                                    <div class="col-md-4 field-div">
-                                        <input type="password" name="old_password" class="form-control field-input">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Новый пароль:</label>
-                                    <div class="col-md-4 password-div">
-                                        <input type="password" name="new_password" class="form-control password-input">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <label class="control-label col-md-3">Повторить пароль:</label>
-                                    <div class="col-md-4 repeat-password-div">
-                                        <input type="password" name="password_repeat" class="form-control repeat-password-input">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="footer">
-                            <div class="row" style="margin-left:30px;">
-                                <div class="col-md-6">
-                                    <button type="submit" class="btn btn-sm" data-background-color="main">Изменить</button>
-                                    <button type="button" class="btn btn-sm" data-background-color="red" data-toggle="collapse" data-target="#add-user">Закрыть</button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
             </div>
         </div>
     </div>

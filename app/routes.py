@@ -13,8 +13,7 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     subjects_data, calculate_week, lesson_edit, show_lesson, handle_lesson, format_school_class_students, \
     format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, subject_record, \
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
-    handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, finance_operation, \
-    del_record
+    handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record
 
 from app import app, db
 from io import BytesIO
@@ -838,7 +837,10 @@ def lesson(lesson_str):
                                lesson_subject=lesson_subject, other_lessons=other_lessons, today=TODAY)
 
     else:
-        if lesson_subject:
+        if lesson_subject.subject_type.name == 'after_school':
+            return redirect(url_for('after_school', month_index=0))
+
+        elif lesson_subject:
             other_lessons = Subject.query.filter(
                 Subject.id != lesson_subject.id,
                 Subject.subject_type.has(SubjectType.name != 'school')
@@ -846,6 +848,7 @@ def lesson(lesson_str):
 
             return render_template('lesson.html', subject_lesson=subject_lesson, lesson_subject=lesson_subject,
                                    other_lessons=other_lessons)
+
         else:
             flash("Такого занятия нет", 'error')
             return redirect(url_for('subjects'))

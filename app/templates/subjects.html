@@ -63,11 +63,19 @@
                                                         <span class="caret"></span>
                                                     </button>
                                                     <ul class="dropdown-menu">
-                                                        <li>
-                                                            <a href="{{ url_for('lesson', lesson_str='0-'+subject.id|string) }}">
-                                                                <i class="material-icons" style="color: purple;">info</i>Занятие
-                                                            </a>
-                                                        </li>
+                                                        {% if subject.subject_type.name == 'after_school' %}
+                                                            <li>
+                                                                <a href="{{ url_for('after_school', month_index=0) }}">
+                                                                    <i class="material-icons" style="color: purple;">info</i>Продленка
+                                                                </a>
+                                                            </li>
+                                                        {% else %}
+                                                            <li>
+                                                                <a href="{{ url_for('lesson', lesson_str='0-'+subject.id|string) }}">
+                                                                    <i class="material-icons" style="color: purple;">info</i>Занятие
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
                                                         <li>
                                                             <a href="{{ url_for('edit_subject', subject_id=subject.id) }}">
                                                                 <i class="material-icons" style="color: purple;">edit</i>Изменить

@@ -910,4 +910,6 @@ lesson_dict = {
 # teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
 # print(teachers)
 
-print_table(User)
+print_table(Subject)
+db.session.c
+
