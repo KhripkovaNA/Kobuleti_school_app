@@ -46,8 +46,254 @@ def logout():
 @app.route('/settings')
 @login_required
 def settings():
+    rooms = Room.query.all()
+    school_classes = SchoolClass.query.order_by(SchoolClass.school_class, SchoolClass.school_name).all()
+    subscription_types = SubscriptionType.query.filter(SubscriptionType.lessons.isnot(None)).all()
+    after_school_prices = SubscriptionType.query.filter(SubscriptionType.period != '').all()
 
-    return render_template('settings.html')
+    return render_template('settings.html', rooms=rooms, school_classes=school_classes,
+                           subscription_types=subscription_types, after_school_prices=after_school_prices)
+
+
+@app.route('/change-add-room', methods=['POST'])
+@login_required
+def change_add_room():
+    try:
+        if current_user.rights == 'admin':
+            if 'change_room_btn' in request.form:
+                room_id = int(request.form.get('change_room_btn')) if request.form.get('change_room_btn').isdigit() \
+                    else None
+                new_name = request.form.get(f'name_{room_id}')
+                new_color = request.form.get(f'color_{room_id}')
+                room = Room.query.filter_by(id=room_id).first()
+                if room and new_name and new_color:
+                    room.name = new_name
+                    room.color = new_color
+                    db.session.commit()
+                    flash(f'Кабинет {room.name} изменен', 'success')
+
+            if 'delete_room_btn' in request.form:
+                room_id = int(request.form.get('delete_room_btn')) if request.form.get('delete_room_btn').isdigit() \
+                    else None
+                room = Room.query.filter_by(id=room_id).first()
+                if room:
+                    db.session.delete(room)
+                    db.session.commit()
+                    flash(f'Кабинет {room.name} удален', 'success')
+
+            if 'add_room' in request.form:
+                room_name = request.form.get('room_name')
+                room_color = request.form.get('room_color')
+                new_room = Room(name=room_name, color=room_color)
+                db.session.add(new_room)
+                db.session.commit()
+                flash('Новый кабинет добавлен в систему', 'success')
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении/изменении кабинета: {str(e)}', 'error')
+
+    return redirect(url_for('settings'))
+
+
+@app.route('/change-add-class', methods=['POST'])
+@login_required
+def change_add_class():
+    try:
+        if current_user.rights == 'admin':
+            if 'change_class_btn' in request.form:
+                class_id = int(request.form.get('change_class_btn')) if request.form.get('change_class_btn').isdigit() \
+                    else None
+                new_school_class = int(request.form.get(f'class_{class_id}')) \
+                    if request.form.get(f'class_{class_id}').isdigit() else None
+                new_school_name = request.form.get(f'name_{class_id}')
+                school_class = SchoolClass.query.filter_by(id=class_id).first()
+                if school_class and new_school_class and new_school_name:
+                    school_class.school_class = new_school_class
+                    school_class.school_name = new_school_name
+                    db.session.commit()
+                    flash(f'Класс {school_class.school_name} изменен', 'success')
+
+            if 'delete_class_btn' in request.form:
+                class_id = int(request.form.get('delete_class_btn')) if request.form.get('delete_class_btn').isdigit() \
+                    else None
+                school_class = SchoolClass.query.filter_by(id=class_id).first()
+                if school_class:
+                    db.session.delete(school_class)
+                    db.session.commit()
+                    flash(f'Класс {school_class.school_name} удален', 'success')
+
+            if 'add_class' in request.form:
+                new_school_class = int(request.form.get('new_school_class')) \
+                    if request.form.get('new_school_class').isdigit() else None
+                new_school_name = request.form.get('new_school_name')
+                new_class = SchoolClass(school_class=new_school_class, school_name=new_school_name)
+                db.session.add(new_class)
+                db.session.commit()
+                flash('Новый класс добавлен в систему', 'success')
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении/изменении кабинета: {str(e)}', 'error')
+
+    return redirect(url_for('settings'))
+
+
+@app.route('/change-add-subscription', methods=['POST'])
+@login_required
+def change_add_subscription():
+    try:
+        if current_user.rights == 'admin':
+            if 'change_subscription_btn' in request.form:
+                subscription_type_id = int(request.form.get('change_class_subscription')) \
+                    if request.form.get('change_class_subscription').isdigit() else None
+                subscription_lessons = int(request.form.get(f'lessons_{subscription_type_id}')) \
+                    if request.form.get(f'lessons_{subscription_type_id}').isdigit() else None
+                subscription_duration = int(request.form.get(f'duration_{subscription_type_id}')) \
+                    if request.form.get(f'duration_{subscription_type_id}').isdigit() else None
+                subscription_price = request.form.get(f'price_{subscription_type_id}').replace(',', '.')
+                if not subscription_price.replace('.', '').isdigit():
+                    flash('Неправильный формат цены', 'error')
+                    return redirect(url_for('settings'))
+
+                subscription_type = SubscriptionType.query.filter_by(id=subscription_type_id).first()
+                if subscription_type and subscription_lessons and subscription_duration:
+                    same_subscription_type = SubscriptionType.query.filter_by(
+                        lessons=subscription_lessons,
+                        duration=subscription_duration,
+                        price=float(subscription_price)
+                    ).all()
+                    if not same_subscription_type:
+                        subscription_type.lessons = subscription_lessons
+                        subscription_type.duration = subscription_duration
+                        subscription_type.price = float(subscription_price)
+                        db.session.commit()
+                        flash('Абонемент изменен', 'success')
+                    else:
+                        flash('Такой абонемент уже есть', 'error')
+
+            if 'delete_subscription_btn' in request.form:
+                subscription_type_id = int(request.form.get('delete_subscription_btn')) \
+                    if request.form.get('delete_subscription_btn').isdigit() else None
+                subscription_type = SubscriptionType.query.filter_by(id=subscription_type_id).first()
+                if subscription_type:
+                    db.session.delete(subscription_type)
+                    db.session.commit()
+                    flash('Абонемент удален', 'success')
+
+            if 'add_subscription' in request.form:
+                new_subscription_lessons = int(request.form.get('new_subscription_lessons')) \
+                    if request.form.get('new_subscription_lessons').isdigit() else None
+                new_subscription_duration = int(request.form.get('new_subscription_duration')) \
+                    if request.form.get('new_subscription_duration').isdigit() else None
+                new_subscription_price = request.form.get('new_subscription_price').replace(',', '.')
+                if not new_subscription_price.replace('.', '').isdigit():
+                    flash('Неправильный формат цены', 'error')
+                    return redirect(url_for('settings'))
+                if new_subscription_lessons and new_subscription_duration:
+                    same_subscription_type = SubscriptionType.query.filter_by(
+                        lessons=new_subscription_lessons,
+                        duration=new_subscription_duration,
+                        price=float(new_subscription_price)
+                    ).all()
+                    if not same_subscription_type:
+                        new_subscription = SubscriptionType(
+                            lessons=new_subscription_lessons,
+                            duration=new_subscription_duration,
+                            price=float(new_subscription_price)
+                        )
+                        db.session.add(new_subscription)
+                        db.session.commit()
+                        flash('Новый абонемент добавлен в систему', 'success')
+
+                    else:
+                        flash('Такой абонемент уже есть', 'error')
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении/изменении абонемента: {str(e)}', 'error')
+
+    return redirect(url_for('settings'))
+
+
+@app.route('/change-add-after-school', methods=['POST'])
+@login_required
+def change_add_after_school():
+    try:
+        if current_user.rights == 'admin':
+            if 'change_after_school_btn' in request.form:
+                after_school_id = int(request.form.get('change_after_school_btn')) \
+                    if request.form.get('change_after_school_btn').isdigit() else None
+                after_school_period = request.form.get(f'period_{after_school_id}')
+                after_school_price = request.form.get(f'price_{after_school_id}').replace(',', '.')
+                if not after_school_price.replace('.', '').isdigit():
+                    flash('Неправильный формат цены', 'error')
+                    return redirect(url_for('settings'))
+
+                after_school_type = SubscriptionType.query.filter_by(id=after_school_id).first()
+                if after_school_type and after_school_period:
+                    same_subscription_type = SubscriptionType.query.filter_by(
+                        period=after_school_period,
+                        price=float(after_school_price)
+                    ).all()
+                    if not same_subscription_type:
+                        after_school_type.lessons = after_school_period
+                        after_school_type.price = float(after_school_price)
+                        db.session.commit()
+                        flash('Цена на продленку изменена', 'success')
+                    else:
+                        flash('Такая цена на продленку уже есть', 'error')
+
+            if 'delete_after_school_btn' in request.form:
+                after_school_id = int(request.form.get('delete_after_school_btn')) \
+                    if request.form.get('delete_after_school_btn').isdigit() else None
+                after_school_type = SubscriptionType.query.filter_by(id=after_school_id).first()
+                if after_school_type:
+                    db.session.delete(after_school_type)
+                    db.session.commit()
+                    flash('Цена на продленку удалена', 'success')
+
+            if 'add_after_school' in request.form:
+                new_after_school_period = request.form.get('new_period')
+                new_after_school_price = request.form.get('new_price').replace(',', '.')
+                if not new_after_school_price.replace('.', '').isdigit():
+                    flash('Неправильный формат цены', 'error')
+                    return redirect(url_for('settings'))
+
+                if new_after_school_period:
+                    same_subscription_type = SubscriptionType.query.filter_by(
+                        period=new_after_school_period,
+                        price=float(new_after_school_price)
+                    ).all()
+                    if not same_subscription_type:
+                        new_after_school_type = SubscriptionType(
+                            period=new_after_school_period,
+                            price=float(new_after_school_price)
+                        )
+                        db.session.add(new_after_school_type)
+                        db.session.commit()
+                        flash('Новая цена на продленку добавлена в систему', 'success')
+
+                    else:
+                        flash('Такая цена на продленку уже есть', 'error')
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении/изменении цены на продленку: {str(e)}', 'error')
+
+    return redirect(url_for('settings'))
 
 
 @app.route('/create-user', methods=['POST'])
@@ -66,7 +312,7 @@ def create_user():
                     new_user.set_password(password)
                     db.session.add(new_user)
                     db.session.commit()
-                    flash(f'Новыйпользователь {new_user.username} зарегистрирован', 'success')
+                    flash(f'Новый пользователь {new_user.username} зарегистрирован', 'success')
                 else:
                     flash(f'Пользователь {username} уже существует. Выберете другое имя пользователя', 'error')
             else:
@@ -862,6 +1108,10 @@ def school_students(school_class):
         SchoolClass.school_name
     ).all()
 
+    if not school_classes:
+        flash("Школьных классов еще нет", 'error')
+        return redirect(url_for('students'))
+
     school_class = int(school_class) if str(school_class).isdigit() else None
     school = school_classes[0] if school_class == 0 else SchoolClass.query.filter_by(id=school_class).first()
     if school:
@@ -921,6 +1171,10 @@ def school_subjects(school_class):
         SchoolClass.school_name
     ).all()
 
+    if not school_classes:
+        flash("Школьных классов еще нет", 'error')
+        return redirect(url_for('students'))
+
     school_class = int(school_class) if str(school_class).isdigit() else None
     school = school_classes[0] if school_class == 0 else SchoolClass.query.filter_by(id=school_class).first()
     if school:
@@ -966,7 +1220,7 @@ def school_timetable(week, day):
     dates = get_date_range(week)
     filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
 
-    return render_template('school_timetable.html', days=DAYS_OF_WEEK, school_classes=school_classes,
+    return render_template('school_timetable.html', days=DAYS_OF_WEEK, school_classes=school_classes, dates=dates,
                            classes=day_school_lessons, date=date_str, start_time=time_range[0], end_time=time_range[1],
                            week=week, week_day=week_day, filename=filename)
 
@@ -1093,6 +1347,11 @@ def student_school_record(student_id, month_index):
 @login_required
 def after_school(month_index):
     after_school_subject = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
+    after_school_prices = SubscriptionType.query.filter(SubscriptionType.period != '').all()
+    if not after_school_prices:
+        flash("Цен на продленку еще нет", 'error')
+        return redirect(url_for('students'))
+
     month_students, period, current_period = get_after_school_students(int(month_index))
     after_school_subject.month_students = month_students
     month_students_ids = [student.id for student in month_students]

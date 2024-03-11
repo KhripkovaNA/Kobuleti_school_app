@@ -15,7 +15,7 @@
                                 class="btn btn-sm {{ 'btn-success' if loop.index==week_day else '' }}"
                                 style="width:130px; padding: 5px 5px;">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week=week, day=loop.index) }}">
-                                {{ day }}, {{ date }}
+                                {{ day }}, {{ dates[loop.index0] }}
                             </a>
                         </button>
                     {% endfor %}
@@ -26,12 +26,12 @@
                         <ul class="dropdown-menu">
                             <li>
                                 <a href="{{ url_for('school_timetable', week=week, day=6) }}">
-                                    {{ days[5] }}, {{ date }}
+                                    {{ days[5] }}, {{ dates[5] }}
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ url_for('school_timetable', week=week, day=7) }}">
-                                    {{ days[6] }}, {{ date }}
+                                    {{ days[6] }}, {{ dates[6] }}
                                 </a>
                             </li>
                         </ul>

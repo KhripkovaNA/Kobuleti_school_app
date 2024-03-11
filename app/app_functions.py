@@ -2098,7 +2098,7 @@ def get_after_school_students(month_index):
 
 
 def get_after_school_prices():
-    after_school_prices = SubscriptionType.query.filter(SubscriptionType.period.isnot('')).all()
+    after_school_prices = SubscriptionType.query.filter(SubscriptionType.period != '').all()
     price_types = []
     for price_type in after_school_prices:
         price_dict = {
@@ -2248,7 +2248,7 @@ def download_timetable(week):
 
 def get_date_range(week):
     date_start = get_date(0, week)
-    dates = [f"{date_start + timedelta(day):%d.%m}" for day in range(5)]
+    dates = [f"{date_start + timedelta(day):%d.%m}" for day in range(7)]
     return dates
 
 

@@ -558,7 +558,7 @@ $(document).ready(function(){
             var fieldInput = $(this);
             var fieldValue = fieldInput.val();
             var fieldDiv = fieldInput.closest('.field-div');
-            var errorDiv = fieldInput.closest('.row');
+            var errorDiv = fieldInput.closest('.row, td');
 
             if (fieldInput.hasClass('required')) {
                 if (!fieldValue) {
@@ -625,7 +625,7 @@ $(document).ready(function(){
         }
     }
 
-    // Validate add-user form
+    // Validate add-user and change-password forms
     $('form.add-user-form, form.change-password-form').submit(function(event) {
         var currentForm = $(this);
         validateFieldInput(currentForm);
@@ -637,8 +637,8 @@ $(document).ready(function(){
         }
     });
 
-    // Validate subscription form
-    $('form.subscription-form').submit(function(event) {
+    // Validate subscription, copy-lessons, change-lessons and grade forms
+    $('form.subscription-form, form.copy-lessons-form, form.change-lessons-form, form.grade-form').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
 
@@ -647,8 +647,10 @@ $(document).ready(function(){
         }
     });
 
-    // Validate finance form
-    $('form.finance-form').submit(function(event) {
+    // Validate forms with required field input
+    $('form.finance-form, form.change-room-form, form.add-room-form, form.deposit-form, form.school-subject-form, ' +
+      'form.change-class-form, form.add-class-form, form.change-subscription-form, form.add-subscription-form, ' +
+      'form.change-after-school-form, form.add-after-school-form').submit(function(event) {
         var currentForm = $(this);
         validateFieldInput(currentForm);
 
@@ -663,56 +665,6 @@ $(document).ready(function(){
         validateDateInput(currentForm);
         validateFieldInput(currentForm);
         validateDateInputRange(currentForm);
-
-        if ($(this).find('.has-error').length > 0) {
-            event.preventDefault();
-        }
-    });
-
-    // Validate deposit form
-    $('form.deposit-form').submit(function(event) {
-        var currentForm = $(this);
-        validateFieldInput(currentForm);
-
-        if ($(this).find('.has-error').length > 0) {
-            event.preventDefault();
-        }
-    });
-
-    // Validate copy-lessons form
-    $('form.copy-lessons-form').submit(function(event) {
-        var currentForm = $(this);
-        validateDateInput(currentForm);
-
-        if ($(this).find('.has-error').length > 0) {
-            event.preventDefault();
-        }
-    });
-
-    // Validate school-subject form
-    $('form.school-subject-form').submit(function(event) {
-        var currentForm = $(this);
-        validateFieldInput(currentForm);
-
-        if ($(this).find('.has-error').length > 0) {
-            event.preventDefault();
-        }
-    });
-
-    // Validate change-lessons form
-    $('form.change-lessons-form').submit(function(event) {
-        var currentForm = $(this);
-        validateDateInput(currentForm);
-
-        if ($(this).find('.has-error').length > 0) {
-            event.preventDefault();
-        }
-    });
-
-    // Validate grade form
-    $('form.grade-form').submit(function(event) {
-        var currentForm = $(this);
-        validateDateInput(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
