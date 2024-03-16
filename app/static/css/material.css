@@ -4822,7 +4822,8 @@ ul {
     height: 130px;
     font-size: 14px;
     display: none;
-    z-index: 200;
+    z-index: 10000;
+    position: absolute;
 }
 
 .wickedpicker__title {

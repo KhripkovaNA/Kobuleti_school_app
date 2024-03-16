@@ -13,7 +13,8 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     subjects_data, calculate_week, lesson_edit, show_lesson, handle_lesson, format_school_class_students, \
     format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, subject_record, \
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
-    handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record
+    handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
+    add_new_event, get_date
 
 from app import app, db
 from io import BytesIO
@@ -782,23 +783,18 @@ def show_edit_employee(employee_id):
 @login_required
 def subjects():
     all_subjects = Subject.query.filter(
-        Subject.subject_type.has(SubjectType.name != 'school')
+        Subject.subject_type.has(SubjectType.name.in_(['extra', 'individual', 'after_school']))
     ).order_by(Subject.name).all()
     for subject in all_subjects:
         subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
 
-    subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school'])).all()
-    subscription_types = format_subscription_types(SubscriptionType.query.all())
-    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-
-    return render_template('subjects.html', subjects=all_subjects, subjects_type="extra_school",
-                           subject_types=subject_types, subscription_types=subscription_types, teachers=all_teachers)
+    return render_template('subjects.html', subjects=all_subjects, subjects_type="extra_school")
 
 
 @app.route('/add-subject', methods=['GET', 'POST'])
 @login_required
 def add_subject():
-    subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school'])).all()
+    subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school', 'event'])).all()
     subscription_types = format_subscription_types(SubscriptionType.query.all())
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
     form = ExtraSubjectForm()
@@ -878,14 +874,31 @@ def edit_subject(subject_id):
 @login_required
 def timetable(week):
     week = int(week)
-    rooms = Room.query.all()
-    week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, rooms)
-    rooms = [room.name for room in rooms if room.name in used_rooms]
-    days = DAYS_OF_WEEK[:len(week_dates)]
+    week_range = [f'{get_date(day, week):%d.%m}' for day in range(7)]
+    all_rooms = Room.query.all()
+    week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, all_rooms)
+    rooms = [room.name for room in all_rooms if room.name in used_rooms]
     subject_types = SubjectType.query.all()
+    events = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'event')).order_by(Subject.name).all()
 
-    return render_template('timetable.html', days=days, rooms=rooms, start_time=time_range[0], end_time=time_range[1],
-                           classes=week_lessons, week=week, week_dates=week_dates, subject_types=subject_types)
+    return render_template('timetable.html', days=DAYS_OF_WEEK, rooms=rooms, start_time=time_range[0],
+                           end_time=time_range[1], classes=week_lessons, week=week, week_dates=week_dates,
+                           all_rooms=all_rooms, events=events, subject_types=subject_types, week_range=week_range)
+
+
+@app.route('/add-event', methods=['POST'])
+@login_required
+def add_event():
+    try:
+        message = add_new_event(request.form)
+        db.session.commit()
+        flash(message[0], message[1])
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении мероприятия: {str(e)}', 'error')
+
+    return redirect(request.referrer)
 
 
 @app.route('/change-lessons', methods=['POST'])
@@ -938,7 +951,7 @@ def copy_lessons():
             flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
             return redirect(url_for('copy_lessons'))
 
-    subject_types = SubjectType.query.all()
+    subject_types = SubjectType.query.filter(SubjectType.name != 'event').all()
     rooms = Room.query.all()
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()

@@ -125,9 +125,6 @@ $(document).ready(function(){
         if ($(".datepicker").datepicker("widget").is(":visible")) {
             $(".datepicker").datepicker("hide");
         }
-        if ($(".timepicker").wickedpicker("widget").is(":visible")) {
-            $(".timepicker").wickedpicker("hide");
-        }
         if ($(".timepicker-input").wickedpicker("widget").is(":visible")) {
             $(".timepicker-input").wickedpicker("hide");
         }
@@ -552,6 +549,35 @@ $(document).ready(function(){
         }
     }
 
+    // Function to validate time input field
+    function validateTimeInput(validatedForm) {
+        validatedForm.find('.time-input').each(function() {
+            var timeInput = $(this);
+            var timeDiv = timeInput.closest('.time-div');
+            var errorDiv = timeInput.closest('.row');
+
+            var timeValue = timeInput.val();
+            var timeRegex = /^\d{1,2}\s*:\s*\d{2}$/;
+            var isValidTimeFormat = timeRegex.test(timeValue);
+            var [hours, minutes] = timeValue.split(':').map(val => parseInt(val.trim(), 10));
+            var isInvalidTime = (hours < 0 || hours > 23 || minutes < 0 || minutes > 59);
+
+            if (!isValidTimeFormat || isInvalidTime) {
+                errorDiv.addClass("has-error");
+                var errorSpan = `<span class="error-span" style="color:red;">Неправильный формат времени (ЧЧ : ММ)</span>`;
+                var existingErrorSpan = timeDiv.find('.error-span');
+
+                if (existingErrorSpan.length === 0) {
+                    timeDiv.append(errorSpan);
+                }
+            } else {
+                errorDiv.removeClass("has-error");
+                timeDiv.find('.error-span').remove();
+            }
+        });
+    }
+
+
     // Function to validate input
     function validateFieldInput(validatedForm) {
         validatedForm.find('.field-input').each(function() {
@@ -653,6 +679,16 @@ $(document).ready(function(){
       'form.change-after-school-form, form.add-after-school-form').submit(function(event) {
         var currentForm = $(this);
         validateFieldInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+        }
+    });
+
+    // Validate add-event form
+    $('form.add-event-form').submit(function(event) {
+        var currentForm = $(this);
+        validateTimeInput(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();

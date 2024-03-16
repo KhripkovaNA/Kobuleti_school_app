@@ -910,5 +910,5 @@ lesson_dict = {
 # teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
 # print(teachers)
 
-after_school_prices = SubscriptionType.query.filter(SubscriptionType.period.isnot('')).all()
-print(after_school_prices)
+print_table(Subject)
+delete_record(Subject, 41)

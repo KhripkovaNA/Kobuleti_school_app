@@ -220,12 +220,11 @@
             $(element).on('click focus', function (event) {
                 //Prevent multiple firings
                 if ($(self.timepicker).is(':hidden')) {
-                  self.showPicker($(this));
-                  window.lastTimePickerControl = $(this); //Put the reference on this timepicker into global scope for unsing that in afterShow function
-                  $(self.hoursElem).focus();
+                    self.showPicker($(this));
+                    window.lastTimePickerControl = $(this); //Put the reference on this timepicker into global scope for using that in afterShow function
+                    $(self.hoursElem).focus();
                 }
             });
-
 
             //Handle click events for closing Wickedpicker
             var clickHandler = function (event) {
@@ -233,27 +232,32 @@
                 if ($(self.timepicker).is(':visible')) {
                     //Clicking the X
                     if ($(event.target).is(self.close)) {
-                      self.hideTimepicker(window.lastTimePickerControl);
-                    } else if ($(event.target).closest(self.timepicker).length || $(event.target).closest($('.hasWickedpicker')).length) { //Clicking the Wickedpicker or one of it's inputs
-                      event.stopPropagation();
+                        self.hideTimepicker(window.lastTimePickerControl);
+                    } else if ($(event.target).closest(self.timepicker).length || $(event.target).closest($('.hasWickedpicker[aria-showingpicker="true"]')).length) { //Clicking the Wickedpicker or one of its inputs
+                        event.stopPropagation();
                     } else {   //Everything else
-                      if (typeof self.options.onClickOutside === 'function') {
-                        self.options.onClickOutside();
-                      }
-                      else {
-                        console.warn("Type of onClickOutside must be a function");
-                      }
+                        if (typeof self.options.onClickOutside === 'function') {
+                            self.options.onClickOutside();
+                        } else {
+                            console.warn("Type of onClickOutside must be a function");
+                        }
 
-                      if (!self.options.closeOnClickOutside) {
-                        return;
-                      }
-                      self.hideTimepicker(window.lastTimePickerControl);
+                        if (!self.options.closeOnClickOutside) {
+                            return;
+                        }
+                        // If clicking outside and another timepicker is clicked, show that one
+                        if ($(event.target).hasClass('hasWickedpicker')) {
+                            self.showPicker($(event.target));
+                        } else {
+                            self.hideTimepicker(window.lastTimePickerControl);
+                        }
                     }
                     window.lastTimePickerControl = null;
                 }
             };
             $(document).off('click', clickHandler).on('click', clickHandler);
         },
+
 
         /**
          * Added keyboard functionality to improve usabil

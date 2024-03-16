@@ -469,7 +469,7 @@ def potential_client_subjects():
     potential_classes = [(school_class.id, school_class.school_name) for school_class in school_classes
                          if school_class.school_name.endswith("класс")]
     all_subjects = Subject.query.filter(
-        Subject.subject_type.has(SubjectType.name != "school")
+        Subject.subject_type.has(SubjectType.name.in_(["extra", "after_school", "individual"]))
     ).order_by(Subject.name).all()
     potential_subjects = [(subject.id, f"{subject.name} ({subject.subject_type.description})")
                           for subject in all_subjects]
@@ -478,7 +478,9 @@ def potential_client_subjects():
 
 
 def subjects_data():
-    all_subjects = Subject.query.order_by(Subject.name).all()
+    all_subjects = Subject.query.filter(
+        Subject.subject_type.has(SubjectType.name != 'event')
+    ).order_by(Subject.name).all()
     subjects_teachers = []
     for subject in all_subjects:
         subject_data = {
@@ -802,7 +804,7 @@ def format_subscription_types(subscription_types):
     types_of_subscription = []
     for subscription_type in subscription_types:
         if subscription_type.lessons:
-            type_of_subscription = f"{subscription_type.lessons} занятий за {subscription_type.price:.0f} " \
+            type_of_subscription = f"{conjugate_lessons(subscription_type.lessons)} за {subscription_type.price:.0f} " \
                                    f"({subscription_type.duration} дней)"
             types_of_subscription.append((subscription_type.id, type_of_subscription))
 
@@ -1090,19 +1092,19 @@ def show_lesson(lesson_str):
             subject_id = int(lesson_id_split[1]) if lesson_id_split[1].isdigit() else None
             last_lesson = Lesson.query.filter(
                 Lesson.subject_id == subject_id,
-                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school"]))
+                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school", "event"]))
             ).order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
             coming_lesson = Lesson.query.filter(
                 Lesson.date >= TODAY,
                 Lesson.subject_id == subject_id,
-                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school"]))
+                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school", "event"]))
             ).order_by(Lesson.date, Lesson.start_time).first()
             subject_lesson = coming_lesson if coming_lesson else last_lesson if last_lesson else None
         else:
             lesson_id = int(lesson_id_split[1]) if lesson_id_split[1].isdigit() else None
             subject_lesson = Lesson.query.filter(
                 Lesson.id == lesson_id,
-                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school"]))
+                ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school", "event"]))
             ).first()
             subject_id = subject_lesson.subject_id if subject_lesson else None
 
@@ -1153,8 +1155,12 @@ def create_lesson_dict(lesson, timetable_type):
             lesson_type = 'индив'
         else:
             lesson_type = ''
+        if lesson.lesson_type.name == 'event':
+            lesson_dict['teacher'] = ''
+            lesson_dict['color'] = '#ED42C2'
+        else:
+            lesson_dict['color'] = lesson.teacher.color
         lesson_dict['lesson_type'] = lesson_type
-        lesson_dict['color'] = lesson.teacher.color
         lesson_dict['subject'] = lesson.subject_names
         lesson_dict['lesson_type_name'] = lesson.lesson_type.name
 
@@ -1173,7 +1179,7 @@ def day_lessons_list(day_room_lessons):
 
     for next_lesson in day_room_lessons[1:]:
         if (
-                current_lesson.teacher.id == next_lesson.teacher.id
+                current_lesson.teacher_id == next_lesson.teacher_id
                 and current_lesson.school_classes.all() == next_lesson.school_classes.all()
                 and current_lesson.lesson_type.name == 'school'
                 and current_lesson.lesson_type.name == 'school'
@@ -2254,12 +2260,8 @@ def get_date_range(week):
 
 def filter_day_lessons(form):
     lessons_week = int(form.get('lessons_week'))
-    lessons_date = form.get('lessons_date')
-    lessons_day, lessons_month = map(int, lessons_date.split('.'))
-    start_year = get_date(0, lessons_week).year
-    end_year = get_date(6, lessons_week).year
-    lessons_year = start_year if start_year == end_year else start_year if lessons_month == 12 else end_year
-    date = datetime(lessons_year, lessons_month, lessons_day).date()
+    lessons_day = int(form.get('lessons_day'))
+    date = get_date(lessons_day, lessons_week)
     query = Lesson.query.filter(Lesson.date == date)
     subject_types = form.get('subject_types')
     if subject_types != "all":
@@ -2467,3 +2469,50 @@ def change_lessons_date(form):
         message = [("Нет занятий,  удовлетворяющих критериям", 'error')]
 
     return new_week, message
+
+
+def add_new_event(form):
+    lessons_week = int(form.get('lessons_week'))
+    event_day = int(form.get('event_day'))
+    event_date = get_date(event_day, lessons_week)
+    start_time = datetime.strptime(form.get('event_start_time'), '%H : %M').time()
+    end_time = datetime.strptime(form.get('event_end_time'), '%H : %M').time()
+    if end_time <= start_time:
+        return 'Мероприятие не добавлено. Ошибка во времени проведения', 'error'
+
+    room_id = int(form.get('room'))
+    conflicts = Lesson.query.filter(
+        Lesson.date == event_date,
+        Lesson.start_time < end_time,
+        Lesson.end_time > start_time,
+        Lesson.room_id == room_id
+    ).all()
+    if not conflicts:
+        event_name = form.get('event_name')
+        if not event_name:
+            return 'Мероприятие не добавлено. Нет названия', 'error'
+
+        event_type = SubjectType.query.filter_by(name='event').first()
+        existing_event_name = Subject.query.filter_by(name=event_name, subject_type_id=event_type.id).first()
+        if existing_event_name:
+            event_id = existing_event_name.id
+        else:
+            new_event_subject = Subject(name=event_name, short_name=event_name, subject_type_id=event_type.id)
+            db.session.add(new_event_subject)
+            db.session.flush()
+            event_id = new_event_subject.id
+        new_event = Lesson(
+            date=event_date,
+            start_time=start_time,
+            end_time=end_time,
+            lesson_type_id=event_type.id,
+            room_id=room_id,
+            subject_id=event_id
+        )
+        db.session.add(new_event)
+        db.session.flush()
+        return 'Мероприятие добавлено в расписание', 'success'
+
+    else:
+        return 'Мероприятие не добавлено, есть занятия в это же время', 'error'
+

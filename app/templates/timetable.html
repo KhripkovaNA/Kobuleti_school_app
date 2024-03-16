@@ -15,12 +15,12 @@
                             <thead class="text-success">
                                 <tr>
                                     <th rowspan="2" width="3%" class="fixed-column">Время</th>
-                                    {% for day in days %}
+                                    {% for day in days[:week_dates|length] %}
                                         <th colspan="{{ rooms|length }}">{{ day }} {{ week_dates[loop.index0] }}</th>
                                     {% endfor %}
                                 </tr>
                                 <tr style="color: green; font-size: 80%;">
-                                    {% for day in days %}
+                                    {% for day in days[:week_dates|length] %}
                                         {% for room in rooms %}
                                             <th>{{ room }}</th>
                                         {% endfor %}
@@ -30,7 +30,7 @@
                             <tbody>
                                 <tr>
                                     <th class="fixed-column">{{ start_time }}:00 - {{ start_time + 1 }}:00</th>
-                                    {% for day in days %}
+                                    {% for day in days[:week_dates|length] %}
                                         {% for room in rooms %}
                                             <td rowspan="{{ end_time - start_time + 1 }}">
                                                 {% if classes.get(day) %}
@@ -49,46 +49,40 @@
                                                                     <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                                 </div>
                                                                 <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ (lesson.start_time - 60 * start_time + 540)/0.6 + 50 }}px;">
-                                                                    {% if lesson.lesson_type_name not in ["school", "after_school"] %}
+                                                                    {% if lesson.lesson_type_name=="school" %}
                                                                         <li>
-                                                                            <a href="{{ url_for('lesson', lesson_str='1-'+lesson.id|string) }}">
-                                                                                <i class="material-icons" style="color: purple;">info</i>Занятие
+                                                                            <a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">
+                                                                                <i class="material-icons" style="color: purple;">date_range</i>Школьное расписание
                                                                             </a>
                                                                         </li>
+                                                                    {% else %}
+                                                                        {% if lesson.lesson_type_name not in ["school", "after_school", "event"] %}
+                                                                            <li>
+                                                                                <a href="{{ url_for('lesson', lesson_str='1-'+lesson.id|string) }}">
+                                                                                    <i class="material-icons" style="color: purple;">info</i>Занятие
+                                                                                </a>
+                                                                            </li>
+                                                                        {% endif %}
+                                                                        {% if lesson.lesson_type_name=="after_school" %}
+                                                                            <li>
+                                                                                <a href="{{ url_for('after_school', month_index=lesson.month_index) }}">
+                                                                                    <i class="material-icons" style="color: purple;">diversity_2</i>Продленка
+                                                                                </a>
+                                                                            </li>
+                                                                        {% endif %}
                                                                         {% if not lesson.completed and lesson.month_index >= -1  %}
                                                                             <li>
                                                                                 <a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">
                                                                                     <i class="material-icons" style="color: purple;">edit</i>Изменить
                                                                                 </a>
                                                                             </li>
-                                                                        {% endif %}
-                                                                    {% elif lesson.lesson_type_name=="school" %}
-                                                                        <li>
-                                                                            <a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">
-                                                                                <i class="material-icons" style="color: purple;">date_range</i>Школьное расписание
-                                                                            </a>
-                                                                        </li>
-                                                                    {% elif lesson.lesson_type_name=="after_school" %}
-                                                                        <li>
-                                                                            <a href="{{ url_for('after_school', month_index=lesson.month_index) }}">
-                                                                                <i class="material-icons" style="color: purple;">diversity_2</i>Продленка
-                                                                            </a>
-                                                                        </li>
-                                                                        {% if lesson.month_index >= -1  %}
+                                                                            <li class="divider"></li>
                                                                             <li>
-                                                                                <a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">
-                                                                                    <i class="material-icons" style="color: purple;">edit</i>Изменить
+                                                                                <a href="#" data-toggle="modal" data-target="#delete-{{ lesson.id }}-modal">
+                                                                                    <i class="material-icons" style="color: red;">delete_forever</i>Отменить
                                                                                 </a>
                                                                             </li>
                                                                         {% endif %}
-                                                                    {% endif %}
-                                                                    {% if lesson.lesson_type_name!="school" and not lesson.completed and lesson.month_index >= -1  %}
-                                                                        <li class="divider"></li>
-                                                                        <li>
-                                                                            <a href="#" data-toggle="modal" data-target="#delete-{{ lesson.id }}-modal">
-                                                                                <i class="material-icons" style="color: red;">delete_forever</i>Отменить
-                                                                            </a>
-                                                                        </li>
                                                                     {% endif %}
                                                                 </ul>
                                                             </div>
@@ -167,6 +161,9 @@
                                 <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
                                 {% if classes and week >= -1 %}
                                     <li>
+                                        <a href="#" data-toggle="modal" data-target="#add-event-modal">Добавить мероприятие</a>
+                                    </li>
+                                    <li>
                                         <a href="#" data-toggle="modal" data-target="#change-lessons-modal">Перенести занятия</a>
                                     </li>
                                     <li>
@@ -176,7 +173,78 @@
                             </ul>
                         </div>
 
-                        <!-- *-*-*-*-*-*-*-*-*-* Delete lessons modal *-*-*-*-*-*-*-*-*-* -->
+                        <!-- *-*-*-*-*-*-*-*-*-* Change lessons modal *-*-*-*-*-*-*-*-*-* -->
+
+                        <div class="modal fade" id="add-event-modal" role="dialog">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h4 class="modal-title">Добавить мероприятие</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form class="add-event-form" action="{{ url_for('add_event') }}" method="post">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <input type="hidden" name="lessons_week" value="{{ week }}">
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
+                                                <div class="col-md-7">
+                                                    <select name="event_day" class="form-control">
+                                                        {% for day in days %}
+                                                            <option value="{{ loop.index0 }}">{{ day }}, {{ week_range[loop.index0] }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Начало:</label>
+                                                <div class="col-md-4 time-div">
+                                                    <input type="text" name="event_start_time" class="form-control timepicker time-input">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Конец:</label>
+                                                <div class="col-md-4 time-div">
+                                                    <input type="text" name="event_end_time" class="form-control timepicker time-input">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Кабинет:</label>
+                                                <div class="col-md-7">
+                                                    <select name="room" class="form-control">
+                                                        {% for room in all_rooms %}
+                                                            <option value="{{ room.id }}">{{ room.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Название:</label>
+                                                <div class="col-md-7">
+                                                    <select name="event_name" class="form-control select-search-add">
+                                                        {% for event in events %}
+                                                            <option value="{{ event.name }}">{{ event.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 col-md-offset-3">
+                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                        Добавить
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                        Закрыть
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- *-*-*-*-*-*-*-*-*-* Change lessons modal *-*-*-*-*-*-*-*-*-* -->
 
                         <div class="modal fade" id="change-lessons-modal" role="dialog">
                             <div class="modal-dialog">
@@ -192,10 +260,10 @@
                                             <div class="row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Перенести с:</label>
                                                 <div class="col-md-7">
-                                                    <select name="lessons_date" class="form-control">
+                                                    <select name="lessons_day" class="form-control">
                                                         {% for day in days %}
                                                             {% if classes.get(day) %}
-                                                                <option value="{{ week_dates[loop.index0] }}">{{ day }}, {{ week_dates[loop.index0] }}</option>
+                                                                <option value="{{ loop.index0 }}">{{ day }}, {{ week_dates[loop.index0] }}</option>
                                                             {% endif %}
                                                         {% endfor %}
                                                     </select>
@@ -260,10 +328,10 @@
                                             <div class="row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Дата занятий:</label>
                                                 <div class="col-md-7">
-                                                    <select name="lessons_date" class="form-control">
+                                                    <select name="lessons_day" class="form-control">
                                                         {% for day in days %}
                                                             {% if classes.get(day) %}
-                                                                <option value="{{ week_dates[loop.index0] }}">{{ day }}, {{ week_dates[loop.index0] }}</option>
+                                                                <option value="{{ loop.index0 }}">{{ day }}, {{ week_dates[loop.index0] }}</option>
                                                             {% endif %}
                                                         {% endfor %}
                                                     </select>
