@@ -309,7 +309,10 @@ def create_user():
             if password == repeat_password:
                 same_username = User.query.filter_by(username=username).all()
                 if not same_username:
-                    new_user = User(username=username, rights=rights)
+                    new_user = User(
+                        username=username,
+                        rights=rights
+                    )
                     new_user.set_password(password)
                     db.session.add(new_user)
                     db.session.commit()
@@ -698,7 +701,7 @@ def employee_report(week):
 def add_employee():
     possible_employees = clients_data('employee')
     distinct_roles = db.session.query(Employee.role.distinct()).all()
-    all_subjects = Subject.query.order_by(Subject.name).all()
+    all_subjects = Subject.query.filter(Subject.subject_type.has(SubjectType.name != 'event')).order_by(Subject.name).all()
     subject_list = [(subj.id, f'{subj.name} ({subj.subject_type.description})') for subj in all_subjects]
     form = EmployeeForm()
     form.selected_client.choices = [(person["id"], f"{person['last_name']} {person['first_name']}")
@@ -768,9 +771,12 @@ def show_edit_employee(employee_id):
         ).all()
         employee_subjects = [subject.id for subject in employee.subjects_taught]
         possible_subjects = Subject.query.filter(
-            ~Subject.id.in_(employee_subjects)
+            ~Subject.id.in_(employee_subjects),
+            Subject.subject_type.has(SubjectType.name != 'event')
         ).order_by(Subject.name).all()
-        all_subjects = Subject.query.order_by(Subject.name).all()
+        all_subjects = Subject.query.filter(
+            Subject.subject_type.has(SubjectType.name != 'event')
+        ).order_by(Subject.name).all()
 
         return render_template('employee.html', employee=employee, form=form, possible_roles=possible_roles,
                                possible_subjects=possible_subjects, subjects=all_subjects, render_type=render_type)
@@ -1089,7 +1095,7 @@ def lesson(lesson_str):
 
         other_lessons = Subject.query.filter(
             Subject.id != lesson_subject.id,
-            Subject.subject_type.has(SubjectType.name != 'school')
+            ~Subject.subject_type.has(SubjectType.name.in_(['school', 'event']))
         ).order_by(Subject.name).all()
 
         return render_template('lesson.html', subject_lesson=subject_lesson, clients=possible_clients,
@@ -1102,7 +1108,7 @@ def lesson(lesson_str):
         elif lesson_subject:
             other_lessons = Subject.query.filter(
                 Subject.id != lesson_subject.id,
-                Subject.subject_type.has(SubjectType.name != 'school')
+                ~Subject.subject_type.has(SubjectType.name.in_(['school', 'event']))
             ).order_by(Subject.name).all()
 
             return render_template('lesson.html', subject_lesson=subject_lesson, lesson_subject=lesson_subject,

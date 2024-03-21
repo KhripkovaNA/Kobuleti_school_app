@@ -613,11 +613,11 @@ $(document).ready(function(){
         var passwordDiv = passwordInput.closest('.password-div');
         var errorDiv = passwordInput.closest('.row');
 
-        var isValidPassword = /^(?=.*[\d])(?=.*[!@#$%^&*])[\w!@#$%^&*]{7,20}$/.test(passwordValue);
+        var isValidPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*_,]{7,20}$/.test(passwordValue);
 
         if (!isValidPassword) {
             errorDiv.addClass("has-error");
-            var errorSpan = `<span class="error-span" style="color:red;">Не менее 7 символов, латинские буквы, символы и цифры</span>`;
+            var errorSpan = `<span class="error-span" style="color:red;">Пароль не соответствует критериям</span>`;
             var existingErrorSpan = passwordDiv.find('.error-span');
 
             if (existingErrorSpan.length === 0) {

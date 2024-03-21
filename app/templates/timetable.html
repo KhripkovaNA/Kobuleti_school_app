@@ -159,10 +159,12 @@
                             <ul class="dropdown-menu">
                                 <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
                                 <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
-                                {% if classes and week >= -1 %}
+                                {% if week >= 0 %}
                                     <li>
                                         <a href="#" data-toggle="modal" data-target="#add-event-modal">Добавить мероприятие</a>
                                     </li>
+                                {% endif %}
+                                {% if classes and week >= -1 %}
                                     <li>
                                         <a href="#" data-toggle="modal" data-target="#change-lessons-modal">Перенести занятия</a>
                                     </li>

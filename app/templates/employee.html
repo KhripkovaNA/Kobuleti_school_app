@@ -169,7 +169,7 @@
                                 <div class="row" id="role-select-row">
                                     <label class="control-label col-md-3">Новая должность:</label>
                                     <div class="col-md-6">
-                                        <select class="form-control select-search-add" name="new_roles" id="role-select" placeholder="Добавить должность" multiple>
+                                        <select class="form-control role-select select-search-add" name="new_roles" placeholder="Добавить должность" multiple>
                                             {% for possible_role in possible_roles %}
                                                 <option value="{{ possible_role[0] }}">{{ possible_role[0] }}</option>
                                             {% endfor %}
