@@ -4,8 +4,25 @@ $(document).ready(function(){
     function adjustClassBoxWidth() {
         $('.card-content').find('.table tbody tr td').each(function() {
             var colWidth = $(this).width();
-            var classBox = $(this).find('.class-box');
-            classBox.width(colWidth - 10);
+            var classBoxes = $(this).find('.class-box');
+            var floatIndex = false;
+            var halfColWidth = (colWidth / 2);
+
+            classBoxes.each(function() {
+                var currentBox = $(this);
+                var splitClasses = currentBox.find("input[type='hidden']").val()
+                if (splitClasses === "True") {
+                    currentBox.width(halfColWidth);
+                    if (floatIndex) {
+                        currentBox.css({ right: -5, left: 'auto' });
+                    } else {
+                        currentBox.css({ left: -5, right: 'auto' });
+                    }
+                    floatIndex = !floatIndex;
+                } else {
+                    currentBox.width(colWidth - 10);
+                }
+            });
         });
     }
 
@@ -855,13 +872,16 @@ $(document).ready(function(){
         var newTitle = originalTitle.replace("1", lessonCount + 1);
         lessonSection.find("h4").text(newTitle);
 
-        lessonSection.find("select, input[type='text'], input[type='hidden']").each(function() {
+        lessonSection.find("select, input[type='text'], input[type='hidden'], input[type='checkbox']").each(function() {
             var originalName = $(this).attr("name");
             if (originalName) {
                 var newName = originalName.replace("-0", "-" + lessonCount);
                 $(this).attr("name", newName);
                 if ($(this).is("input[type='text']") || $(this).is("input[type='hidden']")) {
                     $(this).val("");
+                }
+                if ($(this).is("input[type='checkbox']")) {
+                    $(this).prop('checked', false);
                 }
             }
             var originalId = $(this).attr("id");

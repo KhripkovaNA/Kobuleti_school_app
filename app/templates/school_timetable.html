@@ -64,6 +64,7 @@
                                                             <p style="color: #660000;">{{ lesson.time }}</p>
                                                             <p style="color: #003366;">{{ lesson.subject }}</p>
                                                             <p style="color: #330033;">{{ lesson.teacher }}</p>
+                                                            <input type="hidden" value="{{ lesson.split }}">
                                                         </div>
                                                         <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ (lesson.start_time - 60 * start_time + 540)/0.75 + 50 }}px;">
                                                             <li><a href="{{ url_for('school_lesson', lesson_str='0-'+lesson.id|string) }}">Урок</a></li>

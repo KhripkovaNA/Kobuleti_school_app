@@ -169,6 +169,7 @@ class LessonForm(FlaskForm):
     subject = SelectField(choices=[], validators=[InputRequired(message='Заполните это поле')], validate_choice=False)
     school_classes = SelectMultipleField(choices=[], validators=[Optional()],
                                          validate_choice=False)
+    split_classes = BooleanField()
     room = SelectField(choices=[], validators=[InputRequired(message='Заполните это поле')], validate_choice=False)
     teacher = SelectField(choices=[], validators=[InputRequired(message='Заполните это поле')], validate_choice=False)
 

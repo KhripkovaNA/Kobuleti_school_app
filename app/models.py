@@ -198,6 +198,7 @@ class Lesson(db.Model):
     end_time = db.Column(db.Time)
     lesson_completed = db.Column(db.Boolean, default=False)
     lesson_topic = db.Column(db.String(120), default="")
+    lesson_comment = db.Column(db.String(200), default="")
 
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
@@ -211,6 +212,8 @@ class Lesson(db.Model):
 
     school_classes = db.relationship('SchoolClass', secondary=class_lesson_table,
                                      backref='class_lessons', lazy='dynamic')
+
+    split_classes = db.Column(db.Boolean, default=False)
 
     students_registered = db.relationship('Person', secondary=student_lesson_registered_table,
                                           backref='lessons_registered', lazy='dynamic')

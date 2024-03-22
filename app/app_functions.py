@@ -5,7 +5,7 @@ from app import db
 from sqlalchemy import and_, or_
 from dateutil.relativedelta import relativedelta
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill, GradientFill
 from openpyxl.utils import get_column_letter
 
 DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
@@ -1168,6 +1168,7 @@ def create_lesson_dict(lesson, timetable_type):
         lesson_dict['room'] = lesson.room.name
         lesson_dict['room_color'] = lesson.room.color
         lesson_dict['subject'] = lesson.subject.short_name
+        lesson_dict['split'] = lesson.split_classes
 
     return lesson_dict
 
@@ -1268,28 +1269,33 @@ def day_school_lessons_dict(day, week, school_classes):
     return class_lessons, lesson_date_str, (day_start_hour, day_end_hour)
 
 
-def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher, lesson_id=None):
+def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher, split_classes, lesson_id=None):
+    filter_conditions = [
+        and_(
+            Lesson.start_time < end_time,
+            Lesson.end_time > start_time,
+            Lesson.room_id == room
+        ),
+        and_(
+            Lesson.start_time < end_time,
+            Lesson.end_time > start_time,
+            Lesson.teacher_id == teacher
+        )
+    ]
+
+    if not split_classes:
+        class_condition = and_(
+            Lesson.start_time < end_time,
+            Lesson.end_time > start_time,
+            Lesson.school_classes.any(SchoolClass.id.in_(classes))
+        )
+        filter_conditions.append(class_condition)
+
     conflicting_lessons = Lesson.query.filter(
         and_(
             Lesson.id != lesson_id,
             Lesson.date == date,
-            or_(
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.room_id == room
-                ),
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.teacher_id == teacher
-                ),
-                and_(
-                    Lesson.start_time < end_time,
-                    Lesson.end_time > start_time,
-                    Lesson.school_classes.any(SchoolClass.id.in_(classes))
-                )
-            )
+            or_(*filter_conditions)
         )
     ).all()
 
@@ -1322,6 +1328,7 @@ def create_check_lesson(lesson_date, form, i):
     subject_id, lesson_type_id = form.subject.data.split('-')
     room_id = int(form.room.data)
     classes = [int(school_class) for school_class in form.school_classes.data]
+    split_classes = form.split_classes.data
     teacher_id = int(form.teacher.data)
     school_type = SubjectType.query.filter_by(name='school').first().id
 
@@ -1336,7 +1343,7 @@ def create_check_lesson(lesson_date, form, i):
         return lesson, message_text
 
     conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
-                                                    classes, room_id, teacher_id)
+                                                    classes, room_id, teacher_id, split_classes)
 
     if conflicting_lessons:
         intersection = analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes)
@@ -1358,6 +1365,7 @@ def create_check_lesson(lesson_date, form, i):
         school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
         if school_classes:
             lesson.school_classes.extend(school_classes)
+            lesson.split_classes = split_classes
             school_students = Person.query.filter(
                 Person.status == "Клиент",
                 Person.school_class_id.in_(classes)
@@ -1406,6 +1414,7 @@ def lesson_edit(form, lesson):
     end_time = datetime.strptime(form.end_time.data, '%H : %M').time()
     room_id = int(form.room.data)
     classes = [school_class.id for school_class in lesson.school_classes]
+    split_classes = lesson.split_classes
     teacher_id = int(form.teacher.data)
 
     if end_time <= start_time:
@@ -1413,7 +1422,7 @@ def lesson_edit(form, lesson):
         return message
 
     conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time, classes,
-                                                    room_id, teacher_id, lesson.id)
+                                                    room_id, teacher_id, split_classes, lesson.id)
 
     if conflicting_lessons:
         intersection = analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes)
@@ -1499,8 +1508,10 @@ def copy_filtered_lessons(filtered_lessons, week_diff):
         classes = [cl.id for cl in lesson.school_classes]
         room = lesson.room_id
         teacher = lesson.teacher_id
+        split_classes = lesson.split_classes
 
-        conflicting_lessons = check_conflicting_lessons(date, start_time, end_time, classes, room, teacher)
+        conflicting_lessons = check_conflicting_lessons(date, start_time, end_time, classes,
+                                                        room, teacher, split_classes)
 
         if not conflicting_lessons:
             new_lesson = Lesson(
@@ -1515,6 +1526,7 @@ def copy_filtered_lessons(filtered_lessons, week_diff):
             db.session.add(new_lesson)
             if lesson.lesson_type.name == "school":
                 new_lesson.school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
+                lesson.split_classes = split_classes
                 if lesson.students_registered.all():
                     lesson_students = lesson.students_registered.all()
                 else:
@@ -2228,10 +2240,17 @@ def download_timetable(week):
                 sheet.cell(ind, 1).border = thick_border
                 sheet.cell(ind, 1).alignment = central
             row_ind = start_end_time.index(lesson_time) + last_row_ind + 1
-            sheet.cell(row_ind, col_ind).value = lesson.subject.name
-            color = lesson.room.color.replace('#', '')
-            sheet.cell(row_ind, col_ind).fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
-            sheet.cell(row_ind, col_ind).alignment = central
+            cell = sheet.cell(row_ind, col_ind)
+            if cell.value:
+                cell.value += f" / {lesson.subject.name}"
+                first_color = cell.fill.start_color.index
+                second_color = lesson.room.color.replace('#', '')
+                cell.fill = GradientFill(stop=(first_color, second_color))
+            else:
+                cell.value = lesson.subject.name
+                color = lesson.room.color.replace('#', '')
+                cell.fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
+                cell.alignment = central
 
         new_last_row_ind = sheet.max_row
 
@@ -2445,8 +2464,10 @@ def change_lessons_date(form):
                 classes = [cl.id for cl in lesson.school_classes]
                 room = lesson.room_id
                 teacher = lesson.teacher_id
+                split_classes = lesson.split_classes
 
-                conflicting_lessons = check_conflicting_lessons(new_date, start_time, end_time, classes, room, teacher)
+                conflicting_lessons = check_conflicting_lessons(new_date, start_time, end_time, classes,
+                                                                room, teacher, split_classes)
                 if not conflicting_lessons:
                     lesson.date = new_date
                     change_les += 1
