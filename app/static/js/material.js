@@ -1069,7 +1069,7 @@ $(document).ready(function(){
     $(".employee-role").on("click", ".delete-role", function() {
         var roleRow = $(this).closest(".employee-role");
         employeeRole = roleRow.find(".role-value").val();
-        $("#role-select")[0].selectize.addOption({value:employeeRole,text:employeeRole});
+        $(".role-select")[0].selectize.addOption({value:employeeRole,text:employeeRole});
         roleRow.remove();
         if (employeeRole === "Учитель") {
             $("#teacher-subjects-section").remove();
@@ -1077,8 +1077,8 @@ $(document).ready(function(){
     });
 
     // Delete teacher subject
-    $("#subjects-row").on("click", ".delete-subject", function() {
-        var subjectRow = $(this).closest(".subjects-row");
+    $(".subject-row").on("click", ".delete-subject", function() {
+        var subjectRow = $(this).closest(".subject-row");
         teacherSubjectVal = subjectRow.find(".subject-value").val();
         teacherSubjectText = subjectRow.find("p").html();
         $("#subject-select")[0].selectize.addOption({value:teacherSubjectVal,text:teacherSubjectText});
