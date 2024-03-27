@@ -293,3 +293,13 @@ class Finance(db.Model):
     date = db.Column(db.Date, default=datetime.today().date())
     amount = db.Column(db.Numeric(8, 2))
     description = db.Column(db.String(120))
+
+
+class UserAction(db.Model):
+    __tablename__ = 'user_actions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User', backref='actions')
+    timestamp = db.Column(db.DateTime, default=datetime.today())
+    description = db.Column(db.String(120))

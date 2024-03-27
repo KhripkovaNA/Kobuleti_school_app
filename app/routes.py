@@ -14,7 +14,7 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, subject_record, \
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
-    add_new_event, get_date
+    add_new_event, get_date, user_action
 
 from app import app, db
 from io import BytesIO
@@ -32,15 +32,19 @@ def login():
             flash('Неправильное имя пользователя или пароль', "error")
             return redirect(url_for('login'))
         login_user(user)
-        flash('Вы успешно вошли в систему.', "success")
+        user_action(user, "Вход в систему")
+        db.session.commit()
+        flash('Вы успешно вошли в систему', "success")
         return redirect(url_for('students'))
     return render_template('login.html', form=form)
 
 
 @app.route('/logout')
 def logout():
+    user_action(current_user, "Выход из системы")
+    db.session.commit()
     logout_user()
-    flash('Вы вышли из системы.', "success")
+    flash('Вы вышли из системы', "success")
     return redirect(url_for('login'))
 
 
@@ -70,8 +74,9 @@ def change_add_room():
                 if room and new_name and new_color:
                     room.name = new_name
                     room.color = new_color
+                    user_action(current_user, f"Внесение изменений в кабинет '{room.name}'")
                     db.session.commit()
-                    flash(f'Кабинет {room.name} изменен', 'success')
+                    flash(f"Кабинет '{room.name}' изменен", 'success')
 
             if 'delete_room_btn' in request.form:
                 room_id = int(request.form.get('delete_room_btn')) if request.form.get('delete_room_btn').isdigit() \
@@ -79,19 +84,21 @@ def change_add_room():
                 room = Room.query.filter_by(id=room_id).first()
                 if room:
                     db.session.delete(room)
+                    user_action(current_user, f"Удаление кабинета '{room.name}'")
                     db.session.commit()
-                    flash(f'Кабинет {room.name} удален', 'success')
+                    flash(f"Кабинет '{room.name}' удален", 'success')
 
             if 'add_room' in request.form:
                 room_name = request.form.get('room_name')
                 room_color = request.form.get('room_color')
                 new_room = Room(name=room_name, color=room_color)
                 db.session.add(new_room)
+                user_action(current_user, f"Добавление кабинета '{new_room.name}'")
                 db.session.commit()
-                flash('Новый кабинет добавлен в систему', 'success')
+                flash(f"Новый кабинет '{new_room.name}' добавлен в систему", 'success')
 
         else:
-            flash('Нет прав администратора', 'error')
+            flash('Нет прав руководителя', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -115,8 +122,9 @@ def change_add_class():
                 if school_class and new_school_class and new_school_name:
                     school_class.school_class = new_school_class
                     school_class.school_name = new_school_name
+                    user_action(current_user, f"Внесение изменений в класс '{school_class.school_name}'")
                     db.session.commit()
-                    flash(f'Класс {school_class.school_name} изменен', 'success')
+                    flash(f"Класс '{school_class.school_name}' изменен", 'success')
 
             if 'delete_class_btn' in request.form:
                 class_id = int(request.form.get('delete_class_btn')) if request.form.get('delete_class_btn').isdigit() \
@@ -124,8 +132,9 @@ def change_add_class():
                 school_class = SchoolClass.query.filter_by(id=class_id).first()
                 if school_class:
                     db.session.delete(school_class)
+                    user_action(current_user, f"Удаление класса '{school_class.school_name}'")
                     db.session.commit()
-                    flash(f'Класс {school_class.school_name} удален', 'success')
+                    flash(f"Класс '{school_class.school_name}' удален", 'success')
 
             if 'add_class' in request.form:
                 new_school_class = int(request.form.get('new_school_class')) \
@@ -133,11 +142,12 @@ def change_add_class():
                 new_school_name = request.form.get('new_school_name')
                 new_class = SchoolClass(school_class=new_school_class, school_name=new_school_name)
                 db.session.add(new_class)
+                user_action(current_user, f"Добавление класса '{new_class.school_name}'")
                 db.session.commit()
-                flash('Новый класс добавлен в систему', 'success')
+                flash(f"Новый класс '{new_class.school_name}' добавлен в систему", 'success')
 
         else:
-            flash('Нет прав администратора', 'error')
+            flash('Нет прав руководителя', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -174,6 +184,7 @@ def change_add_subscription():
                         subscription_type.lessons = subscription_lessons
                         subscription_type.duration = subscription_duration
                         subscription_type.price = float(subscription_price)
+                        user_action(current_user, "Изменение абонемента")
                         db.session.commit()
                         flash('Абонемент изменен', 'success')
                     else:
@@ -185,6 +196,7 @@ def change_add_subscription():
                 subscription_type = SubscriptionType.query.filter_by(id=subscription_type_id).first()
                 if subscription_type:
                     db.session.delete(subscription_type)
+                    user_action(current_user, "Удаление абонемента")
                     db.session.commit()
                     flash('Абонемент удален', 'success')
 
@@ -210,6 +222,7 @@ def change_add_subscription():
                             price=float(new_subscription_price)
                         )
                         db.session.add(new_subscription)
+                        user_action(current_user, "Добавление абонемента")
                         db.session.commit()
                         flash('Новый абонемент добавлен в систему', 'success')
 
@@ -217,7 +230,7 @@ def change_add_subscription():
                         flash('Такой абонемент уже есть', 'error')
 
         else:
-            flash('Нет прав администратора', 'error')
+            flash('Нет прав руководителя', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -249,6 +262,7 @@ def change_add_after_school():
                     if not same_subscription_type:
                         after_school_type.lessons = after_school_period
                         after_school_type.price = float(after_school_price)
+                        user_action(current_user, "Изменение цены на продленку")
                         db.session.commit()
                         flash('Цена на продленку изменена', 'success')
                     else:
@@ -260,6 +274,7 @@ def change_add_after_school():
                 after_school_type = SubscriptionType.query.filter_by(id=after_school_id).first()
                 if after_school_type:
                     db.session.delete(after_school_type)
+                    user_action(current_user, "Удаление цены на продленку")
                     db.session.commit()
                     flash('Цена на продленку удалена', 'success')
 
@@ -281,6 +296,7 @@ def change_add_after_school():
                             price=float(new_after_school_price)
                         )
                         db.session.add(new_after_school_type)
+                        user_action(current_user, "Добавление цены на продленку")
                         db.session.commit()
                         flash('Новая цена на продленку добавлена в систему', 'success')
 
@@ -288,7 +304,7 @@ def change_add_after_school():
                         flash('Такая цена на продленку уже есть', 'error')
 
         else:
-            flash('Нет прав администратора', 'error')
+            flash('Нет прав руководителя', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -315,6 +331,7 @@ def create_user():
                     )
                     new_user.set_password(password)
                     db.session.add(new_user)
+                    user_action(current_user, f"Добавление пользователя {new_user.username}")
                     db.session.commit()
                     flash(f'Новый пользователь {new_user.username} зарегистрирован', 'success')
                 else:
@@ -323,7 +340,7 @@ def create_user():
                 flash('Пароли не совпадают', 'error')
 
         else:
-            flash('Нет прав администратора', 'error')
+            flash('Нет прав руководителя', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -340,6 +357,7 @@ def change_password():
         new_password = request.form.get('new_password')
         if current_user.check_password(old_password):
             current_user.password = current_user.set_password(new_password)
+            user_action(current_user, f"Изменение пароля")
             db.session.commit()
             flash('Пароль успешно изменен', 'success')
 
@@ -384,45 +402,57 @@ def add_comment():
 @login_required
 def lesson_register(student_id):
     try:
-        student_id = int(student_id) if str(student_id).isdigit() else None
-        lesson_id, message = student_lesson_register(request.form, student_id)
-        if lesson_id:
-            db.session.commit()
-            flash(message, 'success')
+        if current_user.rights in ["admin", "user"]:
+            student_id = int(student_id) if str(student_id).isdigit() else None
+            student = Person.query.filter_by(id=student_id, status="Клиент").first()
+            lesson, message = student_lesson_register(request.form, student)
+            if lesson:
+                description = f"Запись клиента {student.last_name} {student.first_name} " \
+                              f"на занятие {lesson.subject.name} {lesson.date:%d.%m.%Y}"
+                user_action(current_user, description)
+                db.session.commit()
+                flash(message, 'success')
 
-            return redirect(url_for('lesson', lesson_str=f'1-{lesson_id}'))
+                return redirect(url_for('lesson', lesson_str=f'1-{lesson.id}'))
+
+            else:
+                flash(message, 'error')
 
         else:
-            flash(message, 'error')
-            return redirect(request.referrer)
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при записи клиента: {str(e)}', 'error')
 
-        return redirect(request.referrer)
+    return redirect(request.referrer)
 
 
 @app.route('/student-subjects/<string:student_id>', methods=['POST'])
 @login_required
 def student_subjects_add(student_id):
     try:
-        student = Person.query.filter_by(id=student_id, status="Лид").first()
-        selected_subjects = request.form.getlist("selected_subjects")
-        selected_class = request.form.get("selected_class")
-        if student:
-            if selected_subjects:
-                for subject in selected_subjects:
-                    subject_id = int(subject)
-                    potential_subject = Subject.query.filter_by(id=subject_id).first()
-                    if potential_subject not in student.subjects.all():
-                        student.subjects.append(potential_subject)
-                        db.session.flush()
-            if selected_class:
-                student.school_class_id = int(selected_class)
+        if current_user.rights in ["admin", "user"]:
+            student = Person.query.filter_by(id=student_id, status="Лид").first()
+            selected_subjects = request.form.getlist("selected_subjects")
+            selected_class = request.form.get("selected_class")
+            if student:
+                if selected_subjects:
+                    for subject in selected_subjects:
+                        subject_id = int(subject)
+                        potential_subject = Subject.query.filter_by(id=subject_id).first()
+                        if potential_subject not in student.subjects.all():
+                            student.subjects.append(potential_subject)
+                            db.session.flush()
+                if selected_class:
+                    student.school_class_id = int(selected_class)
 
-            db.session.commit()
-            flash('Занятия добавлены', 'success')
+                user_action(current_user, f"Добавление занятий лиду {student.last_name} {student.first_name}")
+                db.session.commit()
+                flash('Занятия добавлены', 'success')
+
+        else:
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -435,36 +465,49 @@ def student_subjects_add(student_id):
 @login_required
 def subscription(student_id):
     try:
-        new_subscription, price = purchase_subscription(request.form, student_id)
-        db.session.add(new_subscription)
-        db.session.flush()
-        description = f"Покупка абонемента {new_subscription.subject.name}"
-        finance_operation(student_id, -price, description)
-        db.session.commit()
-        flash('Новый абонемент добавлен в систему.', 'success')
+        if current_user.rights in ["admin", "user"]:
+            student_id = int(student_id) if str(student_id).isdigit() else None
+            student = Person.query.filter_by(id=student_id, status="Клиент").first()
+            new_subscription, price = purchase_subscription(request.form, student)
+            db.session.add(new_subscription)
+            db.session.flush()
+            description = f"Покупка абонемента {new_subscription.subject.name}"
+            finance_operation(student_id, -price, description)
+            user_action(current_user, f"Покупка абонемента {new_subscription.subject.name} клиентом "
+                                      f"{student.last_name} {student.first_name}")
+            db.session.commit()
+            flash('Новый абонемент добавлен в систему', 'success')
 
-        return redirect(url_for('show_edit_student', student_id=student_id))
+            return redirect(url_for('show_edit_student', student_id=student_id))
+
+        else:
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при добавлении абонемента: {str(e)}', 'error')
 
-        return redirect(request.referrer)
+    return redirect(request.referrer)
 
 
 @app.route('/deposit/<string:student_id>', methods=['POST'])
 @login_required
 def deposit(student_id):
     try:
-        amount = request.form.get('deposit')
-        if amount:
-            deposit = int(amount)
-            student = Person.query.filter_by(id=student_id).first()
-            student.balance += deposit
-            description = "Пополнение баланса"
-            finance_operation(student_id, deposit, description)
-            db.session.commit()
-            flash('Депозит внесен на счет.', 'success')
+        if current_user.rights in ["admin", "user"]:
+            amount = request.form.get('deposit')
+            if amount:
+                deposit = int(amount)
+                student = Person.query.filter_by(id=student_id).first()
+                student.balance += deposit
+                description = f"Пополнение баланса клиента {student.last_name} {student.first_name}"
+                finance_operation(student_id, deposit, description)
+                user_action(current_user, f"Покупка баланса клиента {student.last_name} {student.first_name}")
+                db.session.commit()
+                flash('Депозит внесен на счет', 'success')
+
+        else:
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -476,43 +519,50 @@ def deposit(student_id):
 @app.route('/add-student', methods=['GET', 'POST'])
 @login_required
 def add_student():
-    clients = clients_data('child')
-    form1 = ChildForm()
-    form1.contacts[0].selected_contact.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
-                                                  for person in clients]
+    if current_user.rights in ["admin", "user"]:
+        clients = clients_data('child')
+        form1 = ChildForm()
+        form1.contacts[0].selected_contact.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
+                                                      for person in clients]
 
-    possible_clients = clients_data('adult')
-    form2 = AdultForm()
-    form2.selected_client.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
-                                     for person in possible_clients]
-    render_type = 'child'
+        possible_clients = clients_data('adult')
+        form2 = AdultForm()
+        form2.selected_client.choices = [(person["id"], f'{person["last_name"]} {person["first_name"]}')
+                                         for person in possible_clients]
+        render_type = 'child'
 
-    if request.method == 'POST':
-        try:
-            if 'add_child_btn' in request.form:
-                if form1.validate_on_submit():
-                    student = add_child(form1)
-                    db.session.commit()
-                    flash('Новый клиент добавлен в систему.', 'success')
-                    return redirect(url_for('show_edit_student', student_id=student.id))
+        if request.method == 'POST':
+            try:
+                if 'add_child_btn' in request.form:
+                    if form1.validate_on_submit():
+                        student = add_child(form1)
+                        user_action(current_user, f"Добавление клиента {student.last_name} {student.first_name}")
+                        db.session.commit()
+                        flash('Новый клиент добавлен в систему', 'success')
+                        return redirect(url_for('show_edit_student', student_id=student.id))
 
-            if 'add_adult_btn' in request.form:
-                render_type = 'adult'
-                if form2.validate_on_submit():
-                    client = add_adult(form2)
-                    db.session.commit()
-                    flash('Новый клиент добавлен в систему.', 'success')
-                    return redirect(url_for('show_edit_student', student_id=client.id))
+                if 'add_adult_btn' in request.form:
+                    render_type = 'adult'
+                    if form2.validate_on_submit():
+                        client = add_adult(form2)
+                        user_action(current_user, f"Добавление клиента {client.last_name} {client.first_name}")
+                        db.session.commit()
+                        flash('Новый клиент добавлен в систему', 'success')
+                        return redirect(url_for('show_edit_student', student_id=client.id))
 
-            flash('Ошибка в форме добавления киента', 'error')
+                flash('Ошибка в форме добавления киента', 'error')
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при добавлении киента: {str(e)}', 'error')
-            return redirect(url_for('add_student'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при добавлении киента: {str(e)}', 'error')
+                return redirect(url_for('add_student'))
 
-    return render_template('add_student.html', clients=clients, possible_clients=possible_clients,
-                           form1=form1, form2=form2, render_type=render_type)
+        return render_template('add_student.html', clients=clients, possible_clients=possible_clients,
+                               form1=form1, form2=form2, render_type=render_type)
+
+    else:
+        flash('Нет прав администратора', 'error')
+        return redirect(url_for('students'))
 
 
 @app.route('/student/<string:student_id>', methods=['GET', 'POST'])
@@ -599,60 +649,89 @@ def show_edit_student(student_id):
 
         if request.method == 'POST':
             try:
-                if 'form_student_submit' in request.form:
-                    render_type = 'edit_student'
-                    if student_form.validate_on_submit():
-                        handle_student_edit(student_form, student, 'edit_student', current_user.rights)
-                        db.session.commit()
-                        flash('Изменения внесены', 'success')
-                        return redirect(url_for('show_edit_student', student_id=student.id))
-
-                if 'form_main_contact_submit' in request.form:
-                    render_type = 'contact_main_edit'
-                    if main_contact_form.validate_on_submit():
-                        handle_student_edit(main_contact_form, student, 'edit_main_contact')
-                        db.session.commit()
-                        flash('Изменения внесены', 'success')
-                        return redirect(url_for('show_edit_student', student_id=student.id))
-
-                for i in range(1, len(student.additional_contacts) + 2):
-                    if f'form_cont_{i}_submit' in request.form:
-                        render_type = f'contact_edit_{i}'
-                        if add_cont_forms[i-1].validate_on_submit():
-                            handle_student_edit(add_cont_forms[i-1], student, f'edit_contact_{i}')
+                if current_user.rights in ["admin", "user"]:
+                    if 'form_student_submit' in request.form:
+                        render_type = 'edit_student'
+                        if student_form.validate_on_submit():
+                            handle_student_edit(student_form, student, 'edit_student', current_user)
+                            description = f"Изменение данных клиента {student.last_name} {student.first_name}"
+                            user_action(current_user, description)
                             db.session.commit()
                             flash('Изменения внесены', 'success')
                             return redirect(url_for('show_edit_student', student_id=student.id))
 
-                if 'form_cont_new_submit' in request.form:
-                    render_type = 'contact_new'
-                    if new_contact_form.validate_on_submit():
-                        handle_student_edit(new_contact_form, student, 'new_contact')
-                        db.session.commit()
-                        flash('Новый контакт добавлен', 'success')
-                        return redirect(url_for('show_edit_student', student_id=student.id))
+                    if 'form_main_contact_submit' in request.form:
+                        render_type = 'contact_main_edit'
+                        if main_contact_form.validate_on_submit():
+                            handle_student_edit(main_contact_form, student, 'edit_main_contact', current_user)
+                            description = f"Изменение основного контакта клиента " \
+                                          f"{student.last_name} {student.first_name}"
+                            user_action(current_user, description)
+                            db.session.commit()
+                            flash('Изменения внесены', 'success')
+                            return redirect(url_for('show_edit_student', student_id=student.id))
 
-                if 'del_subject_btn' in request.form:
-                    handle_student_edit(request.form, student, 'del_subject')
-                    db.session.commit()
-                    flash('Изменения внесены', 'success')
-                    return redirect(url_for('show_edit_student', student_id=student.id))
+                    for i in range(1, len(student.additional_contacts) + 2):
+                        if f'form_cont_{i}_submit' in request.form:
+                            render_type = f'contact_edit_{i}'
+                            if add_cont_forms[i-1].validate_on_submit():
+                                handle_student_edit(add_cont_forms[i-1], student,
+                                                    f'edit_contact_{i}', current_user)
+                                description = f"Изменение контактных данных клиента " \
+                                              f"{student.last_name} {student.first_name}"
+                                user_action(current_user, description)
+                                db.session.commit()
+                                flash('Изменения внесены', 'success')
+                                return redirect(url_for('show_edit_student', student_id=student.id))
 
-                if 'form_subscriptions_submit' in request.form:
-                    render_type = 'subscription'
-                    if subscriptions_form.validate_on_submit():
-                        handle_student_edit(subscriptions_form, student, 'subscription')
+                    if 'form_cont_new_submit' in request.form:
+                        render_type = 'contact_new'
+                        if new_contact_form.validate_on_submit():
+                            handle_student_edit(new_contact_form, student, 'new_contact', current_user)
+                            description = f"Добавление нового контакта клиенту {student.last_name} {student.first_name}"
+                            user_action(current_user, description)
+                            db.session.commit()
+                            flash('Новый контакт добавлен', 'success')
+                            return redirect(url_for('show_edit_student', student_id=student.id))
+
+                    if 'del_subject_btn' in request.form:
+                        handle_student_edit(request.form, student, 'del_subject', current_user)
+                        description = f"Удаление занятия у клиента {student.last_name} {student.first_name}"
+                        user_action(current_user, description)
                         db.session.commit()
                         flash('Изменения внесены', 'success')
                         return redirect(url_for('show_edit_student', student_id=student.id))
 
-                if 'del_after_school' in request.form:
-                    handle_student_edit(request.form, student, 'del_after_school')
-                    db.session.commit()
-                    flash('Изменения внесены', 'success')
-                    return redirect(url_for('show_edit_student', student_id=student.id))
+                    if 'form_subscriptions_submit' in request.form:
+                        if current_user.rights == 'admin':
+                            render_type = 'subscription'
+                            if subscriptions_form.validate_on_submit():
+                                handle_student_edit(subscriptions_form, student, 'subscription', current_user)
+                                db.session.commit()
+                                flash('Изменения внесены', 'success')
+                                return redirect(url_for('show_edit_student', student_id=student.id))
 
-                flash('Ошибка в форме изменения клиента', 'error')
+                        else:
+                            flash('Нет прав руководителя', 'error')
+                            return redirect(url_for('show_edit_student', student_id=student.id))
+
+                    if 'del_after_school' in request.form:
+                        if current_user.rights == 'admin':
+                            handle_student_edit(request.form, student, 'del_after_school', current_user)
+                            description = f"Отмена покупки продленки клиента {student.last_name} {student.first_name}"
+                            user_action(current_user, description)
+                            db.session.commit()
+                            flash('Изменения внесены', 'success')
+
+                        else:
+                            flash('Нет прав руководителя', 'error')
+
+                        return redirect(url_for('show_edit_student', student_id=student.id))
+
+                    flash('Ошибка в форме изменения клиента', 'error')
+
+                else:
+                    flash('Нет прав администратора', 'error')
 
             except Exception as e:
                 db.session.rollback()
@@ -673,7 +752,9 @@ def show_edit_student(student_id):
 @app.route('/employees')
 @login_required
 def employees():
-    all_employees = Person.query.filter(Person.roles.any(Employee.id)).order_by(Person.last_name, Person.first_name).all()
+    all_employees = Person.query.filter(
+        Person.roles.any(Employee.id)
+    ).order_by(Person.last_name, Person.first_name).all()
 
     for employee in all_employees:
         format_employee(employee)
@@ -684,52 +765,70 @@ def employees():
 @app.route('/employee-report/<string:week>')
 @login_required
 def employee_report(week):
-    week = int(week)
-    all_employees = Person.query.filter(
-        Person.roles.any(Employee.id)
-    ).order_by(Person.last_name, Person.first_name).all()
+    if current_user.rights in ["admin", "user"]:
+        week = int(week)
+        all_employees = Person.query.filter(
+            Person.roles.any(Employee.id)
+        ).order_by(Person.last_name, Person.first_name).all()
 
-    employees_list, dates = employee_record(all_employees, week)
-    filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
+        employees_list, dates = employee_record(all_employees, week)
+        filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
 
-    return render_template('employee_report.html', employees=employees_list, dates=dates,
-                           week=week, filename=filename)
+        return render_template('employee_report.html', employees=employees_list, dates=dates,
+                               week=week, filename=filename)
+
+    else:
+        flash('Нет прав администратора', 'error')
+        return redirect(url_for('employees'))
 
 
 @app.route('/add-employee', methods=['GET', 'POST'])
 @login_required
 def add_employee():
-    possible_employees = clients_data('employee')
-    distinct_roles = db.session.query(Employee.role.distinct()).all()
-    all_subjects = Subject.query.filter(Subject.subject_type.has(SubjectType.name != 'event')).order_by(Subject.name).all()
-    subject_list = [(subj.id, f'{subj.name} ({subj.subject_type.description})') for subj in all_subjects]
-    form = EmployeeForm()
-    form.selected_client.choices = [(person["id"], f"{person['last_name']} {person['first_name']}")
-                                    for person in possible_employees]
-    form.roles.choices = ["Учитель"] + [role[0] for role in distinct_roles]
-    form.subjects.choices = subject_list
+    if current_user.rights in ["admin", "user"]:
+        possible_employees = clients_data('employee')
+        distinct_roles = db.session.query(Employee.role.distinct()).all()
+        all_subjects = Subject.query.filter(
+            Subject.subject_type.has(SubjectType.name != 'event')
+        ).order_by(Subject.name).all()
+        school_classes = SchoolClass.query.order_by(SchoolClass.school_class, SchoolClass.school_name).all()
+        subject_list = [(subj.id, f'{subj.name} ({subj.subject_type.description})') for subj in all_subjects]
+        school_classes_list = [(sc_cl.id, sc_cl.school_name) for sc_cl in school_classes]
+        form = EmployeeForm()
+        form.selected_client.choices = [(person["id"], f"{person['last_name']} {person['first_name']}")
+                                        for person in possible_employees]
+        form.roles.choices = ["Учитель"] + [role[0] for role in distinct_roles]
+        form.subjects.choices = subject_list
+        form.school_classes.choices = school_classes_list
 
-    if request.method == 'POST':
-        try:
-            if form.validate_on_submit():
-                employee = add_new_employee(form)
-                db.session.commit()
-                flash('Новый сотрудник добавлен в систему.', 'success')
-                return redirect(url_for('show_edit_employee', employee_id=employee.id))
+        if request.method == 'POST':
+            try:
+                if form.validate_on_submit():
+                    employee = add_new_employee(form)
+                    description = f'Добавление нового сотрудника {employee.last_name} {employee.first_name}'
+                    user_action(current_user, description)
+                    db.session.commit()
+                    flash('Новый сотрудник добавлен в систему.', 'success')
+                    return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
-            flash('Ошибка в форме добавления сотрудника', 'error')
+                flash('Ошибка в форме добавления сотрудника', 'error')
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при добавлении сотрудника: {str(e)}', 'error')
-            return redirect(url_for('add_employee'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при добавлении сотрудника: {str(e)}', 'error')
+                return redirect(url_for('add_employee'))
 
-    return render_template('add_employee.html', possible_employees=possible_employees, form=form)
+        return render_template('add_employee.html', possible_employees=possible_employees, form=form)
+
+    else:
+        flash('Нет прав администратора', 'error')
+        return redirect(url_for('employees'))
 
 
 @app.route('/employee/<string:employee_id>', methods=['GET', 'POST'])
 @login_required
 def show_edit_employee(employee_id):
+    employee_id = int(employee_id) if str(employee_id).isdigit() else None
     employee = Person.query.filter(Person.id == employee_id, Person.roles.any(Employee.id)).first()
 
     if employee:
@@ -750,26 +849,34 @@ def show_edit_employee(employee_id):
 
         if request.method == 'POST':
             try:
-                render_type = 'edit'
-                if form.validate_on_submit():
-                    handle_employee_edit(request.form, employee)
-                    db.session.commit()
-                    flash('Изменения внесены.', 'success')
-                    return redirect(url_for('show_edit_employee', employee_id=employee.id))
+                if current_user.rights in ["admin", "user"]:
+                    render_type = 'edit'
+                    if form.validate_on_submit():
+                        handle_employee_edit(request.form, employee)
+                        description = f'Изменение данных сотрудника {employee.last_name} {employee.first_name}'
+                        user_action(current_user, description)
+                        db.session.commit()
+                        flash('Изменения внесены.', 'success')
+                        return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
-                flash('Ошибка в форме изменения сотрудника', 'error')
+                    flash('Ошибка в форме изменения сотрудника', 'error')
+
+                else:
+                    flash('Нет прав администратора', 'error')
+                    return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
             except Exception as e:
                 db.session.rollback()
                 flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
 
-            return redirect(url_for('show_edit_employee', employee_id=employee.id))
+                return redirect(url_for('show_edit_employee', employee_id=employee.id))
 
         employee_roles = [role.role for role in employee.roles]
         possible_roles = db.session.query(Employee.role.distinct()).filter(
             ~Employee.role.in_(employee_roles)
         ).all()
         employee_subjects = [subject.id for subject in employee.subjects_taught]
+        employee_classes = [sc_cl.id for sc_cl in employee.teaching_classes]
         possible_subjects = Subject.query.filter(
             ~Subject.id.in_(employee_subjects),
             Subject.subject_type.has(SubjectType.name != 'event')
@@ -777,9 +884,14 @@ def show_edit_employee(employee_id):
         all_subjects = Subject.query.filter(
             Subject.subject_type.has(SubjectType.name != 'event')
         ).order_by(Subject.name).all()
+        possible_classes = SchoolClass.query.filter(
+            ~SchoolClass.id.in_(employee_classes)
+        ).order_by(SchoolClass.school_class, SchoolClass.school_name).all()
+        all_classes = SchoolClass.query.order_by(SchoolClass.school_class, SchoolClass.school_name).all()
 
         return render_template('employee.html', employee=employee, form=form, possible_roles=possible_roles,
-                               possible_subjects=possible_subjects, subjects=all_subjects, render_type=render_type)
+                               possible_subjects=possible_subjects, subjects=all_subjects, render_type=render_type,
+                               possible_classes=possible_classes, school_classes=all_classes)
     else:
         flash("Такого сотрудника нет", 'error')
         return redirect(url_for('employees'))
@@ -789,55 +901,68 @@ def show_edit_employee(employee_id):
 @login_required
 def subjects():
     all_subjects = Subject.query.filter(
-        Subject.subject_type.has(SubjectType.name.in_(['extra', 'individual', 'after_school']))
+        Subject.subject_type.has(SubjectType.name.in_(['extra', 'individual']))
     ).order_by(Subject.name).all()
     for subject in all_subjects:
         subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
 
-    return render_template('subjects.html', subjects=all_subjects, subjects_type="extra_school")
+    return render_template('subjects.html', subjects=all_subjects)
 
 
 @app.route('/add-subject', methods=['GET', 'POST'])
 @login_required
 def add_subject():
-    subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school', 'event'])).all()
-    subscription_types = format_subscription_types(SubscriptionType.query.all())
-    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-    form = ExtraSubjectForm()
-    form.subject_type.choices = [(subject_type.id, subject_type.description) for subject_type in subject_types]
-    form.subscription_types.choices = [(type_of_subscription[0], type_of_subscription[1])
-                                       for type_of_subscription in subscription_types]
-    form.teachers.choices = [(teacher.id, f"{teacher.last_name} { teacher.first_name }") for teacher in all_teachers]
-    if request.method == 'POST':
-        try:
-            if form.validate_on_submit():
-                new_subject = add_new_subject(form, "extra_school")
-                db.session.add(new_subject)
-                db.session.commit()
-                flash('Новый предмет добавлен в систему', 'success')
-                return redirect(url_for('subjects'))
+    if current_user.rights in ["admin", "user"]:
+        subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school', 'event'])).all()
+        subscription_types = format_subscription_types(SubscriptionType.query.all())
+        all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+        form = ExtraSubjectForm()
+        form.subject_type.choices = [(subject_type.id, subject_type.description) for subject_type in subject_types]
+        form.subscription_types.choices = [(type_of_subscription[0], type_of_subscription[1])
+                                           for type_of_subscription in subscription_types]
+        form.teachers.choices = [(teacher.id, f"{teacher.last_name} { teacher.first_name }") for teacher in all_teachers]
+        if request.method == 'POST':
+            try:
+                if form.validate_on_submit():
+                    new_subject = add_new_subject(form, "extra_school")
+                    if new_subject:
+                        db.session.add(new_subject)
+                        description = f"Добавление нового предмета {new_subject.name} " \
+                                      f"({new_subject.subject_type.description})"
+                        user_action(current_user, description)
+                        db.session.commit()
+                        flash('Новый предмет добавлен в систему', 'success')
+                        return redirect(url_for('subjects'))
 
-            flash('Ошибка в форме добавления предмета', 'error')
+                    else:
+                        flash('Предмет с таким названием уже есть', 'error')
+                        return redirect(url_for('add_subject'))
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при добавлении предмета: {str(e)}', 'error')
+                flash('Ошибка в форме добавления предмета', 'error')
 
-            return redirect(url_for('add_subject'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при добавлении предмета: {str(e)}', 'error')
 
-    return render_template('add_subject.html', form=form)
+                return redirect(url_for('add_subject'))
+
+        return render_template('add_subject.html', form=form)
+
+    else:
+        flash('Нет прав администратора', 'error')
+        return redirect(url_for('subjects'))
 
 
 @app.route('/subject/<string:subject_id>', methods=['GET', 'POST'])
 @login_required
 def edit_subject(subject_id):
-    subject = Subject.query.filter_by(id=subject_id).first()
-    if subject:
-        if subject.subject_type.name == "school":
-            return redirect(url_for('school_subjects'))
-        elif subject.subject_type.name == "after_school":
-            return redirect(url_for('after_school', month_index=0))
-        else:
+    if current_user.rights in ["admin", "user"]:
+        subject_id = int(subject_id) if str(subject_id).isdigit() else None
+        subject = Subject.query.filter(
+            Subject.id == subject_id,
+            Subject.subject_type.has(SubjectType.name.in_(['extra', 'individual']))
+        ).first()
+        if subject:
             form = EditExtraSubjectForm(
                 subject_name=subject.name,
                 subject_short_name=subject.short_name,
@@ -856,8 +981,9 @@ def edit_subject(subject_id):
                 try:
                     if form.validate_on_submit():
                         handle_subject_edit(subject, request.form)
+                        user_action(current_user, f'Внесение изменений в предмет {subject.name}')
                         db.session.commit()
-                        flash('Изменения внесены.', 'success')
+                        flash('Изменения внесены', 'success')
                         return redirect(url_for('subjects'))
 
                     flash(f'Ошибка в форме изменения предмета', 'error')
@@ -871,15 +997,19 @@ def edit_subject(subject_id):
             return render_template('edit_subject.html', subject=subject, form=form,
                                    subscription_types=subscription_types)
 
+        else:
+            flash("Такого занятия нет.", 'error')
+            return redirect(url_for('subjects'))
+
     else:
-        flash("Такого занятия нет.", 'error')
+        flash('Нет прав администратора', 'error')
         return redirect(url_for('subjects'))
 
 
 @app.route('/timetable/<string:week>')
 @login_required
 def timetable(week):
-    week = int(week)
+    week = int(week) if str(week).lstrip('-').isdigit() else 0
     week_range = [f'{get_date(day, week):%d.%m}' for day in range(7)]
     all_rooms = Room.query.all()
     week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, all_rooms)
@@ -896,9 +1026,15 @@ def timetable(week):
 @login_required
 def add_event():
     try:
-        message = add_new_event(request.form)
-        db.session.commit()
-        flash(message[0], message[1])
+        if current_user.rights in ["admin", "user"]:
+            message, event = add_new_event(request.form)
+            description = f"Добавление мероприятия '{event.subject.name}' {event.date:%d.%m.%y}"
+            user_action(current_user, description)
+            db.session.commit()
+            flash(message[0], message[1])
+
+        else:
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -911,16 +1047,22 @@ def add_event():
 @login_required
 def change_lessons():
     try:
-        new_week, message = change_lessons_date(request.form)
-        db.session.commit()
-        for msg in message:
-            flash(msg[0], msg[1])
-        if new_week is not None:
+        if current_user.rights in ["admin", "user"]:
+            new_week, message, dates = change_lessons_date(request.form)
             db.session.commit()
-            return redirect(url_for('timetable', week=new_week))
+            for msg in message:
+                flash(msg[0], msg[1])
+            if new_week is not None:
+                description = f"Перенос занятий с {dates[0]:%d.%m.%y} на {dates[1]:%d.%m.%y}"
+                user_action(current_user, description)
+                db.session.commit()
+                return redirect(url_for('timetable', week=new_week))
+
+            else:
+                return redirect(request.referrer)
 
         else:
-            return redirect(request.referrer)
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -932,130 +1074,156 @@ def change_lessons():
 @app.route('/copy-lessons', methods=['GET', 'POST'])
 @login_required
 def copy_lessons():
-    if request.method == 'POST':
-        try:
-            filtered_lessons, week_diff, next_week = filter_lessons(request.form)
-            if filtered_lessons:
-                new_lessons, conflicts = copy_filtered_lessons(filtered_lessons, week_diff)
-                db.session.commit()
+    if current_user.rights in ["admin", "user"]:
+        if request.method == 'POST':
+            try:
+                filtered_lessons, week_diff, next_week = filter_lessons(request.form)
+                if filtered_lessons:
+                    new_lessons, conflicts = copy_filtered_lessons(filtered_lessons, week_diff)
+                    if new_lessons > 0:
+                        week_range = f'{get_date(0, next_week):%d.%m}-{get_date(6, next_week):%d.%m.%Y}'
+                        description = f'Копирование уроков в расписание на неделю {week_range}'
+                        user_action(current_user, description)
+                    db.session.commit()
 
-                if conflicts == 0:
-                    flash('Все занятия добавлены в расписание.', 'success')
-                elif new_lessons == 0:
-                    flash(f'Занятия не добавлены, т.к. есть занятия в это же время.', 'error')
+                    if conflicts == 0:
+                        flash('Все занятия добавлены в расписание.', 'success')
+                    elif new_lessons == 0:
+                        flash(f'Занятия не добавлены, т.к. есть занятия в это же время.', 'error')
+                    else:
+                        flash(f'Добавлено занятий: {new_lessons}', 'success')
+                        flash(f'Не добавлено занятий: {conflicts}, т.к. есть занятия в это же время', 'error')
+                    return redirect(url_for('timetable', week=next_week))
+
                 else:
-                    flash(f'Добавлено занятий: {new_lessons}', 'success')
-                    flash(f'Не добавлено занятий: {conflicts}, т.к. есть занятия в это же время', 'error')
-                return redirect(url_for('timetable', week=next_week))
+                    flash('Нет занятий, удовлетворяющих заданным параметрам', 'error')
+                    return redirect(url_for('copy_lessons'))
 
-            else:
-                flash('Нет занятий, удовлетворяющих заданным параметрам', 'error')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
                 return redirect(url_for('copy_lessons'))
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
-            return redirect(url_for('copy_lessons'))
+        subject_types = SubjectType.query.filter(SubjectType.name != 'event').all()
+        rooms = Room.query.all()
+        school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+        all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+        school = SubjectType.query.filter_by(name='school').first()
 
-    subject_types = SubjectType.query.filter(SubjectType.name != 'event').all()
-    rooms = Room.query.all()
-    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-    school = SubjectType.query.filter_by(name='school').first()
+        return render_template('copy_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types, rooms=rooms,
+                               school_classes=school_classes, teachers=all_teachers, school=school)
 
-    return render_template('copy_lessons.html', days=DAYS_OF_WEEK, subject_types=subject_types, rooms=rooms,
-                           school_classes=school_classes, teachers=all_teachers, school=school)
+    else:
+        flash('Нет прав администратора', 'error')
+        return redirect(url_for('timetable', week=0))
 
 
 @app.route('/add-lessons', methods=['GET', 'POST'])
 @login_required
 def add_lessons():
-    all_subjects = subjects_data()
-    rooms = Room.query.all()
-    school_type = SubjectType.query.filter_by(name='school').first().id
-    form = AddLessonsForm()
-    form.lessons[0].subject.choices = [(f"{subject['id']}-{subject['subject_type']}",
-                                        f"{subject['name']} ({subject['description']})")
-                                       for subject in all_subjects]
-    form.lessons[0].room.choices = [(room.id, room.name) for room in rooms]
-    if request.method == 'POST':
-        try:
-            if form.validate_on_submit():
-                messages, week, new_lessons = add_new_lessons(form)
-                db.session.commit()
-                for message in messages:
-                    flash(message[0], message[1])
-                if new_lessons > 0:
-                    return redirect(url_for('timetable', week=week))
-            else:
-                flash(f'Ошибка в форме добавления занятий', 'error')
+    if current_user.rights in ["admin", "user"]:
+        all_subjects = subjects_data()
+        rooms = Room.query.all()
+        school_type = SubjectType.query.filter_by(name='school').first().id
+        form = AddLessonsForm()
+        form.lessons[0].subject.choices = [(f"{subject['id']}-{subject['subject_type']}",
+                                            f"{subject['name']} ({subject['description']})")
+                                           for subject in all_subjects]
+        form.lessons[0].room.choices = [(room.id, room.name) for room in rooms]
+        if request.method == 'POST':
+            try:
+                if form.validate_on_submit():
+                    messages, date, new_lessons = add_new_lessons(form)
+                    if new_lessons > 0:
+                        week = calculate_week(date)
+                        description = f"Добавление новых занятий в расписание {date:%d.%m.%Y}"
+                        user_action(current_user, description)
+                        db.session.commit()
+                        for message in messages:
+                            flash(message[0], message[1])
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
-            return redirect(url_for('add_lessons'))
+                            return redirect(url_for('timetable', week=week))
+                else:
+                    flash(f'Ошибка в форме добавления занятий', 'error')
 
-    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-    school_classes_data = [{school_class.id: school_class.school_name} for school_class in school_classes]
-    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-    teachers_data = [{teacher.id: f"{teacher.last_name} {teacher.first_name}"} for teacher in all_teachers]
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
+                return redirect(url_for('add_lessons'))
 
-    return render_template('add_lessons.html', subjects=all_subjects, school_classes=school_classes_data,
-                           form=form, teachers=teachers_data, school_type=school_type)
+        school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+        school_classes_data = [{school_class.id: school_class.school_name} for school_class in school_classes]
+        all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+        teachers_data = [{teacher.id: f"{teacher.last_name} {teacher.first_name}"} for teacher in all_teachers]
+
+        return render_template('add_lessons.html', subjects=all_subjects, school_classes=school_classes_data,
+                               form=form, teachers=teachers_data, school_type=school_type)
+
+    else:
+        flash('Нет прав администратора', 'error')
+        return redirect(url_for('timetable', week=0))
 
 
 @app.route('/edit-lesson/<string:lesson_id>', methods=['GET', 'POST'])
 @login_required
 def edit_lesson(lesson_id):
-    edited_lesson = Lesson.query.filter_by(id=lesson_id).first()
-    if not edited_lesson:
-        flash("Такого занятия нет.", 'error')
+    if current_user.rights in ["admin", "user"]:
+        edited_lesson = Lesson.query.filter_by(id=lesson_id).first()
+        if not edited_lesson:
+            flash("Такого занятия нет.", 'error')
+            return redirect(url_for('timetable', week=0))
+
+        elif edited_lesson.lesson_type.name == "school":
+            edited_lesson.classes = ', '.join([cl.school_name for cl in sorted(edited_lesson.school_classes,
+                                                                               key=lambda x: x.school_class)])
+        week = calculate_week(edited_lesson.date)
+        rooms = Room.query.all()
+        all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+        form = EditLessonForm(
+            lesson_date=f'{edited_lesson.date:%d.%m.%Y}',
+            start_time=f'{edited_lesson.start_time:%H : %M}',
+            end_time=f'{edited_lesson.end_time:%H : %M}',
+            room=edited_lesson.room_id,
+            teacher=edited_lesson.teacher_id
+        )
+        form.subject.validators = []
+        form.room.choices = [(room.id, room.name) for room in rooms]
+        form.teacher.choices = [(teacher.id, f'{teacher.last_name} {teacher.first_name}') for teacher in all_teachers]
+
+        if request.method == 'POST':
+            try:
+                if form.validate_on_submit():
+                    message = lesson_edit(form, edited_lesson)
+                    if message[1] == 'error':
+                        flash(message[0], message[1])
+                        return redirect(url_for('edit_lesson', lesson_id=edited_lesson.id))
+
+                    if message[1] == 'success':
+                        description = f"Внесение изменений в занятие {edited_lesson.subject.name} " \
+                                      f"{edited_lesson.date:%d.%m.%Y}"
+                        user_action(current_user, description)
+                        db.session.commit()
+                        week = calculate_week(edited_lesson.date)
+                        flash(message[0], message[1])
+
+                        if edited_lesson.lesson_type.name == "school":
+                            day = edited_lesson.date.weekday() + 1
+                            return redirect(url_for('school_timetable', week=week, day=day))
+                        else:
+                            return redirect(url_for('timetable', week=week))
+                else:
+                    flash('Ошибка в форме изменения занятия', 'error')
+
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+                return redirect(url_for('edit_lesson', lesson_id=edited_lesson.id))
+
+        return render_template('edit_lesson.html', lesson=edited_lesson, form=form, week=week)
+
+    else:
+        flash('Нет прав администратора', 'error')
         return redirect(url_for('timetable', week=0))
-
-    elif edited_lesson.lesson_type.name == "school":
-        edited_lesson.classes = ', '.join([cl.school_name for cl in sorted(edited_lesson.school_classes,
-                                                                           key=lambda x: x.school_class)])
-    week = calculate_week(edited_lesson.date)
-    rooms = Room.query.all()
-    all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-    form = EditLessonForm(
-        lesson_date=f'{edited_lesson.date:%d.%m.%Y}',
-        start_time=f'{edited_lesson.start_time:%H : %M}',
-        end_time=f'{edited_lesson.end_time:%H : %M}',
-        room=edited_lesson.room_id,
-        teacher=edited_lesson.teacher_id
-    )
-    form.subject.validators = []
-    form.room.choices = [(room.id, room.name) for room in rooms]
-    form.teacher.choices = [(teacher.id, f'{teacher.last_name} {teacher.first_name}') for teacher in all_teachers]
-
-    if request.method == 'POST':
-        try:
-            if form.validate_on_submit():
-                message = lesson_edit(form, edited_lesson)
-                if message[1] == 'error':
-                    flash(message[0], message[1])
-                    return redirect(url_for('edit_lesson', lesson_id=edited_lesson.id))
-
-                if message[1] == 'success':
-                    db.session.commit()
-                    week = calculate_week(edited_lesson.date)
-                    flash(message[0], message[1])
-
-                    if edited_lesson.lesson_type.name == "school":
-                        day = edited_lesson.date.weekday() + 1
-                        return redirect(url_for('school_timetable', week=week, day=day))
-                    else:
-                        return redirect(url_for('timetable', week=week))
-            else:
-                flash('Ошибка в форме изменения занятия', 'error')
-
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
-            return redirect(url_for('edit_lesson', lesson_id=edited_lesson.id))
-
-    return render_template('edit_lesson.html', lesson=edited_lesson, form=form, week=week)
 
 
 @app.route('/lesson/<string:lesson_str>', methods=['GET', 'POST'])
@@ -1066,7 +1234,7 @@ def lesson(lesson_str):
     if subject_lesson:
         if request.method == 'POST':
             try:
-                message = handle_lesson(request.form, lesson_subject, subject_lesson)
+                message = handle_lesson(request.form, lesson_subject, subject_lesson, current_user)
                 if 'registered_btn' in request.form:
                     db.session.commit()
                     if message:
@@ -1142,17 +1310,25 @@ def school_students(school_class):
     if request.method == 'POST':
         if 'add_client_btn' in request.form:
             try:
-                added_student_id = int(request.form.get('added_student_id')) if request.form.get('added_student_id') else None
-                if added_student_id:
-                    new_school_student = Person.query.filter_by(id=added_student_id).first()
-                    new_school_student.school_class_id = school.id
-                    for subject in school.school_subjects:
-                        if subject not in new_school_student.subjects.all():
-                            new_school_student.subjects.append(subject)
-                    db.session.commit()
-                    flash(f'Новый ученик добавлен в класс', 'success')
+                if current_user.rights in ["admin", "user"]:
+                    added_student_id = int(request.form.get('added_student_id')) if request.form.get('added_student_id') else None
+                    if added_student_id:
+                        new_school_student = Person.query.filter_by(id=added_student_id).first()
+                        new_school_student.school_class_id = school.id
+                        for subject in school.school_subjects:
+                            if subject not in new_school_student.subjects.all():
+                                new_school_student.subjects.append(subject)
+
+                        description = f"Добавление ученика {new_school_student.last_name} " \
+                                      f"{new_school_student.first_name} в класс '{school.school_name}'"
+                        user_action(current_user, description)
+                        db.session.commit()
+                        flash(f'Новый ученик добавлен в класс', 'success')
+                    else:
+                        flash('Ученик не выбран', 'error')
+
                 else:
-                    flash('Ученик не выбран', 'error')
+                    flash('Нет прав администратора', 'error')
 
             except Exception as e:
                 db.session.rollback()
@@ -1160,10 +1336,16 @@ def school_students(school_class):
 
         if 'change_teacher_btn' in request.form:
             try:
-                main_teacher = int(request.form.get('main_teacher')) if request.form.get('main_teacher') else None
-                school.main_teacher_id = main_teacher
-                db.session.commit()
-                flash('Классный руководитель изменен', 'success')
+                if current_user.rights in ["admin", "user"]:
+                    main_teacher = int(request.form.get('main_teacher')) if request.form.get('main_teacher') else None
+                    school.main_teacher_id = main_teacher
+                    description = f"Изменение классного руководителя класса '{school.school_name}'"
+                    user_action(current_user, description)
+                    db.session.commit()
+                    flash('Классный руководитель изменен', 'success')
+
+                else:
+                    flash('Нет прав администратора', 'error')
 
             except Exception as e:
                 db.session.rollback()
@@ -1201,10 +1383,47 @@ def school_subjects(school_class):
 
     if request.method == 'POST':
         try:
-            new_subject = add_new_subject(request.form, "school")
-            db.session.add(new_subject)
-            db.session.commit()
-            flash('Новый предмет добавлен в систему', 'success')
+            if current_user.rights in ["admin", "user"]:
+                if 'new_subject' in request.form:
+                    new_subject = add_new_subject(request.form, "school")
+                    if new_subject:
+                        db.session.add(new_subject)
+                        description = f"Добавление нового школьного предмета {new_subject.name}"
+                        user_action(current_user, description)
+                        db.session.commit()
+                        flash('Новый предмет добавлен в систему', 'success')
+
+                    else:
+                        flash('Школьный предмет с таким названием уже есть', 'error')
+
+                if 'choose_subject' in request.form:
+                    new_subject_id = int(request.form.get("selected_subject")) if \
+                        request.form.get("selected_subject") else None
+                    new_subject = Subject.query.filter(
+                        Subject.id == new_subject_id,
+                        Subject.subject_type.has(SubjectType.name == 'school')
+                    ).first()
+                    if new_subject:
+                        if school not in new_subject.school_classes:
+                            new_subject.school_classes.append(school)
+                        teacher_ids = [int(teacher) for teacher in request.form.getlist("teachers")
+                                       if request.form.getlist("teachers")]
+                        teachers = Person.query.filter(Person.id.in_(teacher_ids), Person.teacher).all()
+                        for teacher in teachers:
+                            if school not in teacher.teaching_classes:
+                                teacher.teaching_classes.append(school)
+                            if new_subject not in teacher.subjects_taught.all():
+                                teacher.subjects_taught.append(new_subject)
+                        description = f"Добавление школьного предмета {new_subject.name} в класс '{school.school_name}'"
+                        user_action(current_user, description)
+                        db.session.commit()
+                        flash('Предмет добавлен классу', 'success')
+
+                    else:
+                        flash('Не выбран предмет', 'error')
+
+            else:
+                flash('Нет прав администратора', 'error')
 
         except Exception as e:
             db.session.rollback()
@@ -1213,8 +1432,46 @@ def school_subjects(school_class):
         return redirect(request.referrer)
 
     all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+    possible_subjects = Subject.query.filter(
+        ~Subject.school_classes.any(SchoolClass.id == school.id),
+        Subject.subject_type.has(SubjectType.name == 'school')
+    ).order_by(Subject.name).all()
+
     return render_template('school.html', school_classes=school_classes, school_class=school, teachers=all_teachers,
-                           render_type="subjects")
+                           possible_subjects=possible_subjects, render_type="subjects")
+
+
+@app.route('/edit-school-subject/<string:subject_id>', methods=['POST'])
+@login_required
+def edit_school_subject(subject_id):
+    try:
+        if current_user.rights in ["admin", "user"]:
+            subject_id = int(subject_id) if str(subject_id).isdigit() else None
+            school_subject = Subject.query.filter(
+                Subject.id == subject_id,
+                Subject.subject_type.has(SubjectType.name == 'school')
+            ).first()
+            if school_subject:
+                subject_new_name = request.form.get('subject_name')
+                subject_new_short_name = request.form.get('subject_short_name')
+
+                school_subject.name = subject_new_name
+                school_subject.short_name = subject_new_short_name
+                user_action(current_user, f'Внесение изменений в школьный предмет {school_subject.name}')
+                db.session.commit()
+                flash('Школьный предмет изменен', 'success')
+
+            else:
+                flash('Такого предмета нет', 'error')
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
+
+    return redirect(request.referrer)
 
 
 @app.route('/school-timetable/<string:week>/<string:day>')
@@ -1282,7 +1539,7 @@ def school_lesson(lesson_str):
             return render_template('school_lesson.html', school_lesson=sc_lesson, school_subject=sc_subject)
         else:
             flash("Такого занятия нет", 'error')
-            return redirect(url_for('school_subjects'))
+            return redirect(url_for('school_subjects', school_class=0))
 
 
 @app.route('/school-subject/<subject_classes>/<string:month_index>', methods=['GET', 'POST'])
@@ -1425,28 +1682,32 @@ def after_school_purchase():
 @login_required
 def generate_employee_report(week):
     try:
-        all_employees = Person.query.filter(
-            Person.roles.any(Employee.id)
-        ).order_by(Person.last_name, Person.first_name).all()
+        if current_user.rights in ["admin", "user"]:
+            all_employees = Person.query.filter(
+                Person.roles.any(Employee.id)
+            ).order_by(Person.last_name, Person.first_name).all()
 
-        employees_list, dates = employee_record(all_employees, int(week))
-        header = ["Имя", "Должность/предмет"] + dates
+            employees_list, dates = employee_record(all_employees, int(week))
+            header = ["Имя", "Должность/предмет"] + dates
 
-        filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
-        workbook = Workbook()
-        sheet = workbook.active
-        sheet.append(header)
+            filename = f"employee_report_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.append(header)
 
-        for record in employees_list:
-            row = [record["name"], record["role"]]
-            activity = [record["activity"].get(date, 0) for date in dates]
-            row += activity
-            sheet.append(row)
+            for record in employees_list:
+                row = [record["name"], record["role"]]
+                activity = [record["activity"].get(date, 0) for date in dates]
+                row += activity
+                sheet.append(row)
 
-        excel_buffer = BytesIO()
-        workbook.save(excel_buffer)
-        excel_buffer.seek(0)
-        return send_file(excel_buffer, download_name=filename, as_attachment=True)
+            excel_buffer = BytesIO()
+            workbook.save(excel_buffer)
+            excel_buffer.seek(0)
+            return send_file(excel_buffer, download_name=filename, as_attachment=True)
+
+        else:
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         flash(f'Ошибка при скачивании файла: {str(e)}', 'error')

@@ -43,6 +43,7 @@
                                                 </div>
                                                 <div class="form-group comment-form-container text-center" style="display:none; margin:0;">
                                                     <form class="comment-form" method="post" data-person-id="{{ employee.id }}">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                         <textarea class="form-control" name="comment" rows="3" cols="8"></textarea>
                                                         <button type="submit" class="btn btn-success btn-sm">Добавить</button>
                                                     </form>
@@ -63,7 +64,7 @@
                                                         <li class="divider"></li>
                                                         <li>
                                                             {% if current_user.rights != 'admin' %}
-                                                                <a href="#" title="Нет прав администратора">
+                                                                <a href="#" title="Нет прав руководителя">
                                                                     <i class="material-icons" style="color: red;">delete_forever</i>Удалить
                                                                 </a>
                                                             {% else %}
@@ -74,6 +75,7 @@
                                                         </li>
                                                     </ul>
                                                 </div>
+
                                             <!-- *-*-*-*-*-*-*-*-*-* Student delete conformation *-*-*-*-*-*-*-*-*-* -->
 
                                                 <div class="modal fade" id="delete-{{ employee.id }}-modal" role="dialog">
@@ -117,20 +119,28 @@
                     <p>Сотрудников пока нет</p>
                 {% endif %}
                 <div class="row">
-                    <div class="col-md-2">
-                        <button class="btn btn-sm" data-background-color="orange">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_employee') }}">
+                    {% if current_user.rights in ["admin", "user"] %}
+                        <div class="col-md-2">
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_employee') }}">
+                                    <i class="material-icons">add_box</i> Добавить сотрудника
+                                </a>
+                            </button>
+                        </div>
+                        <div class="col-md-2 col-md-offset-8">
+                            <button class="btn btn-sm pull-right" data-background-color="purple">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=0) }}">
+                                    <i class="material-icons">summarize</i> Недельный отчет
+                                </a>
+                            </button>
+                        </div>
+                    {% else %}
+                        <button class="btn btn-sm" data-background-color="orange" title="Нет прав администратора" disabled>
+                            <a style="cursor:pointer; color: #FFFFFF;" href="#">
                                 <i class="material-icons">add_box</i> Добавить сотрудника
                             </a>
                         </button>
-                    </div>
-                    <div class="col-md-2 col-md-offset-8">
-                        <button class="btn btn-sm pull-right" data-background-color="purple">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=0) }}">
-                                <i class="material-icons">summarize</i> Недельный отчет
-                            </a>
-                        </button>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -103,6 +103,7 @@ $(document).ready(function(){
 
         var personId = $(this).data("person-id");
         var commentText = $(this).find("textarea[name='comment']").val();
+        var csrfToken = $(this).find("input[name='csrf_token']").val();
         var commentContainer = $(this).closest(".comment-cell").find(".comment-container");
         var commentFormContainer = $(this).closest(".comment-cell").find(".comment-form-container");
 
@@ -112,6 +113,9 @@ $(document).ready(function(){
             data: {
                 person_id: personId,
                 comment: commentText
+            },
+            headers: {
+                'X-CSRF-Token': csrfToken
             },
             success: function (response) {
                 commentContainer.text(response);
@@ -1080,9 +1084,18 @@ $(document).ready(function(){
     $(".subject-row").on("click", ".delete-subject", function() {
         var subjectRow = $(this).closest(".subject-row");
         teacherSubjectVal = subjectRow.find(".subject-value").val();
-        teacherSubjectText = subjectRow.find("p").html();
+        teacherSubjectText = subjectRow.find(".subject-name").html();
         $("#subject-select")[0].selectize.addOption({value:teacherSubjectVal,text:teacherSubjectText});
         subjectRow.remove();
+    });
+
+    // Delete teacher class
+    $(".school-row").on("click", ".delete-school", function() {
+        var schoolRow = $(this).closest(".school-row");
+        teacherSchoolVal = schoolRow.find(".school-value").val();
+        teacherSchoolText = schoolRow.find(".school-name").html();
+        $("#school-select")[0].selectize.addOption({value:teacherSchoolVal,text:teacherSchoolText});
+        schoolRow.remove();
     });
 
     // Create list of student grades in the grade-modal

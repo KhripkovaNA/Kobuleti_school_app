@@ -70,7 +70,7 @@
                                                                                 </a>
                                                                             </li>
                                                                         {% endif %}
-                                                                        {% if not lesson.completed and lesson.month_index >= -1  %}
+                                                                        {% if not lesson.completed and lesson.month_index >= -1 and current_user.rights in ["admin", "user"]  %}
                                                                             <li>
                                                                                 <a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">
                                                                                     <i class="material-icons" style="color: purple;">edit</i>Изменить
@@ -150,232 +150,234 @@
                             </a>
                         </button>
                     </div>
-                    <div class="col-md-3 col-md-offset-3">
-                        <div class="dropup pull-right">
-                            <button class="btn btn-sm dropdown-toggle" data-background-color="main" data-toggle="dropdown">
-                                Составить расписание
-                                <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
-                                <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
-                                {% if week >= 0 %}
-                                    <li>
-                                        <a href="#" data-toggle="modal" data-target="#add-event-modal">Добавить мероприятие</a>
-                                    </li>
-                                {% endif %}
-                                {% if classes and week >= -1 %}
-                                    <li>
-                                        <a href="#" data-toggle="modal" data-target="#change-lessons-modal">Перенести занятия</a>
-                                    </li>
-                                    <li>
-                                        <a href="#" data-toggle="modal" data-target="#delete-lessons-modal">Отменить занятия</a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </div>
-
-                        <!-- *-*-*-*-*-*-*-*-*-* Change lessons modal *-*-*-*-*-*-*-*-*-* -->
-
-                        <div class="modal fade" id="add-event-modal" role="dialog">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h4 class="modal-title">Добавить мероприятие</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="add-event-form" action="{{ url_for('add_event') }}" method="post">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                            <input type="hidden" name="lessons_week" value="{{ week }}">
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
-                                                <div class="col-md-7">
-                                                    <select name="event_day" class="form-control">
-                                                        {% for day in days %}
-                                                            <option value="{{ loop.index0 }}">{{ day }}, {{ week_range[loop.index0] }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Начало:</label>
-                                                <div class="col-md-4 time-div">
-                                                    <input type="text" name="event_start_time" class="form-control timepicker time-input">
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Конец:</label>
-                                                <div class="col-md-4 time-div">
-                                                    <input type="text" name="event_end_time" class="form-control timepicker time-input">
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Кабинет:</label>
-                                                <div class="col-md-7">
-                                                    <select name="room" class="form-control">
-                                                        {% for room in all_rooms %}
-                                                            <option value="{{ room.id }}">{{ room.name }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Название:</label>
-                                                <div class="col-md-7">
-                                                    <select name="event_name" class="form-control select-search-add">
-                                                        {% for event in events %}
-                                                            <option value="{{ event.name }}">{{ event.name }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 col-md-offset-3">
-                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                        Добавить
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                        Закрыть
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
+                    {% if current_user.rights in ["admin", "user"] %}
+                        <div class="col-md-3 col-md-offset-3">
+                            <div class="dropup pull-right">
+                                <button class="btn btn-sm dropdown-toggle" data-background-color="main" data-toggle="dropdown">
+                                    Составить расписание
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
+                                    <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
+                                    {% if week >= 0 %}
+                                        <li>
+                                            <a href="#" data-toggle="modal" data-target="#add-event-modal">Добавить мероприятие</a>
+                                        </li>
+                                    {% endif %}
+                                    {% if classes and week >= -1 %}
+                                        <li>
+                                            <a href="#" data-toggle="modal" data-target="#change-lessons-modal">Перенести занятия</a>
+                                        </li>
+                                        <li>
+                                            <a href="#" data-toggle="modal" data-target="#delete-lessons-modal">Отменить занятия</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
                             </div>
-                        </div>
 
-                        <!-- *-*-*-*-*-*-*-*-*-* Change lessons modal *-*-*-*-*-*-*-*-*-* -->
+                            <!-- *-*-*-*-*-*-*-*-*-* Change lessons modal *-*-*-*-*-*-*-*-*-* -->
 
-                        <div class="modal fade" id="change-lessons-modal" role="dialog">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h4 class="modal-title">Перенести занятия</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="change-lessons-form" action="{{ url_for('change_lessons') }}" method="post">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                            <input type="hidden" name="lessons_week" value="{{ week }}">
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Перенести с:</label>
-                                                <div class="col-md-7">
-                                                    <select name="lessons_day" class="form-control">
-                                                        {% for day in days %}
-                                                            {% if classes.get(day) %}
-                                                                <option value="{{ loop.index0 }}">{{ day }}, {{ week_dates[loop.index0] }}</option>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Перенести на:</label>
-                                                <div class="col-md-7 date-div">
-                                                    <input type="text" name="new_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг">
-                                                </div>
-                                            </div>
-                                            <div class="selectors-group">
+                            <div class="modal fade" id="add-event-modal" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Добавить мероприятие</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="add-event-form" action="{{ url_for('add_event') }}" method="post">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <input type="hidden" name="lessons_week" value="{{ week }}">
                                                 <div class="row">
-                                                    <label class="control-label col-md-4" style="padding-left:44px;">Тип занятий:</label>
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
                                                     <div class="col-md-7">
-                                                        <select name="subject_types" class="form-control main-selector">
-                                                            <option value="all">Все занятия</option>
-                                                            <option value="specific">Выбрать типы занятий</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-7 col-md-offset-4 secondary-selector-div" style="display: none;">
-                                                        <select name="subject_types_specific" placeholder="Выбрать типы занятий" class="form-control select-search" multiple>
-                                                            {% for subject_type in subject_types %}
-                                                                <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
+                                                        <select name="event_day" class="form-control">
+                                                            {% for day in days %}
+                                                                <option value="{{ loop.index0 }}">{{ day }}, {{ week_range[loop.index0] }}</option>
                                                             {% endfor %}
                                                         </select>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 col-md-offset-3">
-                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                        Перенести
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                        Закрыть
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- *-*-*-*-*-*-*-*-*-* Delete lessons modal *-*-*-*-*-*-*-*-*-* -->
-
-                        <div class="modal fade" id="delete-lessons-modal" role="dialog">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h4 class="modal-title">Отменить занятия</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="delete-lessons-form" action="{{ url_for('delete_record') }}" method="post">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                            <input type="hidden" name="record_type" value="lessons">
-                                            <input type="hidden" name="lessons_week" value="{{ week }}">
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Дата занятий:</label>
-                                                <div class="col-md-7">
-                                                    <select name="lessons_day" class="form-control">
-                                                        {% for day in days %}
-                                                            {% if classes.get(day) %}
-                                                                <option value="{{ loop.index0 }}">{{ day }}, {{ week_dates[loop.index0] }}</option>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="selectors-group">
                                                 <div class="row">
-                                                    <label class="control-label col-md-4" style="padding-left:44px;">Тип занятий:</label>
-                                                    <div class="col-md-7">
-                                                        <select name="subject_types" class="form-control main-selector">
-                                                            <option value="all">Все занятия</option>
-                                                            <option value="specific">Выбрать типы занятий</option>
-                                                        </select>
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Начало:</label>
+                                                    <div class="col-md-4 time-div">
+                                                        <input type="text" name="event_start_time" class="form-control timepicker time-input">
                                                     </div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-md-7 col-md-offset-4 secondary-selector-div" style="display: none;">
-                                                        <select name="subject_types_specific" placeholder="Выбрать типы занятий" class="form-control select-search" multiple>
-                                                            {% for subject_type in subject_types %}
-                                                                <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Конец:</label>
+                                                    <div class="col-md-4 time-div">
+                                                        <input type="text" name="event_end_time" class="form-control timepicker time-input">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Кабинет:</label>
+                                                    <div class="col-md-7">
+                                                        <select name="room" class="form-control">
+                                                            {% for room in all_rooms %}
+                                                                <option value="{{ room.id }}">{{ room.name }}</option>
                                                             {% endfor %}
                                                         </select>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 col-md-offset-3">
-                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                        Отменить занятия
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                        Закрыть
-                                                    </button>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Название:</label>
+                                                    <div class="col-md-7">
+                                                        <select name="event_name" class="form-control select-search-add">
+                                                            {% for event in events %}
+                                                                <option value="{{ event.name }}">{{ event.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </form>
+                                                <div class="row">
+                                                    <div class="col-md-6 col-md-offset-3">
+                                                        <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                            Добавить
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                            Закрыть
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                    </div>
+                            <!-- *-*-*-*-*-*-*-*-*-* Change lessons modal *-*-*-*-*-*-*-*-*-* -->
+
+                            <div class="modal fade" id="change-lessons-modal" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Перенести занятия</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="change-lessons-form" action="{{ url_for('change_lessons') }}" method="post">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <input type="hidden" name="lessons_week" value="{{ week }}">
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Перенести с:</label>
+                                                    <div class="col-md-7">
+                                                        <select name="lessons_day" class="form-control">
+                                                            {% for day in days %}
+                                                                {% if classes.get(day) %}
+                                                                    <option value="{{ loop.index0 }}">{{ day }}, {{ week_dates[loop.index0] }}</option>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Перенести на:</label>
+                                                    <div class="col-md-7 date-div">
+                                                        <input type="text" name="new_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг">
+                                                    </div>
+                                                </div>
+                                                <div class="selectors-group">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Тип занятий:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="subject_types" class="form-control main-selector">
+                                                                <option value="all">Все занятия</option>
+                                                                <option value="specific">Выбрать типы занятий</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-7 col-md-offset-4 secondary-selector-div" style="display: none;">
+                                                            <select name="subject_types_specific" placeholder="Выбрать типы занятий" class="form-control select-search" multiple>
+                                                                {% for subject_type in subject_types %}
+                                                                    <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6 col-md-offset-3">
+                                                        <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                            Перенести
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                            Закрыть
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- *-*-*-*-*-*-*-*-*-* Delete lessons modal *-*-*-*-*-*-*-*-*-* -->
+
+                            <div class="modal fade" id="delete-lessons-modal" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Отменить занятия</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="delete-lessons-form" action="{{ url_for('delete_record') }}" method="post">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <input type="hidden" name="record_type" value="lessons">
+                                                <input type="hidden" name="lessons_week" value="{{ week }}">
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Дата занятий:</label>
+                                                    <div class="col-md-7">
+                                                        <select name="lessons_day" class="form-control">
+                                                            {% for day in days %}
+                                                                {% if classes.get(day) %}
+                                                                    <option value="{{ loop.index0 }}">{{ day }}, {{ week_dates[loop.index0] }}</option>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="selectors-group">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Тип занятий:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="subject_types" class="form-control main-selector">
+                                                                <option value="all">Все занятия</option>
+                                                                <option value="specific">Выбрать типы занятий</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-7 col-md-offset-4 secondary-selector-div" style="display: none;">
+                                                            <select name="subject_types_specific" placeholder="Выбрать типы занятий" class="form-control select-search" multiple>
+                                                                {% for subject_type in subject_types %}
+                                                                    <option value="{{ subject_type.id }}">{{ subject_type.description }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6 col-md-offset-3">
+                                                        <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                            Отменить занятия
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                            Закрыть
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

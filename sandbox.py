@@ -3,7 +3,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
     parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
     student_lesson_registered_table, student_lesson_attended_table, student_subject_table, \
     teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
-    SchoolLessonJournal, Report, Finance
+    SchoolLessonJournal, Report, Finance, UserAction
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
@@ -910,9 +910,20 @@ lesson_dict = {
 # teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
 # print(teachers)
 
-school_classes = SchoolClass.query.order_by(
-    SchoolClass.school_class,
-    SchoolClass.school_name
-).all()
-day_school_lessons, date_str, time_range = day_school_lessons_dict(1, 0, school_classes)
-print(day_school_lessons)
+
+# actions = []
+# for user_action in UserAction.query.all():
+#     action_dict = {
+#         "Пользователь": user_action.user.username,
+#         "Дата": f'{user_action.timestamp:%d.%m.%y}',
+#         "Время": f'{user_action.timestamp:%H:%M}',
+#         "Действие": user_action.description
+#     }
+#     actions.append(action_dict)
+#
+# print(*actions, sep='\n')
+
+
+# for i in range(21, 36):
+#     delete_record(UserAction, i)
+# print_table(UserAction)

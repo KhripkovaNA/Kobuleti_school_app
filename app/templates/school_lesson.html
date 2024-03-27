@@ -9,7 +9,7 @@
             </div>
             <div class="card-content">
                 {% if school_lesson %}
-                    <h4 class="title" style="margin-left: 27px;">{{ days_dict[school_lesson.date.weekday()] }}, {{ school_lesson.date.strftime('%d.%m') }}. Учитель: {{ school_lesson.teacher.last_name }} {{ school_lesson.teacher.first_name }}</h4>
+                    <h4 class="title" style="margin-left: 27px;">{{ days_dict[school_lesson.date.weekday()] }}, {{ school_lesson.date.strftime('%d.%m') }}. Время: {{ school_lesson.start_time.strftime('%H:%M') }}. Учитель: {{ school_lesson.teacher.last_name }} {{ school_lesson.teacher.first_name }}</h4>
                     <form action="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.id|string) }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group">

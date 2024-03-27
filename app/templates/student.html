@@ -63,13 +63,15 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="footer" style="margin-left:30px;">
-                        <div class="row">
-                            <div class="col-md-2">
-                                <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                    {% if current_user.rights in ["admin", "user"] %}
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Student information edit *-*-*-*-*-*-*-*-*-* -->
@@ -118,7 +120,7 @@
                                     <label class="control-label col-md-3">Статус:</label>
                                     <div class="col-md-3">
                                         {% if current_user.rights != 'admin' %}
-                                            {{ edit_student_form.status(class="form-control", id="status-select", disabled=True, style="cursor:default; background-color:#eee;", title="Нет прав администратора") }}
+                                            {{ edit_student_form.status(class="form-control", id="status-select", disabled=True, style="cursor:default; background-color:#eee;", title="Нет прав руководителя") }}
                                         {% else %}
                                             {{ edit_student_form.status(class="form-control", id="status-select") }}
                                         {% endif %}
@@ -244,13 +246,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="footer" style="margin-left:30px;">
-                            <div class="row">
-                                <div class="col-md-2">
-                                    <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                        {% if current_user.rights in ["admin", "user"] %}
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        {% endif %}
                     </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Main contact information edit *-*-*-*-*-*-*-*-*-* -->
@@ -365,53 +369,55 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="footer" style="margin-left:30px;">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
-                                            <a class="btn btn-sm" data-background-color="red" href="#" data-toggle="modal" data-target="#delete-contact-{{ contact.id }}-modal">
-                                                <i class="material-icons">delete_forever</i> Удалить
-                                            </a>
-                                        </div>
+                                {% if current_user.rights in ["admin", "user"] %}
+                                    <div class="footer" style="margin-left:30px;">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                                <a class="btn btn-sm" data-background-color="red" href="#" data-toggle="modal" data-target="#delete-contact-{{ contact.id }}-modal">
+                                                    <i class="material-icons">delete_forever</i> Удалить
+                                                </a>
+                                            </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Contact delete conformation *-*-*-*-*-*-*-*-*-* -->
 
-                                        <div class="modal fade" id="delete-contact-{{ contact.id }}-modal" role="dialog">
-                                            <div class="modal-dialog modal-sm">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление контакта</h4>
-                                                    </div>
-                                                    <div class="modal-body" style="padding-top:10px;">
-                                                        <p class="control-label">
-                                                            {% if student.id != contact.id %}
-                                                                Вы уверены, что хотите удалить контакт {{ contact.last_name }} {{ contact.first_name }}?
-                                                            {% else %}
-                                                                Вы уверены, что хотите удалить контакты клиента {{ student.last_name }} {{ student.first_name }}?
-                                                            {% endif %}
-                                                        </p>
-                                                        <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
-                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                            <input type="hidden" name="record_type" value="contact">
-                                                            <input type="hidden" name="contact_id" value="{{ contact.id }}">
-                                                            <input type="hidden" name="student_id" value="{{ student.id }}">
-                                                            <div class="row">
-                                                                <div class="col-md-10 col-md-offset-1">
-                                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                        Да
-                                                                    </button>
-                                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                        Нет
-                                                                    </button>
+                                            <div class="modal fade" id="delete-contact-{{ contact.id }}-modal" role="dialog">
+                                                <div class="modal-dialog modal-sm">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление контакта</h4>
+                                                        </div>
+                                                        <div class="modal-body" style="padding-top:10px;">
+                                                            <p class="control-label">
+                                                                {% if student.id != contact.id %}
+                                                                    Вы уверены, что хотите удалить контакт {{ contact.last_name }} {{ contact.first_name }}?
+                                                                {% else %}
+                                                                    Вы уверены, что хотите удалить контакты клиента {{ student.last_name }} {{ student.first_name }}?
+                                                                {% endif %}
+                                                            </p>
+                                                            <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                <input type="hidden" name="record_type" value="contact">
+                                                                <input type="hidden" name="contact_id" value="{{ contact.id }}">
+                                                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                                                <div class="row">
+                                                                    <div class="col-md-10 col-md-offset-1">
+                                                                        <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                            Да
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                            Нет
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </form>
+                                                            </form>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                {% endif %}
                             </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Additional contacts information edit *-*-*-*-*-*-*-*-*-* -->
@@ -497,7 +503,7 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* Add new contact button *-*-*-*-*-*-*-*-*-* -->
 
-                    {% if student.person_type == 'Ребенок' %}
+                    {% if student.person_type == 'Ребенок' and current_user.rights in ["admin", "user"] %}
                         <div class="row" id="show-new-contact" style="margin-left:10px; {{ 'display:none' if render_type == 'contact_new' else 'display:block' }};">
                             <div class="col-md-2">
                                 <button type="button" id="show-new-contact-btn" class="btn btn-sm" data-background-color="orange">
@@ -645,17 +651,19 @@
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
                                 <div class="col-md-6">
-                                    {% if student.extra_subjects %}
-                                        <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
-                                    {% endif %}
-                                    {% if student.status=="Клиент" and lesson_subjects %}
-                                        <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#lesson-modal">
-                                            <i class="material-icons">date_range</i> Записать
-                                        </a>
-                                    {% elif student.status=="Лид"  %}
-                                        <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subject-modal">
-                                            <i class="material-icons">post_add</i> Интересующие направления
-                                        </a>
+                                    {% if current_user.rights in ["admin", "user"] %}
+                                        {% if student.extra_subjects %}
+                                            <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                        {% endif %}
+                                        {% if student.status=="Клиент" and lesson_subjects %}
+                                            <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#lesson-modal">
+                                                <i class="material-icons">date_range</i> Записать
+                                            </a>
+                                        {% elif student.status=="Лид"  %}
+                                            <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subject-modal">
+                                                <i class="material-icons">post_add</i> Интересующие направления
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
 
@@ -849,12 +857,16 @@
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
                                 <div class="col-md-6">
-                                    {% if student.subscriptions_info %}
-                                        <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                    {% if current_user.rights == "admin" %}
+                                        {% if student.subscriptions_info %}
+                                            <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                        {% endif %}
                                     {% endif %}
-                                    <a href="#" class="btn btn-sm subscription-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subscription-modal">
-                                        <i class="material-icons">addchart</i> Купить абонемент
-                                    </a>
+                                    {% if current_user.rights in ["admin", "user"] %}
+                                        <a href="#" class="btn btn-sm subscription-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subscription-modal">
+                                            <i class="material-icons">addchart</i> Купить абонемент
+                                        </a>
+                                    {% endif %}
                                 </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Student subscription purchase *-*-*-*-*-*-*-*-*-* -->
@@ -1009,15 +1021,18 @@
                                 {% endif %}
                             </div>
                         </div>
+
                         <div class="footer" style="margin-left:30px;">
                             <div class="row">
                                 <div class="col-md-6">
-                                    {% if student.after_school_info %}
+                                    {% if student.after_school_info and current_user.rights == 'admin' %}
                                         <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
                                     {% endif %}
-                                    <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#after-school-modal">
-                                        <i class="material-icons">addchart</i> Записать на продленку
-                                    </a>
+                                    {% if current_user.rights in ["admin", "user"] %}
+                                        <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#after-school-modal">
+                                            <i class="material-icons">addchart</i> Записать на продленку
+                                        </a>
+                                    {% endif %}
                                 </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Student after-school purchase *-*-*-*-*-*-*-*-*-* -->
@@ -1203,103 +1218,105 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="footer" style="margin-left:30px;">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#deposit-modal">
-                                        <i class="material-icons">money</i> Пополнить баланс
-                                    </a>
-                                    <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#finance-modal">
-                                        <i class="material-icons">attach_money</i> Финансовая операция
-                                    </a>
-                                </div>
+                        {% if current_user.rights in ["admin", "user"] %}
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#deposit-modal">
+                                            <i class="material-icons">money</i> Пополнить баланс
+                                        </a>
+                                        <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#finance-modal">
+                                            <i class="material-icons">attach_money</i> Финансовая операция
+                                        </a>
+                                    </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Student balance replenishment *-*-*-*-*-*-*-*-*-* -->
 
-                                <div class="modal fade" id="deposit-modal" role="dialog">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Пополнение депозита</h4>
-                                            </div>
-                                            <div class="modal-body">
-                                                <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                    <div class="row">
-                                                        <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
-                                                        <div class="col-md-4 field-div">
-                                                            <input type="number" class="form-control field-input required" name="deposit" step="10" min="10" max="1000">
+                                    <div class="modal fade" id="deposit-modal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                    <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Пополнение депозита</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <div class="row">
+                                                            <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
+                                                            <div class="col-md-4 field-div">
+                                                                <input type="number" class="form-control field-input required" name="deposit" step="10" min="10" max="1000">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-md-6 col-md-offset-3">
-                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                Внести
-                                                            </button>
-                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                Отмена
-                                                            </button>
+                                                        <div class="row">
+                                                            <div class="col-md-6 col-md-offset-3">
+                                                                <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                    Внести
+                                                                </button>
+                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                    Отмена
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </form>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Student finance operation *-*-*-*-*-*-*-*-*-* -->
 
-                                <div class="modal fade" id="finance-modal" role="dialog">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Финансовая операция</h4>
-                                            </div>
-                                            <div class="modal-body">
-                                                <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                    <input type="hidden" name="person_id" value="{{ student.id }}">
-                                                    <div class="row">
-                                                        <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
-                                                        <div class="col-md-7">
-                                                            <select name="operation_type" class="form-control">
-                                                                <option value="minus">Оплата</option>
-                                                                <option value="plus">Возврат</option>
-                                                            </select>
+                                    <div class="modal fade" id="finance-modal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                    <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Финансовая операция</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <input type="hidden" name="person_id" value="{{ student.id }}">
+                                                        <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
+                                                            <div class="col-md-7">
+                                                                <select name="operation_type" class="form-control">
+                                                                    <option value="minus">Оплата</option>
+                                                                    <option value="plus">Возврат</option>
+                                                                </select>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <label class="control-label col-md-4" style="padding-left:44px;">Описание:</label>
-                                                        <div class="col-md-7 field-div">
-                                                            <input type="text" name="description" class="form-control field-input required">
+                                                        <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Описание:</label>
+                                                            <div class="col-md-7 field-div">
+                                                                <input type="text" name="description" class="form-control field-input required">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                     <div class="row">
-                                                        <label class="control-label col-md-4" style="padding-left:44px;">Сумма:</label>
-                                                        <div class="col-md-4 field-div">
-                                                            <input type="number" name="amount" class="form-control field-input required" step="5" min="5" max="10000">
+                                                         <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Сумма:</label>
+                                                            <div class="col-md-4 field-div">
+                                                                <input type="number" name="amount" class="form-control field-input required" step="5" min="5" max="10000">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-md-6 col-md-offset-3">
-                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                Провести
-                                                            </button>
-                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                Отмена
-                                                            </button>
+                                                        <div class="row">
+                                                            <div class="col-md-6 col-md-offset-3">
+                                                                <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                    Провести
+                                                                </button>
+                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                    Отмена
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </form>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
+                                </div>
                             </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

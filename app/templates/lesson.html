@@ -65,7 +65,9 @@
                                                 <td></td>
                                                 <td></td>
                                                 <td>
-                                                    <button type="submit" name="change_btn" class="btn btn-xs" data-background-color="orange">Изменить</button>
+                                                    {% if current_user.rights in ["admin", "user"] %}
+                                                        <button type="submit" name="change_btn" class="btn btn-xs" data-background-color="orange">Изменить</button>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                         {% else %}
@@ -133,7 +135,7 @@
                                                         <button type="submit" name="registered_btn" class="btn btn-xs" data-background-color="orange">Записать</button>
                                                     </td>
                                                     <td>
-                                                        {% if subject_lesson.date > today %}
+                                                        {% if subject_lesson.date > today or current_user.rights not in ["admin", "user"] %}
                                                             <button type="submit" name="attended_btn" class="btn btn-xs" data-background-color="orange" disabled>Провести</button>
                                                         {% else %}
                                                             <button type="submit" name="attended_btn" class="btn btn-xs" data-background-color="orange">Провести</button>
@@ -180,7 +182,7 @@
                                     {% endfor %}
                                 </ul>
                             </div>
-                            {% if not subject_lesson.students_registered.all() %}
+                            {% if not subject_lesson.students_registered.all() and current_user.rights in ["admin", "user"] %}
                                 <button class="btn btn-sm pull-right" data-background-color="red">
                                     <a href="#" data-toggle="modal" data-target="#delete-modal">
                                         <i class="material-icons">delete_forever</i> Отменить занятие

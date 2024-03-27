@@ -43,12 +43,6 @@
                             <p>Классы</p>
                         </a>
                     </li>
-<!--                    <li id="menu-teachers">-->
-<!--                        <a style="cursor:pointer" href="">-->
-<!--                            <i class="material-icons">group</i>-->
-<!--                            <p>Учителя</p>-->
-<!--                        </a>-->
-<!--                    </li>-->
                     <li id="menu-subjects">
                         <a style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">
                             <i class="material-icons">library_books</i>
@@ -89,11 +83,13 @@
                         </ul>
                     </div>
                     <ul class="nav navbar-nav navbar-right" style="margin-right:20px;">
-                        <li>
-                            <a style="cursor:pointer" href="{{ url_for('finances') }}">
-                                <i class="material-icons">account_balance</i>
-                            </a>
-                        </li>
+                        {% if current_user.rights in ['admin', 'user'] %}
+                            <li>
+                                <a style="cursor:pointer" href="{{ url_for('finances') }}">
+                                    <i class="material-icons">account_balance</i>
+                                </a>
+                            </li>
+                        {% endif %}
                         <li>
                             <a style="cursor:pointer" href="{{ url_for('settings') }}">
                                 <i class="material-icons">settings</i>

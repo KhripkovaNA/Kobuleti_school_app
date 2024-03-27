@@ -1,5 +1,5 @@
-from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, \
-    SchoolClass, SubjectType, SubscriptionType, student_lesson_attended_table, SchoolLessonJournal, Finance
+from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, SchoolClass, \
+    SubjectType, SubscriptionType, student_lesson_attended_table, SchoolLessonJournal, Finance, UserAction
 from datetime import datetime, timedelta
 from app import db
 from sqlalchemy import and_, or_
@@ -250,6 +250,9 @@ def add_new_employee(form):
                 subject_ids = [int(subject_id) for subject_id in form.subjects.data]
                 subjects = Subject.query.filter(Subject.id.in_(subject_ids)).all()
                 employee.subjects_taught.extend(subjects)
+                classes_ids = [int(class_id) for class_id in form.school_classes.data]
+                school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).all()
+                employee.teaching_classes.extend(school_classes)
                 employee.color = form.teacher_color.data
 
     return employee
@@ -532,8 +535,7 @@ def lesson_subjects_data():
     return lesson_subjects
 
 
-def student_lesson_register(form, student_id):
-    student = Person.query.filter_by(id=student_id, status="Клиент").first()
+def student_lesson_register(form, student):
     subject_id = int(form.get('selected_subject')) if form.get('selected_subject') else None
     subject = Subject.query.filter_by(id=subject_id).first()
     lesson_id = int(form.get('lesson')) if form.get('lesson') else None
@@ -553,13 +555,13 @@ def student_lesson_register(form, student_id):
         if student not in lesson.students_registered:
             lesson.students_registered.append(student)
 
-        return lesson_id, "Клиент записан на занятие"
+        return lesson, "Клиент записан на занятие"
 
     else:
         return None, "Ошибка при записи клиента"
 
 
-def purchase_subscription(form, student_id):
+def purchase_subscription(form, student):
     subject_id = int(form.get('selected_subject'))
     subscription_type_id = int(form.get('subscription_type'))
     subscription_type = SubscriptionType.query.filter_by(id=subscription_type_id).first()
@@ -568,7 +570,7 @@ def purchase_subscription(form, student_id):
 
     new_subscription = Subscription(
         subject_id=subject_id,
-        student_id=student_id,
+        student_id=student.id,
         subscription_type_id=subscription_type_id,
         lessons_left=subscription_type.lessons,
         purchase_date=purchase_date,
@@ -577,15 +579,15 @@ def purchase_subscription(form, student_id):
     return new_subscription, subscription_type.price
 
 
-def handle_student_edit(form, student, edit_type):
-    if edit_type == 'student_edit':
+def handle_student_edit(form, student, edit_type, user):
+    if edit_type == 'edit_student':
         student.last_name = form.last_name.data
         student.first_name = form.first_name.data
         student.patronym = form.patronym.data
         student.dob = datetime.strptime(form.dob.data, '%d.%m.%Y').date() \
             if form.dob.data else None
         status = form.status.data
-        if student.status != status:
+        if student.status != status and user.rights == 'admin':
             student.status = status
             if student.status == "Закрыт":
                 student.subjects = []
@@ -595,6 +597,7 @@ def handle_student_edit(form, student, edit_type):
 
             student.leaving_reason = form.leaving_reason.data if student.status == "Закрыт" else ''
         db.session.flush()
+        return
 
     if edit_type == 'edit_main_contact':
         main_contact = student.main_contact
@@ -606,6 +609,7 @@ def handle_student_edit(form, student, edit_type):
             main_contact.first_name = form.first_name.data
             main_contact.patronym = form.patronym.data
         db.session.flush()
+        return
 
     if edit_type.startswith('edit_contact_'):
         ind = int(edit_type[len('edit_contact_'):])
@@ -620,9 +624,11 @@ def handle_student_edit(form, student, edit_type):
         if form.primary_contact.data:
             student.primary_contact = contact.id
         db.session.flush()
+        return
 
     if edit_type == 'new_contact':
         handle_contact_info(form, student)
+        return
 
     if edit_type == 'del_subject':
         del_subject_id = int(form.get('del_subject_btn'))
@@ -634,14 +640,22 @@ def handle_student_edit(form, student, edit_type):
             if del_subject in student.subjects:
                 student.subjects.remove(del_subject)
                 db.session.flush()
+        return
 
     if edit_type == 'subscription':
         for subscription_form in form.subscriptions:
             subscription_id = int(subscription_form.subscription_id.data)
             subscription = Subscription.query.filter_by(id=subscription_id).first()
-            subscription.lessons_left = subscription_form.lessons.data
-            subscription.end_date = datetime.strptime( subscription_form.end_date.data, '%d.%m.%Y').date()
+            lessons_left = subscription_form.lessons.data
+            end_date = datetime.strptime(subscription_form.end_date.data, '%d.%m.%Y').date()
+            if subscription.lessons_left != lessons_left or subscription.end_date != end_date:
+                subscription.lessons_left = lessons_left
+                subscription.end_date = end_date
+                description = f"Изменение абонемента {subscription.subject.name} клиента " \
+                              f"{student.last_name} {student.first_name}"
+                user_action(user, description)
         db.session.flush()
+        return
 
     if edit_type == 'del_after_school':
         del_after_school_id = int(form.get('del_after_school'))
@@ -655,6 +669,7 @@ def handle_student_edit(form, student, edit_type):
             finance_operation(student.id, price, description)
             db.session.delete(del_after_school)
             db.session.flush()
+        return
 
 
 def handle_employee_edit(form, employee):
@@ -671,14 +686,18 @@ def handle_employee_edit(form, employee):
             if role.role == TEACHER:
                 employee.teacher = False
                 employee.subjects_taught = []
+                employee.teaching_classes = []
         else:
             role.role = form.get(f'role_{role.id}')
     db.session.flush()
 
     if employee.teacher:
+        subjects_to_remove = []
         for subject in employee.subjects_taught:
             if not form.get(f'subject_{subject.id}'):
-                employee.subjects_taught.remove(subject)
+                subjects_to_remove.append(subject)
+
+        [employee.subjects_taught.remove(subj) for subj in subjects_to_remove]
 
         new_subject_ids = form.getlist('new_subjects')
         if new_subject_ids:
@@ -686,6 +705,21 @@ def handle_employee_edit(form, employee):
                 Subject.id.in_([int(subject_id) for subject_id in new_subject_ids])
             ).all()
             employee.subjects_taught.extend(new_subjects)
+
+        classes_to_remove = []
+        for school_class in employee.teaching_classes:
+            if not form.get(f'school_class_{school_class.id}'):
+                classes_to_remove.append(school_class)
+
+        [employee.teaching_classes.remove(sc_cl) for sc_cl in classes_to_remove]
+
+        new_classes_ids = form.getlist('new_classes')
+        if new_classes_ids:
+            new_classes = SchoolClass.query.filter(
+                SchoolClass.id.in_([int(class_id) for class_id in new_classes_ids])
+            ).all()
+            employee.teaching_classes.extend(new_classes)
+
         employee.color = form.get('new_teacher_color')
         db.session.flush()
 
@@ -706,6 +740,12 @@ def handle_employee_edit(form, employee):
                         Subject.id.in_([int(subject_id) for subject_id in subject_ids])
                     ).all()
                     employee.subjects_taught.extend(teacher_subjects)
+                classes_ids = form.getlist('classes')
+                if classes_ids:
+                    teacher_classes = SchoolClass.query.filter(
+                        SchoolClass.id.in_([int(class_id) for class_id in classes_ids])
+                    ).all()
+                    employee.teaching_classes.extend(teacher_classes)
                 employee.color = form.get('teacher_color')
 
         db.session.flush()
@@ -774,9 +814,7 @@ def add_new_subject(form, subject_type):
         new_subject.subscription_types.extend(subscription_types)
         new_subject.teachers.extend(teachers)
 
-        return new_subject
-
-    elif subject_type == "school":
+    else:
         name = form.get("subject_name")
         subject_name = name[0].upper() + name[1:]
         short_name = form.get("subject_short_name")
@@ -796,8 +834,16 @@ def add_new_subject(form, subject_type):
         new_subject.teachers.extend(teachers)
         classes_students = Person.query.filter(Person.school_class_id.in_(classes)).all()
         new_subject.students.extend(classes_students)
+        for teacher in teachers:
+            [teacher.teaching_classes.append(sc_cl) for sc_cl in school_classes
+             if sc_cl not in teacher.teaching_classes]
 
-        return new_subject
+    same_subject = Subject.query.filter_by(
+        name=new_subject.name,
+        subject_type_id=new_subject.subject_type_id
+    ).all()
+
+    return new_subject if not same_subject else None
 
 
 def format_subscription_types(subscription_types):
@@ -900,7 +946,7 @@ def get_payment_options(student, subject_id, lesson):
     return payment_options
 
 
-def carry_out_lesson(form, subject, lesson):
+def carry_out_lesson(form, subject, lesson, user):
     lesson_price = subject.one_time_price
     lesson_school_price = subject.school_price if subject.school_price else lesson_price
     if not lesson.students_registered.all():
@@ -915,20 +961,14 @@ def carry_out_lesson(form, subject, lesson):
                 if subscription.lessons_left > 0:
                     subscription.lessons_left -= 1
                 else:
-                    if student.balance >= lesson_price:
-                        student.balance -= lesson_price
-                        description = f"Списание за занятие {subject.name}"
-                        finance_operation(student.id, -lesson_price, description, lesson.date)
-                    else:
-                        return f'Не достаточно средств у клиента {student.last_name} {student.first_name}', 'error'
+                    student.balance -= lesson_price
+                    description = f"Списание за занятие {subject.name}"
+                    finance_operation(student.id, -lesson_price, description, lesson.date)
             else:
                 price = lesson_school_price if payment_option == 'after_school' else lesson_price
-                if student.balance >= price:
-                    student.balance -= price
-                    description = f"Списание за занятие {subject.name}"
-                    finance_operation(student.id, -price, description, lesson.date)
-                else:
-                    return f'Не достаточно средств у клиента {student.last_name} {student.first_name}', 'error'
+                student.balance -= price
+                description = f"Списание за занятие {subject.name}"
+                finance_operation(student.id, -price, description, lesson.date)
 
             attendance = student_lesson_attended_table.insert().values(
                 student_id=student.id,
@@ -936,7 +976,9 @@ def carry_out_lesson(form, subject, lesson):
                 attending_status=form.get(f'attending_status_{student.id}')
             )
             db.session.execute(attendance)
+
     lesson.lesson_completed = True
+    user_action(user, f"Проведение занятия {subject.name} {lesson.date:%d.%m.%Y}")
     return 'Занятие проведено', 'success'
 
 
@@ -974,7 +1016,7 @@ def undo_lesson(form, subject, lesson):
     lesson.lesson_completed = False
 
 
-def handle_lesson(form, subject, lesson):
+def handle_lesson(form, subject, lesson, user):
     if 'del_client_btn' in form:
         del_client_id = int(form.get('del_client_btn'))
         del_client = Person.query.filter_by(id=del_client_id).first()
@@ -982,6 +1024,8 @@ def handle_lesson(form, subject, lesson):
             subject.students.remove(del_client)
         if del_client in lesson.students_registered:
             lesson.students_registered.remove(del_client)
+        description = f"Удаление клиента {del_client.last_name} {del_client.first_name} c занятия {subject.name}"
+        user_action(user, description)
         db.session.flush()
         return 'Клиент удален', 'success'
 
@@ -990,6 +1034,9 @@ def handle_lesson(form, subject, lesson):
         if new_client_id:
             new_client = Person.query.filter_by(id=new_client_id).first()
             subject.students.append(new_client)
+            description = f"Добавление клиента {new_client.last_name} {new_client.first_name} " \
+                          f"на занятие {subject.name}"
+            user_action(user, description)
             db.session.flush()
             return 'Клиент добавлен', 'success'
         else:
@@ -1010,6 +1057,9 @@ def handle_lesson(form, subject, lesson):
                 ).all()
                 if not student_lessons:
                     lesson.students_registered.append(student)
+                    description = f"Запись клиента {student.last_name} {student.first_name} " \
+                                  f"на занятие {subject.name} {lesson.date:%d.%m.%Y}"
+                    user_action(user, description)
                 else:
                     messages.append(f"Клиент {student.last_name} {student.first_name}" +
                                     f" уже записан на занятие в это же время")
@@ -1018,17 +1068,21 @@ def handle_lesson(form, subject, lesson):
                     and not form.get(f'registered_{student.id}')
             ):
                 lesson.students_registered.remove(student)
+                description = f"Отмена записи клиента {student.last_name} {student.first_name} " \
+                              f"на занятие {subject.name} {lesson.date:%d.%m.%Y}"
+                user_action(user, description)
 
         if messages:
             message_text = '. '.join(messages)
             return message_text, 'error'
 
-    if 'attended_btn' in form:
-        message = carry_out_lesson(form, subject, lesson)
+    if 'attended_btn' in form and user.rights in ["admin", "user"]:
+        message = carry_out_lesson(form, subject, lesson, user)
         return message
 
-    if 'change_btn' in form:
+    if 'change_btn' in form and user.rights in ["admin", "user"]:
         undo_lesson(form, subject, lesson)
+        user_action(user, f"Отмена проведения занятия {subject.name} {lesson.date:%d.%m.%Y}")
         return 'Проведение занятия отменено', 'error'
 
 
@@ -1404,8 +1458,8 @@ def add_new_lessons(form):
         else:
             message = (text, 'error')
             messages.append(message)
-    week = calculate_week(lesson_date)
-    return messages, week, new_lessons
+
+    return messages, lesson_date, new_lessons
 
 
 def lesson_edit(form, lesson):
@@ -1578,7 +1632,11 @@ def format_school_class_subjects(school_class):
             ),
             Person.subjects_taught.any(Subject.id == school_subject.id)
         ).order_by(Person.last_name, Person.first_name).all()
-        subject_teachers = school_subject.teachers
+
+        subject_teachers = Person.query.filter(
+            Person.teaching_classes.any(SchoolClass.id == school_class.id),
+            Person.subjects_taught.any(Subject.id == school_subject.id)
+        ).order_by(Person.last_name, Person.first_name).all()
 
         school_subject.school_teachers = school_teachers if school_teachers else subject_teachers
     school_class.school_class_subjects = school_class_subjects
@@ -1774,11 +1832,14 @@ def handle_school_lesson(form, lesson):
         return 'Внесение изменений', 'success'
 
 
+def lesson_duration(lesson):
+    return (lesson.end_time.hour * 60 + lesson.end_time.minute) - \
+           (lesson.start_time.hour * 60 + lesson.start_time.minute)
+
+
 def employee_record(employees, week):
     week_start = get_date(0, week)
     week_end = get_date(6, week)
-    primary_classes = SchoolClass.query.filter(SchoolClass.school_class < 5, SchoolClass.main_teacher_id).all()
-    main_teachers = [(sc_cl.id, sc_cl.main_teacher_id) for sc_cl in primary_classes]
     employees_list = []
 
     def add_employee_dict(employee_id, name, role, activity):
@@ -1788,6 +1849,7 @@ def employee_record(employees, week):
             'role': role,
             'activity': activity
         })
+
     for employee in employees:
         for role in employee.roles:
             if role.role != "Учитель":
@@ -1820,21 +1882,39 @@ def employee_record(employees, week):
                     else:
                         if lessons_dict.get(lesson.subject.name):
                             if lessons_dict[lesson.subject.name].get(lesson_date):
-                                lessons_dict[lesson.subject.name][lesson_date] += 1
+                                if lesson.lesson_type.name != 'school':
+                                    lessons_dict[lesson.subject.name][lesson_date] += lesson_duration(lesson)
+                                else:
+                                    lessons_dict[lesson.subject.name][lesson_date] += 1
                             else:
-                                lessons_dict[lesson.subject.name][lesson_date] = 1
+                                if lesson.lesson_type.name != 'school':
+                                    lessons_dict[lesson.subject.name][lesson_date] = lesson_duration(lesson)
+                                else:
+                                    lessons_dict[lesson.subject.name][lesson_date] = 1
                         else:
-                            lessons_dict[lesson.subject.name] = {lesson_date: 1}
+                            if lesson.lesson_type.name != 'school':
+                                lessons_dict[lesson.subject.name] = {lesson_date: lesson_duration(lesson)}
+                            else:
+                                lessons_dict[lesson.subject.name] = {lesson_date: 1}
             else:
                 for lesson in teacher_lessons:
                     lesson_date = f'{lesson.date:%d.%m}'
                     if lessons_dict.get(lesson.subject.name):
                         if lessons_dict[lesson.subject.name].get(lesson_date):
-                            lessons_dict[lesson.subject.name][lesson_date] += 1
+                            if lesson.lesson_type.name != 'school':
+                                lessons_dict[lesson.subject.name][lesson_date] += lesson_duration(lesson)
+                            else:
+                                lessons_dict[lesson.subject.name][lesson_date] += 1
                         else:
-                            lessons_dict[lesson.subject.name][lesson_date] = 1
+                            if lesson.lesson_type.name != 'school':
+                                lessons_dict[lesson.subject.name][lesson_date] = lesson_duration(lesson)
+                            else:
+                                lessons_dict[lesson.subject.name][lesson_date] = 1
                     else:
-                        lessons_dict[lesson.subject.name] = {lesson_date: 1}
+                        if lesson.lesson_type.name != 'school':
+                            lessons_dict[lesson.subject.name] = {lesson_date: lesson_duration(lesson)}
+                        else:
+                            lessons_dict[lesson.subject.name] = {lesson_date: 1}
             for role, activity in lessons_dict.items():
                 add_employee_dict(employee.id, f"{employee.last_name} {employee.first_name}", role, activity)
 
@@ -2289,7 +2369,7 @@ def filter_day_lessons(form):
         query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
     lessons = query.all()
 
-    return lessons
+    return lessons, date
 
 
 def del_record(form, record_type):
@@ -2377,7 +2457,10 @@ def del_record(form, record_type):
 
     if record_type == 'subject':
         subject_id = int(form.get('subject_id'))
-        subject = Subject.query.filter_by(id=subject_id).first()
+        subject = Subject.query.filter(
+            Subject.id == subject_id,
+            Subject.subject_type.has(~SubjectType.name.in_(['school', 'after_school']))
+        ).first()
         if subject:
             subject_name = f"{subject.name} ({subject.subject_type.description})"
             subject_lessons = Lesson.query.filter_by(subject_id=subject.id).all()
@@ -2387,6 +2470,31 @@ def del_record(form, record_type):
                 db.session.delete(subject)
                 db.session.flush()
                 message = (f"Предмет {subject_name} удален", 'success')
+
+        else:
+            message = ("Такого предмета нет", 'error')
+
+        return message
+
+    if record_type == 'school_subject':
+        subject_id = int(form.get('subject_id'))
+        subject = Subject.query.filter(
+            Subject.id == subject_id,
+            Subject.subject_type.has(SubjectType.name == 'school')
+        ).first()
+        if subject:
+            school_class_id = int(form.get('school_class_id'))
+            school_class = SchoolClass.query.filter_by(id=school_class_id).first()
+            subject.school_classes.remove(school_class)
+            subject_name = subject.name
+            subject_lessons = Lesson.query.filter_by(subject_id=subject.id).all()
+            if not subject_lessons and not subject.school_classes:
+                db.session.delete(subject)
+                message = (f"Школьный предмет {subject_name} полностью удален", 'success')
+            else:
+                message = (f"Школьный предмет {subject_name} удален из класса", 'success')
+            db.session.flush()
+
 
         else:
             message = ("Такого предмета нет", 'error')
@@ -2409,7 +2517,7 @@ def del_record(form, record_type):
             return "Такого занятия нет", 'error'
 
     if record_type == 'lessons':
-        del_lessons = filter_day_lessons(form)
+        del_lessons, date = filter_day_lessons(form)
         if del_lessons:
             les = len(del_lessons)
             del_les = 0
@@ -2451,7 +2559,7 @@ def del_record(form, record_type):
 
 
 def change_lessons_date(form):
-    change_lessons = filter_day_lessons(form)
+    change_lessons, old_date = filter_day_lessons(form)
     new_date = datetime.strptime(form.get('new_date'), '%d.%m.%Y').date()
     new_week = calculate_week(new_date)
     if change_lessons:
@@ -2489,7 +2597,7 @@ def change_lessons_date(form):
         new_week = None
         message = [("Нет занятий,  удовлетворяющих критериям", 'error')]
 
-    return new_week, message
+    return new_week, message, (old_date, new_date)
 
 
 def add_new_event(form):
@@ -2499,7 +2607,7 @@ def add_new_event(form):
     start_time = datetime.strptime(form.get('event_start_time'), '%H : %M').time()
     end_time = datetime.strptime(form.get('event_end_time'), '%H : %M').time()
     if end_time <= start_time:
-        return 'Мероприятие не добавлено. Ошибка во времени проведения', 'error'
+        return ('Мероприятие не добавлено. Ошибка во времени проведения', 'error'), None
 
     room_id = int(form.get('room'))
     conflicts = Lesson.query.filter(
@@ -2511,7 +2619,7 @@ def add_new_event(form):
     if not conflicts:
         event_name = form.get('event_name')
         if not event_name:
-            return 'Мероприятие не добавлено. Нет названия', 'error'
+            return ('Мероприятие не добавлено. Нет названия', 'error'), None
 
         event_type = SubjectType.query.filter_by(name='event').first()
         existing_event_name = Subject.query.filter_by(name=event_name, subject_type_id=event_type.id).first()
@@ -2532,8 +2640,15 @@ def add_new_event(form):
         )
         db.session.add(new_event)
         db.session.flush()
-        return 'Мероприятие добавлено в расписание', 'success'
+        return ('Мероприятие добавлено в расписание', 'success'), new_event
 
     else:
-        return 'Мероприятие не добавлено, есть занятия в это же время', 'error'
+        return ('Мероприятие не добавлено, есть занятия в это же время', 'error'), None
 
+
+def user_action(user, action_description):
+    new_action = UserAction(
+        user_id=user.id,
+        description=action_description
+    )
+    db.session.add(new_action)

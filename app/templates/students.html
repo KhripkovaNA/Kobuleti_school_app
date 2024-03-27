@@ -56,10 +56,11 @@
                                             </td>
                                             <td class="comment-cell"  style="cursor:pointer;">
                                                 <div class="comment-container">
-                                                        {{ student.comment if student.comment }}
+                                                    {{ student.comment if student.comment }}
                                                 </div>
                                                 <div class="form-group comment-form-container text-center" style="display:none; margin:0;">
                                                     <form class="comment-form" method="post" data-person-id="{{ student.id }}">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                         <textarea class="form-control" name="comment" rows="3" cols="8"></textarea>
                                                         <button type="submit" class="btn btn-xs" data-background-color="main">Добавить</button>
                                                     </form>
@@ -77,7 +78,7 @@
                                                                 <i class="material-icons" style="color: purple;">info</i>Профиль
                                                             </a>
                                                         </li>
-                                                        {% if student.status=="Клиент" %}
+                                                        {% if student.status=="Клиент" and current_user.rights in ["admin", "user"] %}
                                                             {% if lesson_subjects %}
                                                                 <li>
                                                                     <a href="#" class="lesson-modal-trigger" data-toggle="modal" data-target="#lesson-{{ student.id }}-modal">
@@ -99,7 +100,7 @@
                                                         <li class="divider"></li>
                                                         <li>
                                                             {% if current_user.rights != 'admin' %}
-                                                                <a href="#" title="Нет прав администратора">
+                                                                <a href="#" title="Нет прав руководителя">
                                                                     <i class="material-icons" style="color: red;">delete_forever</i>Удалить
                                                                 </a>
                                                             {% else %}
@@ -287,11 +288,19 @@
                 {% else %}
                     <p>Клиентов пока нет</p>
                 {% endif %}
-                <button class="btn btn-sm" data-background-color="orange">
-                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
-                        <i class="material-icons">add_box</i> Добавить клиента
-                    </a>
-                </button>
+                {% if current_user.rights in ["admin", "user"] %}
+                    <button class="btn btn-sm" data-background-color="orange">
+                        <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
+                            <i class="material-icons">add_box</i> Добавить клиента
+                        </a>
+                    </button>
+                {% else %}
+                    <button class="btn btn-sm" data-background-color="orange" title="Нет прав администратора" disabled>
+                        <a style="cursor:pointer; color: #FFFFFF;" href="#">
+                            <i class="material-icons">add_box</i> Добавить клиента
+                        </a>
+                    </button>
+                {% endif %}
             </div>
         </div>
     </div>

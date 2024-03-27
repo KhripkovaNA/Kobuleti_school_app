@@ -40,6 +40,18 @@
                                         </div>
                                     </div>
                                 {% endif %}
+                                {% if employee.teaching_classes %}
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Классы:</label>
+                                        <div class="col-md-6">
+                                            <div class="form-control">
+                                                {% for school_class in employee.teaching_classes %}
+                                                    <p>{{ school_class.school_name }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
                                 <div class="row">
                                     <label class="control-label col-md-3">Цвет в расписании:</label>
                                     <div class="col-md-6">
@@ -99,13 +111,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="footer" style="margin-left:30px;">
-                        <div class="row">
-                            <div class="col-md-2">
-                                <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                    {% if current_user.rights in ["admin", "user"] %}
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <button class="btn btn-sm section-form-btn" style="background-color:#4BD1A0;">Изменить</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Employee information edit *-*-*-*-*-*-*-*-*-* -->
@@ -188,7 +202,7 @@
                                                     <input type="hidden" name="subject_{{ subject.id }}" class="subject-value" value="{{ subject.id }}">
                                                 {% else %}
                                                     <div class="col-md-5">
-                                                        <div class="form-control">{{ subject.name }} ({{ subject.subject_type.description }})</div>
+                                                        <div class="form-control subject-name">{{ subject.name }} ({{ subject.subject_type.description }})</div>
                                                     </div>
                                                     <div class="col-md-1">
                                                         <button type="button" class="btn btn-danger del-btn-sm delete-subject">Удалить</button>
@@ -203,6 +217,28 @@
                                                 <select class="form-control select-search" name="new_subjects" id="subject-select" placeholder="Добавить предмет" multiple>
                                                     {% for possible_subject in possible_subjects %}
                                                         <option value="{{ possible_subject.id }}">{{ possible_subject.name }} ({{ possible_subject.subject_type.description }})</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        {% for school_class in employee.teaching_classes %}
+                                            <div class="row school-row">
+                                                <label class="control-label col-md-3">{{ "Классы:" if loop.first }}</label>
+                                                <div class="col-md-5">
+                                                    <div class="form-control school-name">{{ school_class.school_name }}</div>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <button type="button" class="btn btn-danger del-btn-sm delete-school">Удалить</button>
+                                                </div>
+                                                <input type="hidden" name="school_class_{{ school_class.id }}" class="school-value" value="{{ school_class.id }}">
+                                            </div>
+                                        {% endfor %}
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Добавить классы:</label>
+                                            <div class="col-md-6">
+                                                <select class="form-control select-search" name="new_classes" id="school-select" placeholder="Добавить класс" multiple>
+                                                    {% for possible_class in possible_classes %}
+                                                        <option value="{{ possible_class.id }}">{{ possible_class.school_name }}</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -222,6 +258,16 @@
                                             <select name="subjects" class="form-control select-search" placeholder="Выбрать предмет" multiple>
                                                 {% for subject in subjects %}
                                                     <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.subject_type.description }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Классы:</label>
+                                        <div class="col-md-6">
+                                            <select name="classes" class="form-control select-search" placeholder="Выбрать класс" multiple>
+                                                {% for school_class in school_classes %}
+                                                    <option value="{{ school_class.id }}">{{ school_class.school_name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>

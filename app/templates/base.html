@@ -89,11 +89,13 @@
                         </ul>
                     </div>
                     <ul class="nav navbar-nav navbar-right" style="margin-right:20px;">
-                        <li>
-                            <a style="cursor:pointer" href="{{ url_for('finances') }}">
-                                <i class="material-icons">account_balance</i>
-                            </a>
-                        </li>
+                        {% if current_user.rights in ['admin', 'user'] %}
+                            <li>
+                                <a style="cursor:pointer" href="{{ url_for('finances') }}">
+                                    <i class="material-icons">account_balance</i>
+                                </a>
+                            </li>
+                        {% endif %}
                         <li>
                             <a style="cursor:pointer" href="{{ url_for('settings') }}">
                                 <i class="material-icons">settings</i>
