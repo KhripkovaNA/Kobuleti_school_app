@@ -1,6 +1,7 @@
 from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, SchoolClass, \
     SubjectType, SubscriptionType, student_lesson_attended_table, SchoolLessonJournal, Finance, UserAction
 from datetime import datetime, timedelta
+import pytz
 from app import db
 from sqlalchemy import and_, or_
 from dateutil.relativedelta import relativedelta
@@ -17,7 +18,8 @@ TEACHER = "Учитель"
 CHILD_SELF = "Сам ребенок"
 CHOOSE = "Выбрать"
 OTHER = "Другое"
-TODAY = datetime.now().date()
+LOCAL_TZ = pytz.timezone('Asia/Tbilisi')
+TODAY = datetime.now(LOCAL_TZ).date()
 
 
 def conjugate_lessons(number):
@@ -502,7 +504,7 @@ def subjects_data():
 
 
 def lesson_subjects_data():
-    now = datetime.now().time()
+    now = datetime.now(LOCAL_TZ).time()
     filtered_subjects = Subject.query.filter(
         Subject.subject_type.has(SubjectType.name == "extra")
     ).order_by(Subject.name).all()
@@ -880,7 +882,7 @@ def check_subscription(student, lesson, subject_id):
     after_school = after_school_subject()
     cond = lesson == 0
     if cond:
-        date = datetime.today().date()
+        date = TODAY
     else:
         date = lesson.date
     if subject_id == 0:
@@ -2390,7 +2392,7 @@ def del_record(form, record_type):
             else:
                 if student.contacts:
                     db.session.delete(student.contacts[0])
-                    db.session.delete(student)
+                db.session.delete(student)
             db.session.flush()
             message = (f"Клиент {student_name} удален", "success")
         else:

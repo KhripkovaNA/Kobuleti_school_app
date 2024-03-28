@@ -2,6 +2,7 @@ from app import db, login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import pytz
 
 
 parent_child_table = db.Table(
@@ -160,7 +161,7 @@ class Subscription(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     subscription_type_id = db.Column(db.Integer, db.ForeignKey('subscription_types.id'))
     lessons_left = db.Column(db.Integer)
-    purchase_date = db.Column(db.Date, default=datetime.today().date())
+    purchase_date = db.Column(db.Date, default=datetime.now(pytz.timezone('Asia/Tbilisi')).date())
     end_date = db.Column(db.Date)
     active = db.Column(db.Boolean, default=False)
     shift = db.Column(db.Integer)
@@ -290,7 +291,7 @@ class Finance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     person = db.relationship('Person', backref='finances')
-    date = db.Column(db.Date, default=datetime.today().date())
+    date = db.Column(db.Date, default=datetime.now(pytz.timezone('Asia/Tbilisi')).date())
     amount = db.Column(db.Numeric(8, 2))
     description = db.Column(db.String(120))
 
@@ -301,5 +302,5 @@ class UserAction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User', backref='actions')
-    timestamp = db.Column(db.DateTime, default=datetime.today())
+    timestamp = db.Column(db.DateTime, default=datetime.now(pytz.timezone('Asia/Tbilisi')))
     description = db.Column(db.String(120))

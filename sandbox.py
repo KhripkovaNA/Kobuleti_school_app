@@ -7,6 +7,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
+import pytz
 from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
@@ -926,4 +927,8 @@ lesson_dict = {
 
 # for i in range(21, 36):
 #     delete_record(UserAction, i)
-# print_table(UserAction)
+print_table(UserAction)
+local_tz = pytz.timezone('Asia/Tbilisi')
+# local_tz = pytz.timezone('Pacific/Auckland')
+print(datetime.now(local_tz))
+# print_table(Person)
