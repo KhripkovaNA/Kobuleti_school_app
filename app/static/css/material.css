@@ -2869,7 +2869,7 @@ select.form-control[multiple],
 }
 
 .timetable {
-    min-width: 3500px;
+    min-width: 1600px;
     width: 100%;
 }
 
@@ -2915,10 +2915,7 @@ select.form-control[multiple],
 .timetable>thead:first-child>tr:first-child>th,
 .school-timetable>thead:first-child>tr:first-child>th {
     border-top: 1px solid #ddd;
-}
-
-.timetable tbody th {
-    width: 3%;
+    font-size: 12px;
 }
 
 .scroll-timetable {
@@ -2959,11 +2956,12 @@ select.form-control[multiple],
 }
 
 .timetable tbody th {
-    height: 100px;
+    width: 3%;
+    height: 50px;
 }
 
 .school-timetable tbody th {
-    height: 80px;
+    height: 60px;
 }
 
 .timetable thead,
@@ -2983,8 +2981,19 @@ select.form-control[multiple],
 .school-timetable>tbody>tr>th,
 .school-timetable>tfoot>tr>th {
     vertical-align: middle;
-    padding: 3px;
     border: 1px solid #ddd;
+}
+
+.school-timetable>thead>tr>th,
+.school-timetable>tbody>tr>th,
+.school-timetable>tfoot>tr>th {
+    padding: 3px;
+}
+
+.timetable>thead>tr>th,
+.timetable>tbody>tr>th,
+.timetable>tfoot>tr>th {
+    padding: 3px 0;
 }
 
 .timetable>thead>tr>td,
@@ -2994,25 +3003,49 @@ select.form-control[multiple],
 .school-timetable>tbody>tr>td,
 .school-timetable>tfoot>tr>td {
     vertical-align: top;
-    padding: 3px;
     border: 1px solid #ddd;
+}
+
+.timetable>thead>tr>td,
+.timetable>tbody>tr>td,
+.timetable>tfoot>tr>td {
+    padding: 0;
+}
+
+.school-timetable>thead>tr>td,
+.school-timetable>tbody>tr>td,
+.school-timetable>tfoot>tr>td {
+    padding: 3px;
 }
 
 .timetable .class-box, .school-timetable .class-box {
     hyphens: auto;
-    font-size: 9px;
-    font-weight: 400;
+    font-weight: 500;
+}
+
+.school-timetable .class-box {
+    font-size: 8px;
+    padding: 3px;
+}
+
+.timetable .class-box {
+    font-size: 5px;
+    padding: 1px;
+}
+
+.timetable .class-box p, .school-timetable .class-box p {
+    margin: 0 0 -1px 0;
 }
 
 .timetable>thead>tr>th,
 .timetable>tbody>tr>th {
-    font-size: 1em;
-    font-weight: 500;
+    font-size: 7px;
+    font-weight: 700;
 }
 
 .school-timetable>thead>tr>th,
 .school-timetable>tbody>tr>th {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     background-color: #f2f2f2;
 }
@@ -3037,7 +3070,6 @@ select.form-control[multiple],
 .class-box {
     position: absolute;
     text-align: center;
-    padding: 5px;
     border-radius: 5px;
     box-sizing: border-box;
     cursor: pointer;
