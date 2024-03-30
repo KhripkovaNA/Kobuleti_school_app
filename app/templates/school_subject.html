@@ -9,7 +9,7 @@
                 <h4 class="title">Журнал. {{ subject.name }}. {{ school_classes }}</h4>
             </div>
             <div class="card-content">
-                <div class="scroll-timetable">
+                <div class="scroll-timetable" style="height:80vh;">
                     <table class="table table-hover" id="table-report" style="min-width:300px;">
                         <thead class="text-success">
                             <tr>
@@ -21,22 +21,30 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for date, topic, lesson_id in dates_topics %}
-                                <tr>
-                                    <td class="fixed-column">{{ date }}</td>
-                                    <td class="fixed-column-next">{{ topic }}</td>
-                                    {% for student in subject_records.keys() %}
-                                        <td>
-                                            {% if subject_records[student].get((date, topic, lesson_id)) %}
-                                                <p>{{ subject_records[student][(date, topic, lesson_id)].grade }}</p>
-                                                {% if subject_records[student][(date, topic, lesson_id)].comment %}
-                                                    <div class="comment" title="{{ subject_records[student][(date, topic, lesson_id)].comment }}">ком</div>
+                            {% if dates_topics %}
+                                {% for date, topic, lesson_id in dates_topics %}
+                                    <tr>
+                                        <td class="fixed-column">{{ date }}</td>
+                                        <td class="fixed-column-next">{{ topic }}</td>
+                                        {% for student in subject_records.keys() %}
+                                            <td>
+                                                {% if subject_records[student].get((date, topic, lesson_id)) %}
+                                                    <p>{{ subject_records[student][(date, topic, lesson_id)].grade }}</p>
+                                                    {% if subject_records[student][(date, topic, lesson_id)].comment %}
+                                                        <div class="comment" title="{{ subject_records[student][(date, topic, lesson_id)].comment }}">ком</div>
+                                                    {% endif %}
                                                 {% endif %}
-                                            {% endif %}
-                                        </td>
-                                    {% endfor %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="{{ subject_records.keys()|length + 2 }}" style="text-align:center;">
+                                        Уроков пока нет
+                                    </td>
                                 </tr>
-                            {% endfor %}
+                            {% endif %}
                             {% if final_grades_list %}
                                 {% for date, topic, lesson_id in final_grades_list %}
                                     <tr>
@@ -86,9 +94,11 @@
                                 <li>
                                     <a href="#" data-toggle="modal" data-target="#final-grade-modal">Итоговая оценка</a>
                                 </li>
-                                <li>
-                                    <a href="#" data-toggle="modal" data-target="#change-grade-modal">Изменить оценки</a>
-                                </li>
+                                {% if dates_topics or final_grades_list %}
+                                    <li>
+                                        <a href="#" data-toggle="modal" data-target="#change-grade-modal">Изменить оценки</a>
+                                    </li>
+                                {% endif %}
                             </ul>
                         </div>
 
@@ -199,11 +209,9 @@
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Оценка за:</label>
                                                         <div class="col-md-8">
                                                             <select name="grade_type" class="form-control select-search-add">
-                                                                <option value="1 четверть">1 четверть</option>
-                                                                <option value="2 четверть">2 четверть</option>
-                                                                <option value="3 четверть">3 четверть</option>
-                                                                <option value="4 четверть">4 четверть</option>
-                                                                <option value="год">год</option>
+                                                                {% for final_grade_type in finals %}
+                                                                    <option value="{{ final_grade_type }}">final_grade_type</option>
+                                                                {% endfor %}
                                                             </select>
                                                         </div>
                                                     </div>

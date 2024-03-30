@@ -16,6 +16,7 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
     add_new_event, get_date, user_action
 
+from sqlalchemy import distinct
 from app import app, db
 from io import BytesIO
 from openpyxl import Workbook
@@ -1511,7 +1512,7 @@ def school_lesson(lesson_str):
 
         if request.method == 'POST':
             try:
-                message = handle_school_lesson(request.form, sc_lesson)
+                message = handle_school_lesson(request.form, sc_lesson, current_user)
                 db.session.commit()
                 if message:
                     flash(message[0], message[1])
@@ -1526,7 +1527,11 @@ def school_lesson(lesson_str):
             Person.school_class_id.is_not(None),
             ~Person.id.in_([student.id for student in sc_lesson.lesson_students])
         ).order_by(Person.last_name, Person.first_name).all()
-        distinct_grade_types = db.session.query(SchoolLessonJournal.grade_type.distinct()).all()
+        distinct_grade_types = db.session.query(
+            distinct(SchoolLessonJournal.grade_type)
+        ).filter(
+            SchoolLessonJournal.final_grade.is_(False)
+        ).all()
         grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
         days_dict = {day_num: day for (day_num, day) in enumerate(DAYS_OF_WEEK)}
 
@@ -1557,14 +1562,31 @@ def school_subject(subject_classes, month_index):
     subject = Subject.query.filter_by(id=subject_id).first()
     school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).order_by(SchoolClass.school_class).all()
     school_classes_names = ', '.join([cl.school_name for cl in school_classes])
-    distinct_grade_types = db.session.query(SchoolLessonJournal.grade_type.distinct()).all()
+    distinct_grade_types = db.session.query(
+        distinct(SchoolLessonJournal.grade_type)
+    ).filter(
+        SchoolLessonJournal.final_grade.is_(False)
+    ).all()
     grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
+    finals = ["1 четверть", "2 четверть", "3 четверть", "4 четверть", "год"]
+    distinct_finals = db.session.query(
+        distinct(SchoolLessonJournal.grade_type)
+    ).filter(
+        SchoolLessonJournal.final_grade.is_(True)
+    ).all()
+    final_grade_types = [grade_type[0] for grade_type in distinct_finals
+                         if grade_type[0] and grade_type[0] not in finals]
+
+    finals += final_grade_types
 
     if request.method == 'POST':
         try:
             if 'new_grade_btn' in request.form:
-                grade_month_index = add_new_grade(request.form, sc_students, subject_id, "grade")
-
+                grade_info = add_new_grade(request.form, sc_students, subject_id, "grade")
+                grade_month_index = calc_month_index(grade_info[0])
+                description = f"Добавление оценок по предмету {subject.name} {grade_info[0]:%d.%m.%Y} " \
+                              f"({school_classes_names}, {grade_info[1]})"
+                user_action(current_user, description)
                 db.session.commit()
                 flash("Оценки выставлены", 'success')
 
@@ -1572,14 +1594,17 @@ def school_subject(subject_classes, month_index):
                                         month_index=grade_month_index))
 
             if 'new_final_grade_btn' in request.form:
-                add_new_grade(request.form, sc_students, subject_id, "final")
+                grade_info = add_new_grade(request.form, sc_students, subject_id, "final")
+                description = f"Добавление итоговых оценок по предмету {subject.name} {grade_info[0]:%d.%m.%Y} " \
+                              f"({school_classes_names}, {grade_info[1]})"
+                user_action(current_user, description)
                 db.session.commit()
                 flash("Оценки выставлены", 'success')
 
                 return redirect(url_for('school_subject', subject_classes=subject_classes,
                                         month_index=month_index))
             if 'change_grade_btn' in request.form:
-                message = change_grade(request.form, subject_id, classes_ids, month_index)
+                message = change_grade(request.form, subject, classes_ids, month_index, current_user)
                 db.session.commit()
                 flash(message[0], message[1])
 
@@ -1596,7 +1621,7 @@ def school_subject(subject_classes, month_index):
     return render_template('school_subject.html', subject_records=subject_records, dates_topics=dates_topics,
                            final_grades_list=final_grades_list, students=sc_students, subject=subject,
                            school_classes=school_classes_names, month_index=month_index, today=TODAY,
-                           subject_classes=subject_classes, grade_types=grade_types)
+                           subject_classes=subject_classes, grade_types=grade_types, finals=finals)
 
 
 @app.route('/student-record/<string:student_id>/<string:month_index>')

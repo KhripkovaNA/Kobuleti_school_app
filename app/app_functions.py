@@ -1741,7 +1741,7 @@ def show_school_lesson(lesson_str):
     return sc_lesson, sc_subject
 
 
-def handle_school_lesson(form, lesson):
+def handle_school_lesson(form, lesson, user):
     if 'del_student_btn' in form:
         del_student_id = int(form.get('del_student_btn'))
         del_student = Person.query.filter_by(id=del_student_id).first()
@@ -1749,8 +1749,9 @@ def handle_school_lesson(form, lesson):
             lesson.students_registered.remove(del_student)
         if del_student in lesson.students_attended:
             lesson.students_attended.remove(del_student)
-        if lesson.subject in del_student.subjects.all():
-            del_student.subjects.remove(lesson.subject)
+        description = f"Удаление ученика {del_student.last_name} {del_student.first_name} " \
+                      f"из списка учеников урока {lesson.subject.name} {lesson.dat:%d.%m.%Y}"
+        user_action(user, description)
         db.session.flush()
 
     if 'add_student_btn' in form:
@@ -1768,6 +1769,9 @@ def handle_school_lesson(form, lesson):
                     lesson.students_registered.append(new_student)
                 if lesson.subject not in new_student.subjects.all():
                     new_student.subjects.append(lesson.subject)
+                description = f"Добавление ученика {new_student.last_name} {new_student.first_name} " \
+                              f"в список учеников урока {lesson.subject.name} {lesson.dat:%d.%m.%Y}"
+                user_action(user, description)
                 db.session.flush()
                 return "Ученик добавлен", 'success'
 
@@ -1776,6 +1780,7 @@ def handle_school_lesson(form, lesson):
 
     if 'complete_btn' in form:
         lesson.lesson_topic = form.get('lesson_topic')
+        lesson.lesson_comment = form.get('comment')
 
         for student in lesson.lesson_students:
             if student not in lesson.students_registered:
@@ -1825,11 +1830,14 @@ def handle_school_lesson(form, lesson):
                     db.session.delete(journal_record)
             db.session.flush()
         lesson.lesson_completed = True
+        user_action(user, f"Проведение урока {lesson.subject.name} {lesson.date:%d.%m.%Y} и заполнение журнала")
 
         return 'Журнал заполнен', 'success'
 
     if 'change_btn' in form:
         lesson.lesson_completed = False
+        description = f"Отмена проведения урока {lesson.subject.name} {lesson.date:%d.%m.%Y} для внесения изменений"
+        user_action(user, description)
 
         return 'Внесение изменений', 'success'
 
@@ -2017,12 +2025,11 @@ def add_new_grade(form, students, subject_id, grade):
                 journal_record.final_grade = True
             db.session.add(journal_record)
             db.session.flush()
-    month_index = calc_month_index(grade_date)
 
-    return month_index
+    return grade_date, grade_type
 
 
-def change_grade(form, subject_id, classes_ids, month_index):
+def change_grade(form, subject, classes_ids, month_index, user):
     result_date = TODAY + relativedelta(months=month_index)
     month, year = (result_date.month, result_date.year)
     grade_date_topic = form.get('grade_date_topic')
@@ -2045,12 +2052,14 @@ def change_grade(form, subject_id, classes_ids, month_index):
         records = SchoolLessonJournal.query.filter(
             SchoolLessonJournal.date == record_date,
             SchoolLessonJournal.grade_type == topic,
-            SchoolLessonJournal.subject_id == subject_id,
+            SchoolLessonJournal.subject_id == subject.id,
             SchoolLessonJournal.school_class_id.in_(classes_ids),
             SchoolLessonJournal.lesson_id == lesson_id,
             SchoolLessonJournal.final_grade == final_grade
         ).all()
         [db.session.delete(record) for record in records]
+        description = f"Удаление оценок по предмету {subject.name} от {record_date:%d.%m.%Y} ({topic})"
+        user_action(user, description)
         db.session.flush()
         return 'Оценки удалены', 'success'
 
@@ -2067,7 +2076,7 @@ def change_grade(form, subject_id, classes_ids, month_index):
             SchoolLessonJournal.date == record_date,
             SchoolLessonJournal.student_id == student_id,
             SchoolLessonJournal.grade_type == topic,
-            SchoolLessonJournal.subject_id == subject_id,
+            SchoolLessonJournal.subject_id == subject.id,
             SchoolLessonJournal.lesson_id == lesson_id,
             SchoolLessonJournal.final_grade == final_grade
         ).first()
@@ -2080,7 +2089,7 @@ def change_grade(form, subject_id, classes_ids, month_index):
                 date=record_date,
                 student_id=student_id,
                 grade_type=topic,
-                subject_id=subject_id,
+                subject_id=subject.id,
                 lesson_id=lesson_id,
                 school_class_id=student.school_class_id,
                 final_grade=final_grade,
@@ -2089,6 +2098,10 @@ def change_grade(form, subject_id, classes_ids, month_index):
             )
             db.session.add(new_record)
             db.session.flush()
+
+        description = f"Изменение оценки ученика {student.last_name} {student.first_name} по предмету {subject.name} " \
+                      f"от {record_date:%d.%m.%Y} ({topic})"
+        user_action(user, description)
 
         return 'Изменения внесены', 'success'
 

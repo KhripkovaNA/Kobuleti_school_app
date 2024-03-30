@@ -10,7 +10,7 @@
             </div>
             <div class="card-content">
                 {% if classes %}
-                    <div class="scroll-timetable" style="height: 70vh;">
+                    <div class="scroll-timetable" style="height: 80vh;">
                         <table class="table timetable">
                             <thead class="text-success">
                                 <tr>
@@ -48,7 +48,7 @@
                                                                     {% endfor %}
                                                                     <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                                 </div>
-                                                                <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ (lesson.start_time - 60 * start_time + 540)/1.2 + 20 }}px;">
+                                                                <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ (lesson.start_time - 60 * start_time + 540)/1.2 + 20 }}px; left:10%;">
                                                                     {% if lesson.lesson_type_name=="school" %}
                                                                         <li>
                                                                             <a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">

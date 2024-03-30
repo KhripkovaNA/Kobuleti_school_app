@@ -15,15 +15,28 @@
                         <div class="form-group">
                             <div class="row">
                                 <label class="control-label col-md-2">Тема урока:</label>
-                                <div class="col-md-7">
+                                <div class="col-md-6">
                                     {% if school_lesson.lesson_completed %}
                                         <div class="form-control">{{ school_lesson.lesson_topic if school_lesson.lesson_topic }}</div>
                                     {% else %}
                                         <input type="text" name="lesson_topic" class="form-control" value="{{ school_lesson.lesson_topic }}">
                                     {% endif %}
                                 </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-xs" id="add-lesson-comment-btn" data-background-color="main" style="margin:5px;">Комментарий</button>
+                                </div>
                             </div>
-                            <div class="scroll-timetable" style="height: 50vh;">
+                            <div class="row" id="comment-field-row" style="display: none;">
+                                <label class="control-label col-md-2">Комментарий к уроку:</label>
+                                <div class="col-md-7">
+                                    {% if school_lesson.lesson_completed %}
+                                        <textarea class="form-control" rows="3" cols="8" disabled>{{ school_lesson.lesson_comment }}</textarea>
+                                    {% else %}
+                                        <textarea name="comment" class="form-control" rows="3" cols="8">{{ school_lesson.lesson_comment }}</textarea>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="scroll-timetable" style="height: 62vh;">
                                 <table class="table table-hover">
                                     <thead class="text-success">
                                         <th>Ученик</th>

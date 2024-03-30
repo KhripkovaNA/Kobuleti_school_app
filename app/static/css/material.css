@@ -35,7 +35,9 @@ h5,
 }
 
 .card h4.title, .card h5.title {
-    margin-top: 5px;
+    margin-top: 0;
+    font-size: 16px;
+    font-weight: 500;
 }
 
 .card .login-form h5, .card .section h5 {
@@ -375,7 +377,7 @@ h2.title {
 }
 
 .main-panel>.content {
-    margin-top: 50px;
+    margin-top: 30px;
     padding: 15px 15px;
     min-height: calc(100% - 123px);
 }
@@ -2414,7 +2416,8 @@ label {
 }
 
 input[type=checkbox][disabled],
-input[type=radio][disabled] {
+input[type=radio][disabled],
+textarea[disabled].form-control {
     cursor: default;
 }
 
@@ -2864,7 +2867,7 @@ select.form-control[multiple],
 
 .scroll-table-body {
     position: relative;
-    height: 300px;
+    height: 68vh;
     overflow: hidden;
 }
 
@@ -2874,12 +2877,8 @@ select.form-control[multiple],
 }
 
 .school-timetable {
-    min-width: 900px;
-    width: 100%;
-}
-
-.scroll-table table, .scroll-timetable table {
-    table-layout: fixed;
+    min-width: 850px;
+    width: 96%;
 }
 
 .table>thead>tr>th {
@@ -3045,7 +3044,7 @@ select.form-control[multiple],
 
 .school-timetable>thead>tr>th,
 .school-timetable>tbody>tr>th {
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 500;
     background-color: #f2f2f2;
 }
@@ -4247,7 +4246,7 @@ fieldset[disabled] .navbar .btn-link:focus {
 .navbar-absolute {
     position: absolute;
     width: 100%;
-    padding-top: 10px;
+    padding-top: 0;
     z-index: 1029;
 }
 
@@ -4458,7 +4457,7 @@ footer .btn {
 
 .card .title {
     margin-top: 0;
-    margin-bottom: 5px;
+    margin-bottom: 0;
 }
 
 .card .card-image {
@@ -4492,7 +4491,7 @@ footer .btn {
 }
 
 .card .card-content {
-    padding: 10px 20px;
+    padding: 5px 20px;
 }
 
 .card .card-content .category {
@@ -4503,7 +4502,7 @@ footer .btn {
     box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.42), 0 4px 25px 0px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.2);
     margin: -20px 15px 0;
     border-radius: 3px;
-    padding: 5px 15px;
+    padding: 2px 15px;
     background-color: #999999;
 }
 

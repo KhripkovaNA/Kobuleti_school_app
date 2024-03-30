@@ -8,19 +8,19 @@
             <div class="card-header" data-background-color="main">
                 <h4 class="title">Школьное расписание</h4>
             </div>
-            <div class="card-content">
+            <div class="card-content" style="padding: 10px 20px;">
                 <div class="row" style="margin-left:30px;">
                     {% for day in days[:5] %}
                         <button type="button"
                                 class="btn btn-sm {{ 'btn-success' if loop.index==week_day else '' }}"
-                                style="width:130px; padding: 5px 5px;">
+                                style="width:130px; padding: 5px 5px; margin-top: 1px;">
                             <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school_timetable', week=week, day=loop.index) }}">
                                 {{ day }}, {{ dates[loop.index0] }}
                             </a>
                         </button>
                     {% endfor %}
                     <div class="dropdown" style="display:inline;">
-                        <button class="btn btn-sm dropdown-toggle {{ 'btn-success' if week_day in [6, 7] else '' }}" data-toggle="dropdown" style="width:130px; padding: 5px 5px;">
+                        <button class="btn btn-sm dropdown-toggle {{ 'btn-success' if week_day in [6, 7] else '' }}" data-toggle="dropdown" style="width:130px; padding: 5px 5px; margin-top: 1px;">
                             Выходные
                         </button>
                         <ul class="dropdown-menu">
@@ -38,11 +38,11 @@
                     </div>
                 </div>
                 {% if classes %}
-                    <div class="scroll-timetable" style="height: 60vh;">
+                    <div class="scroll-timetable" style="height: 72vh;">
                         <table class="table school-timetable">
                             <thead class="text-success">
                                 <tr>
-                                    <th width="10%">Время</th>
+                                    <th width="8%">Время</th>
                                     {% for school_class in school_classes %}
                                         {% if classes.get(school_class.school_name) %}
                                             <th>{{ school_class.school_name }}</th>
@@ -66,9 +66,10 @@
                                                             <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                             <input type="hidden" value="{{ lesson.split }}">
                                                         </div>
-                                                        <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ (lesson.start_time - 60 * start_time + 540)/0.75 + 50 }}px;">
+                                                        <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ lesson.start_time - 60 * start_time + 560 }}px; left:10%;">
+                                                            <p style="text-align:center; font-weight:500; background-color">{{ lesson.subject }}</p>
                                                             <li><a href="{{ url_for('school_lesson', lesson_str='0-'+lesson.id|string) }}">Урок</a></li>
-                                                            {% if not lesson.completed and lesson.month_index >= -1  %}
+                                                            {% if not lesson.completed and lesson.month_index >= -1 and current_user.rights in ["admin", "user"]  %}
                                                                 <li><a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">Изменить</a></li>
                                                                 <li class="divider"></li>
                                                                 <li>

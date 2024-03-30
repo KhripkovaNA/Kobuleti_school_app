@@ -70,7 +70,7 @@
                                         <th>Действия</th>
                                     </thead>
                                 </table>
-                                <div class="scroll-table-body" style="height:48vh;">
+                                <div class="scroll-table-body" style="height:60vh;">
                                     <table class="table table-hover">
                                         <tbody>
                                             {% for student in school_class.class_students %}
@@ -202,7 +202,7 @@
                                         <th>Действие</th>
                                     </thead>
                                 </table>
-                                <div class="scroll-table-body" style="height:48vh;">
+                                <div class="scroll-table-body" style="height:60vh;">
                                     <table class="table table-hover">
                                         <tbody>
                                             {% for subject in school_class.school_class_subjects %}
@@ -226,7 +226,12 @@
                                                             <ul class="dropdown-menu">
                                                                 <li>
                                                                     <a href="{{ url_for('school_lesson', lesson_str=school_class.id|string+'-'+subject.id|string) }}">
-                                                                        <i class="material-icons" style="color: purple;">info</i>Журнал занятия
+                                                                        <i class="material-icons" style="color: purple;">info</i>Урок
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a href="{{ url_for('school_subject', subject_classes=subject.id|string+'-'+school_class.id|string, month_index=0) }}">
+                                                                        <i class="material-icons" style="color: purple;">article</i>Журнал
                                                                     </a>
                                                                 </li>
                                                                 {% if current_user.rights in ["admin", "user"] %}

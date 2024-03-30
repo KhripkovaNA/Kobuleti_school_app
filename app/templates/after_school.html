@@ -6,12 +6,11 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">{{ after_school_subject.name }}</h4>
+                <h4 class="title">{{ after_school_subject.name }}. {{ months[period[0] - 1].capitalize() }} {{ period[1] }}</h4>
             </div>
             <div class="card-content">
-                <h4 class="title" style="margin-left: 27px;">{{ months[period[0] - 1].capitalize() }} {{ period[1] }}</h4>
                 {% if after_school_subject.month_students %}
-                    <div class="scroll-timetable" style="height:55vh;">
+                    <div class="scroll-timetable" style="height:73vh;">
                         <table class="table table-hover">
                             <thead class="text-success">
                                 <th width="6%">Смена</th>

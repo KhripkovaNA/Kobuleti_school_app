@@ -2,16 +2,45 @@ $(document).ready(function(){
 
     // Adjust the width of class boxes based on the width of table cells
     function adjustClassBoxWidth() {
+        $('.card-content').find('.table tbody tr').each(function() {
+            var rowCells = $(this).find('td');
+            var headerCells = $('.card-content').find('.table thead tr').eq(1).find('th');
+            var totalWidth = 0;
+            var nonEmptyCount = 0;
+
+            rowCells.each(function(index) {
+                var colWidth = $(this).width();
+                var classBoxes = $(this).find('.class-box');
+
+                if (classBoxes.length > 0) {
+                    totalWidth += colWidth;
+                    nonEmptyCount++;
+                }
+            });
+
+            var averageWidth = Math.min(totalWidth / nonEmptyCount, 80);
+
+            rowCells.each(function(index) {
+                var classBoxes = $(this).find('.class-box');
+                if (classBoxes.length === 0) {
+                    $(this).width(35);
+                    headerCells.eq(index).width(35);
+                } else {
+                    $(this).width(averageWidth);
+                    headerCells.eq(index).width(averageWidth);
+                }
+            });
+        });
+        // Adjust class-box width and font size
         $('.card-content').find('.table tbody tr td').each(function() {
-            console.log("func work")
-            var colWidth = $(this).width();
             var classBoxes = $(this).find('.class-box');
             var floatIndex = false;
-            var halfColWidth = (colWidth / 2);
+            var colWidth = $(this).width();
+            var halfColWidth = colWidth / 2;
 
             classBoxes.each(function() {
                 var currentBox = $(this);
-                var splitClasses = currentBox.find("input[type='hidden']").val()
+                var splitClasses = currentBox.find("input[type='hidden']").val();
                 if (splitClasses === "True") {
                     currentBox.width(halfColWidth);
                     if (floatIndex) {
@@ -27,6 +56,7 @@ $(document).ready(function(){
                         currentBox.width(colWidth - 6);
                     }
                 }
+                // Adjust font size for class-box content
                 var paragraphs = currentBox.find('p');
                 var longestTextLength = 0;
                 var longestText = null;
@@ -38,10 +68,11 @@ $(document).ready(function(){
                         longestText = $(this);
                     }
                 });
+
                 if (longestText) {
                     var containerWidth = currentBox.width();
-                    var fontSize = Math.max(5, Math.min(containerWidth * 1.5 / longestTextLength, 12));
-                    var margin = - 0.57 * fontSize + 2.35
+                    var fontSize = Math.max(6, Math.min(containerWidth * 1.5 / longestTextLength, 12));
+                    var margin = -0.5 * fontSize + 1;
                     paragraphs.css({
                         'font-size': fontSize + 'px',
                         'margin': '0 0 ' + margin + 'px 0'
@@ -465,6 +496,19 @@ $(document).ready(function(){
     // Toggle new contact form when editing a client
     $('#show-new-contact-btn, #hide-new-contact-btn').click(function () {
         $('#show-new-contact, #new-contact-form').toggle();
+    });
+
+    // Toggle lesson comment field based on button clicks
+    $("#add-lesson-comment-btn").click(function() {
+        $("#comment-field-row").show();
+    });
+
+    // Close comment field when clicking anywhere outside of it
+    $(document).mouseup(function(e) {
+        var container = $("#comment-field-row");
+        if (!container.is(e.target) && container.has(e.target).length === 0) {
+            container.hide();
+        }
     });
 
     // Toggle client selector based on button clicks
