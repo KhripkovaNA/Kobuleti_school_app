@@ -1543,7 +1543,7 @@ def school_lesson(lesson_str):
         if sc_subject:
             return render_template('school_lesson.html', school_lesson=sc_lesson, school_subject=sc_subject)
         else:
-            flash("Такого занятия нет", 'error')
+            flash("Такого урока нет", 'error')
             return redirect(url_for('school_subjects', school_class=0))
 
 
@@ -1673,28 +1673,36 @@ def after_school(month_index):
 @login_required
 def after_school_purchase():
     try:
-        attendee_id = int(request.form.get("selected_client")) if request.form.get("selected_client") else None
-        if not attendee_id:
-            flash('Клиент не выбран', 'error')
-            return redirect(request.referrer)
+        if current_user.rights in ["admin", "user"]:
+            attendee_id = int(request.form.get("selected_client")) if request.form.get("selected_client") else None
+            if not attendee_id:
+                flash('Клиент не выбран', 'error')
+                return redirect(request.referrer)
 
-        period = request.form.get("period")
-        new_after_school = handle_after_school_adding(attendee_id, request.form, period)
+            period = request.form.get("period")
+            new_after_school, period_text = handle_after_school_adding(attendee_id, request.form, period)
 
-        if not new_after_school:
-            flash('Клиент уже записан на продленку', 'error')
+            if not new_after_school:
+                flash('Клиент уже записан на продленку', 'error')
+
+            else:
+                db.session.add(new_after_school)
+                db.session.flush()
+                price = new_after_school.subscription_type.price
+                if new_after_school.period not in ["month", "day"]:
+                    hours = int(new_after_school.period.split()[0])
+                    price *= hours
+                description = "Оплата продленки"
+                finance_operation(attendee_id, -price, description)
+                attendee = Person.query.filter_by(id=attendee_id).first()
+                user_description = f"Проведение оплаты клиента {attendee.last_name} {attendee.first_name} " \
+                                   f"за Продленку ({period_text})"
+                user_action(current_user, user_description)
+                db.session.commit()
+                flash('Клиент записан на продленку', 'success')
 
         else:
-            db.session.add(new_after_school)
-            db.session.flush()
-            price = new_after_school.subscription_type.price
-            if new_after_school.period not in ["month", "day"]:
-                hours = int(new_after_school.period.split()[0])
-                price *= hours
-            description = "Оплата продленки"
-            finance_operation(attendee_id, -price, description)
-            db.session.commit()
-            flash('Клиент записан на продленку', 'success')
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -1760,18 +1768,26 @@ def generate_timetable(week):
 @login_required
 def add_finance_operation():
     try:
-        person_id = request.form.get('person_id')
-        if not person_id:
-            flash('Клиент не выбран', 'error')
-            return redirect(request.referrer)
+        if current_user.rights in ["admin", "user"]:
+            person_id = request.form.get('person_id')
+            if not person_id:
+                flash('Клиент не выбран', 'error')
+                return redirect(request.referrer)
 
-        description = request.form.get('description')
-        amount = float(request.form.get('amount'))
-        if request.form.get('operation_type') == 'minus':
-            amount = -amount
-        finance_operation(person_id, amount, description, date=TODAY)
-        db.session.commit()
-        flash('Финансовая операция проведена', 'success')
+            description = request.form.get('description')
+            amount = float(request.form.get('amount'))
+            if request.form.get('operation_type') == 'minus':
+                amount = -amount
+            finance_operation(person_id, amount, description, date=TODAY)
+            person = Person.query.filter_by(id=person_id).first()
+            user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name} " \
+                               f"({description})"
+            user_action(current_user, user_description)
+            db.session.commit()
+            flash('Финансовая операция проведена', 'success')
+
+        else:
+            flash('Нет прав администратора', 'error')
 
     except Exception as e:
         db.session.rollback()
@@ -1788,13 +1804,21 @@ def finances():
 
     if request.method == 'POST':
         try:
-            operation_id = request.form.get('operation_id')
-            fin_operation = Finance.query.filter_by(id=operation_id).first()
-            description = request.form.get('description')
-            fin_operation.description = description
-            db.session.commit()
+            if current_user.rights in ["admin", "user"]:
+                operation_id = request.form.get('operation_id')
+                fin_operation = Finance.query.filter_by(id=operation_id).first()
+                new_description = request.form.get('description')
+                old_description = fin_operation.description
+                fin_operation.description = new_description
+                user_description = f"Изменение описания финансовой операции от {fin_operation.date:%d.%m.%Y} с " \
+                                   f"'{old_description}' на '{new_description}'"
+                user_action(current_user, user_description)
+                db.session.commit()
 
-            flash('Финансовая операция изменена', 'success')
+                flash('Финансовая операция изменена', 'success')
+
+            else:
+                flash('Нет прав администратора', 'error')
 
         except Exception as e:
             db.session.rollback()
@@ -1818,16 +1842,20 @@ def delete_record():
                 flash(message[0], message[1])
 
             else:
-                flash('Необходимо обладать правами администратора', 'error')
+                flash('Необходимо обладать правами руководителя', 'error')
 
         else:
-            message = del_record(request.form, record_type)
-            db.session.commit()
-            if type(message) == list:
-                for mes in message:
-                    flash(mes[0], mes[1])
+            if current_user.rights in ["admin", "user"]:
+                message = del_record(request.form, record_type)
+                db.session.commit()
+                if type(message) == list:
+                    for mes in message:
+                        flash(mes[0], mes[1])
+                else:
+                    flash(message[0], message[1])
+
             else:
-                flash(message[0], message[1])
+                flash('Необходимо обладать правами администратора', 'error')
 
     except Exception as e:
         db.session.rollback()

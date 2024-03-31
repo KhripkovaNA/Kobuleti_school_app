@@ -39,9 +39,11 @@
                                             </td>
                                             <td width="35%">{{ operation.description }}</td>
                                             <td width="5%">
-                                                <a href="#" data-toggle="modal" data-target="#change-{{ operation.id }}-modal">
-                                                    <i class="material-icons">edit</i>
-                                                </a>
+                                                {% if current_user.rights in ["admin", "user"] %}
+                                                    <a href="#" data-toggle="modal" data-target="#change-{{ operation.id }}-modal">
+                                                        <i class="material-icons">edit</i>
+                                                    </a>
+                                                {% endif %}
 
                                             <!-- *-*-*-*-*-*-*-*-*-* Operation change modal *-*-*-*-*-*-*-*-*-* -->
 
@@ -103,11 +105,19 @@
                 {% else %}
                     <p>Финансовых операций пока нет</p>
                 {% endif %}
-                <button class="btn btn-sm" data-background-color="purple">
-                    <a href="#" data-toggle="modal" data-target="#finance-modal">
-                        <i class="material-icons">attach_money</i> Финансовая операция
-                    </a>
-                </button>
+                {% if current_user.rights in ["admin", "user"] %}
+                    <button class="btn btn-sm" data-background-color="purple">
+                        <a href="#" data-toggle="modal" data-target="#finance-modal">
+                            <i class="material-icons">attach_money</i> Финансовая операция
+                        </a>
+                    </button>
+                {% else  %}
+                    <button class="btn btn-sm" data-background-color="purple" title="Нет прав администратора" disabled>
+                        <a href="#" data-toggle="modal" data-target="#finance-modal">
+                            <i class="material-icons">attach_money</i> Финансовая операция
+                        </a>
+                    </button>
+                {% endif %}
 
             <!-- *-*-*-*-*-*-*-*-*-* Finance operation modal *-*-*-*-*-*-*-*-*-* -->
 

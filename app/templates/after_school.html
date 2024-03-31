@@ -64,9 +64,15 @@
                 {% endif %}
                 {% if month_index >= 0 %}
                     <div class="row" style="margin-left:45px;">
-                        <button class="btn btn-xs" data-background-color="orange" data-toggle="modal" data-target="#after-school-modal">
-                            <i class="material-icons">add_box</i> Добавить клиента
-                        </button>
+                        {% if current_user.rights in ["admin", "user"] %}
+                            <button class="btn btn-xs" data-background-color="orange" data-toggle="modal" data-target="#after-school-modal">
+                                <i class="material-icons">add_box</i> Добавить клиента
+                            </button>
+                        {% else %}
+                            <button class="btn btn-xs" data-background-color="orange" title="Нет прав администратора" disabled>
+                                <i class="material-icons">add_box</i> Добавить клиента
+                            </button>
+                        {% endif %}
                         <div class="modal fade" id="after-school-modal" role="dialog">
                             <div class="modal-dialog">
                                 <div class="modal-content">

@@ -2235,12 +2235,16 @@ def handle_after_school_adding(student_id, form, period):
         shift = int(form.get("shift"))
         purchase_month, purchase_year = period.split("-")
         purchase_date = datetime(int(purchase_year), int(purchase_month), 1).date()
+        period_text = f"{MONTHS[int(purchase_month) - 1]}"
     else:
         shift = None
         purchase_date = datetime.strptime(form.get("attendance_date"), '%d.%m.%Y').date()
+        period_text = f"{purchase_date:%d.%m.%Y}"
     if term == "hour":
         hours = int(form.get("hours"))
         term = conjugate_hours(hours)
+        period_text = f"{term} {period_text}"
+
     subscription_type_id = int(form.get("subscription_type"))
 
     check_after_school = Subscription.query.filter_by(
@@ -2263,7 +2267,7 @@ def handle_after_school_adding(student_id, form, period):
             period=term
         )
 
-        return new_after_school_subscription
+        return new_after_school_subscription, period_text
 
 
 def finance_operation(person_id, amount, description, date=TODAY):
