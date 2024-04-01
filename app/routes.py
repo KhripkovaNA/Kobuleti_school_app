@@ -15,7 +15,7 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
     add_new_event, get_date, user_action
-
+from decimal import Decimal
 from sqlalchemy import distinct
 from app import app, db
 from io import BytesIO
@@ -498,7 +498,7 @@ def deposit(student_id):
         if current_user.rights in ["admin", "user"]:
             amount = request.form.get('deposit')
             if amount:
-                deposit = int(amount)
+                deposit = Decimal(amount)
                 student = Person.query.filter_by(id=student_id).first()
                 student.balance += deposit
                 description = f"Пополнение баланса клиента {student.last_name} {student.first_name}"
@@ -928,9 +928,10 @@ def add_subject():
                     new_subject = add_new_subject(form, "extra_school")
                     if new_subject:
                         db.session.add(new_subject)
-                        description = f"Добавление нового предмета {new_subject.name} " \
-                                      f"({new_subject.subject_type.description})"
-                        user_action(current_user, description)
+                        db.session.flush()
+                        user_description = f"Добавление нового предмета {new_subject.name} " \
+                                           f"({new_subject.subject_type.description})"
+                        user_action(current_user, user_description)
                         db.session.commit()
                         flash('Новый предмет добавлен в систему', 'success')
                         return redirect(url_for('subjects'))

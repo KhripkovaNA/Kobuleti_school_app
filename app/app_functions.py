@@ -1085,7 +1085,7 @@ def handle_lesson(form, subject, lesson, user):
     if 'change_btn' in form and user.rights in ["admin", "user"]:
         undo_lesson(form, subject, lesson)
         user_action(user, f"Отмена проведения занятия {subject.name} {lesson.date:%d.%m.%Y}")
-        return 'Проведение занятия отменено', 'error'
+        return 'Проведение занятия отменено', 'success'
 
 
 def get_lesson_students(lesson):

@@ -926,4 +926,5 @@ lesson_dict = {
 
 # for i in range(21, 36):
 #     delete_record(UserAction, i)
+print_table()
 
