@@ -71,7 +71,7 @@ $(document).ready(function(){
 
                 if (longestText) {
                     var containerWidth = currentBox.width();
-                    var fontSize = Math.max(6, Math.min(containerWidth * 1.2 / longestTextLength, 12));
+                    var fontSize = Math.max(6, Math.min(containerWidth * 1.3 / longestTextLength, 12));
                     var margin = -0.5 * fontSize + 1;
                     paragraphs.css({
                         'font-size': fontSize + 'px',

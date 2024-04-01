@@ -44,6 +44,11 @@
                                                         <i class="material-icons">edit</i>
                                                     </a>
                                                 {% endif %}
+                                                {% if current_user.rights == "admin" %}
+                                                    <a href="#" data-toggle="modal" data-target="#delete-{{ operation.id }}-modal">
+                                                        <i class="material-icons" style="color:red;">delete_forever</i>
+                                                    </a>
+                                                {% endif %}
 
                                             <!-- *-*-*-*-*-*-*-*-*-* Operation change modal *-*-*-*-*-*-*-*-*-* -->
 
@@ -86,6 +91,38 @@
                                                                             </button>
                                                                             <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                                 Отмена
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            <!-- *-*-*-*-*-*-*-*-*-* Operation delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                                                <div class="modal fade" id="delete-{{ operation.id }}-modal" role="dialog">
+                                                    <div class="modal-dialog modal-sm">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление клиента</h4>
+                                                            </div>
+                                                            <div class="modal-body" style="padding-top:10px;">
+                                                                <p class="control-label">
+                                                                    Вы уверены, что хотите удалить операцию клиента {{ operation.person.last_name }} {{ operation.person.first_name }} от {{ operation.date.strftime('%d.%m.%Y') }} ({{ operation.description }})?
+                                                                </p>
+                                                                <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                    <input type="hidden" name="record_type" value="fin_operation">
+                                                                    <input type="hidden" name="operation_id" value="{{ operation.id }}">
+                                                                    <div class="row">
+                                                                        <div class="col-md-10 col-md-offset-1">
+                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                                Да
+                                                                            </button>
+                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                Нет
                                                                             </button>
                                                                         </div>
                                                                     </div>

@@ -1835,9 +1835,9 @@ def delete_record():
     record_type = request.form.get('record_type')
 
     try:
-        if record_type in ['student', 'employee', 'school_student']:
+        if record_type in ['student', 'employee', 'school_student', 'fin_operation']:
             if current_user.rights == 'admin':
-                message = del_record(request.form, record_type)
+                message = del_record(request.form, record_type, current_user)
                 db.session.commit()
                 flash(message[0], message[1])
 
@@ -1846,7 +1846,7 @@ def delete_record():
 
         else:
             if current_user.rights in ["admin", "user"]:
-                message = del_record(request.form, record_type)
+                message = del_record(request.form, record_type, current_user)
                 db.session.commit()
                 if type(message) == list:
                     for mes in message:

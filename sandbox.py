@@ -5,7 +5,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
     teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
     SchoolLessonJournal, Report, Finance, UserAction
 from sqlalchemy.orm import class_mapper
-from sqlalchemy import and_, or_, distinct
+from sqlalchemy import and_, or_, distinct, text
 from datetime import datetime, timedelta
 import pytz
 from dateutil.relativedelta import relativedelta
@@ -911,7 +911,6 @@ lesson_dict = {
 # teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
 # print(teachers)
 
-
 # actions = []
 # for user_action in UserAction.query.all():
 #     action_dict = {
@@ -927,9 +926,4 @@ lesson_dict = {
 
 # for i in range(21, 36):
 #     delete_record(UserAction, i)
-distinct_grade_types = db.session.query(
-    distinct(SchoolLessonJournal.grade_type)
-).filter(
-    SchoolLessonJournal.final_grade.is_(False)
-).all()
-print(distinct_grade_types)
+

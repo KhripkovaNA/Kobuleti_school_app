@@ -2391,7 +2391,7 @@ def filter_day_lessons(form):
     return lessons, date
 
 
-def del_record(form, record_type):
+def del_record(form, record_type, user):
     if record_type == 'student':
         student_id = int(form.get('student_id'))
         student = Person.query.filter_by(id=student_id).first()
@@ -2411,6 +2411,7 @@ def del_record(form, record_type):
                     db.session.delete(student.contacts[0])
                 db.session.delete(student)
             db.session.flush()
+            user_action(user, f"Удаление клиента {student_name}")
             message = (f"Клиент {student_name} удален", "success")
         else:
             message = ("Такого клиента нет", 'error')
@@ -2442,6 +2443,7 @@ def del_record(form, record_type):
                     db.session.delete(employee.contacts[0])
                     db.session.delete(employee)
                 db.session.flush()
+                user_action(user, f"Удаление сотрудника {employee_name}")
                 message = (f"Сотрудник {employee_name} удален", "success")
         else:
             message = ("Такого сотрудника нет", 'error')
@@ -2451,6 +2453,7 @@ def del_record(form, record_type):
     if record_type == 'contact':
         contact_person_id = int(form.get('contact_id'))
         student_id = int(form.get('student_id'))
+        student = Person.query.filter_by(id=student_id).first()
         contact_person = Person.query.filter_by(id=contact_person_id).first()
         if contact_person:
             if contact_person_id == student_id:
@@ -2464,10 +2467,11 @@ def del_record(form, record_type):
                     db.session.delete(contact_person)
                     db.session.flush()
                 else:
-                    student = Person.query.filter_by(id=student_id).first()
                     student.parents.remove(contact_person)
                     db.session.flush()
 
+            student_name = f"{student.last_name} {student.first_name}"
+            user_action(user, f"Удаление контактной информации клиента {student_name}")
             message = ("Контактная информация удалена", "success")
         else:
             message = ("Такого контакта нет", 'error')
@@ -2488,6 +2492,7 @@ def del_record(form, record_type):
             else:
                 db.session.delete(subject)
                 db.session.flush()
+                user_action(user, f"Удаление предмета {subject_name}")
                 message = (f"Предмет {subject_name} удален", 'success')
 
         else:
@@ -2509,11 +2514,12 @@ def del_record(form, record_type):
             subject_lessons = Lesson.query.filter_by(subject_id=subject.id).all()
             if not subject_lessons and not subject.school_classes:
                 db.session.delete(subject)
+                user_action(user, f"Удаление школьного предмета {subject_name}")
                 message = (f"Школьный предмет {subject_name} полностью удален", 'success')
             else:
+                user_action(user, f"Удаление школьного предмета {subject_name} из класса '{school_class.school_name}'")
                 message = (f"Школьный предмет {subject_name} удален из класса", 'success')
             db.session.flush()
-
 
         else:
             message = ("Такого предмета нет", 'error')
@@ -2527,6 +2533,7 @@ def del_record(form, record_type):
             if not lesson.lesson_completed:
                 db.session.delete(lesson)
                 db.session.flush()
+                user_action(user, f"Отмена занятия {lesson.subject.name} {lesson.date:%d.%m.%Y}")
                 return "Занятие отменено", 'success'
 
             else:
@@ -2547,11 +2554,13 @@ def del_record(form, record_type):
                     db.session.flush()
 
             if del_les == les:
+                user_action(user, f"Отмена занятий {date:%d.%m.%Y} ({conjugate_lessons(del_les)})")
                 return "Все занятия отменены", 'success'
 
             elif del_les != 0:
                 message1 = (f"{conjugate_lessons(del_les)} отменено", 'success')
                 message2 = (f"{conjugate_lessons(del_les)} невозможно отменить", 'error')
+                user_action(user, f"Отмена занятий {date:%d.%m.%Y} ({conjugate_lessons(del_les)})")
                 return [message1, message2]
 
             else:
@@ -2565,14 +2574,32 @@ def del_record(form, record_type):
         student = Person.query.filter(Person.id == student_id, Person.school_class_id).first()
         if student:
             student_name = f"{student.last_name} {student.first_name}"
+            school_class = student.school_class.school_name
             student.school_class_id = None
             for subject in student.subjects.all():
                 if subject.subject_type.name == "school":
                     student.subjects.remove(subject)
             db.session.flush()
+            user_action(user, f"Удаление ученика {student_name} из класса '{school_class}'")
             message = (f"Ученик {student_name} удален из класса", "success")
         else:
             message = ("Такого ученика нет", 'error')
+
+        return message
+
+    if record_type == 'fin_operation':
+        operation_id = int(form.get('operation_id'))
+        operation = Finance.query.filter_by(id=operation_id).first()
+        if operation:
+            descripthon = f"Удаление финансовой операции клиента " \
+                          f"{operation.person.last_name} {operation.person.first_name} от " \
+                          f"{operation.date:%d.%m.%Y} ({operation.description})"
+            db.session.delete(operation)
+            db.session.flush()
+            user_action(user, descripthon)
+            message = (f"Финансовая операция удалена", "success")
+        else:
+            message = ("Такой операции нет", 'error')
 
         return message
 

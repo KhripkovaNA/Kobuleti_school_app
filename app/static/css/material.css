@@ -2865,6 +2865,10 @@ select.form-control[multiple],
     overflow-x: hidden;
 }
 
+.scroll-table table {
+    table-layout: fixed;
+}
+
 .scroll-table-body {
     position: relative;
     height: 68vh;

@@ -67,7 +67,6 @@
                                                             <input type="hidden" value="{{ lesson.split }}">
                                                         </div>
                                                         <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ lesson.start_time - 60 * start_time + 560 }}px; left:10%;">
-                                                            <p style="text-align:center; font-weight:500; background-color">{{ lesson.subject }}</p>
                                                             <li><a href="{{ url_for('school_lesson', lesson_str='0-'+lesson.id|string) }}">Урок</a></li>
                                                             {% if not lesson.completed and lesson.month_index >= -1 and current_user.rights in ["admin", "user"]  %}
                                                                 <li><a href="{{ url_for('edit_lesson', lesson_id=lesson.id) }}">Изменить</a></li>

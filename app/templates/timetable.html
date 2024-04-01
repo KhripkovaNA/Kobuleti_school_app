@@ -56,7 +56,7 @@
                                                                             </a>
                                                                         </li>
                                                                     {% else %}
-                                                                        <p style="text-align:center; font-weight:500;">{{ lesson.subject[0] }}</p>
+                                                                        <p style="text-align:center; font-weight:500; background-color:{{ lesson.color }}; border-radius:3px; margin: 0 5px 0 5px;">{{ lesson.subject[0] }}</p>
                                                                         {% if lesson.lesson_type_name not in ["school", "after_school", "event"] %}
                                                                             <li>
                                                                                 <a href="{{ url_for('lesson', lesson_str='1-'+lesson.id|string) }}">
