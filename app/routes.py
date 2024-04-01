@@ -1145,6 +1145,11 @@ def add_lessons():
                             flash(message[0], message[1])
 
                             return redirect(url_for('timetable', week=week))
+
+                    else:
+                        for message in messages:
+                            flash(message[0], message[1])
+
                 else:
                     flash(f'Ошибка в форме добавления занятий', 'error')
 
