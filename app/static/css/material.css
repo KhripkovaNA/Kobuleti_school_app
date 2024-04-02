@@ -3033,7 +3033,7 @@ select.form-control[multiple],
 
 .timetable .class-box {
     font-size: 5px;
-    padding: 1px;
+    padding: 1px 0;
 }
 
 .timetable .class-box p, .school-timetable .class-box p {
@@ -3079,7 +3079,7 @@ select.form-control[multiple],
 }
 
 .class-box:hover {
-    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2) !important;
 }
 
 .class-box p {

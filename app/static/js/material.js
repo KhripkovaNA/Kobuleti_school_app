@@ -543,32 +543,43 @@ $(document).ready(function(){
 
     });
 
-    // Handle the change event for subscription subject selector
-    $('.subscription-select').change(function () {
-        var subjectId = Number($(this).val());
-        var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
-            return subject.id === subjectId;
+    // Define a function to handle subscription subject selection
+    function handleSubscriptionSubjectSelection() {
+        $('.subscription-select').change(function () {
+            var subjectId = Number($(this).val());
+            var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
+                return subject.id === subjectId;
+            });
+
+            const subscriptionTypeSelector = $('.subscription-type-select');
+            subscriptionTypeSelector.empty();
+
+            $.each(selectedSubject[0].subscription_types_info, function (index, subscriptionType) {
+                subscriptionTypeSelector.append(`<option value="${index}">${subscriptionType}</option>`);
+            });
+
+            subscriptionTypeSelector.trigger("change");
         });
+    }
 
-        const subscriptionTypeSelector = $('.subscription-type-select');
-        subscriptionTypeSelector.empty();
-
-        $.each(selectedSubject[0].subscription_types_info, function (index, subscriptionType) {
-            subscriptionTypeSelector.append(`<option value="${index}">${subscriptionType}</option>`);
+    // Define a function to handle subscription type selection
+    function handleSubscriptionTypeSelection() {
+        $('.subscription-type-select').change(function () {
+            var subscriptionType = $(this).val();
+            var subjectId = Number($('.subscription-select').val());
+            var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
+                return subject.id === subjectId;
+            });
+            const priceDisplay = $('.price-display');
+            priceDisplay.html(`<b>${selectedSubject[0].price_info[subscriptionType]}</b>`);
         });
+    }
 
-        subscriptionTypeSelector.trigger("change");
-    });
+    // Handle subscription subject selection
+    handleSubscriptionSubjectSelection();
 
-    $('.subscription-type-select').change(function () {
-        var subscriptionType = $(this).val();
-        var subjectId = Number($('.subscription-select').val());
-        var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
-            return subject.id === subjectId;
-        });
-        const priceDisplay = $('.price-display');
-        priceDisplay.html(`<b>${selectedSubject[0].price_info[subscriptionType]}</b>`);
-    });
+    // Handle subscription type selection
+    handleSubscriptionTypeSelection();
 
     // Trigger selectors change when subscription modal is shown
     $('.subscription-modal-trigger').on('click', function () {

@@ -64,6 +64,20 @@ def conjugate_hours(number):
         return f"{number} часов"
 
 
+def conjugate_days(number):
+    last_digit = number % 10
+    last_two_digits = number % 100
+
+    if 10 <= last_two_digits <= 20:
+        return f"{number} дней"
+    elif last_digit == 1:
+        return f"{number} день"
+    elif 2 <= last_digit <= 4:
+        return f"{number} дня"
+    else:
+        return f"{number} дней"
+
+
 def person_age(dob):
     age = TODAY.year - dob.year - ((TODAY.month, TODAY.day) < (dob.month, dob.day))
     return conjugate_years(age)
@@ -448,9 +462,11 @@ def extensive_student_info(student):
 
 
 def subscription_subjects_data():
-    filtered_subjects = Subject.query.filter(Subject.id != after_school_subject().id,
-                                             Subject.subscription_types.any(SubscriptionType.id.isnot(None))) \
-        .order_by(Subject.name).all()
+    filtered_subjects = Subject.query.filter(
+        Subject.id != after_school_subject().id,
+        Subject.subscription_types.any(SubscriptionType.id.isnot(None))
+    ).order_by(Subject.name).all()
+
     subscription_subjects = []
     for subject in filtered_subjects:
         subject_data = {
@@ -460,7 +476,9 @@ def subscription_subjects_data():
                            for subscription_type in subject.subscription_types},
             "subscription_types_info": {
                 subscription_type.id: f"{conjugate_lessons(subscription_type.lessons)} " +
-                                      f"на {subscription_type.duration} дней"
+                                      f"на {conjugate_days(subscription_type.duration)} " +
+                                      f"({subscription_type.price:.0f} Лари)"
+
                 for subscription_type in subject.subscription_types
             }
         }
