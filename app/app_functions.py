@@ -1,5 +1,5 @@
 from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, SchoolClass, \
-    SubjectType, SubscriptionType, student_lesson_attended_table, SchoolLessonJournal, Finance, UserAction
+    SubjectType, SubscriptionType, StudentAttendance, SchoolLessonJournal, Finance, UserAction
 from datetime import datetime, timedelta
 import pytz
 from app import db
@@ -967,83 +967,100 @@ def get_payment_options(student, subject_id, lesson):
 
 
 def carry_out_lesson(form, subject, lesson, user):
-    lesson_price = subject.one_time_price
-    lesson_school_price = subject.school_price if subject.school_price else lesson_price
-    if not lesson.students_registered.all():
-        return 'Нет записанных клиентов', 'error'
+    if not lesson.lesson_completed:
+        lesson_price = subject.one_time_price
+        lesson_school_price = subject.school_price if subject.school_price else lesson_price
+        if not lesson.students_registered.all():
+            return 'Нет записанных клиентов', 'error'
 
-    for student in lesson.students_registered.all():
-        if form.get(f'attending_status_{student.id}') in ['attend', 'unreasonable']:
-            payment_option = form.get(f'payment_option_{student.id}')
-            if payment_option.startswith('subscription'):
-                subscription_id = int(payment_option[len('subscription_'):])
-                subscription = Subscription.query.filter_by(id=subscription_id).first()
-                if subscription.lessons_left > 0:
-                    subscription.lessons_left -= 1
+        for student in lesson.students_registered.all():
+            if form.get(f'attending_status_{student.id}') in ['attend', 'unreasonable']:
+                payment_option = form.get(f'payment_option_{student.id}')
+                if payment_option.startswith('subscription'):
+                    subscription_id = int(payment_option[len('subscription_'):])
+                    subscription = Subscription.query.filter_by(id=subscription_id).first()
+                    if subscription.lessons_left > 0:
+                        subscription.lessons_left -= 1
+                    else:
+                        student.balance -= lesson_price
+                        description = f"Списание за занятие {subject.name}"
+                        finance_operation(student.id, -lesson_price, description, lesson.date)
                 else:
-                    student.balance -= lesson_price
+                    price = lesson_school_price if payment_option == 'after_school' else lesson_price
+                    student.balance -= price
                     description = f"Списание за занятие {subject.name}"
-                    finance_operation(student.id, -lesson_price, description, lesson.date)
-            else:
-                price = lesson_school_price if payment_option == 'after_school' else lesson_price
-                student.balance -= price
-                description = f"Списание за занятие {subject.name}"
-                finance_operation(student.id, -price, description, lesson.date)
+                    finance_operation(student.id, -price, description, lesson.date)
 
-            attendance = student_lesson_attended_table.insert().values(
-                student_id=student.id,
-                lesson_id=lesson.id,
-                attending_status=form.get(f'attending_status_{student.id}')
-            )
-            db.session.execute(attendance)
+                attendance = StudentAttendance(
+                    student_id=student.id,
+                    lesson_id=lesson.id,
+                    attending_status=form.get(f'attending_status_{student.id}')
+                )
+                db.session.add(attendance)
+                db.session.flush()
 
-    lesson.lesson_completed = True
-    user_action(user, f"Проведение занятия {subject.name} {lesson.date:%d.%m.%Y}")
-    return 'Занятие проведено', 'success'
+        lesson.lesson_completed = True
+        user_action(user, f"Проведение занятия {subject.name} {lesson.date:%d.%m.%Y}")
+        return 'Занятие проведено', 'success'
+
+    else:
+        return 'Занятие уже проведено', 'error'
 
 
 def undo_lesson(form, subject, lesson):
-    lesson_price = subject.one_time_price
-    lesson_school_price = subject.school_price if subject.school_price else lesson_price
-    for student in lesson.students:
-        attending_status = db.session.query(student_lesson_attended_table.c.attending_status).filter(
-            student_lesson_attended_table.c.student_id == student.id,
-            student_lesson_attended_table.c.lesson_id == lesson.id).scalar()
+    if lesson.lesson_completed:
+        lesson_price = subject.one_time_price
+        lesson_school_price = subject.school_price if subject.school_price else lesson_price
+        for student in lesson.students:
+            attendance = StudentAttendance.query.filter_by(
+                student_id=student.id,
+                lesson_id=lesson.id
+            ).first()
 
-        if attending_status:
-            payment_option = form.get(f'payment_option_{student.id}')
-            if payment_option.startswith('subscription'):
-                subscription_id = int(payment_option[len('subscription_'):])
-                subscription = Subscription.query.filter_by(id=subscription_id).first()
-                subscription.lessons_left += 1
-            else:
-                price = lesson_school_price if payment_option == 'after_school' else lesson_price
-                student.balance += price
-                record = Finance.query.filter(
-                    Finance.person_id == student.id,
-                    Finance.date == lesson.date,
-                    Finance.amount == -price,
-                    Finance.description == f"Списание за занятие {subject.name}"
-                ).first()
-                if record:
-                    db.session.delete(record)
-                    db.session.flush()
-                else:
-                    description = f"Возврат за занятие {subject.name}"
-                    finance_operation(student.id, price, description, lesson.date)
-            lesson.students_attended.remove(student)
+            if attendance:
+                if attendance.attending_status in ['attend', 'unreasonable']:
+                    payment_option = form.get(f'payment_option_{student.id}')
+                    if payment_option.startswith('subscription'):
+                        subscription_id = int(payment_option[len('subscription_'):])
+                        subscription = Subscription.query.filter_by(id=subscription_id).first()
+                        subscription.lessons_left += 1
+                    else:
+                        price = lesson_school_price if payment_option == 'after_school' else lesson_price
+                        record = Finance.query.filter(
+                            Finance.person_id == student.id,
+                            Finance.date == lesson.date,
+                            Finance.amount == -price,
+                            Finance.description == f"Списание за занятие {subject.name}"
+                        ).first()
+                        if record:
+                            student.balance += abs(record.price)
+                            db.session.delete(record)
+                            db.session.flush()
+                        else:
+                            student.balance += price
+                            description = f"Возврат за занятие {subject.name}"
+                            finance_operation(student.id, price, description, lesson.date)
 
-    lesson.lesson_completed = False
+                db.session.delete(attendance)
+
+        lesson.lesson_completed = False
+        return 'Проведение занятия отменено', 'success'
+
+    else:
+        return 'Занятие еще не проведено', 'error'
 
 
 def handle_lesson(form, subject, lesson, user):
     if 'del_client_btn' in form:
         del_client_id = int(form.get('del_client_btn'))
         del_client = Person.query.filter_by(id=del_client_id).first()
+        attendance = StudentAttendance.query.filter_by(student_id=del_client_id, lesson_id=lesson.id).first()
         if del_client in subject.students:
             subject.students.remove(del_client)
         if del_client in lesson.students_registered:
             lesson.students_registered.remove(del_client)
+        if attendance:
+            db.session.delete(attendance)
         description = f"Удаление клиента {del_client.last_name} {del_client.first_name} c занятия {subject.name}"
         user_action(user, description)
         db.session.flush()
@@ -1101,9 +1118,9 @@ def handle_lesson(form, subject, lesson, user):
         return message
 
     if 'change_btn' in form and user.rights in ["admin", "user"]:
-        undo_lesson(form, subject, lesson)
+        message = undo_lesson(form, subject, lesson)
         user_action(user, f"Отмена проведения занятия {subject.name} {lesson.date:%d.%m.%Y}")
-        return 'Проведение занятия отменено', 'success'
+        return message
 
 
 def get_lesson_students(lesson):
@@ -1124,10 +1141,11 @@ def get_lesson_students(lesson):
         for student in lesson_students:
             student.payment_options = get_payment_options(student, lesson.subject_id, lesson)
             if lesson.lesson_completed:
-                attendance = db.session.query(student_lesson_attended_table.c.attending_status).filter(
-                    student_lesson_attended_table.c.student_id == student.id,
-                    student_lesson_attended_table.c.lesson_id == lesson.id).scalar()
-                student.attended = attendance if attendance else 'not_attend'
+                attendance = StudentAttendance.query.filter_by(
+                    student_id=student.id,
+                    lesson_id=lesson.id
+                ).first()
+                student.attended = attendance.attending_status if attendance else 'not_attend'
     return lesson_students
 
 
@@ -1487,9 +1505,11 @@ def lesson_edit(form, lesson):
     start_time = datetime.strptime(form.start_time.data, '%H : %M').time()
     end_time = datetime.strptime(form.end_time.data, '%H : %M').time()
     room_id = int(form.room.data)
-    classes = [school_class.id for school_class in lesson.school_classes]
-    split_classes = lesson.split_classes
-    teacher_id = int(form.teacher.data)
+    before_classes = set([school_class.id for school_class in lesson.school_classes])
+    classes = [int(school_class) for school_class in form.school_classes.data] \
+        if lesson.lesson_type.name == 'school' else []
+    split_classes = form.split_classes.data
+    teacher_id = int(form.teacher.data) if form.teacher.data else None
 
     if end_time <= start_time:
         message = ('Ошибка во времени проведения', 'error')
@@ -1509,6 +1529,40 @@ def lesson_edit(form, lesson):
         lesson.end_time = end_time
         lesson.room_id = room_id
         lesson.teacher_id = teacher_id
+        if lesson.lesson_type.name == 'school':
+            lesson.split_classes = split_classes
+            classes_set = set(classes)
+            if before_classes != classes_set:
+                added_classes = list(classes_set.difference(before_classes))
+                removed_classes = list(before_classes.difference(classes_set))
+                school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
+                lesson.school_classes = [school_class for school_class in school_classes]
+
+                school_students = Person.query.filter(
+                    Person.status == "Клиент",
+                    Person.school_class_id.in_(added_classes + removed_classes)
+                ).all()
+
+                for student in school_students:
+                    if student.school_class_id in removed_classes and student in lesson.students_registered:
+                        lesson.students_registered.remove(student)
+                        attendance = StudentAttendance.query.filter_by(
+                            student_id=student.id, lesson_id=lesson.id
+                        ).first()
+                        if attendance:
+                            db.session.delete(attendance)
+                        db.session.flush()
+
+                    if student.school_class_id in added_classes and student not in lesson.students_registered:
+                        student_lessons = Lesson.query.filter(
+                            Lesson.date == lesson.date,
+                            Lesson.start_time < lesson.end_time,
+                            Lesson.end_time > lesson.start_time,
+                            Lesson.students_registered.any(Person.id == student.id)
+                        ).all()
+                        if not student_lessons:
+                            lesson.students_registered.append(student)
+                        db.session.flush()
 
         message = ('Занятие изменено', 'success')
 
@@ -1743,15 +1797,15 @@ def show_school_lesson(lesson_str):
             ).first()
             student.grade = journal_record.grade if journal_record else None
             student.lesson_comment = journal_record.lesson_comment if journal_record else None
-            attending_status = db.session.query(student_lesson_attended_table.c.attending_status).filter(
-                student_lesson_attended_table.c.student_id == student.id,
-                student_lesson_attended_table.c.lesson_id == sc_lesson.id).scalar()
-            student.attending_status = attending_status
+            attendance = StudentAttendance.query.filter_by(
+                student_id=student.id,
+                lesson_id=sc_lesson.id
+            ).first()
+            student.attending_status = attendance.attending_status if attendance else 'not_attend'
         sc_lesson.lesson_students = lesson_students
         sc_lesson.prev, sc_lesson.next = prev_next_school_lessons(sc_lesson)
 
         sc_subject = sc_lesson.subject
-        school_classes = sc_lesson.school_classes.all()
 
     else:
         sc_subject = Subject.query.filter_by(id=subject_id).first() if subject_id else None
@@ -1763,10 +1817,11 @@ def handle_school_lesson(form, lesson, user):
     if 'del_student_btn' in form:
         del_student_id = int(form.get('del_student_btn'))
         del_student = Person.query.filter_by(id=del_student_id).first()
+        attendance = StudentAttendance.query.filter_by(student_id=del_student.id, lesson_id=lesson.id).first()
         if del_student in lesson.students_registered:
             lesson.students_registered.remove(del_student)
-        if del_student in lesson.students_attended:
-            lesson.students_attended.remove(del_student)
+        if attendance:
+            db.session.delete(attendance)
         description = f"Удаление ученика {del_student.last_name} {del_student.first_name} " \
                       f"из списка учеников урока {lesson.subject.name} {lesson.dat:%d.%m.%Y}"
         user_action(user, description)
@@ -1797,60 +1852,63 @@ def handle_school_lesson(form, lesson, user):
                 return "Ученик записан на другое занятие в это же время", 'error'
 
     if 'complete_btn' in form:
-        lesson.lesson_topic = form.get('lesson_topic')
-        lesson.lesson_comment = form.get('comment')
+        if not lesson.lesson_completed:
+            lesson.lesson_topic = form.get('lesson_topic')
+            lesson.lesson_comment = form.get('comment')
 
-        for student in lesson.lesson_students:
-            if student not in lesson.students_registered:
-                lesson.students_registered.append(student)
+            for student in lesson.lesson_students:
+                if student not in lesson.students_registered:
+                    lesson.students_registered.append(student)
 
-            attending_status = db.session.query(student_lesson_attended_table.c.attending_status).filter(
-                student_lesson_attended_table.c.student_id == student.id,
-                student_lesson_attended_table.c.lesson_id == lesson.id).scalar()
-            new_attending_status = "attend" if form.get(f'attended_{student.id}') else "not_attend"
-            if not attending_status:
-                attendance = student_lesson_attended_table.insert().values(
+                attendance = StudentAttendance.query.filter_by(
                     student_id=student.id,
-                    lesson_id=lesson.id,
-                    attending_status=new_attending_status
-                )
-                db.session.execute(attendance)
-            else:
-                new_attendance = student_lesson_attended_table.update().where(
-                    (student_lesson_attended_table.c.student_id == student.id) &
-                    (student_lesson_attended_table.c.lesson_id == lesson.id)
-                ).values(attending_status=new_attending_status)
-                db.session.execute(new_attendance)
-
-            grade = form.get(f'grade_{student.id}')
-            lesson_comment = form.get(f'lesson_comment_{student.id}')
-            journal_record = SchoolLessonJournal.query.filter_by(
-                lesson_id=lesson.id,
-                student_id=student.id
-            ).first()
-            if grade or lesson_comment:
-                if journal_record:
-                    journal_record.grade = grade
-                    journal_record.lesson_comment = lesson_comment
-                else:
-                    new_journal_record = SchoolLessonJournal(
-                        date=lesson.date,
-                        lesson_id=lesson.id,
+                    lesson_id=lesson.id
+                ).first()
+                new_attending_status = "attend" if form.get(f'attended_{student.id}') else "not_attend"
+                if not attendance:
+                    new_attendance = StudentAttendance(
                         student_id=student.id,
-                        school_class_id=student.school_class_id,
-                        subject_id=lesson.subject_id,
-                        grade=grade,
-                        lesson_comment=lesson_comment
+                        lesson_id=lesson.id,
+                        attending_status=new_attending_status
                     )
-                    db.session.add(new_journal_record)
-            else:
-                if journal_record:
-                    db.session.delete(journal_record)
-            db.session.flush()
-        lesson.lesson_completed = True
-        user_action(user, f"Проведение урока {lesson.subject.name} {lesson.date:%d.%m.%Y} и заполнение журнала")
+                    db.session.add(new_attendance)
+                    db.session.flush()
+                else:
+                    attendance.attending_status = new_attending_status
+                    db.session.flush()
 
-        return 'Журнал заполнен', 'success'
+                grade = form.get(f'grade_{student.id}')
+                lesson_comment = form.get(f'lesson_comment_{student.id}')
+                journal_record = SchoolLessonJournal.query.filter_by(
+                    lesson_id=lesson.id,
+                    student_id=student.id
+                ).first()
+                if grade or lesson_comment:
+                    if journal_record:
+                        journal_record.grade = grade
+                        journal_record.lesson_comment = lesson_comment
+                    else:
+                        new_journal_record = SchoolLessonJournal(
+                            date=lesson.date,
+                            lesson_id=lesson.id,
+                            student_id=student.id,
+                            school_class_id=student.school_class_id,
+                            subject_id=lesson.subject_id,
+                            grade=grade,
+                            lesson_comment=lesson_comment
+                        )
+                        db.session.add(new_journal_record)
+                else:
+                    if journal_record:
+                        db.session.delete(journal_record)
+                db.session.flush()
+            lesson.lesson_completed = True
+            user_action(user, f"Проведение урока {lesson.subject.name} {lesson.date:%d.%m.%Y} и заполнение журнала")
+
+            return 'Журнал заполнен', 'success'
+
+        else:
+            return 'Журнал уже был заполнен', 'error'
 
     if 'change_btn' in form:
         lesson.lesson_completed = False

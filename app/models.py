@@ -39,13 +39,6 @@ student_lesson_registered_table = db.Table(
     db.Column('lesson_id', db.Integer, db.ForeignKey('lessons.id'))
 )
 
-student_lesson_attended_table = db.Table(
-    'student_lesson_attended_table',
-    db.Column('student_id', db.Integer, db.ForeignKey('persons.id')),
-    db.Column('lesson_id', db.Integer, db.ForeignKey('lessons.id')),
-    db.Column('attending_status', db.String(50))
-)
-
 class_lesson_table = db.Table(
     'class_lesson_table',
     db.Column('class_id', db.Integer, db.ForeignKey('school_classes.id')),
@@ -218,8 +211,6 @@ class Lesson(db.Model):
 
     students_registered = db.relationship('Person', secondary=student_lesson_registered_table,
                                           backref='lessons_registered', lazy='dynamic')
-    students_attended = db.relationship('Person', secondary=student_lesson_attended_table,
-                                        backref='lessons_attended', lazy='dynamic')
 
 
 class SchoolClass(db.Model):
@@ -304,3 +295,15 @@ class UserAction(db.Model):
     user = db.relationship('User', backref='actions')
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Tbilisi')))
     description = db.Column(db.String(120))
+
+
+class StudentAttendance(db.Model):
+    __tablename__ = 'student_attendances'
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
+    attending_status = db.Column(db.String(50))
+
+    student = db.relationship('Person', backref='lessons_attended')
+    lesson = db.relationship('Lesson', backref='students_attended')

@@ -1,7 +1,7 @@
 from app import app, db
 from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, \
     parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
-    student_lesson_registered_table, student_lesson_attended_table, student_subject_table, \
+    student_lesson_registered_table, StudentAttendance, student_subject_table, \
     teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
     SchoolLessonJournal, Report, Finance, UserAction
 from sqlalchemy.orm import class_mapper
@@ -926,4 +926,69 @@ lesson_dict = {
 
 # for i in range(21, 36):
 #     delete_record(UserAction, i)
-print(*subscription_subjects_data(), sep='\n')
+
+
+# edited_lesson = Lesson.query.filter_by(id=3085).first()
+# before_classes = {2, 3}
+# classes = [school_class.id for school_class in edited_lesson.school_classes]
+# classes_set = set(classes)
+# if before_classes != classes_set:
+#     print(before_classes)
+#     print(classes_set)
+#     added_classes = list(classes_set.difference(before_classes))
+#     removed_classes = list(before_classes.difference(classes_set))
+#     school_students = Person.query.filter(
+#         Person.status == "Клиент",
+#         Person.school_class_id.in_(added_classes + removed_classes)
+#     ).all()
+#     print(school_students)
+
+attendances = [
+    (31, 90, 'attend'),
+    (70, 124, 'attend'),
+    (154, 86, 'attend'),
+    (122, 86, 'attend'),
+    (169, 86, 'attend'),
+    (158, 86, 'attend'),
+    (135, 86, 'attend'),
+    (136, 86, 'attend'),
+    (171, 86, 'attend'),
+    (165, 91, 'attend'),
+    (78, 91, 'attend'),
+    (184, 91, 'attend'),
+    (1, 91, 'attend'),
+    (30, 91, 'attend'),
+    (30, 127, 'attend'),
+    (73, 111, 'attend'),
+    (30, 111, 'attend'),
+    (186, 111, 'attend'),
+    (93, 111, 'attend'),
+    (182, 111, 'attend'),
+    (154, 112, 'attend'),
+    (165, 112, 'attend'),
+    (114, 112, 'attend'),
+    (30, 112, 'attend'),
+    (143, 112, 'attend'),
+    (1, 112, 'attend'),
+    (73, 109, 'attend'),
+    (55, 109, 'attend'),
+    (49, 109, 'attend'),
+    (125, 107, 'attend'),
+    (140, 107, 'attend'),
+    (31, 153, 'attend'),
+    (30, 128, 'attend'),
+    (122, 156, 'attend'),
+    (165, 156, 'attend'),
+    (131, 156, 'attend'),
+    (138, 156, 'attend'),
+    (165, 169, 'attend'),
+    (127, 154, 'attend'),
+    (149, 154, 'attend'),
+    (30, 154, 'attend'),
+    (78, 158, 'attend'),
+    (76, 158, 'attend'),
+    (60, 158, 'attend')
+]
+
+
+

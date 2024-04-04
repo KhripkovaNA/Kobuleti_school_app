@@ -5,6 +5,7 @@ from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Roo
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
     EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm, \
     ExtraSubjectForm, EditExtraSubjectForm, AddLessonsForm, EditLessonForm
+from wtforms.validators import InputRequired
 from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
@@ -1144,7 +1145,7 @@ def add_lessons():
                         for message in messages:
                             flash(message[0], message[1])
 
-                            return redirect(url_for('timetable', week=week))
+                        return redirect(url_for('timetable', week=week))
 
                     else:
                         for message in messages:
@@ -1177,23 +1178,38 @@ def edit_lesson(lesson_id):
     if current_user.rights in ["admin", "user"]:
         edited_lesson = Lesson.query.filter_by(id=lesson_id).first()
         if not edited_lesson:
-            flash("Такого занятия нет.", 'error')
+            flash("Такого занятия нет", 'error')
             return redirect(url_for('timetable', week=0))
 
-        elif edited_lesson.lesson_type.name == "school":
-            edited_lesson.classes = ', '.join([cl.school_name for cl in sorted(edited_lesson.school_classes,
-                                                                               key=lambda x: x.school_class)])
+        if edited_lesson.lesson_completed:
+            flash("Занятие уже проведено, невозможно изменить", 'error')
+            return redirect(request.referrer)
+
         week = calculate_week(edited_lesson.date)
         rooms = Room.query.all()
         all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+        lesson_classes = sorted(edited_lesson.school_classes, key=lambda x: (x.school_class, x.school_name))
+        lesson_classes_data = [cl.id for cl in lesson_classes] if lesson_classes else None
         form = EditLessonForm(
             lesson_date=f'{edited_lesson.date:%d.%m.%Y}',
             start_time=f'{edited_lesson.start_time:%H : %M}',
             end_time=f'{edited_lesson.end_time:%H : %M}',
             room=edited_lesson.room_id,
+            school_classes=lesson_classes_data,
+            split_classes=edited_lesson.split_classes,
             teacher=edited_lesson.teacher_id
         )
         form.subject.validators = []
+        if edited_lesson.lesson_type.name == 'event':
+            form.teacher.validators = []
+        if edited_lesson.lesson_type.name == "school":
+            all_classes = SchoolClass.query.order_by(
+                SchoolClass.school_class, SchoolClass.school_name
+            ).all()
+            form.school_classes.choices = [(sc_cl.id, sc_cl.school_name) for sc_cl in all_classes]
+            form.school_classes.validators = [InputRequired(message='Заполните это поле')]
+            edited_lesson.classes = ', '.join([cl.school_name for cl in lesson_classes])
+
         form.room.choices = [(room.id, room.name) for room in rooms]
         form.teacher.choices = [(teacher.id, f'{teacher.last_name} {teacher.first_name}') for teacher in all_teachers]
 
@@ -1868,5 +1884,3 @@ def delete_record():
         flash(f'Ошибка при удалении: {str(e)}', 'error')
 
     return redirect(request.referrer)
-
-

@@ -56,15 +56,36 @@
                                     {% endfor %}
                                 </div>
                             </div>
-                            <div class="row {{ 'has-error' if form.teacher.errors }}">
-                                <label class="control-label col-md-3">Учитель:</label>
-                                <div class="col-md-6">
-                                    {{ form.teacher(class="form-control select-search") }}
-                                    {% for error in form.teacher.errors %}
-                                        <span>{{ error }}</span>
-                                    {% endfor %}
+                            {% if lesson.lesson_type.name == 'school' %}
+                                <div class="row {{ 'has-error' if form.school_classes.errors }}">
+                                    <label class="control-label col-md-3">Класс:</label>
+                                    <div class="col-md-6">
+                                        {{ form.school_classes(class="form-control select-search", placeholder="Выбрать классы") }}
+                                        {% for error in form.school_classes.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                            </div>
+                                <div class="row">
+                                    <div class="col-md-6 col-md-offset-3 checkbox-option">
+                                        <label class="contact-radio-label">Разделить классы
+                                            {{ form.split_classes }}
+                                            <span class="custom-checkbox"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if lesson.lesson_type.name != 'event' %}
+                                <div class="row {{ 'has-error' if form.teacher.errors }}">
+                                    <label class="control-label col-md-3">Учитель:</label>
+                                    <div class="col-md-6">
+                                        {{ form.teacher(class="form-control select-search") }}
+                                        {% for error in form.teacher.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="footer">
