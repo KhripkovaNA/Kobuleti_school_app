@@ -943,52 +943,7 @@ lesson_dict = {
 #     ).all()
 #     print(school_students)
 
-attendances = [
-    (31, 90, 'attend'),
-    (70, 124, 'attend'),
-    (154, 86, 'attend'),
-    (122, 86, 'attend'),
-    (169, 86, 'attend'),
-    (158, 86, 'attend'),
-    (135, 86, 'attend'),
-    (136, 86, 'attend'),
-    (171, 86, 'attend'),
-    (165, 91, 'attend'),
-    (78, 91, 'attend'),
-    (184, 91, 'attend'),
-    (1, 91, 'attend'),
-    (30, 91, 'attend'),
-    (30, 127, 'attend'),
-    (73, 111, 'attend'),
-    (30, 111, 'attend'),
-    (186, 111, 'attend'),
-    (93, 111, 'attend'),
-    (182, 111, 'attend'),
-    (154, 112, 'attend'),
-    (165, 112, 'attend'),
-    (114, 112, 'attend'),
-    (30, 112, 'attend'),
-    (143, 112, 'attend'),
-    (1, 112, 'attend'),
-    (73, 109, 'attend'),
-    (55, 109, 'attend'),
-    (49, 109, 'attend'),
-    (125, 107, 'attend'),
-    (140, 107, 'attend'),
-    (31, 153, 'attend'),
-    (30, 128, 'attend'),
-    (122, 156, 'attend'),
-    (165, 156, 'attend'),
-    (131, 156, 'attend'),
-    (138, 156, 'attend'),
-    (165, 169, 'attend'),
-    (127, 154, 'attend'),
-    (149, 154, 'attend'),
-    (30, 154, 'attend'),
-    (78, 158, 'attend'),
-    (76, 158, 'attend'),
-    (60, 158, 'attend')
-]
+
 
 
 

@@ -14,7 +14,7 @@
                         <table class="table timetable">
                             <thead class="text-success">
                                 <tr>
-                                    <th rowspan="2" width="3%" class="fixed-column">Время</th>
+                                    <th rowspan="2" width="3%" class="fixed-column" style="border-left: 2px solid #999;">Время</th>
                                     {% for day in days[:week_dates|length] %}
                                         <th colspan="{{ rooms|length }}">{{ day }} {{ week_dates[loop.index0] }}</th>
                                     {% endfor %}
@@ -22,7 +22,7 @@
                                 <tr style="color: green; font-size: 80%;">
                                     {% for day in days[:week_dates|length] %}
                                         {% for room in rooms %}
-                                            <th style="font-size:9px;">{{ room }}</th>
+                                            <th style="font-size:9px; border-bottom: 2px solid #999; border-right: 2px solid #999;">{{ room }}</th>
                                         {% endfor %}
                                     {% endfor %}
                                 </tr>
@@ -32,13 +32,13 @@
                                     <th class="fixed-column">{{ start_time }}:00 - {{ start_time + 1 }}:00</th>
                                     {% for day in days[:week_dates|length] %}
                                         {% for room in rooms %}
-                                            <td rowspan="{{ end_time - start_time + 1 }}">
+                                            <td rowspan="{{ end_time - start_time + 1 }}" style="border-bottom: 2px solid #999; {{ 'border-right: 2px solid #999;' if loop.last }}">
                                                 {% if classes.get(day) %}
                                                     {% if classes[day].get(room) %}
                                                         {% for lesson in classes[day][room] %}
                                                             <div class="dropdown">
                                                                 <div class="class-box dropdown-toggle" data-toggle="dropdown" id="class-box-{{ lesson.id }}"
-                                                                     style="background-color: {{ lesson.color }}; top: {{ (lesson.start_time - 60 * start_time + 540)/1.2 + 1 }}px; height: {{ (lesson.end_time - lesson.start_time)/1.2 - 4 }}px; {{ 'border: 1px solid #777; box-shadow: 0 0 5px rgba(0, 0, 0, 1);' if lesson.completed and lesson.lesson_type_name != 'school' else 'border: 1px solid #ffffff26;' }}">
+                                                                     style="background-color: {{ lesson.color }}; top: {{ lesson.start_time - 60 * start_time + 541 }}px; height: {{ lesson.end_time - lesson.start_time - 4 }}px; {{ 'border: 1px solid #999; box-shadow: 0 0 5px rgba(0, 0, 0, 1);' if lesson.completed and lesson.lesson_type_name != 'school' else 'border: 1px solid #ffffff26;' }}">
                                                                     <p style="color: #660000;">{{ lesson.time }}</p>
                                                                     {% if lesson.lesson_type %}
                                                                         <p style="color: #003300;">{{ lesson.lesson_type }}</p>
@@ -48,7 +48,7 @@
                                                                     {% endfor %}
                                                                     <p style="color: #330033;">{{ lesson.teacher }}</p>
                                                                 </div>
-                                                                <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ (lesson.start_time - 60 * start_time + 540)/1.2 + 20 }}px; left:10%;">
+                                                                <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ lesson.start_time - 60 * start_time + 560 }}px; left:10%;">
                                                                     {% if lesson.lesson_type_name=="school" %}
                                                                         <li>
                                                                             <a href="{{ url_for('school_timetable', week=week, day=days.index(day)+1) }}">
@@ -129,7 +129,7 @@
                                 </tr>
                                 {% for hour in range(start_time + 1, end_time) %}
                                     <tr>
-                                        <th class="fixed-column">{{ hour }}:00 - {{ hour + 1 }}:00</th>
+                                        <th class="fixed-column" style="{{ 'border-bottom: 2px solid #999;' if loop.last }}">{{ hour }}:00 - {{ hour + 1 }}:00</th>
                                     </tr>
                                 {% endfor %}
                             </tbody>

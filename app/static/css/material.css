@@ -2876,7 +2876,7 @@ select.form-control[multiple],
 }
 
 .timetable {
-    min-width: 1600px;
+    min-width: 500vh;
     width: 100%;
 }
 
@@ -2917,7 +2917,9 @@ select.form-control[multiple],
 
 .timetable>thead:first-child>tr:first-child>th,
 .school-timetable>thead:first-child>tr:first-child>th {
-    border-top: 1px solid #ddd;
+    border-top: 2px solid #999;
+    border-right: 2px solid #999;
+    border-bottom: 2px solid #999;
     font-size: 12px;
 }
 
@@ -2960,7 +2962,12 @@ select.form-control[multiple],
 
 .timetable tbody th {
     width: 3%;
-    height: 50px;
+    height: 60px;
+}
+
+.timetable>tbody>tr>th, .school-timetable>tbody>tr>th {
+    border-right: 2px solid #999 !important;
+    border-left: 2px solid #999 !important;
 }
 
 .school-timetable tbody th {

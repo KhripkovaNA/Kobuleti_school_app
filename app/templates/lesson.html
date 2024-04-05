@@ -14,11 +14,11 @@
                     <form action="{{ url_for('lesson', lesson_str='1-'+subject_lesson.id|string) }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group">
-                            <div class="scroll-timetable" style="height: 55vh;">
+                            <div class="scroll-timetable" style="height: 64vh;">
                                 <table class="table table-hover">
                                     <thead class="text-success">
                                         <th>Клиент</th>
-                                        <th width="25%">Способ оплаты</th>
+                                        <th width="27%">Способ оплаты</th>
                                         <th style="padding-left: 40px;">Запись</th>
                                         <th>Посещение</th>
                                     </thead>
@@ -148,6 +148,14 @@
                                 </table>
                             </div>
                         </div>
+                        <p style="margin-left:27px; color:#AAAAAA;;">
+                            {% if lesson_subject.one_time_price %}
+                                Разовое: {{ lesson_subject.one_time_price|round(1) }} Лари
+                            {% endif %}
+                            {% if lesson_subject.school_price %}
+                                Продленка: {{ lesson_subject.school_price|round(1) }} Лари
+                            {% endif %}
+                        </p>
                     </form>
                     <div class="row">
                         <div class="col-md-6">

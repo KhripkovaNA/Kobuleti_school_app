@@ -10,12 +10,12 @@
             </div>
             <div class="card-content">
                 <input type="text" id="search" placeholder="Поиск в таблице">
-                <div class="scroll-timetable" style="height: 60vh;">
+                <div class="scroll-timetable" style="height: 73vh;">
                     <table class="table table-hover" id="table-report">
                         <thead class="text-success">
                             <tr>
                                 <th width="25%">Сотрудник</th>
-                                <th width="15%">Деятельность</th>
+                                <th width="25%">Деятельность</th>
                                 {% for date in dates %}
                                     <th>{{ date }}</th>
                                 {% endfor %}

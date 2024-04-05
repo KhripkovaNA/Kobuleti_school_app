@@ -42,7 +42,7 @@
                         <table class="table school-timetable">
                             <thead class="text-success">
                                 <tr>
-                                    <th width="8%">Время</th>
+                                    <th width="8%" style="border-left: 2px solid #999;">Время</th>
                                     {% for school_class in school_classes %}
                                         {% if classes.get(school_class.school_name) %}
                                             <th>{{ school_class.school_name }}</th>
@@ -55,7 +55,7 @@
                                     <th>{{ start_time }}:00 - {{ start_time + 1 }}:00</th>
                                     {% for school_class in school_classes %}
                                         {% if classes.get(school_class.school_name) %}
-                                            <td rowspan="{{ end_time - start_time + 1 }}">
+                                            <td rowspan="{{ end_time - start_time + 1 }}" style="border-bottom: 2px solid #999; {{ 'border-right: 2px solid #999;' if loop.last }}">
                                                 {% for lesson in classes[school_class.school_name] %}
                                                     <div class="dropdown">
                                                         <div class="class-box dropdown-toggle" data-toggle="dropdown" id="class-box-{{ lesson.id }}"
@@ -119,7 +119,7 @@
                                 </tr>
                                 {% for hour in range(start_time + 1, end_time) %}
                                     <tr>
-                                        <th>{{ hour }}:00 - {{ hour + 1 }}:00</th>
+                                        <th style="{{ 'border-bottom: 2px solid #999;' if loop.last }}">{{ hour }}:00 - {{ hour + 1 }}:00</th>
                                     </tr>
                                 {% endfor %}
                             </tbody>
