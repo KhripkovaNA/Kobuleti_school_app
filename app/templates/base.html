@@ -61,10 +61,16 @@
                            <p>Школа</p>
                         </a>
                     </li>
-                    <li id="menu-timetable">
+                    <li id="menu-gen-timetable">
                         <a style="cursor:pointer" href="{{ url_for('timetable', week=0) }}">
                             <i class="material-icons">calendar_month</i>
-                           <p>Расписание</p>
+                           <p>Расписание общее</p>
+                        </a>
+                    </li>
+                    <li id="menu-extra-timetable">
+                        <a style="cursor:pointer" href="{{ url_for('extra_timetable', week=0) }}">
+                            <i class="material-icons">date_range</i>
+                           <p>Расписание допов</p>
                         </a>
                     </li>
                     <li id="menu-after-school">

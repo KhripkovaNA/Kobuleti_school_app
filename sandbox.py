@@ -943,7 +943,9 @@ lesson_dict = {
 #     ).all()
 #     print(school_students)
 
-
+all_rooms = Room.query.all()
+week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(-1, all_rooms)
+print(len(week_dates), len(used_rooms))
 
 
 

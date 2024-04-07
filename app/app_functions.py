@@ -1240,7 +1240,7 @@ def create_lesson_dict(lesson, timetable_type):
         'month_index': calc_month_index(lesson.date),
         'subject_full': lesson.subject.name
     }
-    if timetable_type == 'general':
+    if timetable_type in ['general', 'teacher']:
         if lesson.lesson_type.name == 'school':
             lesson_type = format_school_classes_names(lesson.school_classes)
         elif lesson.lesson_type.name == 'individual':
@@ -1253,7 +1253,7 @@ def create_lesson_dict(lesson, timetable_type):
         else:
             lesson_dict['color'] = lesson.teacher.color
         lesson_dict['lesson_type'] = lesson_type
-        lesson_dict['subject'] = lesson.subject_names
+        lesson_dict['subject'] = lesson.subject_names if timetable_type == 'general' else lesson.subject.name
         lesson_dict['lesson_type_name'] = lesson.lesson_type.name
 
     else:
@@ -1305,7 +1305,7 @@ def get_week_dates():
     return week_dates
 
 
-def week_lessons_dict(week, rooms):
+def week_lessons_dict(week, rooms, lessons_type='general'):
     week_lessons = {}
     used_rooms = set()
     week_dates = []
@@ -1317,16 +1317,36 @@ def week_lessons_dict(week, rooms):
         week_dates.append(lessons_date_str)
         day_lessons = {}
         for room in rooms:
-            lessons_filtered = Lesson.query.filter_by(
-                date=lessons_date, room_id=room.id
-            ).order_by(Lesson.start_time).all()
+            if lessons_type == 'general':
+                lessons_filtered = Lesson.query.filter_by(
+                    date=lessons_date, room_id=room.id
+                ).order_by(Lesson.start_time).all()
+            elif lessons_type.startswith('teacher'):
+                teacher_id = int(lessons_type[len('teacher_'):])
+                lessons_filtered = Lesson.query.filter(
+                    Lesson.date == lessons_date,
+                    Lesson.room_id == room.id,
+                    Lesson.teacher_id == teacher_id
+                ).order_by(Lesson.start_time).all()
+            else:
+                lessons_filtered = Lesson.query.filter(
+                    Lesson.date == lessons_date,
+                    Lesson.room_id == room.id,
+                    Lesson.lesson_type.has(SubjectType.name != 'school')
+                ).order_by(Lesson.start_time).all()
             if lessons_filtered:
                 start_hour = lessons_filtered[0].start_time.hour
                 week_start_hour = start_hour if start_hour < week_start_hour else week_start_hour
                 end_hour = lessons_filtered[-1].end_time.hour + 1 * bool(lessons_filtered[-1].end_time.minute)
                 week_end_hour = end_hour if end_hour > week_end_hour else week_end_hour
                 used_rooms.add(room.name)
-                day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
+                if lessons_type.startswith('teacher'):
+                    lessons_for_day = []
+                    for lesson in lessons_filtered:
+                        lessons_for_day.append(create_lesson_dict(lesson, 'teacher'))
+                    day_lessons[room.name] = lessons_for_day
+                else:
+                    day_lessons[room.name] = day_lessons_list(lessons_filtered) if lessons_filtered else []
         if day_lessons:
             week_lessons[weekday] = day_lessons
     if not week_lessons.get(DAYS_OF_WEEK[-1]):

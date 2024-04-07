@@ -61,6 +61,13 @@
                                                                 <i class="material-icons" style="color: purple;">info</i>Профиль
                                                             </a>
                                                         </li>
+                                                        {% if employee.teacher %}
+                                                            <li>
+                                                                <a href="{{ url_for('teacher_timetable', teacher_id=employee.id, week=0) }}">
+                                                                    <i class="material-icons" style="color: purple;">date_range</i>Расписание
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
                                                         <li class="divider"></li>
                                                         <li>
                                                             {% if current_user.rights != 'admin' %}

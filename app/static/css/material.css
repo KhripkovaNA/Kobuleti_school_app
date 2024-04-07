@@ -170,6 +170,10 @@ h2.title {
     margin: 0 15px;
 }
 
+.sidebar .nav>li>a {
+    padding: 7px 15px;
+}
+
 .sidebar .nav li:hover>a,
 .off-canvas-sidebar .nav li:hover>a {
     background: rgba(200, 200, 200, 0.2);
@@ -2923,6 +2927,12 @@ select.form-control[multiple],
     font-size: 12px;
 }
 
+.timetable>thead:first-child>tr:first-child>th:first-child,
+.timetable tbody th {
+    width: 50px;
+    max-width: 50px;
+}
+
 .scroll-timetable {
     position: relative;
     height: 400px;
@@ -2961,7 +2971,6 @@ select.form-control[multiple],
 }
 
 .timetable tbody th {
-    width: 3%;
     height: 60px;
 }
 

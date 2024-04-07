@@ -1017,12 +1017,43 @@ def timetable(week):
     all_rooms = Room.query.all()
     week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, all_rooms)
     rooms = [room.name for room in all_rooms if room.name in used_rooms]
+    cols = len(week_dates) * len(rooms)
     subject_types = SubjectType.query.all()
     events = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'event')).order_by(Subject.name).all()
 
-    return render_template('timetable.html', days=DAYS_OF_WEEK, rooms=rooms, start_time=time_range[0],
+    return render_template('timetable.html', days=DAYS_OF_WEEK, rooms=rooms, cols=cols, start_time=time_range[0],
                            end_time=time_range[1], classes=week_lessons, week=week, week_dates=week_dates,
                            all_rooms=all_rooms, events=events, subject_types=subject_types, week_range=week_range)
+
+
+@app.route('/extra-timetable/<string:week>')
+@login_required
+def extra_timetable(week):
+    week = int(week) if str(week).lstrip('-').isdigit() else 0
+    all_rooms = Room.query.all()
+    week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, all_rooms, 'extra')
+    rooms = [room.name for room in all_rooms if room.name in used_rooms]
+    cols = len(week_dates) * len(rooms)
+
+    return render_template('extra_timetable.html', days=DAYS_OF_WEEK, rooms=rooms, cols=cols, start_time=time_range[0],
+                           end_time=time_range[1], classes=week_lessons, week=week, week_dates=week_dates)
+
+
+@app.route('/teacher-timetable/<string:teacher_id>/<string:week>')
+@login_required
+def teacher_timetable(teacher_id, week):
+    teacher_id = int(teacher_id) if str(teacher_id).isdigit() else None
+    teacher = Person.query.filter_by(id=teacher_id, teacher=True).first()
+    if teacher:
+        week = int(week) if str(week).lstrip('-').isdigit() else 0
+        all_rooms = Room.query.all()
+        week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, all_rooms, f'teacher_{teacher_id}')
+        rooms = [room.name for room in all_rooms if room.name in used_rooms]
+        cols = len(week_dates) * len(rooms)
+
+        return render_template('teacher_timetable.html', days=DAYS_OF_WEEK, rooms=rooms, cols=cols,
+                               start_time=time_range[0], end_time=time_range[1], classes=week_lessons,
+                               week=week, week_dates=week_dates, lessons_teacher=teacher)
 
 
 @app.route('/add-event', methods=['POST'])

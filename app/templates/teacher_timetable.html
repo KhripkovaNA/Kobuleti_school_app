@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Расписание учителя {{ lessons_teacher.last_name }} {{ lessons_teacher.first_name }}. {{ week_dates[0] }} - {{ week_dates[-1] }}</h4>
+            </div>
+            <div class="card-content">
+                {% if classes %}
+                    <div class="scroll-timetable" style="height: 80vh;">
+                        <table class="table timetable" style="min-width: {{ 10*cols + 100 }}vh;">
+                            <thead class="text-success">
+                                <tr>
+                                    <th rowspan="2" class="fixed-column" style="border-left: 2px solid #999;">Время</th>
+                                    {% for day in days[:week_dates|length] %}
+                                        <th colspan="{{ rooms|length }}">{{ day }} {{ week_dates[loop.index0] }}</th>
+                                    {% endfor %}
+                                </tr>
+                                <tr style="color: green; font-size: 80%;">
+                                    {% for day in days[:week_dates|length] %}
+                                        {% for room in rooms %}
+                                            <th style="font-size:9px; border-bottom: 2px solid #999; border-right: 2px solid #999;">{{ room }}</th>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th class="fixed-column">{{ start_time }}:00 - {{ start_time + 1 }}:00</th>
+                                    {% for day in days[:week_dates|length] %}
+                                        {% for room in rooms %}
+                                            <td rowspan="{{ end_time - start_time + 1 }}" style="border-bottom: 2px solid #999; {{ 'border-right: 2px solid #999;' if loop.last }}">
+                                                {% if classes.get(day) %}
+                                                    {% if classes[day].get(room) %}
+                                                        {% for lesson in classes[day][room] %}
+                                                            <div class="dropdown">
+                                                                <div class="class-box dropdown-toggle" data-toggle="dropdown" id="class-box-{{ lesson.id }}"
+                                                                     style="background-color: {{ lesson.color }}; top: {{ lesson.start_time - 60 * start_time + 541 }}px; height: {{ lesson.end_time - lesson.start_time - 4 }}px; {{ 'border: 1px solid #999; box-shadow: 0 0 5px rgba(0, 0, 0, 1);' if lesson.completed and lesson.lesson_type_name != 'school' else 'border: 1px solid #ffffff26;' }}">
+                                                                    <p style="color: #660000;">{{ lesson.time }}</p>
+                                                                    {% if lesson.lesson_type %}
+                                                                        <p style="color: #003300;">{{ lesson.lesson_type }}</p>
+                                                                    {% endif %}
+                                                                    <p style="color: #003366;">{{ lesson.subject }}</p>
+                                                                    <p style="color: #330033;">{{ lesson.teacher }}</p>
+                                                                </div>
+                                                                <ul class="dropdown-menu" id="dropdown-{{ lesson.id }}" style="top: {{ lesson.start_time - 60 * start_time + 560 }}px; left:10%;">
+                                                                    <p style="text-align:center; font-weight:500; background-color:{{ lesson.color }}; border-radius:3px; margin: 0 5px 0 5px;">{{ lesson.subject }}</p>
+                                                                    {% if lesson.lesson_type_name not in ["school", "after_school", "event"] %}
+                                                                        <li>
+                                                                            <a href="{{ url_for('lesson', lesson_str='1-'+lesson.id|string) }}">
+                                                                                <i class="material-icons" style="color: purple;">info</i>Занятие
+                                                                            </a>
+                                                                        </li>
+                                                                    {% elif lesson.lesson_type_name == "school" %}
+                                                                        <li>
+                                                                            <a href="{{ url_for('school_lesson', lesson_str='0-'+lesson.id|string) }}">
+                                                                                <i class="material-icons" style="color: purple;">book</i>Урок
+                                                                            </a>
+                                                                        </li>
+                                                                    {% elif lesson.lesson_type_name == "after_school" %}
+                                                                        <li>
+                                                                            <a href="{{ url_for('after_school', month_index=lesson.month_index) }}">
+                                                                                <i class="material-icons" style="color: purple;">diversity_2</i>Продленка
+                                                                            </a>
+                                                                        </li>
+                                                                    {% endif %}
+                                                                </ul>
+                                                            </div>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                                {% for hour in range(start_time + 1, end_time) %}
+                                    <tr>
+                                        <th class="fixed-column" style="{{ 'border-bottom: 2px solid #999;' if loop.last }}">{{ hour }}:00 - {{ hour + 1 }}:00</th>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>Нет занятий в расписании</p>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-sm" data-background-color="orange">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('teacher_timetable', teacher_id=lessons_teacher.id, week = week - 1) }}">
+                                <i class="material-icons">navigate_before</i>Предыдущая неделя
+                            </a>
+                        </button>
+                        <button class="btn btn-sm" data-background-color="orange">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('teacher_timetable', teacher_id=lessons_teacher.id, week = week + 1) }}">
+                                Следующая неделя<i class="material-icons">navigate_next</i>
+                            </a>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
