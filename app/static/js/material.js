@@ -2,7 +2,7 @@ $(document).ready(function(){
 
     // Adjust the width of class boxes based on the width of table cells
     function adjustClassBoxWidth() {
-        $('.card-content').find('.table tbody tr').each(function() {
+        $('.timetable, .school-timetable').find('.table tbody tr').each(function() {
             var rowCells = $(this).find('td');
             var headerCells = $('.card-content').find('.table thead tr').eq(1).find('th');
             var totalWidth = 0;

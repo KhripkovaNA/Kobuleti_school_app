@@ -284,6 +284,7 @@ class Finance(db.Model):
     person = db.relationship('Person', backref='finances')
     date = db.Column(db.Date, default=lambda: datetime.now(pytz.timezone('Asia/Tbilisi')).date())
     amount = db.Column(db.Numeric(8, 2))
+    operation_type = db.Column(db.String(50))
     description = db.Column(db.String(120))
 
 

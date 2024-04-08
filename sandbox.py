@@ -943,9 +943,17 @@ lesson_dict = {
 #     ).all()
 #     print(school_students)
 
-all_rooms = Room.query.all()
-week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(-1, all_rooms)
-print(len(week_dates), len(used_rooms))
+# all_finances = Finance.query.all()
+# for oper in all_finances:
+#     if oper.description.startswith("Пополнение баланса") or oper.description.startswith("Списание за занятие"):
+#         oper.operation_type = 'balance'
+#     else:
+#         oper.operation_type = 'cash'
+#
+# db.session.commit()
+some_word = 'оплата'
+
+print('(на счет)' in some_word)
 
 
 

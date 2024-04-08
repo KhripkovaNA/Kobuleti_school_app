@@ -5,6 +5,7 @@ import pytz
 from app import db
 from sqlalchemy import and_, or_
 from dateutil.relativedelta import relativedelta
+from decimal import Decimal
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill, GradientFill
 from openpyxl.utils import get_column_letter
@@ -587,6 +588,7 @@ def purchase_subscription(form, student):
     subscription_type = SubscriptionType.query.filter_by(id=subscription_type_id).first()
     purchase_date = datetime.strptime(form.get('purchase_date'), '%d.%m.%Y').date()
     end_date = purchase_date + timedelta(subscription_type.duration)
+    operation_type = form.get('operation_type')
 
     new_subscription = Subscription(
         subject_id=subject_id,
@@ -596,7 +598,7 @@ def purchase_subscription(form, student):
         purchase_date=purchase_date,
         end_date=end_date
     )
-    return new_subscription, subscription_type.price
+    return new_subscription, subscription_type.price, operation_type
 
 
 def handle_student_edit(form, student, edit_type, user):
@@ -686,7 +688,7 @@ def handle_student_edit(form, student, edit_type, user):
                 hours = int(del_after_school.period.split()[0])
                 price *= hours
             description = "Возврат за продленку"
-            finance_operation(student.id, price, description)
+            finance_operation(del_after_school.student, price, 'cash', description)
             db.session.delete(del_after_school)
             db.session.flush()
         return
@@ -984,12 +986,12 @@ def carry_out_lesson(form, subject, lesson, user):
                     else:
                         student.balance -= lesson_price
                         description = f"Списание за занятие {subject.name}"
-                        finance_operation(student.id, -lesson_price, description, lesson.date)
+                        finance_operation(student.id, -lesson_price, 'balance', description, lesson.date)
                 else:
                     price = lesson_school_price if payment_option == 'after_school' else lesson_price
                     student.balance -= price
                     description = f"Списание за занятие {subject.name}"
-                    finance_operation(student.id, -price, description, lesson.date)
+                    finance_operation(student.id, -price, 'balance', description, lesson.date)
 
                 attendance = StudentAttendance(
                     student_id=student.id,
@@ -1039,7 +1041,7 @@ def undo_lesson(form, subject, lesson):
                         else:
                             student.balance += price
                             description = f"Возврат за занятие {subject.name}"
-                            finance_operation(student.id, price, description, lesson.date)
+                            finance_operation(student.id, price, 'balance', description, lesson.date)
 
                 db.session.delete(attendance)
 
@@ -2366,14 +2368,17 @@ def handle_after_school_adding(student_id, form, period):
         return new_after_school_subscription, period_text
 
 
-def finance_operation(person_id, amount, description, date=TODAY):
+def finance_operation(person, amount, operation_type, description, date=TODAY):
     new_operation = Finance(
-        person_id=person_id,
+        person_id=person.id,
         date=date,
         amount=amount,
+        operation_type=operation_type,
         description=description
     )
     db.session.add(new_operation)
+    if operation_type == 'balance':
+        person.balance += Decimal(amount)
     db.session.flush()
 
 

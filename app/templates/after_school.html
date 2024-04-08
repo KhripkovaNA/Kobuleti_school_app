@@ -125,8 +125,18 @@
                                                     <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
                                                 </div>
                                             </div>
-                                            <div class="row price-row">
+                                            <div class="row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
+                                                <div class="col-md-7">
+                                                    <select name="operation_type" class="form-control">
+                                                        <option value="cash">Оплата наличными</option>
+                                                        <option value="bank">Оплата на счет</option>
+                                                        <option value="balance">Оплата с депозита</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row price-row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
                                                 <div class="col-md-7">
                                                     <select name="subscription_type" class="form-control price-selector"></select>
                                                 </div>
