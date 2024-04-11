@@ -2,37 +2,35 @@ $(document).ready(function(){
 
     // Adjust the width of class boxes based on the width of table cells
     function adjustClassBoxWidth() {
-        $('.timetable, .school-timetable').find('.table tbody tr').each(function() {
-            var rowCells = $(this).find('td');
-            var headerCells = $('.card-content').find('.table thead tr').eq(1).find('th');
-            var totalWidth = 0;
-            var nonEmptyCount = 0;
+        var table = $('.table-adjust');
+        var rowCells = table.find('tbody td');
+        var headerCells = $('.table-adjust').find('thead tr').eq(1).find('th');
+        var totalTableWidth = $('.table-adjust').width();
+        var firstColumnWidth = table.find('th').eq(0).width();
+        var availableWidth = totalTableWidth - firstColumnWidth;
 
-            rowCells.each(function(index) {
-                var colWidth = $(this).width();
-                var classBoxes = $(this).find('.class-box');
-
-                if (classBoxes.length > 0) {
-                    totalWidth += colWidth;
-                    nonEmptyCount++;
-                }
-            });
-
-            var averageWidth = Math.min(totalWidth / nonEmptyCount, 80);
-
-            rowCells.each(function(index) {
-                var classBoxes = $(this).find('.class-box');
-                if (classBoxes.length === 0) {
-                    $(this).width(35);
-                    headerCells.eq(index).width(35);
-                } else {
-                    $(this).width(averageWidth);
-                    headerCells.eq(index).width(averageWidth);
-                }
-            });
+        var emptyColumns = rowCells.filter(function() {
+            return $(this).find('.class-box').length === 0;
         });
+
+        emptyColumns.each(function() {
+            $(this).width(35);
+        });
+
+        var remainingWidth = availableWidth - 35 * emptyColumns.length;
+
+        var nonEmptyColumns = rowCells.filter(function() {
+            return $(this).find('.class-box').length > 0;
+        });
+
+        var columnWidth = remainingWidth / nonEmptyColumns.length;
+
+        nonEmptyColumns.each(function() {
+            $(this).width(columnWidth);
+        });
+
         // Adjust class-box width and font size
-        $('.card-content').find('.table tbody tr td').each(function() {
+        $('.table-adjust').find('tbody tr td').each(function() {
             var classBoxes = $(this).find('.class-box');
             var floatIndex = false;
             var colWidth = $(this).width();
@@ -72,11 +70,9 @@ $(document).ready(function(){
                 if (longestText) {
                     var containerWidth = currentBox.width();
                     var containerHeight = currentBox.height();
-                    var fontSize = Math.min(Math.max(8, Math.min(containerHeight / 4, 12)), Math.max(8, Math.min(containerWidth * 1.3 / longestTextLength, 12)));
-                    var margin = -0.6 * fontSize + 1.2;
+                    var fontSize = Math.min(Math.max(8, Math.min(containerHeight / 4, 12)), Math.max(8, Math.min(containerWidth * 1.4 / longestTextLength, 12)));
                     paragraphs.css({
-                        'font-size': fontSize + 'px',
-                        'margin': '0 0 ' + margin + 'px 0'
+                        'font-size': fontSize + 'px'
                     });
                 }
             });

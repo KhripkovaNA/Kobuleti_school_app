@@ -1330,11 +1330,17 @@ def week_lessons_dict(week, rooms, lessons_type='general'):
                     Lesson.room_id == room.id,
                     Lesson.teacher_id == teacher_id
                 ).order_by(Lesson.start_time).all()
+            elif lessons_type == 'extra':
+                lessons_filtered = Lesson.query.filter(
+                    Lesson.date == lessons_date,
+                    Lesson.room_id == room.id,
+                    Lesson.lesson_type.has(SubjectType.name == 'extra')
+                ).order_by(Lesson.start_time).all()
             else:
                 lessons_filtered = Lesson.query.filter(
                     Lesson.date == lessons_date,
                     Lesson.room_id == room.id,
-                    Lesson.lesson_type.has(SubjectType.name != 'school')
+                    Lesson.lesson_type.has(SubjectType.name == 'individual')
                 ).order_by(Lesson.start_time).all()
             if lessons_filtered:
                 start_hour = lessons_filtered[0].start_time.hour

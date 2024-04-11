@@ -3054,6 +3054,7 @@ select.form-control[multiple],
 
 .timetable .class-box p, .school-timetable .class-box p {
     margin: 0 0 -1px 0;
+    line-height: 1;
 }
 
 .timetable>thead>tr>th,

@@ -11,7 +11,7 @@
             <div class="card-content">
                 {% if classes %}
                     <div class="scroll-timetable" style="height: 80vh;">
-                        <table class="table timetable" style="min-width: {{ 10*cols + 100 }}vh;">
+                        <table class="table table-adjust timetable" style="min-width: {{ 10*cols + 100 }}vh;">
                             <thead class="text-success">
                                 <tr>
                                     <th rowspan="2" class="fixed-column" style="border-left: 2px solid #999;">Время</th>
@@ -38,7 +38,7 @@
                                                         {% for lesson in classes[day][room] %}
                                                             <div class="dropdown">
                                                                 <div class="class-box dropdown-toggle" data-toggle="dropdown" id="class-box-{{ lesson.id }}"
-                                                                     style="background-color: {{ lesson.color }}; top: {{ lesson.start_time - 60 * start_time + 541 }}px; height: {{ lesson.end_time - lesson.start_time - 4 }}px; {{ 'border: 1px solid #999; box-shadow: 0 0 5px rgba(0, 0, 0, 1);' if lesson.completed and lesson.lesson_type_name != 'school' else 'border: 1px solid #ffffff26;' }}">
+                                                                     style="background-color: {{ lesson.color if not lesson.completed }}; top: {{ lesson.start_time - 60 * start_time + 541 }}px; height: {{ lesson.end_time - lesson.start_time - 4 }}px; {{ 'border: 1px solid #999; box-shadow: 0 0 5px rgba(0, 0, 0, 1);' if lesson.completed and lesson.lesson_type_name != 'school' else 'border: 1px solid #ffffff26;' }}">
                                                                     <p style="color: #660000;">{{ lesson.time }}</p>
                                                                     {% if lesson.lesson_type %}
                                                                         <p style="color: #003300;">{{ lesson.lesson_type }}</p>

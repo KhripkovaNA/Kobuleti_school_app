@@ -1,4 +1,4 @@
-{% extends "school_base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 
@@ -39,7 +39,7 @@
                 </div>
                 {% if classes %}
                     <div class="scroll-timetable" style="height: 72vh;">
-                        <table class="table school-timetable">
+                        <table class="table table-adjust school-timetable">
                             <thead class="text-success">
                                 <tr>
                                     <th width="8%" style="border-left: 2px solid #999;">Время</th>
@@ -59,7 +59,7 @@
                                                 {% for lesson in classes[school_class.school_name] %}
                                                     <div class="dropdown">
                                                         <div class="class-box dropdown-toggle" data-toggle="dropdown" id="class-box-{{ lesson.id }}"
-                                                             style="background-color: {{ lesson.room_color }}; top: {{ lesson.start_time - 60 * start_time + 541 }}px; height: {{ lesson.end_time - lesson.start_time - 1 }}px; {{ 'border: 1px solid #777; box-shadow: 0 0 5px rgba(0, 0, 0, 1);' if lesson.completed else 'border: 1px solid #ffffff26;' }}"
+                                                             style="background-color: {{ lesson.room_color if not lesson.completed }}; top: {{ lesson.start_time - 60 * start_time + 541 }}px; height: {{ lesson.end_time - lesson.start_time - 1 }}px; {{ 'border: 1px solid #777; box-shadow: 0 0 5px rgba(0, 0, 0, 1);' if lesson.completed else 'border: 1px solid #ffffff26;' }}"
                                                              title="{{ lesson.room }}">
                                                             <p style="color: #660000;">{{ lesson.time }}</p>
                                                             <p style="color: #003366;">{{ lesson.subject }}</p>

@@ -951,9 +951,7 @@ lesson_dict = {
 #         oper.operation_type = 'cash'
 #
 # db.session.commit()
-some_word = 'оплата'
-
-print('(на счет)' in some_word)
+print_table(SubjectType)
 
 
 

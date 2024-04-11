@@ -1036,7 +1036,22 @@ def extra_timetable(week):
     cols = len(week_dates) * len(rooms)
 
     return render_template('extra_timetable.html', days=DAYS_OF_WEEK, rooms=rooms, cols=cols, start_time=time_range[0],
-                           end_time=time_range[1], classes=week_lessons, week=week, week_dates=week_dates)
+                           end_time=time_range[1], classes=week_lessons, week=week, week_dates=week_dates,
+                           timetable_type='extra')
+
+
+@app.route('/individual-timetable/<string:week>')
+@login_required
+def individual_timetable(week):
+    week = int(week) if str(week).lstrip('-').isdigit() else 0
+    all_rooms = Room.query.all()
+    week_lessons, week_dates, used_rooms, time_range = week_lessons_dict(week, all_rooms, 'individual')
+    rooms = [room.name for room in all_rooms if room.name in used_rooms]
+    cols = len(week_dates) * len(rooms)
+
+    return render_template('extra_timetable.html', days=DAYS_OF_WEEK, rooms=rooms, cols=cols, start_time=time_range[0],
+                           end_time=time_range[1], classes=week_lessons, week=week, week_dates=week_dates,
+                           timetable_type='individual')
 
 
 @app.route('/teacher-timetable/<string:teacher_id>/<string:week>')

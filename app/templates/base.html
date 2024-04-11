@@ -55,23 +55,39 @@
                             <p>Занятия</p>
                         </a>
                     </li>
-                    <li id="menu-school">
-                        <a style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">
+                    <li class="dropup" id="menu-school">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                             <i class="material-icons">school</i>
-                           <p>Школа</p>
+                            <p>Школа<span class="caret"></span></p>
                         </a>
+                        <ul class="dropdown-menu" style="margin-left: 50px;">
+                            <li id="menu-school-students">
+                                <a style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">Школьные классы</a>
+                            </li>
+                            <li id="menu-school-subjects">
+                                <a style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">Школьные занятия</a>
+                            </li>
+                        </ul>
                     </li>
-                    <li id="menu-gen-timetable">
-                        <a style="cursor:pointer" href="{{ url_for('timetable', week=0) }}">
+                    <li class="dropup" id="menu-timetable">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                             <i class="material-icons">calendar_month</i>
-                           <p>Расписание общее</p>
+                            <p>Расписание<span class="caret"></span></p>
                         </a>
-                    </li>
-                    <li id="menu-extra-timetable">
-                        <a style="cursor:pointer" href="{{ url_for('extra_timetable', week=0) }}">
-                            <i class="material-icons">date_range</i>
-                           <p>Расписание допов</p>
-                        </a>
+                        <ul class="dropdown-menu" style="margin-left: 50px;">
+                            <li id="menu-gen-timetable">
+                                <a href="{{ url_for('timetable', week=0) }}">Расписание общее</a>
+                            </li>
+                            <li id="menu-extra-timetable">
+                                <a href="{{ url_for('extra_timetable', week=0) }}">Расписание допов</a>
+                            </li>
+                            <li id="menu-individual-timetable">
+                                <a href="{{ url_for('individual_timetable', week=0) }}">Расписание индив</a>
+                            </li>
+                            <li id="menu-school-timetable">
+                                <a href="{{ url_for('school_timetable', week=0, day=0) }}">Расписание школьное</a>
+                            </li>
+                        </ul>
                     </li>
                     <li id="menu-after-school">
                         <a style="cursor:pointer" href="{{ url_for('after_school', month_index=0) }}">
