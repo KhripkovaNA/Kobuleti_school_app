@@ -501,12 +501,11 @@ def deposit(student_id):
             if amount:
                 deposit = Decimal(amount)
                 student = Person.query.filter_by(id=student_id).first()
-                student.balance += deposit
-                description = f"Пополнение баланса клиента {student.last_name} {student.first_name}"
+                description = f"Пополнение баланса клиента"
                 finance_operation(student, deposit, 'balance', description)
-                user_action(current_user, f"Покупка баланса клиента {student.last_name} {student.first_name}")
+                user_action(current_user, f"Пополнение баланса клиента {student.last_name} {student.first_name}")
                 db.session.commit()
-                flash('Депозит внесен на счет', 'success')
+                flash(f'Депозит внесен на счет клиента {student.last_name} {student.first_name}', 'success')
 
         else:
             flash('Нет прав администратора', 'error')

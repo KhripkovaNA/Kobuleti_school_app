@@ -126,7 +126,7 @@
                         </table>
                     </div>
                 {% else %}
-                    <p>Нет уроков в расписании</p>
+                    <p style="height: 120px; padding-top:20px;">Нет уроков в расписании</p>
                 {% endif %}
                 <div class="row">
                     <div class="col-md-6">
@@ -147,9 +147,29 @@
                                 <i class="material-icons">file_download</i> Скачать
                             </a>
                         </button>
-                        <button class="btn btn-sm pull-right" data-background-color="main">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('timetable', week=week) }}">Все расписание</a>
-                        </button>
+                        {% if current_user.rights in ["admin", "user"] %}
+                            <div class="dropup pull-right">
+                                <button class="btn btn-sm dropdown-toggle" data-background-color="main" data-toggle="dropdown">
+                                    Составить расписание
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
+                                    <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                        <div class="dropup pull-right">
+                            <button class="btn btn-sm dropdown-toggle" data-background-color="main" data-toggle="dropdown">
+                                Расписание
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('timetable', week=week) }}">Общее расписание</a></li>
+                                <li><a href="{{ url_for('extra_timetable', week=week) }}">Расписание допов</a></li>
+                                <li><a href="{{ url_for('individual_timetable', week=week) }}">Расписание индив</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

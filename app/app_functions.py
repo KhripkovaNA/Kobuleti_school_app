@@ -2556,6 +2556,9 @@ def del_record(form, record_type, user):
             if student.parents.all():
                 for parent in student.parents:
                     if len(parent.children.all()) == 1 and not parent.status and not parent.roles:
+                        student.primary_contact = None
+                        student.parents.remove(parent)
+                        parent.primary_contact = None
                         db.session.delete(parent.contacts[0])
                         db.session.delete(parent)
                 db.session.flush()

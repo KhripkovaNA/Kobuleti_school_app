@@ -136,7 +136,7 @@
                         </table>
                     </div>
                 {% else %}
-                    <p>Нет занятий в расписании</p>
+                    <p style="height: 120px; padding-top:20px;">Нет занятий в расписании</p>
                 {% endif %}
                 <div class="row">
                     <div class="col-md-6">
@@ -151,8 +151,8 @@
                             </a>
                         </button>
                     </div>
-                    {% if current_user.rights in ["admin", "user"] %}
-                        <div class="col-md-3 col-md-offset-3">
+                    <div class="col-md-6">
+                        {% if current_user.rights in ["admin", "user"] %}
                             <div class="dropup pull-right">
                                 <button class="btn btn-sm dropdown-toggle" data-background-color="main" data-toggle="dropdown">
                                     Составить расписание
@@ -377,8 +377,20 @@
                                 </div>
                             </div>
 
+                        {% endif %}
+                        <div class="dropup pull-right">
+                            <button class="btn btn-sm dropdown-toggle" data-background-color="main" data-toggle="dropdown">
+                                Расписание
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('individual_timetable', week=week) }}">Расписание индив</a></li>
+                                <li><a href="{{ url_for('extra_timetable', week=week) }}">Расписание допов</a></li>
+                                <li><a href="{{ url_for('school_timetable', week=week, day=0) }}">Расписание школьное</a></li>
+                            </ul>
                         </div>
-                    {% endif %}
+                    </div>
+
                 </div>
             </div>
         </div>
