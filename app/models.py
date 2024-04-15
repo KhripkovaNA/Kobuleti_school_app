@@ -285,6 +285,7 @@ class Finance(db.Model):
     date = db.Column(db.Date, default=lambda: datetime.now(pytz.timezone('Asia/Tbilisi')).date())
     amount = db.Column(db.Numeric(8, 2))
     operation_type = db.Column(db.String(50))
+    student_balance = db.Column(db.Boolean, default=False)
     description = db.Column(db.String(120))
 
 
@@ -302,9 +303,17 @@ class StudentAttendance(db.Model):
     __tablename__ = 'student_attendances'
 
     id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date)
+    lesson_time = db.Column(db.Time)
+    payment_method = db.Column(db.String(50))
+    price_paid = db.Column(db.Integer)
+    subscription_lessons = db.Column(db.Integer)
+
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
     student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
     attending_status = db.Column(db.String(50))
 
+    subject = db.relationship('Subject', backref='completed_lessons')
     student = db.relationship('Person', backref='lessons_attended')
     lesson = db.relationship('Lesson', backref='students_attended')

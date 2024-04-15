@@ -12,10 +12,10 @@ from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, s
     handle_employee_edit, format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, \
     change_lessons_date, day_school_lessons_dict, filter_lessons, copy_filtered_lessons, add_new_lessons, \
     subjects_data, calculate_week, lesson_edit, show_lesson, handle_lesson, format_school_class_students, \
-    format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, subject_record, \
+    format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, school_subject_record, \
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
-    add_new_event, get_date, user_action
+    add_new_event, get_date, user_action, subject_record
 from decimal import Decimal
 from sqlalchemy import distinct
 from app import app, db
@@ -956,7 +956,7 @@ def add_subject():
         return redirect(url_for('subjects'))
 
 
-@app.route('/subject/<string:subject_id>', methods=['GET', 'POST'])
+@app.route('/edit-subject/<string:subject_id>', methods=['GET', 'POST'])
 @login_required
 def edit_subject(subject_id):
     if current_user.rights in ["admin", "user"]:
@@ -1356,6 +1356,25 @@ def lesson(lesson_str):
             return redirect(url_for('subjects'))
 
 
+@app.route('/subject/<string:subject_id>/<string:month_index>')
+@login_required
+def subject(subject_id, month_index):
+    subject_id = int(subject_id) if str(subject_id).isdigit() else None
+    subject = Subject.query.filter(
+        Subject.id == subject_id,
+        Subject.subject_type.has(SubjectType.name.in_(["extra", "individual"]))
+    ).first()
+    month_index = int(month_index) if str(month_index).lstrip('-').isdigit() else None
+    if not subject or month_index is None:
+        flash("Журнал не найден", 'error')
+        return redirect(url_for('subjects'))
+
+    subject_records, datetimes, subject_students, month = subject_record(subject_id, month_index)
+
+    return render_template('subject_record.html', subject_records=subject_records, datetimes=datetimes,
+                           students=subject_students, subject=subject, month_index=month_index, month=month)
+
+
 @app.route('/school-students/<string:school_class>', methods=['GET', 'POST'])
 @login_required
 def school_students(school_class):
@@ -1626,7 +1645,7 @@ def school_subject(subject_classes, month_index):
         flash("Журнал не найден", 'error')
         return redirect(url_for('school_subjects', school_class=0))
 
-    subject_records, dates_topics, sc_students, final_grades_list = subject_record(subject_id, classes_ids, month_index)
+    subject_records, dates_topics, sc_students, final_grades_list = school_subject_record(subject_id, classes_ids, month_index)
     subject = Subject.query.filter_by(id=subject_id).first()
     school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).order_by(SchoolClass.school_class).all()
     school_classes_names = ', '.join([cl.school_name for cl in school_classes])

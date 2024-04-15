@@ -983,20 +983,30 @@ def carry_out_lesson(form, subject, lesson, user):
                     subscription = Subscription.query.filter_by(id=subscription_id).first()
                     if subscription.lessons_left > 0:
                         subscription.lessons_left -= 1
+                        payment_info = ("Абонемент", subscription.lessons_left)
                     else:
                         student.balance -= lesson_price
                         description = f"Списание за занятие {subject.name}"
-                        finance_operation(student.id, -lesson_price, 'balance', description, lesson.date)
+                        finance_operation(student, -lesson_price, 'balance', description, lesson.date)
+                        payment_info = ("Разовое", int(lesson_price))
                 else:
                     price = lesson_school_price if payment_option == 'after_school' else lesson_price
                     student.balance -= price
                     description = f"Списание за занятие {subject.name}"
-                    finance_operation(student.id, -price, 'balance', description, lesson.date)
+                    finance_operation(student, -price, 'balance', description, lesson.date)
+                    payment_info = ("Продленка", int(price)) if payment_option == 'after_school' \
+                        else ("Разовое", int(price))
 
                 attendance = StudentAttendance(
+                    date=lesson.date,
+                    lesson_time=lesson.start_time,
                     student_id=student.id,
                     lesson_id=lesson.id,
-                    attending_status=form.get(f'attending_status_{student.id}')
+                    subject_id=subject.id,
+                    attending_status=form.get(f'attending_status_{student.id}'),
+                    payment_method=payment_info[0],
+                    price_paid=payment_info[1] if payment_info[0] in ["Продленка", "Разовое"] else None,
+                    subscription_lessons=payment_info[1] if payment_info[0] == "Абонемент" else None
                 )
                 db.session.add(attendance)
                 db.session.flush()
@@ -1027,7 +1037,8 @@ def undo_lesson(form, subject, lesson):
                         subscription = Subscription.query.filter_by(id=subscription_id).first()
                         subscription.lessons_left += 1
                     else:
-                        price = lesson_school_price if payment_option == 'after_school' else lesson_price
+                        price = attendance.price_paid if attendance.price_paid else lesson_school_price \
+                            if payment_option == 'after_school' else lesson_price
                         record = Finance.query.filter(
                             Finance.person_id == student.id,
                             Finance.date == lesson.date,
@@ -1035,13 +1046,12 @@ def undo_lesson(form, subject, lesson):
                             Finance.description == f"Списание за занятие {subject.name}"
                         ).first()
                         if record:
-                            student.balance += abs(record.price)
                             db.session.delete(record)
                             db.session.flush()
                         else:
                             student.balance += price
                             description = f"Возврат за занятие {subject.name}"
-                            finance_operation(student.id, price, 'balance', description, lesson.date)
+                            finance_operation(student, price, 'balance', description, lesson.date)
 
                 db.session.delete(attendance)
 
@@ -2037,7 +2047,7 @@ def employee_record(employees, week):
     return employees_list, dates
 
 
-def subject_record(subject_id, school_classes_ids, month_index):
+def school_subject_record(subject_id, school_classes_ids, month_index):
     result_date = TODAY + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
@@ -2107,6 +2117,45 @@ def subject_record(subject_id, school_classes_ids, month_index):
         final_grades_list = sorted(list(final_grades_set))
 
     return record_dict, dates_topic, school_students, final_grades_list
+
+
+def subject_record(subject_id, month_index):
+    result_date = TODAY + relativedelta(months=month_index)
+    first_date = datetime(result_date.year, result_date.month, 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
+
+    subject_records = StudentAttendance.query.filter(
+        StudentAttendance.date >= first_date,
+        StudentAttendance.date <= last_date,
+        StudentAttendance.subject_id == subject_id
+    ).order_by(StudentAttendance.date, StudentAttendance.lesson_time).all()
+
+    subject_students = []
+    lesson_datetimes = []
+    record_dict = {}
+    for record in subject_records:
+        date_time_string = f"{record.date:%d.%m} {record.lesson_time:%H:%M}"
+        lesson_date_time = (date_time_string, record.lesson_id)
+        subject_student = (f"{record.student.last_name} {record.student.first_name}", record.student_id)
+        if record.payment_method:
+            student_payment_method = record.payment_method
+            student_payment_info = record.price_paid if record.price_paid else \
+                record.subscription_lessons if record.subscription_lessons else "?"
+            student_payment = f"{student_payment_method}({student_payment_info})"
+        else:
+            student_payment = "?"
+        if subject_student not in subject_students:
+            subject_students.append(subject_student)
+            record_dict[subject_student] = {lesson_date_time: student_payment}
+        else:
+            record_dict[subject_student][lesson_date_time] = student_payment
+        if lesson_date_time not in lesson_datetimes:
+            lesson_datetimes.append(lesson_date_time)
+
+    sorted_subject_students = sorted(subject_students, key=lambda x: x[0])
+    month = MONTHS[first_date.month - 1]
+
+    return record_dict, lesson_datetimes, sorted_subject_students, month
 
 
 def add_new_grade(form, students, subject_id, grade):
