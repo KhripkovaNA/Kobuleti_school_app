@@ -190,6 +190,11 @@
                                     {% endfor %}
                                 </ul>
                             </div>
+                            <button class="btn btn-sm pull-right" data-background-color="purple">
+                                <a style="color: #FFFFFF;" href="{{ url_for('subject', subject_id=lesson_subject.id, month_index=month_index) }}">
+                                    <i class="material-icons">article</i> Журнал
+                                </a>
+                            </button>
                             {% if not subject_lesson.students_registered.all() and current_user.rights in ["admin", "user"] %}
                                 <button class="btn btn-sm pull-right" data-background-color="red">
                                     <a href="#" data-toggle="modal" data-target="#delete-modal">

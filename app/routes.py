@@ -6,7 +6,7 @@ from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditCont
     EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm, \
     ExtraSubjectForm, EditExtraSubjectForm, AddLessonsForm, EditLessonForm
 from wtforms.validators import InputRequired
-from app.app_functions import DAYS_OF_WEEK, TODAY, MONTHS, basic_student_info, subscription_subjects_data, \
+from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_student_info, subscription_subjects_data, \
     lesson_subjects_data, potential_client_subjects, purchase_subscription, add_child, add_adult, clients_data, \
     extensive_student_info, student_lesson_register, handle_student_edit, format_employee, add_new_employee, \
     handle_employee_edit, format_subscription_types, add_new_subject, handle_subject_edit, week_lessons_dict, \
@@ -385,7 +385,7 @@ def students():
     lesson_subjects = lesson_subjects_data()
 
     return render_template('students.html', students=all_students, subscription_subjects=subscription_subjects,
-                           today=f'{TODAY:%d.%m.%Y}', lesson_subjects=lesson_subjects)
+                           today=f'{get_today_date():%d.%m.%Y}', lesson_subjects=lesson_subjects)
 
 
 @app.route('/add-comment', methods=['POST'])
@@ -739,7 +739,7 @@ def show_edit_student(student_id):
                 flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
                 return redirect(url_for('show_edit_student', student_id=student.id))
 
-        return render_template('student.html', student=student, clients=clients, today=f'{TODAY:%d.%m.%Y}',
+        return render_template('student.html', student=student, clients=clients, today=f'{get_today_date():%d.%m.%Y}',
                                lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects,
                                edit_student_form=student_form, render_type=render_type, main_contact=main_contact_form,
                                add_cont_forms=add_cont_forms, new_contact_form=new_contact_form, months=months,
@@ -841,7 +841,7 @@ def show_edit_employee(employee_id):
         )
 
         if employee.teacher:
-            future_lessons = Lesson.query.filter(Lesson.date >= TODAY, Lesson.teacher_id == employee_id).all()
+            future_lessons = Lesson.query.filter(Lesson.date >= get_today_date(), Lesson.teacher_id == employee_id).all()
             lesson_subjects = set([lesson.subject.id for lesson in future_lessons])
             employee.future_lessons = future_lessons
             employee.lesson_subjects = lesson_subjects
@@ -1333,9 +1333,11 @@ def lesson(lesson_str):
             Subject.id != lesson_subject.id,
             ~Subject.subject_type.has(SubjectType.name.in_(['school', 'event']))
         ).order_by(Subject.name).all()
+        month_index = calc_month_index(subject_lesson.date)
 
         return render_template('lesson.html', subject_lesson=subject_lesson, clients=possible_clients,
-                               lesson_subject=lesson_subject, other_lessons=other_lessons, today=TODAY)
+                               lesson_subject=lesson_subject, other_lessons=other_lessons,
+                               today=get_today_date(), month_index=month_index)
 
     else:
         if lesson_subject.subject_type.name == 'after_school':
@@ -1571,7 +1573,7 @@ def school_timetable(week, day):
         return redirect(url_for('school_students', school_class=0))
 
     if week_day == 0:
-        week_day = TODAY.weekday() + 1
+        week_day = get_today_date().weekday() + 1
     if week_day > 7:
         return redirect(url_for('school_timetable', week=week+1, day=1))
 
@@ -1623,7 +1625,7 @@ def school_lesson(lesson_str):
 
         return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
                                school_students=sc_students, grade_types=grade_types, school_subject=sc_subject,
-                               subject_classes=subject_classes, month_index=month_index, today=TODAY)
+                               subject_classes=subject_classes, month_index=month_index, today=get_today_date())
 
     else:
         if sc_subject:
@@ -1706,7 +1708,7 @@ def school_subject(subject_classes, month_index):
 
     return render_template('school_subject.html', subject_records=subject_records, dates_topics=dates_topics,
                            final_grades_list=final_grades_list, students=sc_students, subject=subject,
-                           school_classes=school_classes_names, month_index=month_index, today=TODAY,
+                           school_classes=school_classes_names, month_index=month_index, today=get_today_date(),
                            subject_classes=subject_classes, grade_types=grade_types, finals=finals)
 
 
@@ -1752,7 +1754,7 @@ def after_school(month_index):
     return render_template('after_school.html', after_school_subject=after_school_subject, period=period,
                            current_period=current_period, months=MONTHS, month_index=int(month_index),
                            possible_clients=possible_clients, after_school_prices=after_school_prices,
-                           today=f'{TODAY:%d.%m.%Y}')
+                           today=f'{get_today_date():%d.%m.%Y}')
 
 
 @app.route('/after-school-purchase', methods=['POST'])
@@ -1868,7 +1870,7 @@ def add_finance_operation():
                 amount = -amount
             operation_type = type_of_operation.split('_')[1]
             person = Person.query.filter_by(id=person_id).first()
-            finance_operation(person, amount, operation_type, description, date=TODAY)
+            finance_operation(person, amount, operation_type, description, date=get_today_date())
             user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name} " \
                                f"({description})"
             user_action(current_user, user_description)
@@ -1888,7 +1890,7 @@ def add_finance_operation():
 @app.route('/finances', methods=['GET', 'POST'])
 @login_required
 def finances():
-    finance_operations = Finance.query.order_by(Finance.date.desc()).all()
+    finance_operations = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
     all_persons = Person.query.order_by(Person.last_name, Person.first_name).all()
 
     if request.method == 'POST':

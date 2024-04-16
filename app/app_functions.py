@@ -20,7 +20,10 @@ CHILD_SELF = "Сам ребенок"
 CHOOSE = "Выбрать"
 OTHER = "Другое"
 LOCAL_TZ = pytz.timezone('Asia/Tbilisi')
-TODAY = datetime.now(LOCAL_TZ).date()
+
+
+def get_today_date():
+    return datetime.now(LOCAL_TZ).date()
 
 
 def conjugate_lessons(number):
@@ -80,7 +83,8 @@ def conjugate_days(number):
 
 
 def person_age(dob):
-    age = TODAY.year - dob.year - ((TODAY.month, TODAY.day) < (dob.month, dob.day))
+    today = get_today_date()
+    age = get_today_date().year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
     return conjugate_years(age)
 
 
@@ -427,7 +431,7 @@ def format_subjects_and_subscriptions(student):
                 subscriptions_list.insert(0, f'{subject.name} ({subscription_dict["validity"]})')
                 subscriptions_set.add(subject.id)
             else:
-                day_delta = (subscription.purchase_date - TODAY).days
+                day_delta = (subscription.purchase_date - get_today_date()).days
                 if (-30 <= day_delta <= 30) and subscription.period != "month":
                     subscription_dict['subscription_id'] = subscription.id
                     subscription_dict['purchase_date'] = subscription.purchase_date
@@ -535,10 +539,10 @@ def lesson_subjects_data():
                 Lesson.subject_id == subject.id,
                 or_(
                     and_(
-                        Lesson.date == TODAY,
+                        Lesson.date == get_today_date(),
                         Lesson.start_time > now
                     ),
-                    Lesson.date > TODAY
+                    Lesson.date > get_today_date()
                 )
             )
         ).order_by(Lesson.date, Lesson.start_time).all()
@@ -902,7 +906,7 @@ def check_subscription(student, lesson, subject_id):
     after_school = after_school_subject()
     cond = lesson == 0
     if cond:
-        date = TODAY
+        date = get_today_date()
     else:
         date = lesson.date
     if subject_id == 0:
@@ -1199,7 +1203,7 @@ def show_lesson(lesson_str):
                 ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school", "event"]))
             ).order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
             coming_lesson = Lesson.query.filter(
-                Lesson.date >= TODAY,
+                Lesson.date >= get_today_date(),
                 Lesson.subject_id == subject_id,
                 ~Lesson.lesson_type.has(SubjectType.name.in_(["school", "after_school", "event"]))
             ).order_by(Lesson.date, Lesson.start_time).first()
@@ -1303,11 +1307,12 @@ def day_lessons_list(day_room_lessons):
 
 
 def get_date(day_of_week, week=0):
-    day_of_week_date = TODAY - timedelta(days=TODAY.weekday()) + timedelta(days=day_of_week) + week * timedelta(weeks=1)
+    today = get_today_date()
+    day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week * timedelta(weeks=1)
     return day_of_week_date
 
 
-def get_weekday_date(day_of_week, date=TODAY):
+def get_weekday_date(day_of_week, date=get_today_date()):
     date_of_week_day = date - timedelta(days=date.weekday()) + timedelta(days=day_of_week)
     return date_of_week_day
 
@@ -1516,7 +1521,7 @@ def create_check_lesson(lesson_date, form, i):
 
 
 def calculate_week(date):
-    return int((get_weekday_date(0, date) - get_weekday_date(0, TODAY)).days / 7)
+    return int((get_weekday_date(0, date) - get_weekday_date(0, get_today_date())).days / 7)
 
 
 def add_new_lessons(form):
@@ -1624,7 +1629,7 @@ def filter_lessons(form):
         next_week_date = datetime.strptime(form.get('next_week_specific'), '%d.%m.%Y').date()
         next_start_date = get_weekday_date(0, next_week_date)
     week_diff = int((next_start_date - start_date).days / 7)
-    next_week = int((next_start_date - get_weekday_date(0, TODAY)).days / 7)
+    next_week = int((next_start_date - get_weekday_date(0, get_today_date())).days / 7)
 
     weekday = form.get('lessons_days')
     weekdays = form.getlist('lessons_days_specific')
@@ -1803,7 +1808,7 @@ def show_school_lesson(lesson_str):
                 Lesson.school_classes.any(SchoolClass.id == school_class_id)
             ).order_by(Lesson.date.desc(), Lesson.start_time.desc()).first()
             coming_lesson = Lesson.query.filter(
-                Lesson.date >= TODAY,
+                Lesson.date >= get_today_date(),
                 Lesson.subject_id == subject_id,
                 Lesson.lesson_type.has(SubjectType.name == "school"),
                 Lesson.school_classes.any(SchoolClass.id == school_class_id)
@@ -2048,7 +2053,7 @@ def employee_record(employees, week):
 
 
 def school_subject_record(subject_id, school_classes_ids, month_index):
-    result_date = TODAY + relativedelta(months=month_index)
+    result_date = get_today_date() + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
     school_students = Person.query.filter(
@@ -2120,7 +2125,7 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
 
 
 def subject_record(subject_id, month_index):
-    result_date = TODAY + relativedelta(months=month_index)
+    result_date = get_today_date() + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
 
@@ -2183,7 +2188,7 @@ def add_new_grade(form, students, subject_id, grade):
 
 
 def change_grade(form, subject, classes_ids, month_index, user):
-    result_date = TODAY + relativedelta(months=month_index)
+    result_date = get_today_date() + relativedelta(months=month_index)
     month, year = (result_date.month, result_date.year)
     grade_date_topic = form.get('grade_date_topic')
     if not grade_date_topic:
@@ -2261,13 +2266,13 @@ def change_grade(form, subject, classes_ids, month_index, user):
 
 def calc_month_index(date):
     date1 = date.replace(day=1)
-    date2 = TODAY.replace(day=1)
+    date2 = get_today_date().replace(day=1)
 
     return relativedelta(date1, date2).months
 
 
 def student_record(student, month_index):
-    result_date = TODAY + relativedelta(months=month_index)
+    result_date = get_today_date() + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
 
@@ -2320,7 +2325,7 @@ def student_record(student, month_index):
 
 
 def get_period(month_index):
-    result_date = TODAY + relativedelta(months=month_index)
+    result_date = get_today_date() + relativedelta(months=month_index)
     return result_date.month, result_date.year
 
 
@@ -2423,7 +2428,7 @@ def handle_after_school_adding(student_id, form, period):
         return new_after_school_subscription, period_text
 
 
-def finance_operation(person, amount, operation_type, description, date=TODAY):
+def finance_operation(person, amount, operation_type, description, date=get_today_date()):
     new_operation = Finance(
         person_id=person.id,
         date=date,
@@ -2587,7 +2592,7 @@ def del_record(form, record_type, user):
 
             if employee.teacher:
                 future_lessons = Lesson.query.filter(
-                    Lesson.date >= TODAY,
+                    Lesson.date >= get_today_date(),
                     Lesson.teacher_id == employee_id
                 ).all()
 

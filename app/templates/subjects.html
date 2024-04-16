@@ -63,6 +63,11 @@
                                                                 <i class="material-icons" style="color: purple;">info</i>Занятие
                                                             </a>
                                                         </li>
+                                                        <li>
+                                                            <a href="{{ url_for('subject', subject_id=subject.id, month_index=0) }}">
+                                                                <i class="material-icons" style="color: purple;">article</i>Журнал
+                                                            </a>
+                                                        </li>
                                                         {% if current_user.rights in ["admin", "user"] %}
                                                             <li>
                                                                 <a href="{{ url_for('edit_subject', subject_id=subject.id) }}">
