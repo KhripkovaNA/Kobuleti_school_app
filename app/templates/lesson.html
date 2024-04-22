@@ -28,13 +28,7 @@
                                                 <tr>
                                                     <td>{{ student.last_name }} {{ student.first_name }}</td>
                                                     <td>
-                                                        <div class="dropdown">
-                                                            <select name="payment_option_{{ student.id }}" class="form-control">
-                                                                {% for payment_option in student.payment_options %}
-                                                                    <option value="{{ payment_option.value }}">{{ payment_option.type }}. {{ payment_option.info }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
+                                                        <div class="form-control">{{ student.payment }}</div>
                                                     </td>
                                                     <td class="checkbox-option" style="padding-left: 40px;">
                                                         {% if student in subject_lesson.students_registered %}

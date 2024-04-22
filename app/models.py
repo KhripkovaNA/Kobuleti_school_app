@@ -287,6 +287,7 @@ class Finance(db.Model):
     operation_type = db.Column(db.String(50))
     student_balance = db.Column(db.Boolean, default=False)
     description = db.Column(db.String(120))
+    service_id = db.Column(db.Integer)
 
 
 class UserAction(db.Model):
@@ -308,6 +309,7 @@ class StudentAttendance(db.Model):
     payment_method = db.Column(db.String(50))
     price_paid = db.Column(db.Integer)
     subscription_lessons = db.Column(db.Integer)
+    subscription_id = db.Column(db.Integer)
 
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
     student_id = db.Column(db.Integer, db.ForeignKey('persons.id'))

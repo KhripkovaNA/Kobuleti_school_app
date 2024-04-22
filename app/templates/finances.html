@@ -29,31 +29,43 @@
                                     {% for operation in finance_operations %}
                                         <tr>
                                             <td style="text-align:center;">{{ operation.date.strftime('%d.%m.%Y') }}</td>
-                                            <td width="20%">{{ operation.person.last_name }} {{ operation.person.first_name }}</td>
-                                            <td style="text-align:center;">
-                                                {% if operation.operation_type == 'cash' %}
-                                                    {% if operation.amount > 0 %}
-                                                        <p style="color:red"><b>-{{ operation.amount|round(1) }}</b></p>
-                                                    {% elif operation.amount < 0 %}
-                                                        <p style="color:green"><b>+{{ operation.amount|abs|round(1) }}</b></p>
-                                                    {% else %}
-                                                        <p><b>{{ operation.amount|round(1) }}</b></p>
-                                                    {% endif %}
+                                            <td width="20%">
+                                                {% if operation.person.status %}
+                                                    <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=operation.person_id) }}">
+                                                        {{ operation.person.last_name }} {{ operation.person.first_name }}
+                                                    </a>
+                                                {% elif operation.person.roles %}
+                                                    <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=operation.person_id) }}">
+                                                        {{ operation.person.last_name }} {{ operation.person.first_name }}
+                                                    </a>
+                                                {% else %}
+                                                    {{ operation.person.last_name }} {{ operation.person.first_name }}
                                                 {% endif %}
                                             </td>
-                                            <td style="text-align:center;">
-                                                {% if operation.operation_type == 'bank' %}
-                                                    {% if operation.amount > 0 %}
-                                                        <p style="color:red"><b>-{{ operation.amount|round(1) }}</b></p>
-                                                    {% elif operation.amount < 0 %}
-                                                        <p style="color:green"><b>+{{ operation.amount|abs|round(1) }}</b></p>
-                                                    {% else %}
-                                                        <p><b>{{ operation.amount|round(1) }}</b></p>
+                                            {% if operation.student_balance %}
+                                                <td style="text-align:center;">
+                                                    {% if operation.operation_type == 'cash' %}
+                                                        {% if operation.amount > 0 %}
+                                                            <p style="color:green"><b>+{{ operation.amount|round(1) }}</b></p>
+                                                        {% elif operation.amount < 0 %}
+                                                            <p style="color:red"><b>{{ operation.amount|round(1) }}</b></p>
+                                                        {% else %}
+                                                            <p><b>{{ operation.amount|round(1) }}</b></p>
+                                                        {% endif %}
                                                     {% endif %}
-                                                {% endif %}
-                                            </td>
-                                            <td style="text-align:center;">
-                                                {% if operation.operation_type == 'balance' %}
+                                                </td>
+                                                <td style="text-align:center;">
+                                                    {% if operation.operation_type == 'bank' %}
+                                                        {% if operation.amount > 0 %}
+                                                            <p style="color:green"><b>+{{ operation.amount|round(1) }}</b></p>
+                                                        {% elif operation.amount < 0 %}
+                                                            <p style="color:red"><b>{{ operation.amount|round(1) }}</b></p>
+                                                        {% else %}
+                                                            <p><b>{{ operation.amount|round(1) }}</b></p>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                                <td style="text-align:center;">
                                                     {% if operation.amount > 0 %}
                                                         <p style="color:green"><b>+{{ operation.amount|round(1) }}</b></p>
                                                     {% elif operation.amount < 0 %}
@@ -61,8 +73,32 @@
                                                     {% else %}
                                                         <p><b>{{ operation.amount|round(1) }}</b></p>
                                                     {% endif %}
-                                                {% endif %}
-                                            </td>
+                                                </td>
+                                            {% else %}
+                                                 <td style="text-align:center;">
+                                                    {% if operation.operation_type == 'cash' %}
+                                                        {% if operation.amount > 0 %}
+                                                            <p style="color:red"><b>-{{ operation.amount|round(1) }}</b></p>
+                                                        {% elif operation.amount < 0 %}
+                                                            <p style="color:green"><b>+{{ operation.amount|abs|round(1) }}</b></p>
+                                                        {% else %}
+                                                            <p><b>{{ operation.amount|round(1) }}</b></p>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                                <td style="text-align:center;">
+                                                    {% if operation.operation_type == 'bank' %}
+                                                        {% if operation.amount > 0 %}
+                                                            <p style="color:red"><b>-{{ operation.amount|round(1) }}</b></p>
+                                                        {% elif operation.amount < 0 %}
+                                                            <p style="color:green"><b>+{{ operation.amount|abs|round(1) }}</b></p>
+                                                        {% else %}
+                                                            <p><b>{{ operation.amount|round(1) }}</b></p>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                                <td style="text-align:center;"></td>
+                                            {% endif %}
                                             <td width="30%">{{ operation.description }}</td>
                                             <td>
                                                 {% if current_user.rights in ["admin", "user"] %}

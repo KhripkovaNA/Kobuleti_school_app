@@ -13,6 +13,7 @@ from openpyxl.utils import get_column_letter
 DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
           "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
+OPERATION_TYPES = {"cash": "нал", "bank": "счет", "balance": "депозит"}
 CHILD = "Ребенок"
 ADULT = "Взрослый"
 TEACHER = "Учитель"
@@ -93,25 +94,32 @@ def create_student(form, student_type):
     first_name = form.first_name.data
     patronym = form.patronym.data
     status = form.status.data
-    if student_type == 'child':
-        dob = datetime.strptime(form.dob.data, '%d.%m.%Y').date() \
-            if form.dob.data else None
-        person_type = CHILD
+    same_person = Person.query.filter_by(last_name=last_name, first_name=first_name).all()
+    if not same_person:
+        if student_type == 'child':
+            dob = datetime.strptime(form.dob.data, '%d.%m.%Y').date() \
+                if form.dob.data else None
+            person_type = CHILD
+
+        else:
+            dob = None
+            person_type = ADULT
+
+        student = Person(
+            last_name=last_name,
+            first_name=first_name,
+            patronym=patronym,
+            dob=dob,
+            person_type=person_type,
+            status=status
+        )
+        message = ''
 
     else:
-        dob = None
-        person_type = ADULT
+        student = None
+        message = f"Человек с именем {last_name} {first_name} уже есть в системе"
 
-    student = Person(
-        last_name=last_name,
-        first_name=first_name,
-        patronym=patronym,
-        dob=dob,
-        person_type=person_type,
-        status=status
-    )
-
-    return student
+    return student, message
 
 
 def create_contact(form):
@@ -132,15 +140,22 @@ def create_parent(contact_form):
     parent_last_name = contact_form.parent_last_name.data
     parent_first_name = contact_form.parent_first_name.data
     parent_patronym = contact_form.parent_patronym.data
+    same_person = Person.query.filter_by(last_name=parent_last_name, first_name=parent_first_name).all()
 
-    parent = Person(
-        last_name=parent_last_name,
-        first_name=parent_first_name,
-        patronym=parent_patronym,
-        person_type=ADULT
-    )
+    if not same_person:
+        parent = Person(
+            last_name=parent_last_name,
+            first_name=parent_first_name,
+            patronym=parent_patronym,
+            person_type=ADULT
+        )
+        message = ''
 
-    return parent
+    else:
+        parent = None
+        message = f"Человек с именем {parent_last_name} {parent_first_name} уже есть в системе"
+
+    return parent, message
 
 
 def handle_contact_info(contact_form, student):
@@ -162,30 +177,34 @@ def handle_contact_info(contact_form, student):
 
         db.session.flush()
 
-    elif relation_type != CHILD_SELF:
+    else:
         if contact_select == CHOOSE:
             parent_id = int(contact_form.selected_contact.data)
             parent = Person.query.filter_by(id=parent_id).first()
             contact = Contact.query.filter_by(person_id=parent_id).first()
 
         else:
-            contact = create_contact(contact_form)
-            parent = create_parent(contact_form)
-            db.session.add(parent)
-            db.session.add(contact)
-            db.session.flush()
+            parent, message = create_parent(contact_form)
+            if parent:
+                contact = create_contact(contact_form)
+                db.session.add(parent)
+                db.session.add(contact)
+                db.session.flush()
 
-            parent.contacts.append(contact)
-            parent.primary_contact = parent.id
+                parent.contacts.append(contact)
+                parent.primary_contact = parent.id
+
+            else:
+                return message
 
         student.parents.append(parent)
         db.session.flush()
         assign_relation_type(contact_form, student, parent)
-    else:
-        return
 
     if contact_form.primary_contact.data:
         student.primary_contact = contact.person_id
+
+    return ''
 
 
 def assign_relation_type(form, student, parent):
@@ -203,14 +222,17 @@ def assign_relation_type(form, student, parent):
 
 
 def add_child(form):
-    student = create_student(form, 'child')
-    db.session.add(student)
-    db.session.flush()
+    student, message = create_student(form, 'child')
+    if student:
+        db.session.add(student)
+        db.session.flush()
 
-    for contact_form in form.contacts:
-        handle_contact_info(contact_form, student)
+        for contact_form in form.contacts:
+            message = handle_contact_info(contact_form, student)
+            if message:
+                return None, message
 
-    return student
+    return student, message
 
 
 def add_adult(form):
@@ -219,19 +241,21 @@ def add_adult(form):
         client_id = int(form.selected_client.data)
         client = Person.query.filter_by(id=client_id).first()
         client.status = form.status.data
+        message = ''
+        db.session.flush()
 
     else:
-        client = create_student(form, 'adult')
-        contact = create_contact(form)
-        db.session.add(client)
-        db.session.add(contact)
-        db.session.flush()
-        client.contacts.append(contact)
-        client.primary_contact = client.id
+        client, message = create_student(form, 'adult')
+        if client:
+            contact = create_contact(form)
+            db.session.add(client)
+            db.session.add(contact)
+            db.session.flush()
+            client.contacts.append(contact)
+            client.primary_contact = client.id
+            db.session.flush()
 
-    db.session.flush()
-
-    return client
+    return client, message
 
 
 def add_new_employee(form):
@@ -243,19 +267,24 @@ def add_new_employee(form):
     else:
         last_name = form.last_name.data
         first_name = form.first_name.data
-        patronym = form.patronym.data
-        employee = Person(
-            last_name=last_name,
-            first_name=first_name,
-            patronym=patronym,
-            person_type=ADULT
-        )
-        contact = create_contact(form)
-        db.session.add(employee)
-        db.session.add(contact)
-        db.session.flush()
-        employee.contacts.append(contact)
-        employee.primary_contact = employee.id
+        same_person = Person.query.filter_by(last_name=last_name, first_name=first_name).all()
+        if same_person:
+            return None, f"Человек с именем {last_name} {first_name} уже есть в системе"
+
+        else:
+            patronym = form.patronym.data
+            employee = Person(
+                last_name=last_name,
+                first_name=first_name,
+                patronym=patronym,
+                person_type=ADULT
+            )
+            contact = create_contact(form)
+            db.session.add(employee)
+            db.session.add(contact)
+            db.session.flush()
+            employee.contacts.append(contact)
+            employee.primary_contact = employee.id
 
     roles = form.roles.data
     if roles:
@@ -276,7 +305,7 @@ def add_new_employee(form):
                 employee.teaching_classes.extend(school_classes)
                 employee.color = form.teacher_color.data
 
-    return employee
+    return employee, ''
 
 
 def clients_data(person_type):
@@ -607,54 +636,90 @@ def purchase_subscription(form, student):
 
 def handle_student_edit(form, student, edit_type, user):
     if edit_type == 'edit_student':
-        student.last_name = form.last_name.data
-        student.first_name = form.first_name.data
-        student.patronym = form.patronym.data
-        student.dob = datetime.strptime(form.dob.data, '%d.%m.%Y').date() \
-            if form.dob.data else None
-        status = form.status.data
-        if student.status != status and user.rights == 'admin':
-            student.status = status
-            if student.status == "Закрыт":
-                student.subjects = []
-                student.subscriptions = []
-            student.pause_date = datetime.strptime(form.pause_until.data, '%d.%m.%Y').date() \
-                if form.pause_until.data and student.status == "Пауза" else None
+        last_name = form.last_name.data
+        first_name = form.first_name.data
+        same_person = Person.query.filter(
+            Person.id != student.id,
+            Person.last_name == last_name,
+            Person.first_name == first_name
+        ).all()
+        if same_person:
+            return f"Человек с именем {last_name} {first_name} уже есть в системе"
 
-            student.leaving_reason = form.leaving_reason.data if student.status == "Закрыт" else ''
-        db.session.flush()
-        return
+        else:
+            student.last_name = last_name
+            student.first_name = first_name
+            student.patronym = form.patronym.data
+            student.dob = datetime.strptime(form.dob.data, '%d.%m.%Y').date() \
+                if form.dob.data else None
+            status = form.status.data
+            if student.status != status and user.rights == 'admin':
+                student.status = status
+                if student.status == "Закрыт":
+                    student.subjects = []
+                    student.subscriptions = []
+                student.pause_date = datetime.strptime(form.pause_until.data, '%d.%m.%Y').date() \
+                    if form.pause_until.data and student.status == "Пауза" else None
+
+                student.leaving_reason = form.leaving_reason.data if student.status == "Закрыт" else ''
+            db.session.flush()
+
+        return ''
 
     if edit_type == 'edit_main_contact':
         main_contact = student.main_contact
+        if main_contact.id != student.id:
+            contact_last_name = form.last_name.data
+            contact_first_name = form.first_name.data
+            same_person = Person.query.filter(
+                Person.id != main_contact.id,
+                Person.last_name == contact_last_name,
+                Person.first_name == contact_first_name
+            ).all()
+            if same_person:
+                return f"Человек с именем {contact_last_name} {contact_first_name} уже есть в системе"
+
+            main_contact.last_name = contact_last_name
+            main_contact.first_name = contact_first_name
+            main_contact.patronym = form.patronym.data
+
         main_contact.contacts[0].telegram = form.telegram.data
         main_contact.contacts[0].phone = form.phone.data
         main_contact.contacts[0].other_contact = form.other_contact.data
-        if main_contact.id != student.id:
-            main_contact.last_name = form.last_name.data
-            main_contact.first_name = form.first_name.data
-            main_contact.patronym = form.patronym.data
+
         db.session.flush()
-        return
+        return ''
 
     if edit_type.startswith('edit_contact_'):
         ind = int(edit_type[len('edit_contact_'):])
         contact = student.additional_contacts[ind - 1]
+        if contact.id != student.id:
+            contact_last_name = form.last_name.data
+            contact_first_name = form.first_name.data
+            same_person = Person.query.filter(
+                Person.id != contact.id,
+                Person.last_name == contact_last_name,
+                Person.first_name == contact_first_name
+            ).all()
+            if same_person:
+                return f"Человек с именем {contact_last_name} {contact_first_name} уже есть в системе"
+
+            contact.last_name = contact_last_name
+            contact.first_name = contact_first_name
+            contact.patronym = form.patronym.data
+
         contact.contacts[0].telegram = form.telegram.data
         contact.contacts[0].phone = form.phone.data
         contact.contacts[0].other_conta = form.other_contact.data
-        if contact.id != student.id:
-            contact.last_name = form.last_name.data
-            contact.first_name = form.first_name.data
-            contact.patronym = form.patronym.data
+
         if form.primary_contact.data:
             student.primary_contact = contact.id
         db.session.flush()
-        return
+        return ''
 
     if edit_type == 'new_contact':
-        handle_contact_info(form, student)
-        return
+        message = handle_contact_info(form, student)
+        return message
 
     if edit_type == 'del_subject':
         del_subject_id = int(form.get('del_subject_btn'))
@@ -666,7 +731,7 @@ def handle_student_edit(form, student, edit_type, user):
             if del_subject in student.subjects:
                 student.subjects.remove(del_subject)
                 db.session.flush()
-        return
+        return ''
 
     if edit_type == 'subscription':
         for subscription_form in form.subscriptions:
@@ -691,16 +756,37 @@ def handle_student_edit(form, student, edit_type, user):
             if del_after_school.period not in ["month", "day"]:
                 hours = int(del_after_school.period.split()[0])
                 price *= hours
-            description = "Возврат за продленку"
-            finance_operation(del_after_school.student, price, 'cash', description)
-            db.session.delete(del_after_school)
-            db.session.flush()
+            record = Finance.query.filter(
+                Finance.person_id == del_after_school.student_id,
+                Finance.amount == -price,
+                Finance.service_id == del_after_school.id
+            ).first()
+            if record:
+                if record.student_balance:
+                    record.person.balance -= record.amount
+                db.session.delete(record)
+                db.session.flush()
+            else:
+                description = "Возврат за продленку"
+                finance_operation(del_after_school.student, price, 'cash', description, del_after_school.id)
+                db.session.delete(del_after_school)
+                db.session.flush()
         return
 
 
 def handle_employee_edit(form, employee):
-    employee.last_name = form.get('last_name')
-    employee.first_name = form.get('first_name')
+    last_name = form.get('last_name')
+    first_name = form.get('first_name')
+    same_person = Person.query.filter(
+        Person.id != employee.id,
+        Person.last_name == last_name,
+        Person.first_name == first_name
+    ).all()
+    if same_person:
+        return f"Человек с именем {last_name} {first_name} уже есть в системе"
+
+    employee.last_name = last_name
+    employee.first_name = first_name
     employee.patronym = form.get('patronym')
     employee.contacts[0].telegram = form.get('telegram')
     employee.contacts[0].phone = form.get('phone')
@@ -775,6 +861,8 @@ def handle_employee_edit(form, employee):
                 employee.color = form.get('teacher_color')
 
         db.session.flush()
+
+    return ''
 
 
 def format_employee(employee):
@@ -989,15 +1077,13 @@ def carry_out_lesson(form, subject, lesson, user):
                         subscription.lessons_left -= 1
                         payment_info = ("Абонемент", subscription.lessons_left)
                     else:
-                        student.balance -= lesson_price
                         description = f"Списание за занятие {subject.name}"
-                        finance_operation(student, -lesson_price, 'balance', description, lesson.date)
+                        finance_operation(student, -lesson_price, 'balance', description, lesson.id, date=lesson.date)
                         payment_info = ("Разовое", int(lesson_price))
                 else:
                     price = lesson_school_price if payment_option == 'after_school' else lesson_price
-                    student.balance -= price
                     description = f"Списание за занятие {subject.name}"
-                    finance_operation(student, -price, 'balance', description, lesson.date)
+                    finance_operation(student, -price, 'balance', description, lesson.id, date=lesson.date)
                     payment_info = ("Продленка", int(price)) if payment_option == 'after_school' \
                         else ("Разовое", int(price))
 
@@ -1035,27 +1121,37 @@ def undo_lesson(form, subject, lesson):
 
             if attendance:
                 if attendance.attending_status in ['attend', 'unreasonable']:
-                    payment_option = form.get(f'payment_option_{student.id}')
-                    if payment_option.startswith('subscription'):
-                        subscription_id = int(payment_option[len('subscription_'):])
-                        subscription = Subscription.query.filter_by(id=subscription_id).first()
-                        subscription.lessons_left += 1
+                    payment_option = attendance.payment_method
+                    if payment_option == 'Абонемент':
+                        subscription_id = int(attendance.subscription_id)
+                        if not subscription_id:
+                            subscription = Subscription.query.filter(
+                                Subscription.student_id == student.id,
+                                Subscription.subject_id == subject.id,
+                                Subscription.purchase_date <= lesson.date,
+                                Subscription.end_date >= lesson.date
+                            ).order_by(Subscription.purchase_date.desc()).first()
+                        else:
+                            subscription = Subscription.query.filter_by(id=subscription_id).first()
+                        if subscription:
+                            subscription.lessons_left += 1
+
                     else:
                         price = attendance.price_paid if attendance.price_paid else lesson_school_price \
-                            if payment_option == 'after_school' else lesson_price
+                            if payment_option == 'Продленка' else lesson_price
                         record = Finance.query.filter(
                             Finance.person_id == student.id,
                             Finance.date == lesson.date,
                             Finance.amount == -price,
-                            Finance.description == f"Списание за занятие {subject.name}"
+                            Finance.description == f"Списание за занятие {subject.name}",
+                            or_(Finance.service_id == lesson.id, Finance.service_id.is_(None))
                         ).first()
                         if record:
                             db.session.delete(record)
                             db.session.flush()
                         else:
-                            student.balance += price
                             description = f"Возврат за занятие {subject.name}"
-                            finance_operation(student, price, 'balance', description, lesson.date)
+                            finance_operation(student, price, 'balance', description, lesson.id, date=lesson.date)
 
                 db.session.delete(attendance)
 
@@ -1162,6 +1258,15 @@ def get_lesson_students(lesson):
                     lesson_id=lesson.id
                 ).first()
                 student.attended = attendance.attending_status if attendance else 'not_attend'
+                if attendance.payment_method:
+                    student_payment_method = attendance.payment_method
+                    student_payment_info = attendance.price_paid if attendance.price_paid else \
+                        attendance.subscription_lessons if attendance.subscription_lessons else "?"
+                    student_payment = f"{student_payment_method}({student_payment_info})"
+                else:
+                    student_payment = "?"
+                student.payment = student_payment
+
     return lesson_students
 
 
@@ -2428,17 +2533,25 @@ def handle_after_school_adding(student_id, form, period):
         return new_after_school_subscription, period_text
 
 
-def finance_operation(person, amount, operation_type, description, date=get_today_date()):
+def finance_operation(person, amount, operation_type, description, service_id, balance=False, date=get_today_date()):
+    if balance:
+        person.balance += Decimal(amount)
+
+    if operation_type == 'balance':
+        person.balance += Decimal(amount)
+        operation_type = None
+        balance = True
+
     new_operation = Finance(
         person_id=person.id,
         date=date,
         amount=amount,
         operation_type=operation_type,
-        description=description
+        student_balance=balance,
+        description=description,
+        service_id=service_id
     )
     db.session.add(new_operation)
-    if operation_type == 'balance':
-        person.balance += Decimal(amount)
     db.session.flush()
 
 
@@ -2571,6 +2684,7 @@ def del_record(form, record_type, user):
                 student.status = None
                 db.session.flush()
             else:
+                student.primary_contact = None
                 if student.contacts:
                     db.session.delete(student.contacts[0])
                 db.session.delete(student)
@@ -2600,10 +2714,11 @@ def del_record(form, record_type, user):
                 message = (f"Сотрудник {employee_name} не может быть удален", 'error')
 
             else:
-                if employee.children.all() or employee.status:
-                    for role in employee.roles:
-                        db.session.delete(role)
-                else:
+                for role in employee.roles:
+                    db.session.delete(role)
+
+                if not employee.children.all() or not employee.status:
+                    employee.primary_contact = None
                     db.session.delete(employee.contacts[0])
                     db.session.delete(employee)
                 db.session.flush()
@@ -2627,6 +2742,8 @@ def del_record(form, record_type, user):
             else:
                 if len(contact_person.children.all()) == 1 and not contact_person.status \
                         and not contact_person.roles:
+                    student.parents.remove(contact_person)
+                    contact_person.primary_contact = None
                     db.session.delete(contact_person.contacts[0])
                     db.session.delete(contact_person)
                     db.session.flush()
@@ -2758,6 +2875,8 @@ def del_record(form, record_type, user):
             descripthon = f"Удаление финансовой операции клиента " \
                           f"{operation.person.last_name} {operation.person.first_name} от " \
                           f"{operation.date:%d.%m.%Y} ({operation.description})"
+            if operation.student_balance:
+                operation.person.balance -= operation.amount
             db.session.delete(operation)
             db.session.flush()
             user_action(user, descripthon)

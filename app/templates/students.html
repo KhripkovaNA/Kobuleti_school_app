@@ -236,6 +236,15 @@
                                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                                     <div class="row">
                                                                         <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
+                                                                        <div class="col-md-7">
+                                                                            <select name="operation_type" class="form-control">
+                                                                                <option value="cash">Наличными</option>
+                                                                                <option value="bank">На счет</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Сумма:</label>
                                                                         <div class="col-md-4 field-div">
                                                                             <input type="number" class="form-control field-input required" name="deposit" min="0" step="any">
                                                                         </div>

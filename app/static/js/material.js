@@ -749,6 +749,13 @@ $(document).ready(function(){
         }
     }
 
+    // Disable submit button on form submit to prevent double clicking
+    $('form').submit(function() {
+        var currentForm = $(this);
+        submitButton = currentForm.find("button[type='submit']");
+        submitButton.prop('disabled', true);
+    });
+
     // Validate add-user and change-password forms
     $('form.add-user-form, form.change-password-form').submit(function(event) {
         var currentForm = $(this);
@@ -758,6 +765,8 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
+            submitButton = currentForm.find("button[type='submit']");
+            submitButton.prop('disabled', false);
         }
     });
 
@@ -768,6 +777,8 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
+            submitButton = currentForm.find("button[type='submit']");
+            submitButton.prop('disabled', false);
         }
     });
 
@@ -780,6 +791,8 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
+            submitButton = currentForm.find("button[type='submit']");
+            submitButton.prop('disabled', false);
         }
     });
 
@@ -790,6 +803,8 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
+            submitButton = currentForm.find("button[type='submit']");
+            submitButton.prop('disabled', false);
         }
     });
 
@@ -802,6 +817,8 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
+            submitButton = currentForm.find("button[type='submit']");
+            submitButton.prop('disabled', false);
         }
     });
 

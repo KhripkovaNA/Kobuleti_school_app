@@ -15,7 +15,7 @@ from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_studen
     format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, school_subject_record, \
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
-    add_new_event, get_date, user_action, subject_record
+    add_new_event, get_date, user_action, subject_record, OPERATION_TYPES
 from decimal import Decimal
 from sqlalchemy import distinct
 from app import app, db
@@ -474,7 +474,7 @@ def subscription(student_id):
             db.session.add(new_subscription)
             db.session.flush()
             description = f"Покупка абонемента {new_subscription.subject.name}"
-            finance_operation(student, -price, operation_type, description)
+            finance_operation(student, -price, operation_type, description, new_subscription.id)
             user_action(current_user, f"Покупка абонемента {new_subscription.subject.name} клиентом "
                                       f"{student.last_name} {student.first_name}")
             db.session.commit()
@@ -499,11 +499,14 @@ def deposit(student_id):
         if current_user.rights in ["admin", "user"]:
             amount = request.form.get('deposit')
             if amount:
+                operation_type = request.form.get('operation_type')
                 deposit = Decimal(amount)
                 student = Person.query.filter_by(id=student_id).first()
                 description = f"Пополнение баланса клиента"
-                finance_operation(student, deposit, 'balance', description)
-                user_action(current_user, f"Пополнение баланса клиента {student.last_name} {student.first_name}")
+                finance_operation(student, deposit, operation_type, description, None, True)
+                user_description = f"{description} {student.last_name} {student.first_name} " \
+                                   f"({OPERATION_TYPES.get(operation_type, '?')}{deposit:.1f})"
+                user_action(current_user, user_description)
                 db.session.commit()
                 flash(f'Депозит внесен на счет клиента {student.last_name} {student.first_name}', 'success')
 
@@ -536,20 +539,28 @@ def add_student():
             try:
                 if 'add_child_btn' in request.form:
                     if form1.validate_on_submit():
-                        student = add_child(form1)
-                        user_action(current_user, f"Добавление клиента {student.last_name} {student.first_name}")
-                        db.session.commit()
-                        flash('Новый клиент добавлен в систему', 'success')
-                        return redirect(url_for('show_edit_student', student_id=student.id))
+                        student, message = add_child(form1)
+                        if student:
+                            user_action(current_user, f"Добавление клиента {student.last_name} {student.first_name}")
+                            db.session.commit()
+                            flash('Новый клиент добавлен в систему', 'success')
+                            return redirect(url_for('show_edit_student', student_id=student.id))
+
+                        else:
+                            flash(message, 'error')
 
                 if 'add_adult_btn' in request.form:
                     render_type = 'adult'
                     if form2.validate_on_submit():
-                        client = add_adult(form2)
-                        user_action(current_user, f"Добавление клиента {client.last_name} {client.first_name}")
-                        db.session.commit()
-                        flash('Новый клиент добавлен в систему', 'success')
-                        return redirect(url_for('show_edit_student', student_id=client.id))
+                        client, message = add_adult(form2)
+                        if client:
+                            user_action(current_user, f"Добавление клиента {client.last_name} {client.first_name}")
+                            db.session.commit()
+                            flash('Новый клиент добавлен в систему', 'success')
+                            return redirect(url_for('show_edit_student', student_id=client.id))
+
+                        else:
+                            flash(message, 'error')
 
                 flash('Ошибка в форме добавления киента', 'error')
 
@@ -654,46 +665,62 @@ def show_edit_student(student_id):
                     if 'form_student_submit' in request.form:
                         render_type = 'edit_student'
                         if student_form.validate_on_submit():
-                            handle_student_edit(student_form, student, 'edit_student', current_user)
-                            description = f"Изменение данных клиента {student.last_name} {student.first_name}"
-                            user_action(current_user, description)
-                            db.session.commit()
-                            flash('Изменения внесены', 'success')
-                            return redirect(url_for('show_edit_student', student_id=student.id))
+                            message = handle_student_edit(student_form, student, 'edit_student', current_user)
+                            if not message:
+                                description = f"Изменение данных клиента {student.last_name} {student.first_name}"
+                                user_action(current_user, description)
+                                db.session.commit()
+                                flash('Изменения внесены', 'success')
+                                return redirect(url_for('show_edit_student', student_id=student.id))
+
+                            else:
+                                flash(message, 'error')
 
                     if 'form_main_contact_submit' in request.form:
                         render_type = 'contact_main_edit'
                         if main_contact_form.validate_on_submit():
-                            handle_student_edit(main_contact_form, student, 'edit_main_contact', current_user)
-                            description = f"Изменение основного контакта клиента " \
-                                          f"{student.last_name} {student.first_name}"
-                            user_action(current_user, description)
-                            db.session.commit()
-                            flash('Изменения внесены', 'success')
-                            return redirect(url_for('show_edit_student', student_id=student.id))
-
-                    for i in range(1, len(student.additional_contacts) + 2):
-                        if f'form_cont_{i}_submit' in request.form:
-                            render_type = f'contact_edit_{i}'
-                            if add_cont_forms[i-1].validate_on_submit():
-                                handle_student_edit(add_cont_forms[i-1], student,
-                                                    f'edit_contact_{i}', current_user)
-                                description = f"Изменение контактных данных клиента " \
+                            message = handle_student_edit(main_contact_form, student, 'edit_main_contact', current_user)
+                            if not message:
+                                description = f"Изменение основного контакта клиента " \
                                               f"{student.last_name} {student.first_name}"
                                 user_action(current_user, description)
                                 db.session.commit()
                                 flash('Изменения внесены', 'success')
                                 return redirect(url_for('show_edit_student', student_id=student.id))
 
+                            else:
+                                flash(message, 'error')
+
+                    for i in range(1, len(student.additional_contacts) + 2):
+                        if f'form_cont_{i}_submit' in request.form:
+                            render_type = f'contact_edit_{i}'
+                            if add_cont_forms[i-1].validate_on_submit():
+                                message = handle_student_edit(add_cont_forms[i-1], student,
+                                                              f'edit_contact_{i}', current_user)
+                                if not message:
+                                    description = f"Изменение контактных данных клиента " \
+                                                  f"{student.last_name} {student.first_name}"
+                                    user_action(current_user, description)
+                                    db.session.commit()
+                                    flash('Изменения внесены', 'success')
+                                    return redirect(url_for('show_edit_student', student_id=student.id))
+
+                                else:
+                                    flash(message, 'error')
+
                     if 'form_cont_new_submit' in request.form:
                         render_type = 'contact_new'
                         if new_contact_form.validate_on_submit():
-                            handle_student_edit(new_contact_form, student, 'new_contact', current_user)
-                            description = f"Добавление нового контакта клиенту {student.last_name} {student.first_name}"
-                            user_action(current_user, description)
-                            db.session.commit()
-                            flash('Новый контакт добавлен', 'success')
-                            return redirect(url_for('show_edit_student', student_id=student.id))
+                            message = handle_student_edit(new_contact_form, student, 'new_contact', current_user)
+                            if not message:
+                                description = f"Добавление нового контакта клиенту {student.last_name} {student.first_name}"
+                                user_action(current_user, description)
+                                db.session.commit()
+                                flash('Новый контакт добавлен', 'success')
+                                return redirect(url_for('show_edit_student', student_id=student.id))
+
+                            else:
+                                flash(message, 'error')
 
                     if 'del_subject_btn' in request.form:
                         handle_student_edit(request.form, student, 'del_subject', current_user)
@@ -805,12 +832,16 @@ def add_employee():
         if request.method == 'POST':
             try:
                 if form.validate_on_submit():
-                    employee = add_new_employee(form)
-                    description = f'Добавление нового сотрудника {employee.last_name} {employee.first_name}'
-                    user_action(current_user, description)
-                    db.session.commit()
-                    flash('Новый сотрудник добавлен в систему.', 'success')
-                    return redirect(url_for('show_edit_employee', employee_id=employee.id))
+                    employee, message = add_new_employee(form)
+                    if employee:
+                        description = f'Добавление нового сотрудника {employee.last_name} {employee.first_name}'
+                        user_action(current_user, description)
+                        db.session.commit()
+                        flash('Новый сотрудник добавлен в систему.', 'success')
+                        return redirect(url_for('show_edit_employee', employee_id=employee.id))
+
+                    else:
+                        flash(message, 'error')
 
                 flash('Ошибка в форме добавления сотрудника', 'error')
 
@@ -853,12 +884,16 @@ def show_edit_employee(employee_id):
                 if current_user.rights in ["admin", "user"]:
                     render_type = 'edit'
                     if form.validate_on_submit():
-                        handle_employee_edit(request.form, employee)
-                        description = f'Изменение данных сотрудника {employee.last_name} {employee.first_name}'
-                        user_action(current_user, description)
-                        db.session.commit()
-                        flash('Изменения внесены.', 'success')
-                        return redirect(url_for('show_edit_employee', employee_id=employee.id))
+                        message = handle_employee_edit(request.form, employee)
+                        if not message:
+                            description = f'Изменение данных сотрудника {employee.last_name} {employee.first_name}'
+                            user_action(current_user, description)
+                            db.session.commit()
+                            flash('Изменения внесены', 'success')
+                            return redirect(url_for('show_edit_employee', employee_id=employee.id))
+
+                        else:
+                            flash(message, 'error')
 
                     flash('Ошибка в форме изменения сотрудника', 'error')
 
@@ -1781,9 +1816,9 @@ def after_school_purchase():
                     hours = int(new_after_school.period.split()[0])
                     price *= hours
                 operation_type = request.form.get('operation_type')
-                description = "Оплата продленки"
+                description = f"Оплата продленки ({period_text})"
                 attendee = Person.query.filter_by(id=attendee_id).first()
-                finance_operation(attendee, -price, operation_type, description)
+                finance_operation(attendee, -price, operation_type, description, new_after_school.id)
                 user_description = f"Проведение оплаты клиента {attendee.last_name} {attendee.first_name} " \
                                    f"за Продленку ({period_text})"
                 user_action(current_user, user_description)
@@ -1870,9 +1905,10 @@ def add_finance_operation():
                 amount = -amount
             operation_type = type_of_operation.split('_')[1]
             person = Person.query.filter_by(id=person_id).first()
-            finance_operation(person, amount, operation_type, description, date=get_today_date())
-            user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name} " \
-                               f"({description})"
+            finance_operation(person, amount, operation_type, description, None)
+
+            user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name}: " \
+                               f"{description} ({OPERATION_TYPES.get(operation_type, '?')} {amount:.1f})"
             user_action(current_user, user_description)
             db.session.commit()
             flash('Финансовая операция проведена', 'success')

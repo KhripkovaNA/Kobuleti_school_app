@@ -9,7 +9,7 @@ from sqlalchemy import and_, or_, distinct, text
 from datetime import datetime, timedelta
 import pytz
 from dateutil.relativedelta import relativedelta
-from app.app_functions import subjects_data, get_weekday_date, TODAY, format_subscription_types, \
+from app.app_functions import subjects_data, get_weekday_date, get_today_date, format_subscription_types, \
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
     lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record, \
     conjugate_lessons, calculate_week, get_date_range, day_school_lessons_dict
@@ -952,3 +952,49 @@ lesson_dict = {
 #
 # db.session.commit()
 
+# all_finances = Finance.query.all()
+# for oper in all_finances:
+#     if oper.operation_type == 'balance':
+#         oper.student_balance = True
+#         if oper.description.startswith('Пополнение баланса'):
+#             oper.operation_type = 'cash'
+#         else:
+#             oper.operation_type = None
+#
+#     else:
+#         oper.student_balance = False
+#
+# db.session.commit()
+# print_table(Finance)
+
+# extra_lessons = StudentAttendance.query.filter(
+#     StudentAttendance.lesson.has(Lesson.lesson_type.has(SubjectType.name != "school"))
+# ).all()
+# for lesson in extra_lessons:
+#     print(lesson.id, lesson.lesson_id, lesson.date, lesson.student.last_name, lesson.student.first_name,
+#           lesson.payment_method, lesson.price_paid, lesson.subscription_lessons, lesson.subscription_id)
+
+
+# record = Finance.query.filter(
+#     Finance.person_id == 1,
+#     Finance.date == datetime(2024, 4, 1).date(),
+#     Finance.amount == -20,
+#     Finance.description.startswith("Списание за занятие"),
+#     or_(Finance.service_id == 3083, Finance.service_id.is_(None))
+# ).first()
+#
+# print(record)
+#
+# print(Finance.query.filter_by(id=11).first().service_id)
+
+
+# all_finances = Finance.query.all()
+# for oper in all_finances:
+#     if oper.student_balance:
+#         if oper.description.startswith('Пополнение баланса'):
+#             oper.operation_type = 'cash'
+#         else:
+#             oper.operation_type = None
+#
+# db.session.commit()
+# print_table(Finance)

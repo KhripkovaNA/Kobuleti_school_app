@@ -166,12 +166,8 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div id="add-contact">
-                                <button type="button" id="add-contact-btn" class="btn btn-sm" data-background-color="orange">Добавить контакт</button>
-                            </div>
-                            <div id="remove-contact" style="{{ 'display:none' if form1.contacts|length == 1 else 'display:block' }};">
-                                <button type="button" id="remove-contact-btn" class="btn btn-sm" data-background-color="red">Удалить контакт</button>
-                            </div>
+                            <button type="button" id="add-contact-btn" class="btn btn-sm" data-background-color="orange">Добавить контакт</button>
+                            <button type="button" id="remove-contact" class="btn btn-sm" data-background-color="red" style="{{ 'display:none' if form1.contacts|length == 1 else 'display:inline-block' }};">Удалить контакт</button>
                         </div>
                     </div>
                     <div class="footer">
