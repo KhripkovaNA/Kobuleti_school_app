@@ -1423,9 +1423,14 @@ def subject(subject_id, month_index):
         return redirect(url_for('subjects'))
 
     subject_records, datetimes, subject_students, month = subject_record(subject_id, month_index)
+    other_subjects = Subject.query.filter(
+        Subject.id != subject_id,
+        ~Subject.subject_type.has(SubjectType.name.in_(['school', 'event', 'after_school']))
+    ).order_by(Subject.name).all()
 
     return render_template('subject_record.html', subject_records=subject_records, datetimes=datetimes,
-                           students=subject_students, subject=subject, month_index=month_index, month=month)
+                           students=subject_students, subject=subject, month_index=month_index,
+                           other_subjects=other_subjects, month=month)
 
 
 @app.route('/school-students/<string:school_class>', methods=['GET', 'POST'])

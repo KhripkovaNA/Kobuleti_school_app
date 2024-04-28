@@ -19,6 +19,7 @@
                                     <thead class="text-success">
                                         <th>Клиент</th>
                                         <th width="27%">Способ оплаты</th>
+                                        <th style="text-align:center;">Баланс</th>
                                         <th style="padding-left: 40px;">Запись</th>
                                         <th>Посещение</th>
                                     </thead>
@@ -29,6 +30,15 @@
                                                     <td>{{ student.last_name }} {{ student.first_name }}</td>
                                                     <td>
                                                         <div class="form-control">{{ student.payment }}</div>
+                                                    </td>
+                                                    <td style="text-align:center;">
+                                                        {% if student.balance > 0 %}
+                                                            <p style="color:green"><b>{{ student.balance|round(1) }}</b></p>
+                                                        {% elif student.balance < 0 %}
+                                                            <p style="color:red"><b>{{ student.balance|round(1) }}</b></p>
+                                                        {% else %}
+                                                            <p><b>{{ student.balance|round(1) }}</b></p>
+                                                        {% endif %}
                                                     </td>
                                                     <td class="checkbox-option" style="padding-left: 40px;">
                                                         {% if student in subject_lesson.students_registered %}
@@ -58,6 +68,7 @@
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
+                                                <td></td>
                                                 <td>
                                                     {% if current_user.rights in ["admin", "user"] %}
                                                         <button type="submit" name="change_btn" class="btn btn-xs" data-background-color="orange">Изменить</button>
@@ -75,10 +86,19 @@
                                                         <div class="dropdown">
                                                             <select name="payment_option_{{ student.id }}" class="form-control">
                                                                 {% for payment_option in student.payment_options %}
-                                                                    <option value="{{ payment_option.value }}">{{ payment_option.type }}. {{ payment_option.info }}</option>
+                                                                    <option value="{{ payment_option.value }}">{{ payment_option.type }} {{ payment_option.info if payment_option.info }}</option>
                                                                 {% endfor %}
                                                             </select>
                                                         </div>
+                                                    </td>
+                                                    <td style="text-align:center;">
+                                                        {% if student.balance > 0 %}
+                                                            <p style="color:green"><b>{{ student.balance|round(1) }}</b></p>
+                                                        {% elif student.balance < 0 %}
+                                                            <p style="color:red"><b>{{ student.balance|round(1) }}</b></p>
+                                                        {% else %}
+                                                            <p><b>{{ student.balance|round(1) }}</b></p>
+                                                        {% endif %}
                                                     </td>
                                                     {% if student in subject_lesson.students_registered %}
                                                         <td class="checkbox-option" style="padding-left: 40px;">
@@ -120,6 +140,7 @@
                                                         <button type="button" class="btn btn-danger btn-xs close-client-btn">Отменить</button>
                                                     </div>
                                                 </td>
+                                                <td></td>
                                                 <td></td>
                                                 {% if not subject_lesson.students %}
                                                     <td></td>
@@ -235,7 +256,7 @@
                     <div class="row" style="margin-top: 15px;">
                         <p style="margin-left: 80px;">Запланированных занятий нет</p>
                     </div>
-                    <div class="row" style="margin-top: 45px;">
+                    <div class="row" style="margin-top: 100px;">
                         <div class="col-md-12">
                             <div class="dropup pull-right">
                                 <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-background-color="main">

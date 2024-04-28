@@ -33,7 +33,7 @@
                                             </a>
                                         </td>
                                         {% for datetime in datetimes %}
-                                            <td>
+                                            <td style="font-size: 12px;">
                                                 {{ subject_records[student][datetime] if subject_records[student].get(datetime) }}
                                             </td>
                                         {% endfor %}
@@ -43,10 +43,10 @@
                         </table>
                     </div>
                 {% else %}
-                    <p>Нет пройденных занятий в этом месяце</p>
+                    <p style="margin-top: 15px;">Нет пройденных занятий в этом месяце</p>
                 {% endif %}
-                <div class="row">
-                    <div class="col-md-6">
+                <div class="row" style="{{ 'margin-top: 100px;' if not subject_records }}">
+                    <div class="col-md-12">
                         <button class="btn btn-sm" data-background-color="orange">
                             <a style="color: #FFFFFF;" href="{{ url_for('subject', subject_id=subject.id, month_index=month_index-1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущий месяц
@@ -59,6 +59,17 @@
                                 </a>
                             </button>
                         {% endif %}
+                        <div class="dropup pull-right">
+                            <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-background-color="main">
+                                <i class="material-icons" style="color: white;">library_books</i> Другое занятие
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                {% for other_subject in other_subjects %}
+                                    <li><a href="{{ url_for('subject', subject_id=other_subject.id, month_index=month_index) }}">{{ other_subject.name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

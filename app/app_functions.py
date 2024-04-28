@@ -1075,21 +1075,21 @@ def get_payment_options(student, subject_id, lesson):
             payment_option = {
                 'value': f'subscription_{subscription.id}',
                 'type': 'Абонемент',
-                'info': f'{subscription.lessons_left} (до {subscription.end_date:%d.%m})'
+                'info': f'({subscription.lessons_left} до {subscription.end_date:%d.%m})'
             }
             payment_options.append(payment_option)
     if after_school_sub:
         payment_option = {
             'value': 'after_school',
             'type': 'Продленка',
-            'info': f'Баланс: {student_balance}'
+            'info': ''
         }
         payment_options.append(payment_option)
     else:
         payment_option = {
             'value': 'one_time',
             'type': 'Разовое',
-            'info': f'Баланс: {student_balance}'
+            'info': ''
         }
         payment_options.append(payment_option)
     return payment_options
@@ -1295,9 +1295,8 @@ def get_lesson_students(lesson):
                 student.attended = attendance.attending_status if attendance else 'not_attend'
                 if attendance.payment_method:
                     student_payment_method = attendance.payment_method
-                    student_payment_info = attendance.price_paid if attendance.price_paid else \
-                        attendance.subscription_lessons if attendance.subscription_lessons else "?"
-                    student_payment = f"{student_payment_method}({student_payment_info})"
+                    student_subscription_info = f"({attendance.subscription_lessons})" if attendance.subscription_lessons else ''
+                    student_payment = student_payment_method + student_subscription_info
                 else:
                     student_payment = "?"
                 student.payment = student_payment
@@ -2285,9 +2284,8 @@ def subject_record(subject_id, month_index):
         subject_student = (f"{record.student.last_name} {record.student.first_name}", record.student_id)
         if record.payment_method:
             student_payment_method = record.payment_method
-            student_payment_info = record.price_paid if record.price_paid else \
-                record.subscription_lessons if record.subscription_lessons else "?"
-            student_payment = f"{student_payment_method}({student_payment_info})"
+            student_subscription_info = f"({record.subscription_lessons})" if record.subscription_lessons else ''
+            student_payment = student_payment_method + student_subscription_info
         else:
             student_payment = "?"
         if subject_student not in subject_students:
