@@ -17,6 +17,7 @@ from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_studen
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
     add_new_event, get_date, user_action, subject_record, OPERATION_TYPES
 from decimal import Decimal
+from datetime import datetime
 from sqlalchemy import distinct
 from app import app, db
 from io import BytesIO
@@ -652,10 +653,14 @@ def show_edit_student(student_id):
                     'subscription_id': subscription["subscription_id"],
                     'subject_name': subscription["subject_name"],
                     'lessons': subscription["lessons_left"],
+                    'full_subscription': subscription["full_subscription"],
+                    'purchase_date': subscription["purchase_date"],
                     'end_date': subscription["end_date"]
                 })
         subscriptions_form = SubscriptionsEditForm(data=data)
-        student_finances = Finance.query.filter_by(person_id=student.id).order_by(Finance.date.desc()).all()
+        student_finances = Finance.query.filter_by(person_id=student.id).order_by(
+            Finance.date.desc(), Finance.id.desc()
+        ).all()
         student.finance_operations = student_finances
         render_type = 'student'
 
@@ -713,7 +718,8 @@ def show_edit_student(student_id):
                         if new_contact_form.validate_on_submit():
                             message = handle_student_edit(new_contact_form, student, 'new_contact', current_user)
                             if not message:
-                                description = f"Добавление нового контакта клиенту {student.last_name} {student.first_name}"
+                                description = f"Добавление нового контакта клиенту {student.last_name} " \
+                                              f"{student.first_name}"
                                 user_action(current_user, description)
                                 db.session.commit()
                                 flash('Новый контакт добавлен', 'success')
@@ -738,6 +744,17 @@ def show_edit_student(student_id):
                                 db.session.commit()
                                 flash('Изменения внесены', 'success')
                                 return redirect(url_for('show_edit_student', student_id=student.id))
+
+                        else:
+                            flash('Нет прав руководителя', 'error')
+                            return redirect(url_for('show_edit_student', student_id=student.id))
+
+                    if 'del_subscription' in request.form:
+                        if current_user.rights == 'admin':
+                            handle_student_edit(request.form, student, 'del_subscription', current_user)
+                            db.session.commit()
+                            flash('Изменения внесены', 'success')
+                            return redirect(url_for('show_edit_student', student_id=student.id))
 
                         else:
                             flash('Нет прав руководителя', 'error')
@@ -1898,6 +1915,7 @@ def add_finance_operation():
                 flash('Клиент не выбран', 'error')
                 return redirect(request.referrer)
 
+            finance_date = datetime.strptime(request.form.get('finance_date'), '%d.%m.%Y').date()
             description = request.form.get('description')
             amount = float(request.form.get('amount'))
             type_of_operation = request.form.get('operation_type')
@@ -1905,7 +1923,7 @@ def add_finance_operation():
                 amount = -amount
             operation_type = type_of_operation.split('_')[1]
             person = Person.query.filter_by(id=person_id).first()
-            finance_operation(person, amount, operation_type, description, None)
+            finance_operation(person, amount, operation_type, description, None, date=finance_date)
 
             user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name}: " \
                                f"{description} ({OPERATION_TYPES.get(operation_type, '?')} {amount:.1f})"
@@ -1934,12 +1952,28 @@ def finances():
             if current_user.rights in ["admin", "user"]:
                 operation_id = request.form.get('operation_id')
                 fin_operation = Finance.query.filter_by(id=operation_id).first()
+                new_finance_date = datetime.strptime(request.form.get('finance_date'), '%d.%m.%Y').date()
+                old_finance_date = fin_operation.date
                 new_description = request.form.get('description')
                 old_description = fin_operation.description
                 fin_operation.description = new_description
-                user_description = f"Изменение описания финансовой операции от {fin_operation.date:%d.%m.%Y} с " \
-                                   f"'{old_description}' на '{new_description}'"
-                user_action(current_user, user_description)
+                fin_operation.date = new_finance_date
+
+                if new_finance_date == old_finance_date and new_description != old_description:
+                    user_description = f"Изменение описания финансовой операции от {fin_operation.date:%d.%m.%Y} с " \
+                                       f"'{old_description}' на '{new_description}'"
+                elif new_finance_date != old_finance_date and new_description == old_description:
+                    user_description = f"Изменение даты финансовой операции '{old_description}' " \
+                                       f"с {old_finance_date:%d.%m.%Y} на {new_finance_date:%d.%m.%Y}"
+                elif new_finance_date != old_finance_date and new_description != old_description:
+                    user_description = f"Изменение финансовой операции '{old_description}' " \
+                                       f"({old_finance_date:%d.%m.%Y}) " \
+                                       f"на '{new_description}' ({new_finance_date:%d.%m.%Y})"
+                else:
+                    user_description = None
+
+                if user_description:
+                    user_action(current_user, user_description)
                 db.session.commit()
 
                 flash('Финансовая операция изменена', 'success')
@@ -1953,7 +1987,8 @@ def finances():
 
         return redirect(url_for('finances'))
 
-    return render_template('finances.html', finance_operations=finance_operations, all_persons=all_persons)
+    return render_template('finances.html', finance_operations=finance_operations, all_persons=all_persons,
+                           today=f'{get_today_date():%d.%m.%Y}')
 
 
 @app.route('/delete-record', methods=['POST'])

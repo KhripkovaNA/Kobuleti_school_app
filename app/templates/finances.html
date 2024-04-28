@@ -126,8 +126,8 @@
                                                                     <input type="hidden" name="operation_id" value="{{ operation.id }}">
                                                                     <div class="row">
                                                                         <label class="control-label col-md-3" style="padding-left:44px;">Дата:</label>
-                                                                        <div class="col-md-3">
-                                                                            <div class="form-control">{{ operation.date.strftime('%d.%m.%Y') }}</div>
+                                                                        <div class="col-md-3 date-div">
+                                                                            <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ operation.date.strftime('%d.%m.%Y') }}">
                                                                         </div>
                                                                         <label class="control-label col-md-3" style="padding-left:44px;">Сумма:</label>
                                                                         <div class="col-md-2">
@@ -231,9 +231,16 @@
                                 <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <div class="row">
+                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
+                                        <div class="col-md-7 date-div">
+                                            <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
                                         <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
                                         <div class="col-md-7">
                                             <select name="person_id" class="form-control select-search">
+                                                <option disabled selected></option>
                                                 {% for person in all_persons %}
                                                     <option value="{{ person.id }}">{{ person.last_name }} {{ person.first_name }}</option>
                                                 {% endfor %}
@@ -242,8 +249,9 @@
                                     </div>
                                     <div class="row">
                                         <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
-                                        <div class="col-md-7">
-                                            <select name="operation_type" class="form-control">
+                                        <div class="col-md-7 field-div">
+                                            <select name="operation_type" class="form-control field-input required">
+                                                <option disabled selected></option>
                                                 <option value="minus_cash">Оплата наличными</option>
                                                 <option value="minus_bank">Оплата на счет</option>
                                                 <option value="minus_balance">Оплата с депозита</option>

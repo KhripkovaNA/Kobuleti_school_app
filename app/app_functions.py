@@ -444,7 +444,10 @@ def format_subjects_and_subscriptions(student):
             subscription_dict['subscription_id'] = subscription.id
             subscription_dict['subject_name'] = subject.name
             subscription_dict['lessons_left'] = subscription.lessons_left
+            subscription_dict['purchase_date'] = f'{subscription.purchase_date:%d.%m.%Y}'
             subscription_dict['end_date'] = f'{subscription.end_date:%d.%m.%Y}'
+            subscription_dict['full_subscription'] = True \
+                if subscription.lessons_left == subscription.subscription_type.lessons else False
             subscriptions.append(subscription_dict)
             subscriptions_list.append(f'{subject.name}({subscription.lessons_left})')
             subscriptions_set.add(subject.id)
@@ -738,14 +741,46 @@ def handle_student_edit(form, student, edit_type, user):
             subscription_id = int(subscription_form.subscription_id.data)
             subscription = Subscription.query.filter_by(id=subscription_id).first()
             lessons_left = subscription_form.lessons.data
+            purchase_date = datetime.strptime(subscription_form.purchase_date.data, '%d.%m.%Y').date()
             end_date = datetime.strptime(subscription_form.end_date.data, '%d.%m.%Y').date()
-            if subscription.lessons_left != lessons_left or subscription.end_date != end_date:
+            if subscription.lessons_left != lessons_left or subscription.purchase_date != purchase_date \
+                    or subscription.end_date != end_date:
                 subscription.lessons_left = lessons_left
+                subscription.purchase_date = purchase_date
                 subscription.end_date = end_date
                 description = f"Изменение абонемента {subscription.subject.name} клиента " \
                               f"{student.last_name} {student.first_name}"
                 user_action(user, description)
         db.session.flush()
+        return
+
+    if edit_type == 'del_subscription':
+        del_subscription_id = int(form.get('del_subscription'))
+        del_subscription = Subscription.query.filter_by(id=del_subscription_id).first()
+        if del_subscription:
+            full_subscription = del_subscription.lessons_left == del_subscription.subscription_type.lessons
+            if full_subscription:
+                price = del_subscription.subscription_type.price
+                record = Finance.query.filter(
+                    Finance.person_id == del_subscription.student_id,
+                    Finance.amount == -price,
+                    Finance.service_id == del_subscription.id
+                ).first()
+                if record:
+                    if record.student_balance:
+                        record.person.balance -= record.amount
+                    db.session.delete(record)
+                    db.session.flush()
+                else:
+                    description = f"Возврат за абонемент {del_subscription.subject.name}"
+                    finance_operation(del_subscription.student, price, 'cash', description, del_subscription.id)
+
+                description = f"Удаление абонемента {del_subscription.subject.name} клиента " \
+                              f"{student.last_name} {student.first_name}"
+                user_action(user, description)
+                db.session.delete(del_subscription)
+
+                db.session.flush()
         return
 
     if edit_type == 'del_after_school':
@@ -1417,7 +1452,9 @@ def get_date(day_of_week, week=0):
     return day_of_week_date
 
 
-def get_weekday_date(day_of_week, date=get_today_date()):
+def get_weekday_date(day_of_week, date=None):
+    if date is None:
+        date = get_today_date()
     date_of_week_day = date - timedelta(days=date.weekday()) + timedelta(days=day_of_week)
     return date_of_week_day
 
@@ -1485,7 +1522,7 @@ def week_lessons_dict(week, rooms, lessons_type='general'):
 
 
 def day_school_lessons_dict(day, week, school_classes):
-    lesson_date = get_date(day-1, week)
+    lesson_date = get_date(day - 1, week)
     lesson_date_str = f'{lesson_date:%d.%m}'
     day_start_hour = 22
     day_end_hour = 8
@@ -1971,7 +2008,7 @@ def handle_school_lesson(form, lesson, user):
         if attendance:
             db.session.delete(attendance)
         description = f"Удаление ученика {del_student.last_name} {del_student.first_name} " \
-                      f"из списка учеников урока {lesson.subject.name} {lesson.dat:%d.%m.%Y}"
+                      f"из списка учеников урока {lesson.subject.name} {lesson.date:%d.%m.%Y}"
         user_action(user, description)
         db.session.flush()
 
@@ -1991,7 +2028,7 @@ def handle_school_lesson(form, lesson, user):
                 if lesson.subject not in new_student.subjects.all():
                     new_student.subjects.append(lesson.subject)
                 description = f"Добавление ученика {new_student.last_name} {new_student.first_name} " \
-                              f"в список учеников урока {lesson.subject.name} {lesson.dat:%d.%m.%Y}"
+                              f"в список учеников урока {lesson.subject.name} {lesson.date:%d.%m.%Y}"
                 user_action(user, description)
                 db.session.flush()
                 return "Ученик добавлен", 'success'
@@ -2087,7 +2124,6 @@ def employee_record(employees, week):
     for employee in employees:
         for role in employee.roles:
             if role.role != "Учитель":
-
                 add_employee_dict(employee.id, f"{employee.last_name} {employee.first_name}", role.role, {})
 
         if employee.teacher:
@@ -2389,8 +2425,8 @@ def student_record(student, month_index):
     ).all()
 
     student_subjects = Subject.query.filter(
-      Subject.subject_type.has(SubjectType.name == "school"),
-      Subject.students.any(Person.id == student.id)
+        Subject.subject_type.has(SubjectType.name == "school"),
+        Subject.students.any(Person.id == student.id)
     ).order_by(Subject.name).all()
     subjects_dict = {subject.name: {} for subject in student_subjects}
     dates_grade_type_set = set()
@@ -2533,7 +2569,10 @@ def handle_after_school_adding(student_id, form, period):
         return new_after_school_subscription, period_text
 
 
-def finance_operation(person, amount, operation_type, description, service_id, balance=False, date=get_today_date()):
+def finance_operation(person, amount, operation_type, description, service_id, balance=False, date=None):
+    if date is None:
+        date = get_today_date()
+
     if balance:
         person.balance += Decimal(amount)
 
@@ -2767,10 +2806,27 @@ def del_record(form, record_type, user):
         ).first()
         if subject:
             subject_name = f"{subject.name} ({subject.subject_type.description})"
-            subject_lessons = Lesson.query.filter_by(subject_id=subject.id).all()
-            if subject_lessons:
-                message = (f"Предмет {subject_name} не может быть удален", 'error')
+            subject_lessons = Lesson.query.filter(subject_id=subject.id).all()
+            subscriptions = Subscription.query.filter(
+                Subscription.subject_id == subject.id,
+                Subscription.end_date >= get_today_date(),
+                Subscription.lessons_left > 0
+            ).all()
+            if subject_lessons or subscriptions:
+                text = f"Предмет {subject_name} не может быть удален, "
+                text += "т.к. есть дейсвующие абонементы" if subscriptions else "т.к. есть занятия в расписании"
+                message = (text, 'error')
             else:
+                old_subscriptions = Subscription.query.filter(
+                    Subscription.subject_id == subject.id,
+                    or_(
+                        Subscription.end_date < get_today_date(),
+                        Subscription.lessons_left == 0
+                    )
+                ).all()
+                if old_subscriptions:
+                    for subscription in old_subscriptions:
+                        db.session.delete(subscription)
                 db.session.delete(subject)
                 db.session.flush()
                 user_action(user, f"Удаление предмета {subject_name}")

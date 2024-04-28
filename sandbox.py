@@ -997,4 +997,4 @@ lesson_dict = {
 #             oper.operation_type = None
 #
 # db.session.commit()
-# print_table(Finance)
+print_table(UserAction)

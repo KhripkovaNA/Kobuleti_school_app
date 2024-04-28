@@ -125,6 +125,8 @@ class SubscriptionForm(Form):
     subject_name = StringField()
     lessons = IntegerField(validators=[InputRequired(message='Заполните это поле'),
                                        NumberRange(0, 20, message='Неправильный формат')])
+    full_subscription = BooleanField()
+    purchase_date = StringField(validators=[InputRequired(message='Заполните это поле'), validate_date_format])
     end_date = StringField(validators=[InputRequired(message='Заполните это поле'), validate_date_format])
 
 

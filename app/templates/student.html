@@ -824,11 +824,12 @@
                             <div class="form-group">
                                 {% if student.subscriptions_info %}
                                     <div class="row">
-                                        <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                                        <div class="col-md-9 table-responsive" style="padding-left:44px;">
                                             <table class="table table-hover" style="table-layout: fixed;">
                                                 <thead class="text-success">
                                                     <th>Занятие</th>
                                                     <th style="text-align:center;">Остаток уроков</th>
+                                                    <th style="text-align:center;">Дата покупки</th>
                                                     <th style="text-align:center;">Срок действия</th>
                                                 </thead>
                                                 <tbody>
@@ -837,6 +838,9 @@
                                                             <td style="padding-top:15px; vertical-align:top;">{{ subscription.subject_name }}</td>
                                                             <td style="padding: 12px 40px; vertical-align:top;">
                                                                 <div class="form-control">{{ subscription.lessons_left if subscription.lessons_left }}</div>
+                                                            </td>
+                                                            <td style="padding: 12px 30px; vertical-align:top;">
+                                                                <div class="form-control">{{ subscription.purchase_date }}</div>
                                                             </td>
                                                             <td style="padding: 12px 30px; vertical-align:top;">
                                                                 <div class="form-control">{{ subscription.end_date }}</div>
@@ -948,11 +952,12 @@
                                 <div class="form-group">
                                     {% if student.subscriptions_info %}
                                         <div class="row">
-                                            <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                                            <div class="col-md-11 table-responsive" style="padding-left:44px;">
                                                 <table class="table table-hover" style="table-layout: fixed;">
                                                     <thead class="text-success">
                                                         <th>Занятие</th>
                                                         <th style="text-align:center;">Остаток уроков</th>
+                                                        <th style="text-align:center;">Дата покупки</th>
                                                         <th style="text-align:center;">Срок действия</th>
                                                     </thead>
                                                     <tbody>
@@ -965,6 +970,12 @@
                                                                         <span>{{ error }}</span>
                                                                     {% endfor %}
                                                                 </td>
+                                                                <td style="padding: 12px 30px; vertical-align:top;" class="{{ 'has-error' if subscription_form.purchase_date.errors }}">
+                                                                    {{ subscription_form.purchase_date(class="form-control datepicker", placeholder="дд.мм.гггг") }}
+                                                                    {% for error in subscription_form.purchase_date.errors %}
+                                                                        <span>{{ error }}</span>
+                                                                    {% endfor %}
+                                                                </td>
                                                                 <td style="padding: 12px 30px; vertical-align:top;" class="{{ 'has-error' if subscription_form.end_date.errors }}">
                                                                     {{ subscription_form.end_date(class="form-control datepicker", placeholder="дд.мм.гггг") }}
                                                                     {% for error in subscription_form.end_date.errors %}
@@ -972,6 +983,9 @@
                                                                     {% endfor %}
                                                                 </td>
                                                                 {{ subscription_form.subscription_id }}
+                                                                {% if subscription_form.full_subscription.data %}
+                                                                    <td><button type="submit" name="del_subscription" value="{{ subscription_form.subscription_id.data }}" class="btn btn-danger del-btn-sm">Удалить</button></td>
+                                                                {% endif %}
                                                             </tr>
                                                         {% endfor %}
                                                     </tbody>
@@ -1323,6 +1337,12 @@
                                                     <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                         <input type="hidden" name="person_id" value="{{ student.id }}">
+                                                        <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
+                                                            <div class="col-md-7 date-div">
+                                                                <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                            </div>
+                                                        </div>
                                                         <div class="row">
                                                             <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
                                                             <div class="col-md-7">

@@ -749,11 +749,16 @@ $(document).ready(function(){
         }
     }
 
-    // Disable submit button on form submit to prevent double clicking
-    $('form').submit(function() {
-        var currentForm = $(this);
-        submitButton = currentForm.find("button[type='submit']");
-        submitButton.prop('disabled', true);
+    // Reset form submission status on page load or reload
+    $('form').data('submitted', false);
+
+    $('form').submit(function(event) {
+        if ($(this).data('submitted') === true) {
+            event.preventDefault();
+            return;
+        }
+
+        $(this).data('submitted', true);
     });
 
     // Validate add-user and change-password forms
@@ -765,8 +770,7 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
-            submitButton = currentForm.find("button[type='submit']");
-            submitButton.prop('disabled', false);
+            $('form').data('submitted', false);
         }
     });
 
@@ -777,13 +781,12 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
-            submitButton = currentForm.find("button[type='submit']");
-            submitButton.prop('disabled', false);
+            $('form').data('submitted', false);
         }
     });
 
     // Validate forms with required field input
-    $('form.finance-form, form.change-room-form, form.add-room-form, form.deposit-form, form.school-subject-form, ' +
+    $('form.change-room-form, form.add-room-form, form.deposit-form, form.school-subject-form, ' +
       'form.change-class-form, form.add-class-form, form.change-subscription-form, form.add-subscription-form, ' +
       'form.change-after-school-form, form.add-after-school-form').submit(function(event) {
         var currentForm = $(this);
@@ -791,8 +794,18 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
-            submitButton = currentForm.find("button[type='submit']");
-            submitButton.prop('disabled', false);
+            $('form').data('submitted', false);
+        }
+    });
+
+    $('form.finance-form, form.change-finance-form').submit(function(event) {
+        var currentForm = $(this);
+        validateDateInput(currentForm);
+        validateFieldInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+            $('form').data('submitted', false);
         }
     });
 
@@ -803,8 +816,7 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
-            submitButton = currentForm.find("button[type='submit']");
-            submitButton.prop('disabled', false);
+            $('form').data('submitted', false);
         }
     });
 
@@ -817,8 +829,7 @@ $(document).ready(function(){
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
-            submitButton = currentForm.find("button[type='submit']");
-            submitButton.prop('disabled', false);
+            $('form').data('submitted', false);
         }
     });
 
