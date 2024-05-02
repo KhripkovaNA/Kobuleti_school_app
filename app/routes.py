@@ -506,7 +506,7 @@ def deposit(student_id):
                 description = f"Пополнение баланса клиента"
                 finance_operation(student, deposit, operation_type, description, None, True)
                 user_description = f"{description} {student.last_name} {student.first_name} " \
-                                   f"({OPERATION_TYPES.get(operation_type, '?')}{deposit:.1f})"
+                                   f"({OPERATION_TYPES.get(operation_type, '?')} {deposit:.1f})"
                 user_action(current_user, user_description)
                 db.session.commit()
                 flash(f'Депозит внесен на счет клиента {student.last_name} {student.first_name}', 'success')

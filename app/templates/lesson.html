@@ -27,7 +27,11 @@
                                         {% if subject_lesson.lesson_completed %}
                                             {% for student in subject_lesson.students %}
                                                 <tr>
-                                                    <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                                    <td>
+                                                        <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                            {{ student.last_name }} {{ student.first_name }}
+                                                        </a>
+                                                    </td>
                                                     <td>
                                                         <div class="form-control">{{ student.payment }}</div>
                                                     </td>
@@ -80,7 +84,9 @@
                                                 <tr>
                                                     <td>
                                                         <button type="submit" name="del_client_btn" value="{{ student.id }}" class="btn btn-danger del-btn" style="margin-bottom:2px">x</button>
-                                                        {{ student.last_name }} {{ student.first_name }}
+                                                        <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                            {{ student.last_name }} {{ student.first_name }}
+                                                        </a>
                                                     </td>
                                                     <td>
                                                         <div class="dropdown">

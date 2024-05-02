@@ -1063,11 +1063,12 @@ def get_payment_options(student, subject_id, lesson):
     after_school_sub = Subscription.query.filter_by(student_id=student.id,
                                                     subject_id=after_school_subject().id,
                                                     active=True).first()
-    subscriptions = Subscription.query.filter_by(student_id=student.id,
-                                                 subject_id=subject_id,
-                                                 active=True) \
-        .order_by(Subscription.purchase_date.desc()).all()
-    student_balance = round(student.balance, 1)
+    subscriptions = Subscription.query.filter(
+        Subscription.student_id == student.id,
+        Subscription.subject_id == subject_id,
+        Subscription.lessons_left > 0,
+        Subscription.active
+    ).order_by(Subscription.purchase_date).all()
 
     payment_options = []
     if subscriptions:
@@ -1078,7 +1079,7 @@ def get_payment_options(student, subject_id, lesson):
                 'info': f'({subscription.lessons_left} до {subscription.end_date:%d.%m})'
             }
             payment_options.append(payment_option)
-    if after_school_sub:
+    elif after_school_sub:
         payment_option = {
             'value': 'after_school',
             'type': 'Продленка',
@@ -1121,6 +1122,7 @@ def carry_out_lesson(form, subject, lesson, user):
                     finance_operation(student, -price, 'balance', description, lesson.id, date=lesson.date)
                     payment_info = ("Продленка", int(price)) if payment_option == 'after_school' \
                         else ("Разовое", int(price))
+                    subscription_id = None
 
                 attendance = StudentAttendance(
                     date=lesson.date,
@@ -1131,7 +1133,8 @@ def carry_out_lesson(form, subject, lesson, user):
                     attending_status=form.get(f'attending_status_{student.id}'),
                     payment_method=payment_info[0],
                     price_paid=payment_info[1] if payment_info[0] in ["Продленка", "Разовое"] else None,
-                    subscription_lessons=payment_info[1] if payment_info[0] == "Абонемент" else None
+                    subscription_lessons=payment_info[1] if payment_info[0] == "Абонемент" else None,
+                    subscription_id=subscription_id
                 )
                 db.session.add(attendance)
                 db.session.flush()
@@ -1158,7 +1161,7 @@ def undo_lesson(form, subject, lesson):
                 if attendance.attending_status in ['attend', 'unreasonable']:
                     payment_option = attendance.payment_method
                     if payment_option == 'Абонемент':
-                        subscription_id = int(attendance.subscription_id)
+                        subscription_id = int(attendance.subscription_id) if attendance.subscription_id else None
                         if not subscription_id:
                             subscription = Subscription.query.filter(
                                 Subscription.student_id == student.id,
@@ -1295,7 +1298,8 @@ def get_lesson_students(lesson):
                 student.attended = attendance.attending_status if attendance else 'not_attend'
                 if attendance.payment_method:
                     student_payment_method = attendance.payment_method
-                    student_subscription_info = f"({attendance.subscription_lessons})" if attendance.subscription_lessons else ''
+                    student_subscription_info = f"({attendance.subscription_lessons})" \
+                        if attendance.subscription_lessons is not None else ''
                     student_payment = student_payment_method + student_subscription_info
                 else:
                     student_payment = "?"
@@ -2284,7 +2288,8 @@ def subject_record(subject_id, month_index):
         subject_student = (f"{record.student.last_name} {record.student.first_name}", record.student_id)
         if record.payment_method:
             student_payment_method = record.payment_method
-            student_subscription_info = f"({record.subscription_lessons})" if record.subscription_lessons else ''
+            student_subscription_info = f"({record.subscription_lessons})" \
+                if record.subscription_lessons is not None else ''
             student_payment = student_payment_method + student_subscription_info
         else:
             student_payment = "?"
