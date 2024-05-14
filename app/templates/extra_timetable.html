@@ -131,16 +131,18 @@
                 {% endif %}
                 <div class="row">
                     <div class="col-md-6">
+
                         <button class="btn btn-sm" data-background-color="orange">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('extra_timetable', week = week - 1) }}">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('extra_timetable', week = week - 1) if timetable_type == 'extra' else url_for('individual_timetable', week = week - 1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущая неделя
                             </a>
                         </button>
                         <button class="btn btn-sm" data-background-color="orange">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('extra_timetable', week = week + 1) }}">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('extra_timetable', week = week + 1) if timetable_type == 'extra' else url_for('individual_timetable', week = week + 1) }}">
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
                         </button>
+
                     </div>
                     <div class="col-md-6">
                         {% if current_user.rights in ["admin", "user"] %}

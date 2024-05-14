@@ -998,3 +998,6 @@ lesson_dict = {
 #
 # db.session.commit()
 # print_table(StudentAttendance)
+
+date = get_today_date() - timedelta(days=14)
+print(date)

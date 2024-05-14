@@ -17,7 +17,7 @@ from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_studen
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
     add_new_event, get_date, user_action, subject_record, OPERATION_TYPES
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import distinct
 from app import app, db
 from io import BytesIO
@@ -1949,7 +1949,11 @@ def add_finance_operation():
 @app.route('/finances', methods=['GET', 'POST'])
 @login_required
 def finances():
-    finance_operations = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
+    today = get_today_date()
+    two_weeks_ago = today - timedelta(days=14)
+    finance_operations = Finance.query.filter(
+        Finance.date >= two_weeks_ago
+    ).order_by(Finance.date.desc(), Finance.id.desc()).all()
     all_persons = Person.query.order_by(Person.last_name, Person.first_name).all()
 
     if request.method == 'POST':
@@ -1993,7 +1997,15 @@ def finances():
         return redirect(url_for('finances'))
 
     return render_template('finances.html', finance_operations=finance_operations, all_persons=all_persons,
-                           today=f'{get_today_date():%d.%m.%Y}')
+                           today=f'{today:%d.%m.%Y}', render_type="last_weeks")
+
+
+@app.route('/all-finances')
+@login_required
+def all_finances():
+    finance_operations = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
+
+    return render_template('finances.html', finance_operations=finance_operations, render_type="all")
 
 
 @app.route('/delete-record', methods=['POST'])

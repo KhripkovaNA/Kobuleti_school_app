@@ -6,7 +6,11 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Финансовые операции</h4>
+                {% if render_type == 'last_weeks' %}
+                    <h4 class="title">Последние финансовые операции</h4>
+                {% else %}
+                    <h4 class="title">Все финансовые операции</h4>
+                {% endif %}
             </div>
             <div class="card-content table-responsive">
                 {% if finance_operations %}
@@ -20,7 +24,9 @@
                                 <th style="text-align:center;">Счет</th>
                                 <th style="text-align:center;">Депозит</th>
                                 <th width="30%">Описание</th>
-                                <th></th>
+                                {% if render_type == 'last_weeks' %}
+                                    <th></th>
+                                {% endif %}
                             </thead>
                         </table>
                         <div class="scroll-table-body">
@@ -100,101 +106,103 @@
                                                 <td style="text-align:center;"></td>
                                             {% endif %}
                                             <td width="30%">{{ operation.description }}</td>
-                                            <td>
-                                                {% if current_user.rights in ["admin", "user"] %}
-                                                    <a href="#" data-toggle="modal" data-target="#change-{{ operation.id }}-modal">
-                                                        <i class="material-icons">edit</i>
-                                                    </a>
-                                                {% endif %}
-                                                {% if current_user.rights == "admin" %}
-                                                    <a href="#" data-toggle="modal" data-target="#delete-{{ operation.id }}-modal">
-                                                        <i class="material-icons" style="color:red;">delete_forever</i>
-                                                    </a>
-                                                {% endif %}
+                                            {% if render_type == 'last_weeks' %}
+                                                <td>
+                                                    {% if current_user.rights in ["admin", "user"] %}
+                                                        <a href="#" data-toggle="modal" data-target="#change-{{ operation.id }}-modal">
+                                                            <i class="material-icons">edit</i>
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if current_user.rights == "admin" %}
+                                                        <a href="#" data-toggle="modal" data-target="#delete-{{ operation.id }}-modal">
+                                                            <i class="material-icons" style="color:red;">delete_forever</i>
+                                                        </a>
+                                                    {% endif %}
 
-                                            <!-- *-*-*-*-*-*-*-*-*-* Operation change modal *-*-*-*-*-*-*-*-*-* -->
+                                                <!-- *-*-*-*-*-*-*-*-*-* Operation change modal *-*-*-*-*-*-*-*-*-* -->
 
-                                                <div class="modal fade" id="change-{{ operation.id }}-modal" role="dialog">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h4 class="modal-title">Изменить финансовую операцию</h4>
-                                                            </div>
-                                                            <div class="modal-body" style="padding-top:10px;">
-                                                                <form class="change-finance-form" action="{{ url_for('finances') }}" method="post">
-                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                                    <input type="hidden" name="operation_id" value="{{ operation.id }}">
-                                                                    <div class="row">
-                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Дата:</label>
-                                                                        <div class="col-md-3 date-div">
-                                                                            <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ operation.date.strftime('%d.%m.%Y') }}">
+                                                    <div class="modal fade" id="change-{{ operation.id }}-modal" role="dialog">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h4 class="modal-title">Изменить финансовую операцию</h4>
+                                                                </div>
+                                                                <div class="modal-body" style="padding-top:10px;">
+                                                                    <form class="change-finance-form" action="{{ url_for('finances') }}" method="post">
+                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                        <input type="hidden" name="operation_id" value="{{ operation.id }}">
+                                                                        <div class="row">
+                                                                            <label class="control-label col-md-3" style="padding-left:44px;">Дата:</label>
+                                                                            <div class="col-md-3 date-div">
+                                                                                <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ operation.date.strftime('%d.%m.%Y') }}">
+                                                                            </div>
+                                                                            <label class="control-label col-md-3" style="padding-left:44px;">Сумма:</label>
+                                                                            <div class="col-md-2">
+                                                                                {% if operation.amount > 0 %}
+                                                                                    <div class="form-control" style="color:red"><b>-{{ operation.amount|round(1) }}</b></div>
+                                                                                {% elif operation.amount < 0 %}
+                                                                                    <div class="form-control" style="color:green"><b>+{{ operation.amount|abs|round(1) }}</b></div>
+                                                                                {% else %}
+                                                                                    <div class="form-control"><b>{{ operation.amount|round(1) }}</b></div>
+                                                                                {% endif %}
+                                                                            </div>
                                                                         </div>
-                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Сумма:</label>
-                                                                        <div class="col-md-2">
-                                                                            {% if operation.amount > 0 %}
-                                                                                <div class="form-control" style="color:red"><b>-{{ operation.amount|round(1) }}</b></div>
-                                                                            {% elif operation.amount < 0 %}
-                                                                                <div class="form-control" style="color:green"><b>+{{ operation.amount|abs|round(1) }}</b></div>
-                                                                            {% else %}
-                                                                                <div class="form-control"><b>{{ operation.amount|round(1) }}</b></div>
-                                                                            {% endif %}
+                                                                        <div class="row">
+                                                                            <label class="control-label col-md-3" style="padding-left:44px;">Описание:</label>
+                                                                            <div class="col-md-8 field-div">
+                                                                                <input type="text" name="description" class="form-control field-input" value="{{ operation.description }}">
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="row">
-                                                                        <label class="control-label col-md-3" style="padding-left:44px;">Описание:</label>
-                                                                        <div class="col-md-8 field-div">
-                                                                            <input type="text" name="description" class="form-control field-input" value="{{ operation.description }}">
+                                                                        <div class="row">
+                                                                            <div class="col-md-6 col-md-offset-3">
+                                                                                <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                                    Изменить
+                                                                                </button>
+                                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                    Отмена
+                                                                                </button>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="row">
-                                                                        <div class="col-md-6 col-md-offset-3">
-                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                                Изменить
-                                                                            </button>
-                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                                Отмена
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                            <!-- *-*-*-*-*-*-*-*-*-* Operation delete conformation *-*-*-*-*-*-*-*-*-* -->
-
-                                                <div class="modal fade" id="delete-{{ operation.id }}-modal" role="dialog">
-                                                    <div class="modal-dialog modal-sm">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление клиента</h4>
-                                                            </div>
-                                                            <div class="modal-body" style="padding-top:10px;">
-                                                                <p class="control-label">
-                                                                    Вы уверены, что хотите удалить операцию клиента {{ operation.person.last_name }} {{ operation.person.first_name }} от {{ operation.date.strftime('%d.%m.%Y') }} ({{ operation.description }})?
-                                                                </p>
-                                                                <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
-                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                                    <input type="hidden" name="record_type" value="fin_operation">
-                                                                    <input type="hidden" name="operation_id" value="{{ operation.id }}">
-                                                                    <div class="row">
-                                                                        <div class="col-md-10 col-md-offset-1">
-                                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                                Да
-                                                                            </button>
-                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                                Нет
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </form>
+                                                                    </form>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                            </td>
+                                                <!-- *-*-*-*-*-*-*-*-*-* Operation delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                                                    <div class="modal fade" id="delete-{{ operation.id }}-modal" role="dialog">
+                                                        <div class="modal-dialog modal-sm">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление клиента</h4>
+                                                                </div>
+                                                                <div class="modal-body" style="padding-top:10px;">
+                                                                    <p class="control-label">
+                                                                        Вы уверены, что хотите удалить операцию клиента {{ operation.person.last_name }} {{ operation.person.first_name }} от {{ operation.date.strftime('%d.%m.%Y') }} ({{ operation.description }})?
+                                                                    </p>
+                                                                    <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                        <input type="hidden" name="record_type" value="fin_operation">
+                                                                        <input type="hidden" name="operation_id" value="{{ operation.id }}">
+                                                                        <div class="row">
+                                                                            <div class="col-md-10 col-md-offset-1">
+                                                                                <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                                    Да
+                                                                                </button>
+                                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                    Нет
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </td>
+                                            {% endif %}
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -204,90 +212,108 @@
                 {% else %}
                     <p>Финансовых операций пока нет</p>
                 {% endif %}
-                {% if current_user.rights in ["admin", "user"] %}
-                    <button class="btn btn-sm" data-background-color="purple">
-                        <a href="#" data-toggle="modal" data-target="#finance-modal">
-                            <i class="material-icons">attach_money</i> Финансовая операция
-                        </a>
-                    </button>
-                {% else  %}
-                    <button class="btn btn-sm" data-background-color="purple" title="Нет прав администратора" disabled>
-                        <a href="#" data-toggle="modal" data-target="#finance-modal">
-                            <i class="material-icons">attach_money</i> Финансовая операция
-                        </a>
-                    </button>
-                {% endif %}
+                {% if render_type == 'last_weeks' %}
+                    <div class="col-md-12">
+                        {% if current_user.rights in ["admin", "user"] %}
+                            <button class="btn btn-sm" data-background-color="purple">
+                                <a href="#" data-toggle="modal" data-target="#finance-modal">
+                                    <i class="material-icons">attach_money</i> Финансовая операция
+                                </a>
+                            </button>
+                        {% else  %}
+                            <button class="btn btn-sm" data-background-color="purple" title="Нет прав администратора" disabled>
+                                <a href="#" data-toggle="modal" data-target="#finance-modal">
+                                    <i class="material-icons">attach_money</i> Финансовая операция
+                                </a>
+                            </button>
+                        {% endif %}
+                        <button class="btn btn-sm pull-right" data-background-color="purple">
+                            <a href="{{ url_for('all_finances') }}">
+                                <i class="material-icons">assured_workload</i> Все финансовые операции
+                            </a>
+                        </button>
 
-            <!-- *-*-*-*-*-*-*-*-*-* Finance operation modal *-*-*-*-*-*-*-*-*-* -->
+                <!-- *-*-*-*-*-*-*-*-*-* Finance operation modal *-*-*-*-*-*-*-*-*-* -->
 
-                <div class="modal fade" id="finance-modal" role="dialog">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title">Финансовая операция</h4>
-                            </div>
-                            <div class="modal-body">
-                                <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                    <div class="row">
-                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
-                                        <div class="col-md-7 date-div">
-                                            <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
-                                        </div>
+                        <div class="modal fade" id="finance-modal" role="dialog">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h4 class="modal-title">Финансовая операция</h4>
                                     </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
-                                        <div class="col-md-7">
-                                            <select name="person_id" class="form-control select-search">
-                                                <option disabled selected></option>
-                                                {% for person in all_persons %}
-                                                    <option value="{{ person.id }}">{{ person.last_name }} {{ person.first_name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
+                                    <div class="modal-body">
+                                        <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
+                                                <div class="col-md-7 date-div">
+                                                    <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
+                                                <div class="col-md-7">
+                                                    <select name="person_id" class="form-control select-search">
+                                                        <option disabled selected></option>
+                                                        {% for person in all_persons %}
+                                                            <option value="{{ person.id }}">{{ person.last_name }} {{ person.first_name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
+                                                <div class="col-md-7 field-div">
+                                                    <select name="operation_type" class="form-control field-input required">
+                                                        <option disabled selected></option>
+                                                        <option value="minus_cash">Оплата наличными</option>
+                                                        <option value="minus_bank">Оплата на счет</option>
+                                                        <option value="minus_balance">Оплата с депозита</option>
+                                                        <option value="plus_cash">Возврат наличными</option>
+                                                        <option value="plus_bank">Возврат co счета</option>
+                                                        <option value="plus_balance">Возврат на депозит</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Описание:</label>
+                                                <div class="col-md-7 field-div">
+                                                    <input type="text" name="description" class="form-control field-input required">
+                                                </div>
+                                            </div>
+                                             <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Сумма:</label>
+                                                <div class="col-md-4 field-div">
+                                                    <input type="number" name="amount" class="form-control field-input required" step="any" min="0">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 col-md-offset-3">
+                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                        Провести
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                        Отмена
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
                                     </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
-                                        <div class="col-md-7 field-div">
-                                            <select name="operation_type" class="form-control field-input required">
-                                                <option disabled selected></option>
-                                                <option value="minus_cash">Оплата наличными</option>
-                                                <option value="minus_bank">Оплата на счет</option>
-                                                <option value="minus_balance">Оплата с депозита</option>
-                                                <option value="plus_cash">Возврат наличными</option>
-                                                <option value="plus_bank">Возврат co счета</option>
-                                                <option value="plus_balance">Возврат на депозит</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <label class="control-label col-md-4" style="padding-left:44px;">Описание:</label>
-                                        <div class="col-md-7 field-div">
-                                            <input type="text" name="description" class="form-control field-input required">
-                                        </div>
-                                    </div>
-                                     <div class="row">
-                                        <label class="control-label col-md-4" style="padding-left:44px;">Сумма:</label>
-                                        <div class="col-md-4 field-div">
-                                            <input type="number" name="amount" class="form-control field-input required" step="any" min="0">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 col-md-offset-3">
-                                            <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                Провести
-                                            </button>
-                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                Отмена
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
+                                </div>
                             </div>
                         </div>
+
                     </div>
-                </div>
+                {% else %}
+                    <div class="col-md-12">
+                        <button class="btn btn-sm pull-right" data-background-color="purple">
+                            <a href="{{ url_for('finances') }}">
+                                <i class="material-icons">account_balance</i> Последние финансовые операции
+                            </a>
+                        </button>
+                    </div>
+                {% endif %}
 
             </div>
         </div>
