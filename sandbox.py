@@ -999,5 +999,32 @@ lesson_dict = {
 # db.session.commit()
 # print_table(StudentAttendance)
 
-date = get_today_date() - timedelta(days=14)
-print(date)
+def print_data(table_model, table_rows):
+
+    mapper = class_mapper(table_model)
+    fields = [column.key for column in mapper.columns]
+
+    for row in table_rows:
+        for column in fields:
+            value = getattr(row, column)
+            print(f"{column}: {value}", end='\t')
+        print('\n'+'*'*20)
+
+
+# subscriptions = Subscription.query.filter(
+#     Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school'))
+# ).order_by(
+#     Subscription.purchase_date.desc()
+# ).all()
+
+subscriptions = Subscription.query.join(Person).filter(
+    Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school'))
+).order_by(
+    Subscription.purchase_date.desc(), Person.last_name, Person.first_name
+).all()
+
+for subscription in subscriptions:
+    if subscription.lessons_left == subscription.subscription_type.lessons:
+        print(subscription.id, 'Yeee!')
+
+print_data(Subscription, subscriptions)

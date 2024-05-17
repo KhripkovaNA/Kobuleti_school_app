@@ -754,35 +754,6 @@ def handle_student_edit(form, student, edit_type, user):
         db.session.flush()
         return
 
-    if edit_type == 'del_subscription':
-        del_subscription_id = int(form.get('del_subscription'))
-        del_subscription = Subscription.query.filter_by(id=del_subscription_id).first()
-        if del_subscription:
-            full_subscription = del_subscription.lessons_left == del_subscription.subscription_type.lessons
-            if full_subscription:
-                price = del_subscription.subscription_type.price
-                record = Finance.query.filter(
-                    Finance.person_id == del_subscription.student_id,
-                    Finance.amount == -price,
-                    Finance.service_id == del_subscription.id
-                ).first()
-                if record:
-                    if record.student_balance:
-                        record.person.balance -= record.amount
-                    db.session.delete(record)
-                    db.session.flush()
-                else:
-                    description = f"Возврат за абонемент {del_subscription.subject.name}"
-                    finance_operation(del_subscription.student, price, 'cash', description, del_subscription.id)
-
-                description = f"Удаление абонемента {del_subscription.subject.name} клиента " \
-                              f"{student.last_name} {student.first_name}"
-                user_action(user, description)
-                db.session.delete(del_subscription)
-
-                db.session.flush()
-        return
-
     if edit_type == 'del_after_school':
         del_after_school_id = int(form.get('del_after_school'))
         del_after_school = Subscription.query.filter_by(id=del_after_school_id).first()
@@ -1056,6 +1027,16 @@ def check_subscription(student, lesson, subject_id):
                     or (cond5 and cond)
             ) else False
             db.session.commit()
+
+
+def check_subscriptions(subscriptions):
+    date = get_today_date()
+    for subscription in subscriptions:
+        cond1 = subscription.purchase_date <= date
+        cond2 = subscription.end_date >= date
+        cond3 = subscription.lessons_left > 0
+        subscription.active = True if cond1 and cond2 and cond3 else False
+        db.session.commit()
 
 
 def get_payment_options(student, subject_id, lesson):
@@ -2942,6 +2923,43 @@ def del_record(form, record_type, user):
             message = (f"Финансовая операция удалена", "success")
         else:
             message = ("Такой операции нет", 'error')
+
+        return message
+
+    if record_type == 'subscription':
+        del_subscription_id = int(form.get('subscription_id'))
+        del_subscription = Subscription.query.filter_by(id=del_subscription_id).first()
+        if del_subscription:
+            full_subscription = del_subscription.lessons_left == del_subscription.subscription_type.lessons
+            used_subscription = StudentAttendance.query.filter_by(subscription_id=del_subscription_id).all()
+            if full_subscription and not used_subscription:
+                price = del_subscription.subscription_type.price
+                record = Finance.query.filter(
+                    Finance.person_id == del_subscription.student_id,
+                    Finance.amount == -price,
+                    Finance.service_id == del_subscription.id
+                ).first()
+                if record:
+                    if record.student_balance:
+                        record.person.balance -= record.amount
+                    db.session.delete(record)
+                    db.session.flush()
+                else:
+                    description = f"Возврат за абонемент {del_subscription.subject.name}"
+                    finance_operation(del_subscription.student, price, 'cash', description, del_subscription.id)
+
+                description = f"Удаление абонемента {del_subscription.subject.name} клиента " \
+                              f"{del_subscription.student.last_name} {del_subscription.student.first_name}"
+                user_action(user, description)
+                db.session.delete(del_subscription)
+                db.session.flush()
+                message = (f"Абонемент удален", "success")
+
+            else:
+                message = (f"Абонемент не может быть удален", "error")
+
+        else:
+            message = ("Такого абонемента нет", 'error')
 
         return message
 

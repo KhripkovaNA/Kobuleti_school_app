@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, request, send_file
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Employee, Lesson, SubjectType, Subject, Room, SchoolClass, \
+from app.models import User, Person, Employee, Lesson, Subscription, SubjectType, Subject, Room, SchoolClass, \
     SubscriptionType, SchoolLessonJournal, Finance
 from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
     EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm, \
@@ -15,7 +15,7 @@ from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_studen
     format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, school_subject_record, \
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
-    add_new_event, get_date, user_action, subject_record, OPERATION_TYPES
+    add_new_event, get_date, user_action, subject_record, OPERATION_TYPES, check_subscriptions
 from decimal import Decimal
 from datetime import datetime, timedelta
 from sqlalchemy import distinct
@@ -744,17 +744,6 @@ def show_edit_student(student_id):
                                 db.session.commit()
                                 flash('Изменения внесены', 'success')
                                 return redirect(url_for('show_edit_student', student_id=student.id))
-
-                        else:
-                            flash('Нет прав руководителя', 'error')
-                            return redirect(url_for('show_edit_student', student_id=student.id))
-
-                    if 'del_subscription' in request.form:
-                        if current_user.rights == 'admin':
-                            handle_student_edit(request.form, student, 'del_subscription', current_user)
-                            db.session.commit()
-                            flash('Изменения внесены', 'success')
-                            return redirect(url_for('show_edit_student', student_id=student.id))
 
                         else:
                             flash('Нет прав руководителя', 'error')
@@ -2008,13 +1997,52 @@ def all_finances():
     return render_template('finances.html', finance_operations=finance_operations, render_type="all")
 
 
+@app.route('/subscriptions', methods=['GET', 'POST'])
+@login_required
+def subscriptions():
+    if request.method == 'POST':
+        try:
+            if current_user.rights == "admin":
+                subscription_id = int(request.form.get("subscription_id"))
+                subscription = Subscription.query.filter_by(id=subscription_id).first()
+                subscription.lessons_left = int(request.form.get("lessons_left"))
+                subscription.purchase_date = datetime.strptime(request.form.get("purchase_date"), '%d.%m.%Y').date()
+                subscription.end_date = datetime.strptime(request.form.get("end_date"), '%d.%m.%Y').date()
+                description = f"Изменение абонемента {subscription.subject.name} клиента " \
+                              f"{subscription.student.last_name} {subscription.student.first_name}"
+                user_action(current_user, description)
+                db.session.commit()
+                flash('Изменения внесены', 'success')
+
+            else:
+                flash('Нет прав руководителя', 'error')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при изменении абонемента: {str(e)}', 'error')
+
+        return redirect(url_for('subscriptions'))
+
+    today = get_today_date()
+    three_months_ago = today - timedelta(days=90)
+    recent_subscriptions = Subscription.query.join(Person).filter(
+        Subscription.purchase_date >= three_months_ago,
+        Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school'))
+    ).order_by(
+        Subscription.purchase_date.desc(), Person.last_name, Person.first_name
+    ).all()
+    check_subscriptions(recent_subscriptions)
+
+    return render_template('subscriptions.html', subscriptions=recent_subscriptions)
+
+
 @app.route('/delete-record', methods=['POST'])
 @login_required
 def delete_record():
     record_type = request.form.get('record_type')
 
     try:
-        if record_type in ['student', 'employee', 'school_student', 'fin_operation']:
+        if record_type in ['student', 'employee', 'school_student', 'fin_operation', 'subscription']:
             if current_user.rights == 'admin':
                 message = del_record(request.form, record_type, current_user)
                 db.session.commit()

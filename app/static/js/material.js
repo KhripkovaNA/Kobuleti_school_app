@@ -547,8 +547,9 @@ $(document).ready(function(){
             var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
                 return subject.id === subjectId;
             });
+            var subscriptionModal = $(this).closest('.modal-body');
 
-            const subscriptionTypeSelector = $('.subscription-type-select');
+            var subscriptionTypeSelector = subscriptionModal.find('.subscription-type-select');
             subscriptionTypeSelector.empty();
 
             $.each(selectedSubject[0].subscription_types_info, function (index, subscriptionType) {
@@ -563,26 +564,21 @@ $(document).ready(function(){
     function handleSubscriptionTypeSelection() {
         $('.subscription-type-select').change(function () {
             var subscriptionType = $(this).val();
-            var subjectId = Number($('.subscription-select').val());
-            var selectedSubject = subscriptionSubjectsData.filter(function(subject) {
-                return subject.id === subjectId;
-            });
-            const priceDisplay = $('.price-display');
-            priceDisplay.html(`<b>${selectedSubject[0].price_info[subscriptionType]}</b>`);
+            var subscriptionTypeText = $(this).find('option:selected').text();
+            var extractedText = subscriptionTypeText.match(/\((.*?)\)/)[1];
+            var subscriptionModal = $(this).closest('.modal-body');
+            var priceDisplay = subscriptionModal.find('.price-display');
+            priceDisplay.html(`<b>${extractedText}</b>`);
         });
     }
-
-    // Handle subscription subject selection
-    handleSubscriptionSubjectSelection();
-
-    // Handle subscription type selection
-    handleSubscriptionTypeSelection();
 
     // Trigger selectors change when subscription modal is shown
     $('.subscription-modal-trigger').on('click', function () {
         var subscriptionModalId = $(this).data('target');
         var subscriptionModal = $(subscriptionModalId);
         var subscriptionSubjectSelector = subscriptionModal.find('.subscription-select');
+        handleSubscriptionSubjectSelection();
+        handleSubscriptionTypeSelection();
         subscriptionSubjectSelector.trigger("change");
     });
 
@@ -675,7 +671,6 @@ $(document).ready(function(){
         });
     }
 
-
     // Function to validate input
     function validateFieldInput(validatedForm) {
         validatedForm.find('.field-input').each(function() {
@@ -752,6 +747,7 @@ $(document).ready(function(){
     // Reset form submission status on page load or reload
     $('form').data('submitted', false);
 
+    // Change form submission status on form submit
     $('form').submit(function(event) {
         if ($(this).data('submitted') === true) {
             event.preventDefault();
@@ -798,7 +794,7 @@ $(document).ready(function(){
         }
     });
 
-    $('form.finance-form, form.change-finance-form').submit(function(event) {
+    $('form.finance-form, form.change-finance-form, form.form-subscription').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
         validateFieldInput(currentForm);

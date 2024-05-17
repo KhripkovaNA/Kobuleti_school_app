@@ -984,7 +984,11 @@
                                                                 </td>
                                                                 {{ subscription_form.subscription_id }}
                                                                 {% if subscription_form.full_subscription.data %}
-                                                                    <td><button type="submit" name="del_subscription" value="{{ subscription_form.subscription_id.data }}" class="btn btn-danger del-btn-sm">Удалить</button></td>
+                                                                    <td>
+                                                                        <a class="btn btn-danger del-btn-sm" href="#" data-toggle="modal" data-target="#del-subscription-{{ subscription_form.subscription_id.data }}-modal">
+                                                                            Удалить
+                                                                        </a>
+                                                                    </td>
                                                                 {% endif %}
                                                             </tr>
                                                         {% endfor %}
@@ -1004,6 +1008,43 @@
                                 </div>
                             </div>
                         </form>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Subscription delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                        {% for subscription_form in subscriptions_form.subscriptions %}
+                            {% if subscription_form.full_subscription.data and current_user.rights == "admin" %}
+                                <div class="modal fade" id="del-subscription-{{ subscription_form.subscription_id.data }}-modal" role="dialog">
+                                    <div class="modal-dialog modal-sm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление абонемента</h4>
+                                            </div>
+                                            <div class="modal-body" style="padding-top:10px;">
+                                                <p class="control-label">
+                                                    Вы уверены, что хотите удалить абонемент {{ subscription_form.subject_name.data }}?
+                                                </p>
+                                                <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <input type="hidden" name="record_type" value="subscription">
+                                                    <input type="hidden" name="subscription_id" value="{{ subscription_form.subscription_id.data }}">
+                                                    <div class="row">
+                                                        <div class="col-md-10 col-md-offset-1">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Да
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Нет
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
                     </div>
                 </div>
 
