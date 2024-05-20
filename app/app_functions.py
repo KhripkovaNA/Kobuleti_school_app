@@ -1257,7 +1257,7 @@ def handle_lesson(form, subject, lesson, user):
 def get_lesson_students(lesson):
     if lesson.lesson_completed:
         lesson_students = Person.query.filter(
-            Person.lessons_registered.any(Lesson.id == lesson.id)
+            Person.lessons_attended.any(StudentAttendance.lesson_id == lesson.id)
         ).order_by(Person.last_name, Person.first_name).all()
     else:
         lesson_students = Person.query.filter(
