@@ -1031,6 +1031,13 @@ def print_data(table_model, table_rows):
 # print(persons)
 # db.session.commit()
 
-finances = Finance.query.all()
-print_data(Finance, finances)
+# finances = Finance.query.all()
+# print_data(Finance, finances)
 
+sub_rows = Subscription.query.filter(
+    Subscription.lessons_left.is_(None)
+    ).join(Person).order_by(
+        Person.last_name, Person.first_name, Subscription.purchase_date.desc()
+        ).all()
+
+print_data(Subscription, sub_rows)

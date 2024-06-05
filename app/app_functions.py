@@ -1022,11 +1022,13 @@ def check_subscription(student, lesson, subject_id):
         if subscription.subject == after_school:
             cond11 = subscription.purchase_date.month == date.month
             cond12 = subscription.period == "month"
-            cond21 = subscription.purchase_date >= date <= subscription.end_date
-            cond22 = subscription.period == "week"
+            if subscription.period == "week":
+                cond2 = subscription.purchase_date <= date <= subscription.end_date
+            else:
+                cond2 = False
             cond3 = subscription.purchase_date > date
             subscription.active = True if (
-                ((cond11 and cond12) or (cond21 and cond22))
+                ((cond11 and cond12) or cond2)
                 or (cond3 and cond)
             ) else False
             db.session.commit()

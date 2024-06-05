@@ -1787,9 +1787,7 @@ def after_school(month_index):
 
     month_students, period, current_period = get_after_school_students(int(month_index))
     after_school_subject.month_students = month_students
-    month_students_ids = [student.id for student in month_students]
     possible_clients = Person.query.filter(
-        ~Person.id.in_(month_students_ids),
         Person.status.in_(["Клиент", "Лид"]),
         Person.person_type == "Ребенок"
     ).order_by(Person.last_name, Person.first_name).all()
