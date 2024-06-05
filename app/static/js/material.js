@@ -891,20 +891,30 @@ $(document).ready(function(){
         return (day < 10 ? '0' : '') + day + '.' + (month < 10 ? '0' : '') + month;
     }
 
+    // Function to define week range
+    function calculateWeekRange(selectedDate) {
+        var dayOfWeek = selectedDate.getDay();
+
+        var startOfWeek = new Date(selectedDate);
+        startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+        var endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        return {
+            start: startOfWeek,
+            end: endOfWeek
+        };
+    }
+
     $(".selectors-group").on("change", ".datepicker", function() {
         var selectedDate = $(this).datepicker('getDate');
         var isValidDate = moment(selectedDate, 'DD.MM.YYYY', true).isValid();
         if (isValidDate) {
-            var dayOfWeek = selectedDate.getDay();
+            var weekRange = calculateWeekRange(selectedDate);
 
-            var startOfWeek = new Date(selectedDate);
-            startOfWeek.setDate(selectedDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-
-            var endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-            var formattedStartDate = formatDate(startOfWeek);
-            var formattedEndDate = formatDate(endOfWeek);
+            var formattedStartDate = formatDate(weekRange.start);
+            var formattedEndDate = formatDate(weekRange.end);
 
             var weekRangeContainer = $(this).closest(".selectors-group").find(".week-range")
             weekRangeContainer.html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
@@ -1272,14 +1282,14 @@ $(document).ready(function(){
         term = $(this).val();
         if (term === "month") {
             $(".shift-row").show();
-            $(".hours-row, .day-row").hide();
+            $(".hours-row, .day-row, .week-range-div").hide();
             $(".day-row").find(".date-input").removeClass("required");
-        } else if (term === "day") {
-            $(".shift-row, .hours-row").hide();
-            $(".day-row").show();
-            $(".day-row").find(".date-input").addClass("required");
+        } else if ((term === "week") || (term === "day")) {
+            $(".shift-row, .day-row").show();
+            $(".hours-row").hide();
+            $(".day-row").find(".date-input").addClass("required").trigger("change");
         } else {
-            $(".shift-row").hide();
+            $(".shift-row, .week-range-div").hide();
             $(".hours-row, .day-row").show();
             $(".hour-number").val(1);
             $(".hours-row").find(".field-input").addClass("required");
@@ -1295,6 +1305,24 @@ $(document).ready(function(){
                 text : price.price + " Лари"
             }));
         });
+    });
+
+    $("#after-school-modal").on("change", ".datepicker", function() {
+        term = $("#after-school-modal").find(".term-selector").val();
+        if (term === "week") {
+            var selectedDate = $(this).datepicker('getDate');
+            var isValidDate = moment(selectedDate, 'DD.MM.YYYY', true).isValid();
+            if (isValidDate) {
+                var weekRange = calculateWeekRange(selectedDate);
+
+                var formattedStartDate = formatDate(weekRange.start);
+                var formattedEndDate = formatDate(weekRange.end);
+
+                var weekRangeContainer = $("#after-school-modal").find(".week-range-div");
+                weekRangeContainer.find(".week-range").html("<b>" + formattedStartDate + " - " + formattedEndDate + "</b>");
+                weekRangeContainer.show();
+            }
+        }
     });
 
     // Recount price by changing number of hours

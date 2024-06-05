@@ -288,6 +288,7 @@ class Finance(db.Model):
     student_balance = db.Column(db.Boolean, default=False)
     description = db.Column(db.String(120))
     service_id = db.Column(db.Integer)
+    balance_state = db.Column(db.Numeric(8, 2))
 
 
 class UserAction(db.Model):

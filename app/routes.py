@@ -263,7 +263,7 @@ def change_add_after_school():
                         price=float(after_school_price)
                     ).all()
                     if not same_subscription_type:
-                        after_school_type.lessons = after_school_period
+                        after_school_type.period = after_school_period
                         after_school_type.price = float(after_school_price)
                         user_action(current_user, "Изменение цены на продленку")
                         db.session.commit()
@@ -464,24 +464,22 @@ def student_subjects_add(student_id):
     return redirect(request.referrer)
 
 
-@app.route('/subscription/<string:student_id>', methods=['POST'])
+@app.route('/subscription', methods=['POST'])
 @login_required
-def subscription(student_id):
+def subscription():
     try:
         if current_user.rights in ["admin", "user"]:
-            student_id = int(student_id) if str(student_id).isdigit() else None
-            student = Person.query.filter_by(id=student_id, status="Клиент").first()
-            new_subscription, price, operation_type = purchase_subscription(request.form, student)
+            new_subscription, price, operation_type = purchase_subscription(request.form)
             db.session.add(new_subscription)
             db.session.flush()
             description = f"Покупка абонемента {new_subscription.subject.name}"
-            finance_operation(student, -price, operation_type, description, new_subscription.id)
+            finance_operation(new_subscription.student, -price, operation_type, description, new_subscription.id)
             user_action(current_user, f"Покупка абонемента {new_subscription.subject.name} клиентом "
-                                      f"{student.last_name} {student.first_name}")
+                                      f"{new_subscription.student.last_name} {new_subscription.student.first_name}")
             db.session.commit()
             flash('Новый абонемент добавлен в систему', 'success')
 
-            return redirect(url_for('show_edit_student', student_id=student_id))
+            return redirect(url_for('show_edit_student', student_id=new_subscription.student_id))
 
         else:
             flash('Нет прав администратора', 'error')
@@ -1823,7 +1821,7 @@ def after_school_purchase():
                 db.session.add(new_after_school)
                 db.session.flush()
                 price = new_after_school.subscription_type.price
-                if new_after_school.period not in ["month", "day"]:
+                if new_after_school.period not in ["month", "week", "day"]:
                     hours = int(new_after_school.period.split()[0])
                     price *= hours
                 operation_type = request.form.get('operation_type')
@@ -1985,8 +1983,11 @@ def finances():
 
         return redirect(url_for('finances'))
 
+    subscription_subjects = subscription_subjects_data()
+
     return render_template('finances.html', finance_operations=finance_operations, all_persons=all_persons,
-                           today=f'{today:%d.%m.%Y}', render_type="last_weeks")
+                           today=f'{today:%d.%m.%Y}', subscription_subjects=subscription_subjects,
+                           render_type="last_weeks")
 
 
 @app.route('/all-finances')

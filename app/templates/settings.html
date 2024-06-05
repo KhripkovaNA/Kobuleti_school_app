@@ -365,7 +365,7 @@
                                                         <tr>
                                                             <td style="vertical-align:top;" class="field-div">
                                                                 <select name="period_{{ after_school_price.id }}" class="form-control">
-                                                                    {% for period in ["месяц", "день", "час"] %}
+                                                                    {% for period in ["месяц", "неделя", "день", "час"] %}
                                                                         {% if period == after_school_price.period %}
                                                                             <option value="{{ period }}" selected>{{ period }}</option>
                                                                         {% else %}
@@ -404,7 +404,7 @@
                                             </div>
                                             <div class="row field-div" style="padding: 0 20px 0 44px; margin-top:0;">
                                                 <select name="new_period" class="form-control">
-                                                    {% for period in ["месяц", "день", "час"] %}
+                                                    {% for period in ["месяц", "неделя", "день", "час"] %}
                                                         <option value="{{ period }}">{{ period }}</option>
                                                     {% endfor %}
                                                 </select>

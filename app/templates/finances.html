@@ -23,6 +23,7 @@
                                 <th style="text-align:center;">Наличные</th>
                                 <th style="text-align:center;">Счет</th>
                                 <th style="text-align:center;">Депозит</th>
+                                <th style="text-align:center;">Остаток</th>
                                 <th width="30%">Описание</th>
                                 {% if render_type == 'last_weeks' %}
                                     <th></th>
@@ -105,17 +106,13 @@
                                                 </td>
                                                 <td style="text-align:center;"></td>
                                             {% endif %}
+                                            <td style="text-align:center; font-weight:400;"><i>{{ operation.balance_state|round(1) }}</i></td>
                                             <td width="30%">{{ operation.description }}</td>
                                             {% if render_type == 'last_weeks' %}
                                                 <td>
                                                     {% if current_user.rights in ["admin", "user"] %}
                                                         <a href="#" data-toggle="modal" data-target="#change-{{ operation.id }}-modal">
                                                             <i class="material-icons">edit</i>
-                                                        </a>
-                                                    {% endif %}
-                                                    {% if current_user.rights == "admin" %}
-                                                        <a href="#" data-toggle="modal" data-target="#delete-{{ operation.id }}-modal">
-                                                            <i class="material-icons" style="color:red;">delete_forever</i>
                                                         </a>
                                                     {% endif %}
 
@@ -169,38 +166,6 @@
                                                         </div>
                                                     </div>
 
-                                                <!-- *-*-*-*-*-*-*-*-*-* Operation delete conformation *-*-*-*-*-*-*-*-*-* -->
-
-                                                    <div class="modal fade" id="delete-{{ operation.id }}-modal" role="dialog">
-                                                        <div class="modal-dialog modal-sm">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление финансовой операции</h4>
-                                                                </div>
-                                                                <div class="modal-body" style="padding-top:10px;">
-                                                                    <p class="control-label">
-                                                                        Вы уверены, что хотите удалить операцию клиента {{ operation.person.last_name }} {{ operation.person.first_name }} от {{ operation.date.strftime('%d.%m.%Y') }} ({{ operation.description }})?
-                                                                    </p>
-                                                                    <form class="login-form" action="{{ url_for('delete_record') }}" method="post">
-                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                                        <input type="hidden" name="record_type" value="fin_operation">
-                                                                        <input type="hidden" name="operation_id" value="{{ operation.id }}">
-                                                                        <div class="row">
-                                                                            <div class="col-md-10 col-md-offset-1">
-                                                                                <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                                    Да
-                                                                                </button>
-                                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                                    Нет
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
                                                 </td>
                                             {% endif %}
                                         </tr>
@@ -220,9 +185,14 @@
                                     <i class="material-icons">attach_money</i> Финансовая операция
                                 </a>
                             </button>
+                            <button class="btn btn-sm" data-background-color="purple">
+                                <a href="#" class="subscription-modal-trigger" data-toggle="modal" data-target="#subscription-modal">
+                                    <i class="material-icons">addchart</i> Покупка абонемента
+                                </a>
+                            </button>
                         {% else  %}
                             <button class="btn btn-sm" data-background-color="purple" title="Нет прав администратора" disabled>
-                                <a href="#" data-toggle="modal" data-target="#finance-modal">
+                                <a href="#" data-toggle="modal" data-target="">
                                     <i class="material-icons">attach_money</i> Финансовая операция
                                 </a>
                             </button>
@@ -232,6 +202,85 @@
                                 <i class="material-icons">assured_workload</i> Все финансовые операции
                             </a>
                         </button>
+
+                <!-- *-*-*-*-*-*-*-*-*-* Subscription purchase *-*-*-*-*-*-*-*-*-* -->
+
+                            <div class="modal fade" id="subscription-modal" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Покупка абонемента</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="subscription-form" action="{{ url_for('subscription') }}" method="post">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
+                                                    <div class="col-md-7">
+                                                        <select name="student_id" class="form-control select-search">
+                                                            <option disabled selected></option>
+                                                            {% for person in all_persons %}
+                                                                {% if person.status == "Клиент" %}
+                                                                    <option value="{{ person.id }}">{{ person.last_name }} {{ person.first_name }}</option>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
+                                                    <div class="col-md-7">
+                                                        <select name="selected_subject" class="form-control subscription-select">
+                                                            {% for subject in subscription_subjects %}
+                                                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Тип абонемента:</label>
+                                                    <div class="col-md-7">
+                                                        <select name="subscription_type" class="form-control subscription-type-select"></select>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Дата покупки:</label>
+                                                    <div class="col-md-7 date-div">
+                                                        <input type="text" name="purchase_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
+                                                    <div class="col-md-7">
+                                                        <select name="operation_type" class="form-control">
+                                                            <option value="cash">Оплата наличными</option>
+                                                            <option value="bank">Оплата на счет</option>
+                                                            <option value="balance">Оплата с депозита</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
+                                                    <div class="col-md-7">
+                                                        <p class="form-control price-display" style="color:green"></p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6 col-md-offset-3">
+                                                        <button type="submit" class="btn btn-sm purchase-subscription" data-background-color="main">
+                                                            Оплатить
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                            Отмена
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                 <!-- *-*-*-*-*-*-*-*-*-* Finance operation modal *-*-*-*-*-*-*-*-*-* -->
 
@@ -319,4 +368,7 @@
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    var subscriptionSubjectsData = {{ subscription_subjects | tojson | safe }};
+</script>
 {% endblock %}

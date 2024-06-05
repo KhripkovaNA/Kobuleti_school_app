@@ -1011,20 +1011,26 @@ def print_data(table_model, table_rows):
         print('\n'+'*'*20)
 
 
-# subscriptions = Subscription.query.filter(
-#     Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school'))
-# ).order_by(
-#     Subscription.purchase_date.desc()
-# ).all()
+# persons = {}
+# finances = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
+# for fin_op in finances:
+#     if fin_op.person_id not in persons.keys():
+#         fin_op.balance_state = fin_op.person.balance if fin_op.person.balance else 0
+#     else:
+#         fin_op.balance_state = persons[fin_op.person_id]
+#     db.session.flush()
+#     if fin_op.student_balance:
+#         balance_state = fin_op.balance_state - fin_op.amount
+#     else:
+#         balance_state = fin_op.balance_state
+#
+#     persons[fin_op.person_id] = balance_state
 
-subscriptions = Subscription.query.join(Person).filter(
-    Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school'))
-).order_by(
-    Subscription.purchase_date.desc(), Person.last_name, Person.first_name
-).all()
+# print_table(Finance)
+#
+# print(persons)
+# db.session.commit()
 
-for subscription in subscriptions:
-    if subscription.lessons_left == subscription.subscription_type.lessons:
-        print(subscription.id, 'Yeee!')
+finances = Finance.query.all()
+print_data(Finance, finances)
 
-print_data(Subscription, subscriptions)

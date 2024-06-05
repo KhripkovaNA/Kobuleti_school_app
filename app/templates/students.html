@@ -166,8 +166,9 @@
                                                                 <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form class="subscription-form" action="{{ url_for('subscription', student_id=student.id) }}" method="post">
+                                                                <form class="subscription-form" action="{{ url_for('subscription') }}" method="post">
                                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                    <input type="hidden" name="student_id" value="{{ student.id }}"/>
                                                                     <div class="row">
                                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
                                                                         <div class="col-md-7">

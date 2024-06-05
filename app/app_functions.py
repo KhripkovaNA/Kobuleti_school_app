@@ -457,8 +457,13 @@ def format_subjects_and_subscriptions(student):
                 subscription_dict['subscription_id'] = subscription.id
                 subscription_dict['purchase_date'] = subscription.purchase_date
                 subscription_dict['shift'] = subscription.shift
-                subscription_dict['period'] = "месяц"
-                subscription_dict['validity'] = MONTHS[subscription.purchase_date.month - 1]
+                if subscription.period == "month":
+                    subscription_dict['period'] = "месяц"
+                    subscription_dict['validity'] = MONTHS[subscription.purchase_date.month - 1]
+                elif subscription.period == "week":
+                    subscription_dict['period'] = "неделя"
+                    subscription_dict['validity'] = f'{subscription.purchase_date:%d.%m}-' \
+                                                    f'{subscription.end_date:%d.%m.%y}'
                 after_school_list.append(subscription_dict)
                 subscriptions_list.insert(0, f'{subject.name} ({subscription_dict["validity"]})')
                 subscriptions_set.add(subject.id)
@@ -468,8 +473,11 @@ def format_subjects_and_subscriptions(student):
                     subscription_dict['subscription_id'] = subscription.id
                     subscription_dict['purchase_date'] = subscription.purchase_date
                     subscription_dict['shift'] = subscription.shift
-                    subscription_dict['period'] = "день" if subscription.period == "day" else subscription.period
-                    subscription_dict['validity'] = f"{subscription.purchase_date:%d.%m}"
+                    subscription_dict['period'] = "день" if subscription.period == "day" else "неделя" \
+                        if subscription.period == "week" else subscription.period
+                    subscription_dict['validity'] = f'{subscription.purchase_date:%d.%m}-' \
+                                                    f'{subscription.end_date:%d.%m.%y}' \
+                        if subscription.period == "week" else f'{subscription.purchase_date:%d.%m}'
 
                     after_school_list.append(subscription_dict)
                     subscriptions_set.add(subject.id)
@@ -618,7 +626,9 @@ def student_lesson_register(form, student):
         return None, "Ошибка при записи клиента"
 
 
-def purchase_subscription(form, student):
+def purchase_subscription(form):
+    student_id = int(form.get('student_id'))
+    student = Person.query.filter_by(id=student_id, status="Клиент").first()
     subject_id = int(form.get('selected_subject'))
     subscription_type_id = int(form.get('subscription_type'))
     subscription_type = SubscriptionType.query.filter_by(id=subscription_type_id).first()
@@ -759,24 +769,24 @@ def handle_student_edit(form, student, edit_type, user):
         del_after_school = Subscription.query.filter_by(id=del_after_school_id).first()
         if del_after_school:
             price = del_after_school.subscription_type.price
-            if del_after_school.period not in ["month", "day"]:
+            if del_after_school.period not in ["month", "day", "week"]:
                 hours = int(del_after_school.period.split()[0])
                 price *= hours
             record = Finance.query.filter(
                 Finance.person_id == del_after_school.student_id,
-                Finance.amount == -price,
                 Finance.service_id == del_after_school.id
             ).first()
             if record:
-                if record.student_balance:
-                    record.person.balance -= record.amount
-                db.session.delete(record)
-                db.session.flush()
+                description = "Возврат за продленку"
+                finance_operation(del_after_school.student, abs(record.amount), record.operation_type,
+                                  description, None, balance=record.student_balance)
+                record.service_id = None
             else:
                 description = "Возврат за продленку"
                 finance_operation(del_after_school.student, price, 'cash', description, del_after_school.id)
-                db.session.delete(del_after_school)
-                db.session.flush()
+            db.session.delete(del_after_school)
+            db.session.flush()
+
         return
 
 
@@ -1010,21 +1020,23 @@ def check_subscription(student, lesson, subject_id):
                                                   Subscription.student_id == student.id).all()
     for subscription in subscriptions:
         if subscription.subject == after_school:
-            cond1 = subscription.purchase_date.month == date.month
-            cond2 = subscription.purchase_date > date
-            cond3 = subscription.period == "month"
-            subscription.active = True if ((cond1 or (cond2 and cond)) and cond3) else False
+            cond11 = subscription.purchase_date.month == date.month
+            cond12 = subscription.period == "month"
+            cond21 = subscription.purchase_date >= date <= subscription.end_date
+            cond22 = subscription.period == "week"
+            cond3 = subscription.purchase_date > date
+            subscription.active = True if (
+                ((cond11 and cond12) or (cond21 and cond22))
+                or (cond3 and cond)
+            ) else False
             db.session.commit()
         else:
-            cond1 = subscription.purchase_date <= date
-            cond2 = subscription.end_date >= date
-            cond3 = subscription.lessons_left >= 0
-            cond4 = subscription.lessons_left > 0
-            cond5 = subscription.purchase_date > date
+            cond1 = subscription.purchase_date <= date <= subscription.end_date
+            cond2 = subscription.lessons_left > 0
+            cond3 = subscription.purchase_date > date
             subscription.active = True if (
-                    (cond1 and cond2 and cond3 and not cond)
-                    or (cond1 and cond2 and cond4)
-                    or (cond5 and cond)
+                (cond1 and cond2)
+                or (cond3 and cond)
             ) else False
             db.session.commit()
 
@@ -1032,10 +1044,9 @@ def check_subscription(student, lesson, subject_id):
 def check_subscriptions(subscriptions):
     date = get_today_date()
     for subscription in subscriptions:
-        cond1 = subscription.purchase_date <= date
-        cond2 = subscription.end_date >= date
-        cond3 = subscription.lessons_left > 0
-        subscription.active = True if cond1 and cond2 and cond3 else False
+        cond1 = subscription.purchase_date <= date <= subscription.end_date
+        cond2 = subscription.lessons_left > 0
+        subscription.active = True if cond1 and cond2 else False
         db.session.commit()
 
 
@@ -1095,12 +1106,12 @@ def carry_out_lesson(form, subject, lesson, user):
                         payment_info = ("Абонемент", subscription.lessons_left)
                     else:
                         description = f"Списание за занятие {subject.name}"
-                        finance_operation(student, -lesson_price, 'balance', description, lesson.id, date=lesson.date)
+                        finance_operation(student, -lesson_price, 'balance', description, lesson.id)
                         payment_info = ("Разовое", int(lesson_price))
                 else:
                     price = lesson_school_price if payment_option == 'after_school' else lesson_price
-                    description = f"Списание за занятие {subject.name}"
-                    finance_operation(student, -price, 'balance', description, lesson.id, date=lesson.date)
+                    description = f"Списание за занятие {subject.name} {lesson.date:%d.%m.%y}"
+                    finance_operation(student, -price, 'balance', description, lesson.id)
                     payment_info = ("Продленка", int(price)) if payment_option == 'after_school' \
                         else ("Разовое", int(price))
                     subscription_id = None
@@ -1128,7 +1139,7 @@ def carry_out_lesson(form, subject, lesson, user):
         return 'Занятие уже проведено', 'error'
 
 
-def undo_lesson(form, subject, lesson):
+def undo_lesson(subject, lesson):
     if lesson.lesson_completed:
         lesson_price = subject.one_time_price
         lesson_school_price = subject.school_price if subject.school_price else lesson_price
@@ -1160,18 +1171,14 @@ def undo_lesson(form, subject, lesson):
                             if payment_option == 'Продленка' else lesson_price
                         record = Finance.query.filter(
                             Finance.person_id == student.id,
-                            Finance.date == lesson.date,
-                            Finance.amount == -price,
-                            Finance.description == f"Списание за занятие {subject.name}",
-                            or_(Finance.service_id == lesson.id, Finance.service_id.is_(None))
+                            Finance.service_id == lesson.id
                         ).first()
+                        description = f"Возврат за занятие {subject.name} {lesson.date:%d.%m.%y}"
                         if record:
-                            db.session.delete(record)
-                            db.session.flush()
-                        else:
-                            description = f"Возврат за занятие {subject.name}"
-                            finance_operation(student, price, 'balance', description, lesson.id, date=lesson.date)
+                            record.service_id = None
+                        finance_operation(student, price, 'balance', description, None)
 
+                        db.session.flush()
                 db.session.delete(attendance)
 
         lesson.lesson_completed = False
@@ -1249,7 +1256,7 @@ def handle_lesson(form, subject, lesson, user):
         return message
 
     if 'change_btn' in form and user.rights in ["admin", "user"]:
-        message = undo_lesson(form, subject, lesson)
+        message = undo_lesson(subject, lesson)
         user_action(user, f"Отмена проведения занятия {subject.name} {lesson.date:%d.%m.%Y}")
         return message
 
@@ -2476,6 +2483,10 @@ def get_after_school_students(month_index):
                 after_school_student.activities = activities
             if subscription.period == "month":
                 after_school_student.attendance = ["месяц"]
+            elif subscription.period == "week":
+                after_school_student.attendance = [
+                    f"неделя ({subscription.purchase_date:%d.%m}-{subscription.end_date:%d.%m})"
+                ]
             elif subscription.period == "day":
                 after_school_student.attendance = [f"день ({subscription.purchase_date:%d.%m})"]
             else:
@@ -2484,7 +2495,11 @@ def get_after_school_students(month_index):
         else:
             student_ind = after_school_students.index(after_school_student)
             after_school_student = after_school_students[student_ind]
-            if subscription.period == "day":
+            if subscription.period == "week":
+                after_school_student.attendance = [
+                    f"неделя ({subscription.purchase_date:%d.%m}-{subscription.end_date:%d.%m})"
+                ]
+            elif subscription.period == "day":
                 after_school_student.attendance.append(f"день ({subscription.purchase_date:%d.%m})")
             else:
                 after_school_student.attendance.append(f"{subscription.period} ({subscription.purchase_date:%d.%m})")
@@ -2503,6 +2518,8 @@ def get_after_school_prices():
         }
         if price_type.period == "месяц":
             price_dict["period"] = "month"
+        elif price_type.period == "неделя":
+            price_dict["period"] = "week"
         elif price_type.period == "день":
             price_dict["period"] = "day"
         else:
@@ -2514,19 +2531,25 @@ def get_after_school_prices():
 
 def handle_after_school_adding(student_id, form, period):
     term = form.get("term")
+    shift = int(form.get("shift")) if term in ["month", "day", "week"] and form.get("shift") != "0" else None
     if term == "month":
-        shift = int(form.get("shift"))
         purchase_month, purchase_year = period.split("-")
         purchase_date = datetime(int(purchase_year), int(purchase_month), 1).date()
+        end_date = purchase_date + relativedelta(months=+1, days=-1)
         period_text = f"{MONTHS[int(purchase_month) - 1]}"
+    elif term == "week":
+        selected_date = datetime.strptime(form.get("attendance_date"), '%d.%m.%Y').date()
+        purchase_date = get_weekday_date(0, selected_date)
+        end_date = get_weekday_date(6, selected_date)
+        period_text = f"неделя {purchase_date:%d.%m}-{end_date:%d.%m.%Y}"
     else:
-        shift = None
         purchase_date = datetime.strptime(form.get("attendance_date"), '%d.%m.%Y').date()
+        end_date = purchase_date
         period_text = f"{purchase_date:%d.%m.%Y}"
-    if term == "hour":
-        hours = int(form.get("hours"))
-        term = conjugate_hours(hours)
-        period_text = f"{term} {period_text}"
+        if term == "hour":
+            hours = int(form.get("hours"))
+            term = conjugate_hours(hours)
+            period_text = f"{term} {period_text}"
 
     subscription_type_id = int(form.get("subscription_type"))
 
@@ -2534,6 +2557,7 @@ def handle_after_school_adding(student_id, form, period):
         subject_id=after_school_subject().id,
         student_id=student_id,
         purchase_date=purchase_date,
+        end_date=end_date,
         period=term
     ).first()
 
@@ -2546,6 +2570,7 @@ def handle_after_school_adding(student_id, form, period):
             student_id=student_id,
             subscription_type_id=subscription_type_id,
             purchase_date=purchase_date,
+            end_date=end_date,
             shift=shift,
             period=term
         )
@@ -2559,8 +2584,7 @@ def finance_operation(person, amount, operation_type, description, service_id, b
 
     if balance:
         person.balance += Decimal(amount)
-
-    if operation_type == 'balance':
+    elif operation_type == 'balance':
         person.balance += Decimal(amount)
         operation_type = None
         balance = True
@@ -2572,7 +2596,8 @@ def finance_operation(person, amount, operation_type, description, service_id, b
         operation_type=operation_type,
         student_balance=balance,
         description=description,
-        service_id=service_id
+        service_id=service_id,
+        balance_state=person.balance
     )
     db.session.add(new_operation)
     db.session.flush()
@@ -2908,24 +2933,6 @@ def del_record(form, record_type, user):
 
         return message
 
-    if record_type == 'fin_operation':
-        operation_id = int(form.get('operation_id'))
-        operation = Finance.query.filter_by(id=operation_id).first()
-        if operation:
-            descripthon = f"Удаление финансовой операции клиента " \
-                          f"{operation.person.last_name} {operation.person.first_name} от " \
-                          f"{operation.date:%d.%m.%Y} ({operation.description})"
-            if operation.student_balance:
-                operation.person.balance -= operation.amount
-            db.session.delete(operation)
-            db.session.flush()
-            user_action(user, descripthon)
-            message = (f"Финансовая операция удалена", "success")
-        else:
-            message = ("Такой операции нет", 'error')
-
-        return message
-
     if record_type == 'subscription':
         del_subscription_id = int(form.get('subscription_id'))
         del_subscription = Subscription.query.filter_by(id=del_subscription_id).first()
@@ -2936,17 +2943,15 @@ def del_record(form, record_type, user):
                 price = del_subscription.subscription_type.price
                 record = Finance.query.filter(
                     Finance.person_id == del_subscription.student_id,
-                    Finance.amount == -price,
                     Finance.service_id == del_subscription.id
                 ).first()
+                fin_description = f"Возврат за абонемент {del_subscription.subject.name}"
                 if record:
-                    if record.student_balance:
-                        record.person.balance -= record.amount
-                    db.session.delete(record)
-                    db.session.flush()
+                    record.service_id = None
+                    finance_operation(del_subscription.student, abs(record.amount), record.operation_type,
+                                      fin_description, None, balance=record.student_balance)
                 else:
-                    description = f"Возврат за абонемент {del_subscription.subject.name}"
-                    finance_operation(del_subscription.student, price, 'cash', description, del_subscription.id)
+                    finance_operation(del_subscription.student, price, 'cash', fin_description, None)
 
                 description = f"Удаление абонемента {del_subscription.subject.name} клиента " \
                               f"{del_subscription.student.last_name} {del_subscription.student.first_name}"

@@ -88,6 +88,7 @@
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
                                                 <div class="col-md-7">
                                                     <select name="selected_client" class="form-control select-search">
+                                                        <option disabled selected></option>
                                                         {% for client in possible_clients %}
                                                             <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
                                                         {% endfor %}
@@ -99,6 +100,7 @@
                                                 <div class="col-md-7">
                                                     <select name="term" class="form-control term-selector">
                                                         <option value="month">Месяц</option>
+                                                        <option value="week">Неделя</option>
                                                         <option value="day">День</option>
                                                         <option value="hour">Часы</option>
                                                     </select>
@@ -108,6 +110,7 @@
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Смена:</label>
                                                 <div class="col-md-7">
                                                     <select name="shift" class="form-control">
+                                                        <option value="0">Нет</option>
                                                         <option value="1">1 смена</option>
                                                         <option value="2">2 смена</option>
                                                     </select>
@@ -123,6 +126,12 @@
                                                 <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
                                                 <div class="col-md-7 date-div">
                                                     <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                </div>
+                                            </div>
+                                            <div class="row week-range-div" style="display: none;">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Выбранная неделя:</label>
+                                                <div class="col-md-7">
+                                                    <div class="form-control week-range"></div>
                                                 </div>
                                             </div>
                                             <div class="row">
