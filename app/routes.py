@@ -15,7 +15,7 @@ from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_studen
     format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, school_subject_record, \
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
-    add_new_event, get_date, user_action, subject_record, OPERATION_TYPES, check_subscriptions
+    add_new_event, get_date, user_action, subject_record, OPERATION_TYPES, check_subscriptions, calc_day_index
 from decimal import Decimal
 from datetime import datetime, timedelta
 from sqlalchemy import distinct
@@ -1779,14 +1779,20 @@ def student_school_record(student_id, month_index):
 @app.route('/after-school/<string:month_index>')
 @login_required
 def after_school(month_index):
+    month_index = int(month_index) if str(month_index).lstrip('-').isdigit() else 0
     after_school_subject = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
     after_school_prices = SubscriptionType.query.filter(SubscriptionType.period != '').all()
     if not after_school_prices:
         flash("Цен на продленку еще нет", 'error')
         return redirect(url_for('students'))
 
-    month_students, period, current_period = get_after_school_students(int(month_index))
-    after_school_subject.month_students = month_students
+    month_students, period, current_period, date = get_after_school_students(month_index, "month")
+    after_school_subject.students = month_students
+    if month_index == 0:
+        day_index = 0
+    else:
+        date = datetime(period[1], period[0], 1).date()
+        day_index = calc_day_index(date)
     possible_clients = Person.query.filter(
         Person.status.in_(["Клиент", "Лид"]),
         Person.person_type == "Ребенок"
@@ -1794,9 +1800,23 @@ def after_school(month_index):
     after_school_prices = get_after_school_prices()
 
     return render_template('after_school.html', after_school_subject=after_school_subject, period=period,
-                           current_period=current_period, months=MONTHS, month_index=int(month_index),
+                           current_period=current_period, months=MONTHS, month_index=month_index,
                            possible_clients=possible_clients, after_school_prices=after_school_prices,
-                           today=f'{get_today_date():%d.%m.%Y}')
+                           date=f'{date:%d.%m.%Y}', day_index=day_index, render_type="month")
+
+
+@app.route('/after-school-days/<string:day_index>')
+@login_required
+def after_school_days(day_index):
+    day_index = int(day_index) if str(day_index).lstrip('-').isdigit() else 0
+    after_school_subject = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
+    day_students, period, current_period, date = get_after_school_students(day_index, "day")
+    after_school_subject.students = day_students
+    month_index = calc_month_index(date)
+
+    return render_template('after_school.html', after_school_subject=after_school_subject, period=period,
+                           current_period=current_period, months=MONTHS, day_index=day_index,
+                           date=f'{date:%d.%m.%Y}', month_index=month_index, render_type="day")
 
 
 @app.route('/after-school-purchase', methods=['POST'])

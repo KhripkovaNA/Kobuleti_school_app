@@ -2405,6 +2405,9 @@ def calc_month_index(date):
     return relativedelta(date1, date2).months
 
 
+
+
+
 def student_record(student, month_index):
     result_date = get_today_date() + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
@@ -2463,16 +2466,53 @@ def get_period(month_index):
     return result_date.month, result_date.year
 
 
-def get_after_school_students(month_index):
+def get_day(day_index):
+    result_date = get_today_date() + timedelta(days=day_index)
+    return result_date
+
+
+def calc_day_index(date):
+    day_index = (date - get_today_date()).days
+    return day_index
+
+
+def get_after_school_students(period_index, period_type):
     current_period = get_period(0)
-    period = get_period(month_index)
+    after_school_id = after_school_subject().id
+    if period_type == "month":
+        date = get_today_date()
+        period = get_period(period_index)
+    else:
+        date = get_day(period_index)
+        period = get_period(calc_month_index(date))
     first_date = datetime(period[1], period[0], 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
-    after_school_subscriptions = Subscription.query.filter(
-        Subscription.subject_id == after_school_subject().id,
-        Subscription.purchase_date >= first_date,
-        Subscription.purchase_date <= last_date
-    ).all()
+    if period_type == "month":
+        after_school_subscriptions = Subscription.query.filter(
+            Subscription.subject_id == after_school_id,
+            Subscription.purchase_date >= first_date,
+            Subscription.purchase_date <= last_date
+        ).all()
+    else:
+        after_school_subscriptions = Subscription.query.filter(
+            Subscription.subject_id == after_school_id,
+            or_(
+                and_(
+                    Subscription.period == "month",
+                    Subscription.purchase_date >= first_date,
+                    Subscription.purchase_date <= last_date
+                ),
+                and_(
+                    Subscription.period == "week",
+                    Subscription.purchase_date <= date,
+                    Subscription.end_date >= date
+                ),
+                and_(
+                    ~Subscription.period.in_(["month", "week"]),
+                    Subscription.purchase_date == date,
+                )
+            )
+        ).all()
     after_school_students = []
     for subscription in after_school_subscriptions:
         after_school_student = subscription.student
@@ -2507,7 +2547,7 @@ def get_after_school_students(month_index):
                 after_school_student.attendance.append(f"{subscription.period} ({subscription.purchase_date:%d.%m})")
     after_school_students = sorted(after_school_students, key=lambda x: (x.shift, x.last_name, x.first_name))
 
-    return after_school_students, period, current_period
+    return after_school_students, period, current_period, date
 
 
 def get_after_school_prices():

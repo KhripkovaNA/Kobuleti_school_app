@@ -6,10 +6,10 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">{{ after_school_subject.name }}. {{ months[period[0] - 1].capitalize() }} {{ period[1] }}</h4>
+                <h4 class="title">{{ after_school_subject.name }}. {% if render_type == "month" %}{{ months[period[0] - 1].capitalize() }} {{ period[1] }}{% else %}{{ date }}{% endif %}</h4>
             </div>
             <div class="card-content">
-                {% if after_school_subject.month_students %}
+                {% if after_school_subject.students %}
                     <div class="scroll-timetable" style="height:73vh;">
                         <table class="table table-hover">
                             <thead class="text-success">
@@ -17,13 +17,13 @@
                                 <th>Клиент</th>
                                 <th>Дата рождения, Возраст</th>
                                 <th>Посещение</th>
-                                {% if period == current_period %}
+                                {% if (render_type == "month" and period == current_period) or (render_type == "day" and day_index == 0) %}
                                     <th>Доп занятия</th>
                                     <th>Баланс</th>
                                 {% endif %}
                             </thead>
                             <tbody>
-                                {% for student in after_school_subject.month_students %}
+                                {% for student in after_school_subject.students %}
                                     <tr>
                                         <td>{{ student.shift if student.shift < 10 }}</td>
                                         <td>
@@ -40,7 +40,7 @@
                                                 <p>{{ attendance }}</p>
                                             {% endfor %}
                                         </td>
-                                        {% if period == current_period %}
+                                        {% if (render_type == "month" and period == current_period) or (render_type == "day" and day_index == 0) %}
                                             <td>
                                                 {% for activity in student.activities %}
                                                     {{ activity }}{{',' if not loop.last }}
@@ -48,9 +48,11 @@
                                             </td>
                                             <td>
                                                 {% if student.balance_plus %}
-                                                    <p style="color:green"><b>Баланс: {{ student.balance_plus }}</b></p>
+                                                    <p style="color:green"><b>{{ student.balance_plus }}</b></p>
+                                                {% elif student.balance_minus %}
+                                                    <p style="color:red"><b>{{ student.balance_minus }}</b></p>
                                                 {% else %}
-                                                    <p style="color:red"><b>Баланс: {{ student.balance_minus if student.balance_minus else 0 }}</b></p>
+                                                    <p><b>0</b></p>
                                                 {% endif %}
                                             </td>
                                         {% endif %}
@@ -62,7 +64,7 @@
                 {% else %}
                     <p>Клиентов пока нет</p>
                 {% endif %}
-                {% if month_index >= 0 %}
+                {% if render_type == "month" and month_index >= 0 %}
                     <div class="row" style="margin-left:45px;">
                         {% if current_user.rights in ["admin", "user"] %}
                             <button class="btn btn-xs" data-background-color="orange" data-toggle="modal" data-target="#after-school-modal">
@@ -125,7 +127,7 @@
                                             <div class="row day-row" style="display:none;">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
                                                 <div class="col-md-7 date-div">
-                                                    <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                    <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ date }}">
                                                 </div>
                                             </div>
                                             <div class="row week-range-div" style="display: none;">
@@ -167,25 +169,52 @@
                         </div>
                     </div>
                 {% endif %}
+
                 <div class="row">
-                    <div class="col-md-6">
-                        <button class="btn btn-sm" data-background-color="orange">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index - 1) }}">
-                                <i class="material-icons">navigate_before</i>Предыдущий месяц
-                            </a>
-                        </button>
-                        <button class="btn btn-sm" data-background-color="orange">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index + 1) }}">
-                                Следующий месяц<i class="material-icons">navigate_next</i>
-                            </a>
-                        </button>
+                    <div class="col-md-12">
+                        {% if render_type == "month" %}
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index - 1) }}">
+                                    <i class="material-icons">navigate_before</i>Предыдущий месяц
+                                </a>
+                            </button>
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index + 1) }}">
+                                    Следующий месяц<i class="material-icons">navigate_next</i>
+                                </a>
+                            </button>
+                            <button class="btn btn-xs pull-right" data-background-color="purple">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index) }}">
+                                    <i class="material-icons">today</i> Дни
+                                </a>
+                            </button>
+                        {% else %}
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index - 1) }}">
+                                    <i class="material-icons">navigate_before</i>Предыдущий день
+                                </a>
+                            </button>
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index + 1) }}">
+                                    Следующий день<i class="material-icons">navigate_next</i>
+                                </a>
+                            </button>
+                            <button class="btn btn-xs pull-right" data-background-color="purple">
+                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index) }}">
+                                    <i class="material-icons">calendar_month</i> Месяц
+                                </a>
+                            </button>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<script type="text/javascript">
-    var afterSchoolPrices = {{ after_school_prices | tojson | safe }};
-</script>
+{% if render_type == "month" %}
+    <script type="text/javascript">
+        var afterSchoolPrices = {{ after_school_prices | tojson | safe }};
+    </script>
+{% endif %}
 {% endblock %}
