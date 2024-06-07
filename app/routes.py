@@ -473,7 +473,8 @@ def subscription():
             db.session.add(new_subscription)
             db.session.flush()
             description = f"Покупка абонемента {new_subscription.subject.name}"
-            finance_operation(new_subscription.student, -price, operation_type, description, new_subscription.id)
+            finance_operation(new_subscription.student, -price, operation_type,
+                              description, "subscription", new_subscription.id)
             user_action(current_user, f"Покупка абонемента {new_subscription.subject.name} клиентом "
                                       f"{new_subscription.student.last_name} {new_subscription.student.first_name}")
             db.session.commit()
@@ -502,7 +503,7 @@ def deposit(student_id):
                 deposit = Decimal(amount)
                 student = Person.query.filter_by(id=student_id).first()
                 description = f"Пополнение баланса клиента"
-                finance_operation(student, deposit, operation_type, description, None, True)
+                finance_operation(student, deposit, operation_type, description, "balance", None, True)
                 user_description = f"{description} {student.last_name} {student.first_name} " \
                                    f"({OPERATION_TYPES.get(operation_type, '?')} {deposit:.1f})"
                 user_action(current_user, user_description)
@@ -1845,7 +1846,7 @@ def after_school_purchase():
                 operation_type = request.form.get('operation_type')
                 description = f"Оплата продленки ({period_text})"
                 attendee = Person.query.filter_by(id=attendee_id).first()
-                finance_operation(attendee, -price, operation_type, description, new_after_school.id)
+                finance_operation(attendee, -price, operation_type, description, "after_school", new_after_school.id)
                 user_description = f"Проведение оплаты клиента {attendee.last_name} {attendee.first_name} " \
                                    f"за Продленку ({period_text})"
                 user_action(current_user, user_description)
@@ -1927,13 +1928,15 @@ def add_finance_operation():
 
             finance_date = datetime.strptime(request.form.get('finance_date'), '%d.%m.%Y').date()
             description = request.form.get('description')
+            if finance_date != get_today_date():
+                description += f" (от {finance_date:%d.%m.%y})"
             amount = float(request.form.get('amount'))
             type_of_operation = request.form.get('operation_type')
             if type_of_operation.startswith('minus'):
                 amount = -amount
             operation_type = type_of_operation.split('_')[1]
             person = Person.query.filter_by(id=person_id).first()
-            finance_operation(person, amount, operation_type, description, None, date=finance_date)
+            finance_operation(person, amount, operation_type, description, "finance", None)
 
             user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name}: " \
                                f"{description} ({OPERATION_TYPES.get(operation_type, '?')} {amount:.1f})"

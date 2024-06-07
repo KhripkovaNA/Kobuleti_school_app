@@ -1026,14 +1026,8 @@ def print_data(table_model, table_rows):
 #
 #     persons[fin_op.person_id] = balance_state
 
-# print_table(Finance)
+print_table(Finance)
 #
 # print(persons)
 # db.session.commit()
 
-# finances = Finance.query.all()
-# print_data(Finance, finances)
-
-date = get_today_date() + timedelta(days=-36)
-day_index = (date - get_today_date()).days
-print(date, day_index)

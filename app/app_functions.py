@@ -774,16 +774,18 @@ def handle_student_edit(form, student, edit_type, user):
                 price *= hours
             record = Finance.query.filter(
                 Finance.person_id == del_after_school.student_id,
+                Finance.service == "after_school",
                 Finance.service_id == del_after_school.id
             ).first()
             if record:
                 description = "Возврат за продленку"
                 finance_operation(del_after_school.student, abs(record.amount), record.operation_type,
-                                  description, None, balance=record.student_balance)
+                                  description, "del_after_school", None, balance=record.student_balance)
                 record.service_id = None
             else:
                 description = "Возврат за продленку"
-                finance_operation(del_after_school.student, price, 'cash', description, del_after_school.id)
+                finance_operation(del_after_school.student, price, 'cash', description,
+                                  "del_after_school", del_after_school.id)
             db.session.delete(del_after_school)
             db.session.flush()
 
@@ -1108,12 +1110,12 @@ def carry_out_lesson(form, subject, lesson, user):
                         payment_info = ("Абонемент", subscription.lessons_left)
                     else:
                         description = f"Списание за занятие {subject.name}"
-                        finance_operation(student, -lesson_price, 'balance', description, lesson.id)
+                        finance_operation(student, -lesson_price, 'balance', description, 'lesson', lesson.id)
                         payment_info = ("Разовое", int(lesson_price))
                 else:
                     price = lesson_school_price if payment_option == 'after_school' else lesson_price
                     description = f"Списание за занятие {subject.name} {lesson.date:%d.%m.%y}"
-                    finance_operation(student, -price, 'balance', description, lesson.id)
+                    finance_operation(student, -price, 'balance', description, 'lesson', lesson.id)
                     payment_info = ("Продленка", int(price)) if payment_option == 'after_school' \
                         else ("Разовое", int(price))
                     subscription_id = None
@@ -1173,12 +1175,13 @@ def undo_lesson(subject, lesson):
                             if payment_option == 'Продленка' else lesson_price
                         record = Finance.query.filter(
                             Finance.person_id == student.id,
+                            Finance.service == "lesson",
                             Finance.service_id == lesson.id
                         ).first()
                         description = f"Возврат за занятие {subject.name} {lesson.date:%d.%m.%y}"
                         if record:
                             record.service_id = None
-                        finance_operation(student, price, 'balance', description, None)
+                        finance_operation(student, price, 'balance', description, 'del_lesson', None)
 
                         db.session.flush()
                 db.session.delete(attendance)
@@ -2620,7 +2623,7 @@ def handle_after_school_adding(student_id, form, period):
         return new_after_school_subscription, period_text
 
 
-def finance_operation(person, amount, operation_type, description, service_id, balance=False, date=None):
+def finance_operation(person, amount, operation_type, description, service, service_id, balance=False, date=None):
     if date is None:
         date = get_today_date()
 
@@ -2638,6 +2641,7 @@ def finance_operation(person, amount, operation_type, description, service_id, b
         operation_type=operation_type,
         student_balance=balance,
         description=description,
+        service=service,
         service_id=service_id,
         balance_state=person.balance
     )
@@ -2985,15 +2989,17 @@ def del_record(form, record_type, user):
                 price = del_subscription.subscription_type.price
                 record = Finance.query.filter(
                     Finance.person_id == del_subscription.student_id,
+                    Finance.service == "subscription",
                     Finance.service_id == del_subscription.id
                 ).first()
                 fin_description = f"Возврат за абонемент {del_subscription.subject.name}"
                 if record:
                     record.service_id = None
                     finance_operation(del_subscription.student, abs(record.amount), record.operation_type,
-                                      fin_description, None, balance=record.student_balance)
+                                      fin_description, 'del_subscription', None, balance=record.student_balance)
                 else:
-                    finance_operation(del_subscription.student, price, 'cash', fin_description, None)
+                    finance_operation(del_subscription.student, price, 'cash',
+                                      fin_description, 'del_subscription', None)
 
                 description = f"Удаление абонемента {del_subscription.subject.name} клиента " \
                               f"{del_subscription.student.last_name} {del_subscription.student.first_name}"
