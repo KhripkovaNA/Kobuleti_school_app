@@ -37,7 +37,11 @@
                                         </td>
                                         <td>
                                             {% for attendance in student.attendance %}
-                                                <p>{{ attendance }}</p>
+                                                {% if render_type == "month" %}
+                                                    <p>{{ attendance }}</p>
+                                                {% else %}
+                                                    <p>{{ attendance.split('(')[0] }}</p>
+                                                {% endif %}
                                             {% endfor %}
                                         </td>
                                         {% if (render_type == "month" and period == current_period) or (render_type == "day" and day_index == 0) %}

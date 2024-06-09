@@ -782,7 +782,7 @@ $(document).ready(function(){
     });
 
     // Validate forms with required field input
-    $('form.change-room-form, form.add-room-form, form.deposit-form, form.school-subject-form, ' +
+    $('form.change-room-form, form.add-room-form, form.deposit-form, form.school-subject-form, form.salary-form, ' +
       'form.change-class-form, form.add-class-form, form.change-subscription-form, form.add-subscription-form, ' +
       'form.change-after-school-form, form.add-after-school-form').submit(function(event) {
         var currentForm = $(this);

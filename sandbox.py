@@ -16,6 +16,7 @@ from app.app_functions import subjects_data, get_weekday_date, get_today_date, f
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
+import re
 
 app.app_context().push()
 
@@ -1026,8 +1027,38 @@ def print_data(table_model, table_rows):
 #
 #     persons[fin_op.person_id] = balance_state
 
-print_table(Finance)
+# print_table(Finance)
+# """
+# школа, продленка, депозит, абон (по предм), занятия (по предм), обеды, аренда, канцел, аттестация, зарплата
+# """
 #
-# print(persons)
+# cats = db.session.query(Finance.service.distinct()).all()
+# categories = ['after_school', 'subscription', 'del_after_school', 'school', 'lesson', 'balance', 'stationery',
+#               'dining', 'del_subscription', 'finance', 'del_lesson', 'salary', 'sublease', 'assessment']
+# print([cat[0] for cat in cats])
+# finances = Finance.query.all()
+# n = 1
+# for fin in finances:
+#     if fin.service == 'finance':
+#         if any(substring in fin.description for substring in ['продленка']):
+#             fin.service = 'after_school'
+#         else:
+#             print(n, fin.description)
+#             n += 1
+#
 # db.session.commit()
+
+# finances = Finance.query.filter(Finance.service.in_(['subscription', 'lesson', 'del_subscription', 'del_lesson'])).all()
+# n = 1
+# regex = r''
+# for fin in finances:
+#     text = fin.description.replace('Покупка абонемента', '').replace('Списание за занятие', '')\
+#         .replace('Возврат за абонемент', '').replace('Возврат за занятие', '')
+#     date_pattern = r'\b\d{2}\.\d{2}\.\d{2}\b'
+#     subj_name = re.sub(date_pattern, '', text).strip()
+#     subject = Subject.query.filter_by(name=subj_name).first()
+#     if subject:
+#         fin.subject_id = subject.id
+# db.session.commit()
+
 

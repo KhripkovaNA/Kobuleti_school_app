@@ -290,6 +290,8 @@ class Finance(db.Model):
     service = db.Column(db.String(16))
     service_id = db.Column(db.Integer)
     balance_state = db.Column(db.Numeric(8, 2))
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
+    subject = db.relationship('Subject', backref='purchases')
 
 
 class UserAction(db.Model):

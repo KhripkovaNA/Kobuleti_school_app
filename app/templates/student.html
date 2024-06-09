@@ -1343,8 +1343,9 @@
                                                     <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Пополнение депозита</h4>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <form class="login-form" action="{{ url_for('deposit', student_id=student.id) }}" method="post">
+                                                    <form class="login-form" action="{{ url_for('deposit') }}" method="post">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <input type="hidden" name="student_id" value="{{ student.id }}">
                                                         <div class="row">
                                                             <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
                                                             <div class="col-md-4">

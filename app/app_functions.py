@@ -14,6 +14,10 @@ DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Че�
 MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
           "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
 OPERATION_TYPES = {"cash": "нал", "bank": "счет", "balance": "депозит"}
+OPERATION_CATEGORIES = {'after_school': 'Продленка', 'subscription': 'Абонемент', 'del_after_school': 'Продленка',
+                        'school': 'Школа', 'lesson': 'Занятие', 'balance': 'Депозит', 'stationery': 'Канцелярия',
+                        'dining': 'Обед', 'del_subscription': 'Абонемент', 'finance': 'Прочее', 'del_lesson': 'Занятие',
+                        'salary': 'Зарплата', 'sublease': 'Аренда', 'assessment': 'Аттестация'}
 CHILD = "Ребенок"
 ADULT = "Взрослый"
 TEACHER = "Учитель"
@@ -1110,12 +1114,14 @@ def carry_out_lesson(form, subject, lesson, user):
                         payment_info = ("Абонемент", subscription.lessons_left)
                     else:
                         description = f"Списание за занятие {subject.name}"
-                        finance_operation(student, -lesson_price, 'balance', description, 'lesson', lesson.id)
+                        finance_operation(student, -lesson_price, 'balance', description, 'lesson',
+                                          lesson.id, subject_id=subject.id)
                         payment_info = ("Разовое", int(lesson_price))
                 else:
                     price = lesson_school_price if payment_option == 'after_school' else lesson_price
                     description = f"Списание за занятие {subject.name} {lesson.date:%d.%m.%y}"
-                    finance_operation(student, -price, 'balance', description, 'lesson', lesson.id)
+                    finance_operation(student, -price, 'balance', description, 'lesson',
+                                      lesson.id, subject_id=subject.id)
                     payment_info = ("Продленка", int(price)) if payment_option == 'after_school' \
                         else ("Разовое", int(price))
                     subscription_id = None
@@ -1181,7 +1187,8 @@ def undo_lesson(subject, lesson):
                         description = f"Возврат за занятие {subject.name} {lesson.date:%d.%m.%y}"
                         if record:
                             record.service_id = None
-                        finance_operation(student, price, 'balance', description, 'del_lesson', None)
+                        finance_operation(student, price, 'balance', description,
+                                          'del_lesson', None, subject_id=subject.id)
 
                         db.session.flush()
                 db.session.delete(attendance)
@@ -2623,9 +2630,8 @@ def handle_after_school_adding(student_id, form, period):
         return new_after_school_subscription, period_text
 
 
-def finance_operation(person, amount, operation_type, description, service, service_id, balance=False, date=None):
-    if date is None:
-        date = get_today_date()
+def finance_operation(person, amount, operation_type, description, service, service_id, balance=False, subject_id=None):
+    date = get_today_date()
 
     if balance:
         person.balance += Decimal(amount)
@@ -2643,7 +2649,8 @@ def finance_operation(person, amount, operation_type, description, service, serv
         description=description,
         service=service,
         service_id=service_id,
-        balance_state=person.balance
+        balance_state=person.balance,
+        subject_id=subject_id
     )
     db.session.add(new_operation)
     db.session.flush()
@@ -2996,10 +3003,11 @@ def del_record(form, record_type, user):
                 if record:
                     record.service_id = None
                     finance_operation(del_subscription.student, abs(record.amount), record.operation_type,
-                                      fin_description, 'del_subscription', None, balance=record.student_balance)
+                                      fin_description, 'del_subscription', None, balance=record.student_balance,
+                                      subject_id=del_subscription.subject_id)
                 else:
-                    finance_operation(del_subscription.student, price, 'cash',
-                                      fin_description, 'del_subscription', None)
+                    finance_operation(del_subscription.student, price, 'cash', fin_description,
+                                       'del_subscription', None, subject_id=del_subscription.subject_id)
 
                 description = f"Удаление абонемента {del_subscription.subject.name} клиента " \
                               f"{del_subscription.student.last_name} {del_subscription.student.first_name}"

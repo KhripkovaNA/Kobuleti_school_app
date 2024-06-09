@@ -15,7 +15,8 @@ from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_studen
     format_school_class_subjects, show_school_lesson, handle_school_lesson, employee_record, school_subject_record, \
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
-    add_new_event, get_date, user_action, subject_record, OPERATION_TYPES, check_subscriptions, calc_day_index
+    add_new_event, get_date, user_action, subject_record, OPERATION_TYPES, OPERATION_CATEGORIES, check_subscriptions, \
+    calc_day_index
 from decimal import Decimal
 from datetime import datetime, timedelta
 from sqlalchemy import distinct
@@ -473,8 +474,8 @@ def subscription():
             db.session.add(new_subscription)
             db.session.flush()
             description = f"Покупка абонемента {new_subscription.subject.name}"
-            finance_operation(new_subscription.student, -price, operation_type,
-                              description, "subscription", new_subscription.id)
+            finance_operation(new_subscription.student, -price, operation_type, description,
+                              "subscription", new_subscription.id, subject_id=new_subscription.subject_id)
             user_action(current_user, f"Покупка абонемента {new_subscription.subject.name} клиентом "
                                       f"{new_subscription.student.last_name} {new_subscription.student.first_name}")
             db.session.commit()
@@ -492,16 +493,21 @@ def subscription():
     return redirect(request.referrer)
 
 
-@app.route('/deposit/<string:student_id>', methods=['POST'])
+@app.route('/deposit', methods=['POST'])
 @login_required
-def deposit(student_id):
+def deposit():
     try:
         if current_user.rights in ["admin", "user"]:
+            student_id = int(request.form.get('student_id')) if request.form.get('student_id') else None
             amount = request.form.get('deposit')
+            student = Person.query.filter_by(id=student_id).first()
+            if not student:
+                flash('Клиент не выбран', 'error')
+                return redirect(request.referrer)
+
             if amount:
                 operation_type = request.form.get('operation_type')
                 deposit = Decimal(amount)
-                student = Person.query.filter_by(id=student_id).first()
                 description = f"Пополнение баланса клиента"
                 finance_operation(student, deposit, operation_type, description, "balance", None, True)
                 user_description = f"{description} {student.last_name} {student.first_name} " \
@@ -509,6 +515,39 @@ def deposit(student_id):
                 user_action(current_user, user_description)
                 db.session.commit()
                 flash(f'Депозит внесен на счет клиента {student.last_name} {student.first_name}', 'success')
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при внесении депозита: {str(e)}', 'error')
+
+    return redirect(request.referrer)
+
+
+@app.route('/salary', methods=['POST'])
+@login_required
+def salary():
+    try:
+        if current_user.rights in ["admin", "user"]:
+            employee_id = int(request.form.get('employee_id')) if request.form.get('employee_id') else None
+            amount = request.form.get('amount')
+            employee = Person.query.filter_by(id=employee_id).first()
+            if not employee:
+                flash('Сотрудник не выбран', 'error')
+                return redirect(request.referrer)
+
+            if amount:
+                operation_type = request.form.get('operation_type')
+                salary = Decimal(amount)
+                description = f"Выдача зарплаты сотруднику"
+                finance_operation(employee, salary, operation_type, description, "salary", None)
+                user_description = f"{description} {employee.last_name} {employee.first_name} " \
+                                   f"({OPERATION_TYPES.get(operation_type, '?')} {salary:.1f})"
+                user_action(current_user, user_description)
+                db.session.commit()
+                flash(f'Финансовая операция проведена', 'success')
 
         else:
             flash('Нет прав администратора', 'error')
@@ -1927,7 +1966,10 @@ def add_finance_operation():
                 return redirect(request.referrer)
 
             finance_date = datetime.strptime(request.form.get('finance_date'), '%d.%m.%Y').date()
+            category = request.form.get('operation_category')
             description = request.form.get('description')
+            if not description:
+                description = OPERATION_CATEGORIES[category]
             if finance_date != get_today_date():
                 description += f" (от {finance_date:%d.%m.%y})"
             amount = float(request.form.get('amount'))
@@ -1936,7 +1978,7 @@ def add_finance_operation():
                 amount = -amount
             operation_type = type_of_operation.split('_')[1]
             person = Person.query.filter_by(id=person_id).first()
-            finance_operation(person, amount, operation_type, description, "finance", None)
+            finance_operation(person, amount, operation_type, description, category, None)
 
             user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name}: " \
                                f"{description} ({OPERATION_TYPES.get(operation_type, '?')} {amount:.1f})"
@@ -1972,20 +2014,14 @@ def finances():
                 new_finance_date = datetime.strptime(request.form.get('finance_date'), '%d.%m.%Y').date()
                 old_finance_date = fin_operation.date
                 new_description = request.form.get('description')
+                if new_finance_date != old_finance_date:
+                    new_description += f" (от {new_finance_date:%d.%m.%y})"
                 old_description = fin_operation.description
                 fin_operation.description = new_description
-                fin_operation.date = new_finance_date
 
-                if new_finance_date == old_finance_date and new_description != old_description:
-                    user_description = f"Изменение описания финансовой операции от {fin_operation.date:%d.%m.%Y} с " \
+                if new_description != old_description:
+                    user_description = f"Изменение финансовой операции от {fin_operation.date:%d.%m.%Y} с " \
                                        f"'{old_description}' на '{new_description}'"
-                elif new_finance_date != old_finance_date and new_description == old_description:
-                    user_description = f"Изменение даты финансовой операции '{old_description}' " \
-                                       f"с {old_finance_date:%d.%m.%Y} на {new_finance_date:%d.%m.%Y}"
-                elif new_finance_date != old_finance_date and new_description != old_description:
-                    user_description = f"Изменение финансовой операции '{old_description}' " \
-                                       f"({old_finance_date:%d.%m.%Y}) " \
-                                       f"на '{new_description}' ({new_finance_date:%d.%m.%Y})"
                 else:
                     user_description = None
 
