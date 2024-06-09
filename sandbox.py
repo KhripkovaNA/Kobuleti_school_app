@@ -1061,4 +1061,4 @@ def print_data(table_model, table_rows):
 #         fin.subject_id = subject.id
 # db.session.commit()
 
-
+print_table(Finance)

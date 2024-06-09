@@ -2041,10 +2041,13 @@ def finances():
         return redirect(url_for('finances'))
 
     subscription_subjects = subscription_subjects_data()
+    periods = [get_period(0), get_period(1)]
+    months = [(f"{period[0]}-{period[1]}", MONTHS[period[0] - 1].capitalize()) for period in periods]
+    after_school_prices = get_after_school_prices()
 
     return render_template('finances.html', finance_operations=finance_operations, all_persons=all_persons,
                            today=f'{today:%d.%m.%Y}', subscription_subjects=subscription_subjects,
-                           render_type="last_weeks")
+                           after_school_prices=after_school_prices, months=months, render_type="last_weeks")
 
 
 @app.route('/all-finances')
