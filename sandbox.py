@@ -17,6 +17,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
 import re
+import csv
 
 app.app_context().push()
 
@@ -1061,4 +1062,60 @@ def print_data(table_model, table_rows):
 #         fin.subject_id = subject.id
 # db.session.commit()
 
-print_table(Finance)
+# print_table(Finance)
+OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school': 'Продленка', 'subscription': 'Абонемент',
+                        'del_subscription': 'Абонемент', 'lesson': 'Занятие', 'del_lesson': 'Занятие',
+                        'balance': 'Депозит, пополнение', 'salary': 'Зарплата', 'dining': 'Обед', 'school': 'Школа',
+                        'stationery': 'Канцелярия', 'finance': 'Прочее', 'sublease': 'Аренда',
+                        'assessment': 'Аттестация'}
+fields = ["Категория", "Занятие", "Приход", "Расход"]
+
+categories = ['Продленка', 'Абонемент', 'Занятие', 'Депозит, пополнение', 'Зарплата',
+              'Обед', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация', 'Прочее']
+operation_types = ["cash", "bank", "balance"]
+day_finance_operations = {oper_type: {} for oper_type in operation_types}
+report_date = datetime(2024, 6, 9).date()
+finances = Finance.query.filter_by(date=report_date).all()
+
+
+def sort_finances(oper_type, category, subject):
+    if category not in day_finance_operations[oper_type].keys():
+        day_finance_operations[oper_type][category] = {subject: {"Приход": plus, "Расход": minus}}
+    else:
+        if subject not in day_finance_operations[oper_type][category].keys():
+            day_finance_operations[oper_type][category][subject] = {"Приход": plus, "Расход": minus}
+        else:
+            day_finance_operations[oper_type][category][subject]["Приход"] += plus
+            day_finance_operations[oper_type][category][subject]["Расход"] += minus
+
+
+for fin in finances:
+    if fin.student_balance:
+        plus = fin.amount if fin.amount > 0 else 0
+        minus = abs(fin.amount) if fin.amount < 0 else 0
+    else:
+        plus = abs(fin.amount) if fin.amount < 0 else 0
+        minus = fin.amount if fin.amount > 0 else 0
+    category = OPERATION_CATEGORIES[fin.service]
+    subject = fin.subject.name if fin.subject_id else "Нет"
+    if fin.operation_type == "cash":
+        sort_finances("cash", category, subject)
+    elif fin.operation_type == "bank":
+        sort_finances("bank", category, subject)
+    if fin.student_balance:
+        sort_finances("balance", category, subject)
+
+with open('finance_report.csv', 'w', encoding="utf-8") as csvfile:
+    csvwriter = csv.writer(csvfile)
+    for oper_type in operation_types:
+        csvwriter.writerow([oper_type])
+        csvwriter.writerow(fields)
+        for category in categories:
+            if category in day_finance_operations[oper_type].keys():
+                for subject in day_finance_operations[oper_type][category].keys():
+                    plus = day_finance_operations[oper_type][category][subject]["Приход"]
+                    minus = day_finance_operations[oper_type][category][subject]["Расход"]
+                    table_row = [category, subject, plus, minus]
+                    csvwriter.writerow(table_row)
+
+

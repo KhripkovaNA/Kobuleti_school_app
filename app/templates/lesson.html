@@ -29,7 +29,7 @@
                                                 <tr>
                                                     <td>
                                                         <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
-                                                            {{ student.last_name }} {{ student.first_name }}
+                                                            {{ loop.index }}. {{ student.last_name }} {{ student.first_name }}
                                                         </a>
                                                     </td>
                                                     <td>
@@ -85,7 +85,7 @@
                                                     <td>
                                                         <button type="submit" name="del_client_btn" value="{{ student.id }}" class="btn btn-danger del-btn" style="margin-bottom:2px">x</button>
                                                         <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
-                                                            {{ student.last_name }} {{ student.first_name }}
+                                                            {{ loop.index }}. {{ student.last_name }} {{ student.first_name }}
                                                         </a>
                                                     </td>
                                                     <td>

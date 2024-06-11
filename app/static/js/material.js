@@ -770,8 +770,8 @@ $(document).ready(function(){
         }
     });
 
-    // Validate subscription, copy-lessons, change-lessons and grade forms
-    $('form.subscription-form, form.copy-lessons-form, form.change-lessons-form, form.grade-form').submit(function(event) {
+    // Validate subscription, copy-lessons, change-lessons, finance-report and grade forms
+    $('form.subscription-form, form.copy-lessons-form, form.change-lessons-form, form.finance-report-form, form.grade-form').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
 
@@ -794,6 +794,7 @@ $(document).ready(function(){
         }
     });
 
+    // Validate finance, change-finance and subscription forms
     $('form.finance-form, form.change-finance-form, form.form-subscription').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
@@ -826,6 +827,15 @@ $(document).ready(function(){
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
             $('form').data('submitted', false);
+        }
+    });
+
+    // Close finance-report form after submission
+    $('#submit-and-close').click(function() {
+        // Submit the form
+        $('form.finance-report-form').submit();
+        if ($('form.finance-report-form').data('submitted') === true) {
+            $('#finance-report-modal').modal('hide');
         }
     });
 

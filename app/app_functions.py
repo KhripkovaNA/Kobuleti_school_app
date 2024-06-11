@@ -14,10 +14,11 @@ DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Че�
 MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
           "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
 OPERATION_TYPES = {"cash": "нал", "bank": "счет", "balance": "депозит"}
-OPERATION_CATEGORIES = {'after_school': 'Продленка', 'subscription': 'Абонемент', 'del_after_school': 'Продленка',
-                        'school': 'Школа', 'lesson': 'Занятие', 'balance': 'Депозит', 'stationery': 'Канцелярия',
-                        'dining': 'Обед', 'del_subscription': 'Абонемент', 'finance': 'Прочее', 'del_lesson': 'Занятие',
-                        'salary': 'Зарплата', 'sublease': 'Аренда', 'assessment': 'Аттестация'}
+OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school': 'Продленка', 'subscription': 'Абонемент',
+                        'del_subscription': 'Абонемент', 'lesson': 'Занятие', 'del_lesson': 'Занятие',
+                        'balance': 'Депозит, пополнение', 'salary': 'Зарплата', 'dining': 'Обед', 'school': 'Школа',
+                        'stationery': 'Канцелярия', 'finance': 'Прочее', 'sublease': 'Аренда',
+                        'assessment': 'Аттестация'}
 CHILD = "Ребенок"
 ADULT = "Взрослый"
 TEACHER = "Учитель"
@@ -1032,10 +1033,11 @@ def check_subscription(student, lesson, subject_id):
                 cond2 = subscription.purchase_date <= date <= subscription.end_date
             else:
                 cond2 = False
-            cond3 = subscription.purchase_date > date
+            cond31 = subscription.purchase_date > date
+            cond32 = subscription.period in ["month", "week"]
             subscription.active = True if (
                 ((cond11 and cond12) or cond2)
-                or (cond3 and cond)
+                or (cond31 and cond32 and cond)
             ) else False
             db.session.commit()
         else:
@@ -2743,6 +2745,101 @@ def download_timetable(week):
         sheet.column_dimensions[get_column_letter(col)].width = adjusted_width
 
     return workbook, dates
+
+
+def sort_finance_operations(report_date):
+    finances = Finance.query.filter_by(date=report_date).all()
+    day_finance_operations = {oper_type: {} for oper_type in OPERATION_TYPES.keys()}
+
+    def sort_finances(oper_type, category, subject):
+        if category not in day_finance_operations[oper_type].keys():
+            day_finance_operations[oper_type][category] = {subject: {"Приход": plus, "Расход": minus}}
+        else:
+            if subject not in day_finance_operations[oper_type][category].keys():
+                day_finance_operations[oper_type][category][subject] = {"Приход": plus, "Расход": minus}
+            else:
+                day_finance_operations[oper_type][category][subject]["Приход"] += plus
+                day_finance_operations[oper_type][category][subject]["Расход"] += minus
+
+    for fin in finances:
+        if fin.student_balance:
+            plus = fin.amount if fin.amount > 0 else 0
+            minus = abs(fin.amount) if fin.amount < 0 else 0
+        else:
+            plus = abs(fin.amount) if fin.amount < 0 else 0
+            minus = fin.amount if fin.amount > 0 else 0
+        category = OPERATION_CATEGORIES[fin.service]
+        subject = fin.subject.name if fin.subject_id else ""
+        if fin.operation_type == "cash":
+            sort_finances("cash", category, subject)
+        elif fin.operation_type == "bank":
+            sort_finances("bank", category, subject)
+        if fin.student_balance:
+            sort_finances("balance", category, subject)
+    return day_finance_operations
+
+
+def download_finance_report(report_date):
+    fields = ["Категория", "Занятие", "Приход", "Расход"]
+
+    categories = ['Продленка', 'Абонемент', 'Занятие', 'Депозит, пополнение', 'Зарплата',
+                  'Обед', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация', 'Прочее']
+    operation_types = OPERATION_TYPES.keys()
+    day_finance_operations = sort_finance_operations(report_date)
+
+    workbook = Workbook()
+    sheet = workbook.active
+    central = Alignment(horizontal="center")
+    thin_border = Border(left=Side(style='thin'),
+                         right=Side(style='thin'),
+                         top=Side(style='thin'),
+                         bottom=Side(style='thin'))
+    thick_border = Border(left=Side(style='thick'),
+                          right=Side(style='thick'),
+                          top=Side(style='thick'),
+                          bottom=Side(style='thick'))
+    large_font = Font(bold=True, size=16)
+    bold_font = Font(bold=True)
+    last_row_ind = 1
+    for oper_type in operation_types:
+        sheet.cell(last_row_ind, 1).value = OPERATION_TYPES[oper_type]
+        sheet.cell(last_row_ind, 1).alignment = central
+        sheet.cell(last_row_ind, 1).border = thick_border
+        sheet.cell(last_row_ind, 1).font = large_font
+        last_row_ind += 1
+        for ind, field in enumerate(fields, start=1):
+            sheet.cell(last_row_ind, ind).value = field
+            sheet.cell(last_row_ind, ind).alignment = central
+            sheet.cell(last_row_ind, ind).border = thin_border
+            sheet.cell(last_row_ind, ind).font = bold_font
+        last_row_ind += 1
+        for category in categories:
+            if category in day_finance_operations[oper_type].keys():
+                for subject in day_finance_operations[oper_type][category].keys():
+                    sheet.cell(last_row_ind, 1).value = category
+                    sheet.cell(last_row_ind, 2).value = subject
+                    sheet.cell(last_row_ind, 1).border = thin_border
+                    sheet.cell(last_row_ind, 2).border = thin_border
+                    plus = day_finance_operations[oper_type][category][subject]["Приход"]
+                    minus = day_finance_operations[oper_type][category][subject]["Расход"]
+                    sheet.cell(last_row_ind, 3).value = plus
+                    sheet.cell(last_row_ind, 4).value = minus
+                    sheet.cell(last_row_ind, 3).border = thin_border
+                    sheet.cell(last_row_ind, 4).border = thin_border
+                    last_row_ind += 1
+        last_row_ind += 2
+
+    for col_ind in range(1, sheet.max_column + 1):
+        max_length = 0
+        for row_ind in range(1, sheet.max_row + 1):
+            current_cell = sheet.cell(row_ind, col_ind)
+            if current_cell.value:
+                if len(str(current_cell.value)) > max_length:
+                    max_length = len(current_cell.value)
+        adjusted_width = max_length + 2
+        sheet.column_dimensions[get_column_letter(col_ind)].width = adjusted_width
+
+    return workbook
 
 
 def get_date_range(week):

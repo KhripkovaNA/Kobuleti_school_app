@@ -16,7 +16,7 @@ from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_studen
     add_new_grade, change_grade, calc_month_index, student_record, get_after_school_students, get_after_school_prices, \
     handle_after_school_adding, finance_operation, download_timetable, get_date_range, get_period, del_record, \
     add_new_event, get_date, user_action, subject_record, OPERATION_TYPES, OPERATION_CATEGORIES, check_subscriptions, \
-    calc_day_index
+    calc_day_index, download_finance_report
 from decimal import Decimal
 from datetime import datetime, timedelta
 from sqlalchemy import distinct
@@ -2044,6 +2044,7 @@ def finances():
     periods = [get_period(0), get_period(1)]
     months = [(f"{period[0]}-{period[1]}", MONTHS[period[0] - 1].capitalize()) for period in periods]
     after_school_prices = get_after_school_prices()
+    # filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
 
     return render_template('finances.html', finance_operations=finance_operations, all_persons=all_persons,
                            today=f'{today:%d.%m.%Y}', subscription_subjects=subscription_subjects,
@@ -2056,6 +2057,24 @@ def all_finances():
     finance_operations = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
 
     return render_template('finances.html', finance_operations=finance_operations, render_type="all")
+
+
+@app.route('/finance-report', methods=['POST'])
+@login_required
+def finance_report():
+    try:
+        report_date = datetime.strptime(request.form.get('report_date'), '%d.%m.%Y').date()
+        workbook = download_finance_report(report_date)
+
+        filename = f"finance_report_{report_date:%d_%m_%y}.xlsx"
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
+        excel_buffer.seek(0)
+        return send_file(excel_buffer, download_name=filename, as_attachment=True)
+
+    except Exception as e:
+        flash(f'Ошибка при скачивании файла: {str(e)}', 'error')
+        return
 
 
 @app.route('/subscriptions', methods=['GET', 'POST'])
