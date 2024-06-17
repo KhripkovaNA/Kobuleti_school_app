@@ -1072,50 +1072,72 @@ fields = ["Категория", "Занятие", "Приход", "Расход"
 
 categories = ['Продленка', 'Абонемент', 'Занятие', 'Депозит, пополнение', 'Зарплата',
               'Обед', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация', 'Прочее']
-operation_types = ["cash", "bank", "balance"]
-day_finance_operations = {oper_type: {} for oper_type in operation_types}
-report_date = datetime(2024, 6, 9).date()
-finances = Finance.query.filter_by(date=report_date).all()
+# operation_types = ["cash", "bank", "balance"]
+# day_finance_operations = {oper_type: {} for oper_type in operation_types}
+# report_date = datetime(2024, 6, 9).date()
+# finances = Finance.query.filter_by(date=report_date).all()
+#
+#
+# def sort_finances(oper_type, category, subject):
+#     if category not in day_finance_operations[oper_type].keys():
+#         day_finance_operations[oper_type][category] = {subject: {"Приход": plus, "Расход": minus}}
+#     else:
+#         if subject not in day_finance_operations[oper_type][category].keys():
+#             day_finance_operations[oper_type][category][subject] = {"Приход": plus, "Расход": minus}
+#         else:
+#             day_finance_operations[oper_type][category][subject]["Приход"] += plus
+#             day_finance_operations[oper_type][category][subject]["Расход"] += minus
 
 
-def sort_finances(oper_type, category, subject):
-    if category not in day_finance_operations[oper_type].keys():
-        day_finance_operations[oper_type][category] = {subject: {"Приход": plus, "Расход": minus}}
-    else:
-        if subject not in day_finance_operations[oper_type][category].keys():
-            day_finance_operations[oper_type][category][subject] = {"Приход": plus, "Расход": minus}
-        else:
-            day_finance_operations[oper_type][category][subject]["Приход"] += plus
-            day_finance_operations[oper_type][category][subject]["Расход"] += minus
+# for fin in finances:
+#     if fin.student_balance:
+#         plus = fin.amount if fin.amount > 0 else 0
+#         minus = abs(fin.amount) if fin.amount < 0 else 0
+#     else:
+#         plus = abs(fin.amount) if fin.amount < 0 else 0
+#         minus = fin.amount if fin.amount > 0 else 0
+#     category = OPERATION_CATEGORIES[fin.service]
+#     subject = fin.subject.name if fin.subject_id else "Нет"
+#     if fin.operation_type == "cash":
+#         sort_finances("cash", category, subject)
+#     elif fin.operation_type == "bank":
+#         sort_finances("bank", category, subject)
+#     if fin.student_balance:
+#         sort_finances("balance", category, subject)
 
+# with open('finance_report.csv', 'w', encoding="utf-8") as csvfile:
+#     csvwriter = csv.writer(csvfile)
+#     for oper_type in operation_types:
+#         csvwriter.writerow([oper_type])
+#         csvwriter.writerow(fields)
+#         for category in categories:
+#             if category in day_finance_operations[oper_type].keys():
+#                 for subject in day_finance_operations[oper_type][category].keys():
+#                     plus = day_finance_operations[oper_type][category][subject]["Приход"]
+#                     minus = day_finance_operations[oper_type][category][subject]["Расход"]
+#                     table_row = [category, subject, plus, minus]
+#                     csvwriter.writerow(table_row)
 
-for fin in finances:
-    if fin.student_balance:
-        plus = fin.amount if fin.amount > 0 else 0
-        minus = abs(fin.amount) if fin.amount < 0 else 0
-    else:
-        plus = abs(fin.amount) if fin.amount < 0 else 0
-        minus = fin.amount if fin.amount > 0 else 0
-    category = OPERATION_CATEGORIES[fin.service]
-    subject = fin.subject.name if fin.subject_id else "Нет"
-    if fin.operation_type == "cash":
-        sort_finances("cash", category, subject)
-    elif fin.operation_type == "bank":
-        sort_finances("bank", category, subject)
-    if fin.student_balance:
-        sort_finances("balance", category, subject)
+# subscription_lessons = StudentAttendance.query.filter(StudentAttendance.payment_method == "Абонемент").all()
+# print_data(StudentAttendance, subscription_lessons)
 
-with open('finance_report.csv', 'w', encoding="utf-8") as csvfile:
-    csvwriter = csv.writer(csvfile)
-    for oper_type in operation_types:
-        csvwriter.writerow([oper_type])
-        csvwriter.writerow(fields)
-        for category in categories:
-            if category in day_finance_operations[oper_type].keys():
-                for subject in day_finance_operations[oper_type][category].keys():
-                    plus = day_finance_operations[oper_type][category][subject]["Приход"]
-                    minus = day_finance_operations[oper_type][category][subject]["Расход"]
-                    table_row = [category, subject, plus, minus]
-                    csvwriter.writerow(table_row)
+# for les in subscription_lessons:
+#     subscription_id = les.subscription_id
+#     subscription = Subscription.query.filter(
+#         Subscription.id == subscription_id,
+#         Subscription.student_id == les.student_id,
+#         Subscription.subject_id == les.subject_id
+#     ).first()
+#     if subscription:
+#         subscription_price = subscription.subscription_type.price
+#         subscription_lessons = subscription.subscription_type.lessons
+#         one_lesson_price = subscription_price / subscription_lessons
+#         print(subscription_price, subscription_lessons, one_lesson_price)
+#     else:
+#         print("No!")
 
+# print_table(Subscription)
+date1 = datetime(2024, 6, 17).date()
+date2 = datetime(2024, 6, 11).date()
 
+print(-7 <= (date1 - date2).days <= 7)

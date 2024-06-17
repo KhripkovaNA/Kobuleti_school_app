@@ -2014,14 +2014,20 @@ def finances():
                 new_finance_date = datetime.strptime(request.form.get('finance_date'), '%d.%m.%Y').date()
                 old_finance_date = fin_operation.date
                 new_description = request.form.get('description')
-                if new_finance_date != old_finance_date:
-                    new_description += f" (от {new_finance_date:%d.%m.%y})"
                 old_description = fin_operation.description
                 fin_operation.description = new_description
+                fin_operation.date = new_finance_date
 
-                if new_description != old_description:
-                    user_description = f"Изменение финансовой операции от {fin_operation.date:%d.%m.%Y} с " \
+                if new_finance_date == old_finance_date and new_description != old_description:
+                    user_description = f"Изменение описания финансовой операции от {fin_operation.date:%d.%m.%Y} с " \
                                        f"'{old_description}' на '{new_description}'"
+                elif new_finance_date != old_finance_date and new_description == old_description:
+                    user_description = f"Изменение даты финансовой операции '{old_description}' " \
+                                       f"с {old_finance_date:%d.%m.%Y} на {new_finance_date:%d.%m.%Y}"
+                elif new_finance_date != old_finance_date and new_description != old_description:
+                    user_description = f"Изменение финансовой операции '{old_description}' " \
+                                       f"({old_finance_date:%d.%m.%Y}) " \
+                                       f"на '{new_description}' ({new_finance_date:%d.%m.%Y})"
                 else:
                     user_description = None
 

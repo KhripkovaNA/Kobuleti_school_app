@@ -2502,8 +2502,26 @@ def get_after_school_students(period_index, period_type):
     if period_type == "month":
         after_school_subscriptions = Subscription.query.filter(
             Subscription.subject_id == after_school_id,
-            Subscription.purchase_date >= first_date,
-            Subscription.purchase_date <= last_date
+            or_(
+                and_(
+                    Subscription.period != "week",
+                    Subscription.purchase_date >= first_date,
+                    Subscription.purchase_date <= last_date
+                ),
+                and_(
+                    Subscription.period == "week",
+                    or_(
+                        and_(
+                            Subscription.purchase_date >= first_date,
+                            Subscription.purchase_date <= last_date
+                        ),
+                        and_(
+                            Subscription.end_date >= first_date,
+                            Subscription.end_date <= last_date
+                        )
+                    )
+                )
+            )
         ).all()
     else:
         after_school_subscriptions = Subscription.query.filter(
@@ -2550,9 +2568,9 @@ def get_after_school_students(period_index, period_type):
             student_ind = after_school_students.index(after_school_student)
             after_school_student = after_school_students[student_ind]
             if subscription.period == "week":
-                after_school_student.attendance = [
+                after_school_student.attendance.append(
                     f"неделя ({subscription.purchase_date:%d.%m}-{subscription.end_date:%d.%m})"
-                ]
+                )
             elif subscription.period == "day":
                 after_school_student.attendance.append(f"день ({subscription.purchase_date:%d.%m})")
             else:

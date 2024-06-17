@@ -18,7 +18,7 @@
                                 <th>Дата рождения, Возраст</th>
                                 <th>Посещение</th>
                                 {% if (render_type == "month" and period == current_period) or (render_type == "day" and day_index == 0) %}
-                                    <th>Доп занятия</th>
+                                    <th width="20%">Доп занятия</th>
                                     <th>Баланс</th>
                                 {% endif %}
                             </thead>
@@ -28,7 +28,7 @@
                                         <td>{{ student.shift if student.shift < 10 }}</td>
                                         <td>
                                             <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
-                                                {{ student.last_name }} {{ student.first_name }}
+                                                {{ loop.index }}. {{ student.last_name }} {{ student.first_name }}
                                             </a>
                                         </td>
                                         <td>
@@ -45,7 +45,7 @@
                                             {% endfor %}
                                         </td>
                                         {% if (render_type == "month" and period == current_period) or (render_type == "day" and day_index == 0) %}
-                                            <td>
+                                            <td width="20%">
                                                 {% for activity in student.activities %}
                                                     {{ activity }}{{',' if not loop.last }}
                                                 {% endfor %}
