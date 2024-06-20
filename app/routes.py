@@ -506,8 +506,13 @@ def deposit():
                 return redirect(request.referrer)
 
             if amount:
-                operation_type = request.form.get('operation_type')
-                deposit = Decimal(amount)
+                type_of_operation = request.form.get('operation_type')
+                if type_of_operation.startswith('minus'):
+                    deposit = -Decimal(amount)
+                else:
+                    deposit = Decimal(amount)
+
+                operation_type = type_of_operation.split("_")[1]
                 description = f"Пополнение баланса клиента"
                 finance_operation(student, deposit, operation_type, description, "balance", None, True)
                 user_description = f"{description} {student.last_name} {student.first_name} " \
@@ -1961,27 +1966,48 @@ def add_finance_operation():
     try:
         if current_user.rights in ["admin", "user"]:
             person_id = request.form.get('person_id')
-            if not person_id:
+            service = request.form.get('operation_category')
+
+            if not person_id and service != "collection":
                 flash('Клиент не выбран', 'error')
                 return redirect(request.referrer)
 
+            if not service:
+                flash('Предмет не выбран', 'error')
+                return redirect(request.referrer)
+
+            if service.startswith("subject"):
+                subject_tuple = service.split("_")[1:]
+                subject_id, subject_name = int(subject_tuple[0]), subject_tuple[1]
+                service = "del_lesson"
+            else:
+                subject_id, subject_name = None, None
+
             finance_date = datetime.strptime(request.form.get('finance_date'), '%d.%m.%Y').date()
-            category = request.form.get('operation_category')
+
             description = request.form.get('description')
             if not description:
-                description = OPERATION_CATEGORIES[category]
-            if finance_date != get_today_date():
-                description += f" (от {finance_date:%d.%m.%y})"
+                if service == "del_lesson":
+                    description = f"Возврат за занятие {subject_name}"
+                else:
+                    description = OPERATION_CATEGORIES[service]
+
+            # if finance_date != get_today_date():
+            #     description += f" (от {finance_date:%d.%m.%y})"
             amount = float(request.form.get('amount'))
             type_of_operation = request.form.get('operation_type')
             if type_of_operation.startswith('minus'):
                 amount = -amount
             operation_type = type_of_operation.split('_')[1]
             person = Person.query.filter_by(id=person_id).first()
-            finance_operation(person, amount, operation_type, description, category, None)
-
-            user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name}: " \
-                               f"{description} ({OPERATION_TYPES.get(operation_type, '?')} {amount:.1f})"
+            finance_operation(person, amount, operation_type, description, service,
+                              subject_id=subject_id, date=finance_date)
+            if person:
+                user_description = f"Проведение финансовой операции клиента {person.last_name} {person.first_name}: " \
+                                   f"{description} ({OPERATION_TYPES.get(operation_type, '?')} {amount:.1f})"
+            else:
+                user_description = f"Проведение финансовой операции {OPERATION_TYPES.get(operation_type, '?')} " \
+                                   f"{amount:.1f})"
             user_action(current_user, user_description)
             db.session.commit()
             flash('Финансовая операция проведена', 'success')
@@ -2050,11 +2076,14 @@ def finances():
     periods = [get_period(0), get_period(1)]
     months = [(f"{period[0]}-{period[1]}", MONTHS[period[0] - 1].capitalize()) for period in periods]
     after_school_prices = get_after_school_prices()
-    # filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
+    subject_tuples = db.session.query(Subject.id, Subject.name).filter(
+        Subject.subject_type.has(SubjectType.name.in_(["individual", "extra"]))
+    ).all()
 
     return render_template('finances.html', finance_operations=finance_operations, all_persons=all_persons,
                            today=f'{today:%d.%m.%Y}', subscription_subjects=subscription_subjects,
-                           after_school_prices=after_school_prices, months=months, render_type="last_weeks")
+                           after_school_prices=after_school_prices, months=months, subjects=subject_tuples,
+                           render_type="last_weeks")
 
 
 @app.route('/all-finances')
@@ -2080,7 +2109,7 @@ def finance_report():
 
     except Exception as e:
         flash(f'Ошибка при скачивании файла: {str(e)}', 'error')
-        return
+        return redirect(request.referrer)
 
 
 @app.route('/subscriptions', methods=['GET', 'POST'])

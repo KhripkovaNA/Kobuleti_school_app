@@ -17,7 +17,7 @@
                                 <th>Фамилия, Имя</th>
                                 <th>Дата рождения, Возраст</th>
                                 <th>Статус</th>
-                                <th width="15%">Занятия</th>
+                                <!--<th width="15%">Занятия</th>-->
                                 <th>Контакт</th>
                                 <th>Комментарий</th>
                                 <th></th>
@@ -42,14 +42,14 @@
                                                     <p style="color:red"><b>Баланс: {{ student.balance_minus }}</b></p>
                                                 {% endif %}
                                             </td>
-                                            <td width="15%">
-                                                {% if student.subjects_info %}
-                                                    {% if student.status in ["Клиент", "Лид"] %}
-                                                        {{ 'Интересуется:' if student.status == "Лид" }}
-                                                        {{ student.subjects_info if student.subjects_info }}
-                                                    {% endif %}
-                                                {% endif %}
-                                            </td>
+                                            <!--<td width="15%">-->
+                                            <!--    {% if student.subjects_info %}-->
+                                            <!--        {% if student.status in ["Клиент", "Лид"] %}-->
+                                            <!--            {{ 'Интересуется:' if student.status == "Лид" }}-->
+                                            <!--            {{ student.subjects_info if student.subjects_info }}-->
+                                            <!--        {% endif %}-->
+                                            <!--    {% endif %}-->
+                                            <!--</td>-->
                                             <td>
                                                 {{ student.contact_name if student.contact_name }}
                                                 {{ student.contact if student.contact }}
@@ -240,8 +240,8 @@
                                                                         <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
                                                                         <div class="col-md-7">
                                                                             <select name="operation_type" class="form-control">
-                                                                                <option value="cash">Наличными</option>
-                                                                                <option value="bank">На счет</option>
+                                                                                <option value="plus_cash">Наличными</option>
+                                                                                <option value="plus_bank">На счет</option>
                                                                             </select>
                                                                         </div>
                                                                     </div>

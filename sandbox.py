@@ -5,7 +5,7 @@ from app.models import User, Person, Contact, Subject, Subscription, Subscriptio
     teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
     SchoolLessonJournal, Report, Finance, UserAction
 from sqlalchemy.orm import class_mapper
-from sqlalchemy import and_, or_, distinct, text
+from sqlalchemy import and_, or_, distinct, text, func
 from datetime import datetime, timedelta
 import pytz
 from dateutil.relativedelta import relativedelta
@@ -1070,8 +1070,10 @@ OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school'
                         'assessment': 'Аттестация'}
 fields = ["Категория", "Занятие", "Приход", "Расход"]
 
-categories = ['Продленка', 'Абонемент', 'Занятие', 'Депозит, пополнение', 'Зарплата',
-              'Обед', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация', 'Прочее']
+categories = ['Продленка', 'Депозит, пополнение', 'Зарплата', 'Инкассация', 'Хозрасходы'
+              'Питание', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация']
+
+
 # operation_types = ["cash", "bank", "balance"]
 # day_finance_operations = {oper_type: {} for oper_type in operation_types}
 # report_date = datetime(2024, 6, 9).date()
@@ -1119,8 +1121,7 @@ categories = ['Продленка', 'Абонемент', 'Занятие', 'Д�
 #                     csvwriter.writerow(table_row)
 
 # subscription_lessons = StudentAttendance.query.filter(StudentAttendance.payment_method == "Абонемент").all()
-# print_data(StudentAttendance, subscription_lessons)
-
+#
 # for les in subscription_lessons:
 #     subscription_id = les.subscription_id
 #     subscription = Subscription.query.filter(
@@ -1130,14 +1131,26 @@ categories = ['Продленка', 'Абонемент', 'Занятие', 'Д�
 #     ).first()
 #     if subscription:
 #         subscription_price = subscription.subscription_type.price
-#         subscription_lessons = subscription.subscription_type.lessons
-#         one_lesson_price = subscription_price / subscription_lessons
-#         print(subscription_price, subscription_lessons, one_lesson_price)
+#         lessons = subscription.subscription_type.lessons
+#         one_lesson_price = subscription_price / lessons
+#         les.price_paid = one_lesson_price
 #     else:
 #         print("No!")
-
+# db.session.commit()
+# print_data(StudentAttendance, subscription_lessons)
+# print_table(StudentAttendance)
 # print_table(Subscription)
-date1 = datetime(2024, 6, 17).date()
-date2 = datetime(2024, 6, 11).date()
+# date1 = datetime(2024, 6, 17).date()
+# date2 = datetime(2024, 6, 11).date()
+#
+# print(-7 <= (date1 - date2).days <= 7)
 
-print(-7 <= (date1 - date2).days <= 7)
+# total_balance = db.session.query(func.sum(Person.balance)).scalar()
+# print(total_balance)
+subjects = db.session.query(Subject.id, Subject.name).filter(
+    Subject.subject_type.has(SubjectType.name.in_(["individual", "extra"]))
+).all()
+print(subjects)
+for subject in subjects:
+    print(f"lesson_{subject[0]}_{subject[1]}", subject[1])
+# names_list = [name[0] for name in subject_names]

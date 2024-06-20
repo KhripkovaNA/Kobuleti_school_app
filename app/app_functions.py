@@ -16,9 +16,9 @@ MONTHS = ["январь", "февраль", "март", "апрель", "май"
 OPERATION_TYPES = {"cash": "нал", "bank": "счет", "balance": "депозит"}
 OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school': 'Продленка', 'subscription': 'Абонемент',
                         'del_subscription': 'Абонемент', 'lesson': 'Занятие', 'del_lesson': 'Занятие',
-                        'balance': 'Депозит, пополнение', 'salary': 'Зарплата', 'dining': 'Обед', 'school': 'Школа',
+                        'balance': 'Депозит, пополнение', 'salary': 'Зарплата', 'dining': 'Питание', 'school': 'Школа',
                         'stationery': 'Канцелярия', 'finance': 'Прочее', 'sublease': 'Аренда',
-                        'assessment': 'Аттестация'}
+                        'assessment': 'Аттестация', 'collection': 'Инкассация', 'household': 'Хозтовары'}
 CHILD = "Ребенок"
 ADULT = "Взрослый"
 TEACHER = "Учитель"
@@ -502,7 +502,7 @@ def format_subjects_and_subscriptions(student):
 def basic_student_info(student):
     format_student_info(student)
     format_main_contact(student)
-    format_subjects_and_subscriptions(student)
+    # format_subjects_and_subscriptions(student)
 
 
 def extensive_student_info(student):
@@ -2650,8 +2650,11 @@ def handle_after_school_adding(student_id, form, period):
         return new_after_school_subscription, period_text
 
 
-def finance_operation(person, amount, operation_type, description, service, service_id, balance=False, subject_id=None):
-    date = get_today_date()
+def finance_operation(person, amount, operation_type, description, service,
+                      service_id=None, balance=False, subject_id=None, date=None):
+
+    if not date:
+        date = get_today_date()
 
     if balance:
         person.balance += Decimal(amount)
@@ -2661,7 +2664,7 @@ def finance_operation(person, amount, operation_type, description, service, serv
         balance = True
 
     new_operation = Finance(
-        person_id=person.id,
+        person_id=person.id if person else None,
         date=date,
         amount=amount,
         operation_type=operation_type,
@@ -2669,7 +2672,7 @@ def finance_operation(person, amount, operation_type, description, service, serv
         description=description,
         service=service,
         service_id=service_id,
-        balance_state=person.balance,
+        balance_state=person.balance if person else None,
         subject_id=subject_id
     )
     db.session.add(new_operation)
@@ -2766,18 +2769,17 @@ def download_timetable(week):
 
 
 def sort_finance_operations(report_date):
+    lesson_categories = ['Абонемент', 'Занятие']
     finances = Finance.query.filter_by(date=report_date).all()
     day_finance_operations = {oper_type: {} for oper_type in OPERATION_TYPES.keys()}
+    day_subjects = set()
 
-    def sort_finances(oper_type, category, subject):
+    def sort_finances(oper_type, category):
         if category not in day_finance_operations[oper_type].keys():
-            day_finance_operations[oper_type][category] = {subject: {"Приход": plus, "Расход": minus}}
+            day_finance_operations[oper_type][category] = {"Приход": plus, "Расход": minus}
         else:
-            if subject not in day_finance_operations[oper_type][category].keys():
-                day_finance_operations[oper_type][category][subject] = {"Приход": plus, "Расход": minus}
-            else:
-                day_finance_operations[oper_type][category][subject]["Приход"] += plus
-                day_finance_operations[oper_type][category][subject]["Расход"] += minus
+            day_finance_operations[oper_type][category]["Приход"] += plus
+            day_finance_operations[oper_type][category]["Расход"] += minus
 
     for fin in finances:
         if fin.student_balance:
@@ -2787,23 +2789,29 @@ def sort_finance_operations(report_date):
             plus = abs(fin.amount) if fin.amount < 0 else 0
             minus = fin.amount if fin.amount > 0 else 0
         category = OPERATION_CATEGORIES[fin.service]
-        subject = fin.subject.name if fin.subject_id else ""
+        if category in lesson_categories:
+            category = fin.subject.name if fin.subject_id else "Занятие"
+            day_subjects.add(category)
+
         if fin.operation_type == "cash":
-            sort_finances("cash", category, subject)
+            sort_finances("cash", category)
         elif fin.operation_type == "bank":
-            sort_finances("bank", category, subject)
+            sort_finances("bank", category)
         if fin.student_balance:
-            sort_finances("balance", category, subject)
-    return day_finance_operations
+            sort_finances("balance", category)
+
+    subject_list = sorted(list(day_subjects)) if day_subjects else []
+
+    return day_finance_operations, subject_list
 
 
 def download_finance_report(report_date):
-    fields = ["Категория", "Занятие", "Приход", "Расход"]
-
-    categories = ['Продленка', 'Абонемент', 'Занятие', 'Депозит, пополнение', 'Зарплата',
-                  'Обед', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация', 'Прочее']
+    fields = ["Категория", "Приход", "Расход"]
+    categories = ['Продленка', 'Депозит, пополнение/возврат', 'Зарплата', 'Питание', 'Школа',
+                  'Канцелярия', 'Инкассация', 'Хозтовары' 'Аренда', 'Аттестация', 'Прочее']
     operation_types = OPERATION_TYPES.keys()
-    day_finance_operations = sort_finance_operations(report_date)
+    day_finance_operations, subject_categories = sort_finance_operations(report_date)
+    all_categories = subject_categories + categories
 
     workbook = Workbook()
     sheet = workbook.active
@@ -2820,39 +2828,76 @@ def download_finance_report(report_date):
     bold_font = Font(bold=True)
     last_row_ind = 1
     for oper_type in operation_types:
-        sheet.cell(last_row_ind, 1).value = OPERATION_TYPES[oper_type]
-        sheet.cell(last_row_ind, 1).alignment = central
-        sheet.cell(last_row_ind, 1).border = thick_border
-        sheet.cell(last_row_ind, 1).font = large_font
+        sheet.merge_cells(f'A{last_row_ind}:C{last_row_ind}')
+        sheet[f'A{last_row_ind}'] = OPERATION_TYPES[oper_type]
+        sheet[f'A{last_row_ind}'].alignment = central
+        for row in sheet[f'A{last_row_ind}:C{last_row_ind}']:
+            for cell in row:
+                cell.border = thick_border
+        sheet[f'A{last_row_ind}'].font = large_font
         last_row_ind += 1
+
         for ind, field in enumerate(fields, start=1):
             sheet.cell(last_row_ind, ind).value = field
             sheet.cell(last_row_ind, ind).alignment = central
             sheet.cell(last_row_ind, ind).border = thin_border
             sheet.cell(last_row_ind, ind).font = bold_font
         last_row_ind += 1
-        for category in categories:
+        first_row = last_row_ind
+
+        for category in all_categories:
             if category in day_finance_operations[oper_type].keys():
-                for subject in day_finance_operations[oper_type][category].keys():
-                    sheet.cell(last_row_ind, 1).value = category
-                    sheet.cell(last_row_ind, 2).value = subject
-                    sheet.cell(last_row_ind, 1).border = thin_border
-                    sheet.cell(last_row_ind, 2).border = thin_border
-                    plus = day_finance_operations[oper_type][category][subject]["Приход"]
-                    minus = day_finance_operations[oper_type][category][subject]["Расход"]
-                    sheet.cell(last_row_ind, 3).value = plus
-                    sheet.cell(last_row_ind, 4).value = minus
-                    sheet.cell(last_row_ind, 3).border = thin_border
-                    sheet.cell(last_row_ind, 4).border = thin_border
-                    last_row_ind += 1
-        last_row_ind += 2
+                sheet.cell(last_row_ind, 1).value = category
+                sheet.cell(last_row_ind, 1).border = thin_border
+                plus = day_finance_operations[oper_type][category]["Приход"]
+                minus = day_finance_operations[oper_type][category]["Расход"]
+                sheet.cell(last_row_ind, 2).value = plus
+                sheet.cell(last_row_ind, 3).value = minus
+                sheet.cell(last_row_ind, 2).border = thin_border
+                sheet.cell(last_row_ind, 3).border = thin_border
+                last_row_ind += 1
+
+        last_row_ind += 1
+
+        if oper_type == "cash":
+            sheet.cell(last_row_ind, 1).value = "Остаток на начало дня"
+            sheet.cell(last_row_ind, 1).border = thin_border
+            sheet.cell(last_row_ind, 1).font = bold_font
+            sheet.cell(last_row_ind, 2).border = thin_border
+            sheet.cell(last_row_ind, 3).value = 0
+            sheet.cell(last_row_ind, 3).font = bold_font
+            sheet.cell(last_row_ind, 3).border = thin_border
+            sheet.cell(last_row_ind + 1, 1).value = "Остаток на конец дня"
+            sheet.cell(last_row_ind + 1, 1).border = thin_border
+            sheet.cell(last_row_ind + 1, 1).font = bold_font
+            sheet.cell(last_row_ind + 1, 2).border = thin_border
+
+            func_str = f'= C{last_row_ind} + SUM(B{first_row}:B{last_row_ind-2}) - ' \
+                       f'SUM(C{first_row}:C{last_row_ind-2})'
+            last_row_ind += 1
+            sheet.cell(last_row_ind, 3).value = func_str
+            sheet.cell(last_row_ind, 3).border = thin_border
+            sheet.cell(last_row_ind, 3).font = bold_font
+
+        else:
+            sheet.cell(last_row_ind, 1).value = "Оборот за день"
+            sheet.cell(last_row_ind, 1).border = thin_border
+            sheet.cell(last_row_ind, 1).font = bold_font
+            sheet.cell(last_row_ind, 2).border = thin_border
+            func_str = f'= SUM(B{first_row}:B{last_row_ind - 2}) - ' \
+                       f'SUM(C{first_row}:C{last_row_ind - 2})'
+            sheet.cell(last_row_ind, 3).value = func_str
+            sheet.cell(last_row_ind, 3).font = bold_font
+            sheet.cell(last_row_ind, 3).border = thin_border
+
+        last_row_ind += 3
 
     for col_ind in range(1, sheet.max_column + 1):
         max_length = 0
         for row_ind in range(1, sheet.max_row + 1):
             current_cell = sheet.cell(row_ind, col_ind)
             if current_cell.value:
-                if len(str(current_cell.value)) > max_length:
+                if len(str(current_cell.value)) > max_length and not current_cell.value.startswith('='):
                     max_length = len(current_cell.value)
         adjusted_width = max_length + 2
         sheet.column_dimensions[get_column_letter(col_ind)].width = adjusted_width
