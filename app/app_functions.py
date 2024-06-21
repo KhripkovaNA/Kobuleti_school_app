@@ -16,7 +16,7 @@ MONTHS = ["январь", "февраль", "март", "апрель", "май"
 OPERATION_TYPES = {"cash": "нал", "bank": "счет", "balance": "депозит"}
 OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school': 'Продленка', 'subscription': 'Абонемент',
                         'del_subscription': 'Абонемент', 'lesson': 'Занятие', 'del_lesson': 'Занятие',
-                        'balance': 'Депозит, пополнение', 'salary': 'Зарплата', 'dining': 'Питание', 'school': 'Школа',
+                        'balance': 'Депозит, пополнение/возврат', 'salary': 'Зарплата', 'dining': 'Питание', 'school': 'Школа',
                         'stationery': 'Канцелярия', 'finance': 'Прочее', 'sublease': 'Аренда',
                         'assessment': 'Аттестация', 'collection': 'Инкассация', 'household': 'Хозтовары'}
 CHILD = "Ребенок"
@@ -2808,7 +2808,7 @@ def sort_finance_operations(report_date):
 def download_finance_report(report_date):
     fields = ["Категория", "Приход", "Расход"]
     categories = ['Продленка', 'Депозит, пополнение/возврат', 'Зарплата', 'Питание', 'Школа',
-                  'Канцелярия', 'Инкассация', 'Хозтовары' 'Аренда', 'Аттестация', 'Прочее']
+                  'Канцелярия', 'Инкассация', 'Хозтовары', 'Аренда', 'Аттестация', 'Прочее']
     operation_types = OPERATION_TYPES.keys()
     day_finance_operations, subject_categories = sort_finance_operations(report_date)
     all_categories = subject_categories + categories
