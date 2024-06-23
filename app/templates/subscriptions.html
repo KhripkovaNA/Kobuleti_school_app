@@ -14,13 +14,14 @@
                         <input type="text" id="search" placeholder="Поиск в таблице">
                         <table class="table table-hover">
                             <thead class="text-success">
-                                <th width="20%">Клиент</th>
-                                <th width="20%" style="text-align:center;">Занятие</th>
-                                <th style="text-align:center;">Остаток уроков</th>
-                                <th style="text-align:center;">Дата покупки</th>
-                                <th style="text-align:center;">Срок действия</th>
+                                <th>Клиент</th>
+                                <th style="text-align:center;">Занятие</th>
+                                <th width="8%" style="text-align:center;">Остаток уроков</th>
+                                <th width="8%" style="text-align:center;">Дата покупки</th>
+                                <th width="8%" style="text-align:center;">Срок действия</th>
+                                <th style="text-align:center;">Тип абонемента</th>
                                 <th style="text-align:center;">Статус</th>
-                                <th></th>
+                                <th width="8%"></th>
                             </thead>
                         </table>
                         <div class="scroll-table-body">
@@ -28,15 +29,16 @@
                                 <tbody>
                                     {% for subscription in subscriptions %}
                                         <tr>
-                                            <td width="20%">
+                                            <td>
                                                 <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=subscription.student_id) }}">
                                                     {{ subscription.student.last_name }} {{ subscription.student.first_name }}
                                                 </a>
                                             </td>
-                                            <td width="20%" style="text-align:center;">{{ subscription.subject.name }} ({{ subscription.subject.subject_type.description }})</td>
-                                            <td style="text-align:center;">{{ subscription.lessons_left }}</td>
-                                            <td style="text-align:center;">{{ subscription.purchase_date.strftime('%d.%m.%Y') }}</td>
-                                            <td style="text-align:center;">{{ subscription.end_date.strftime('%d.%m.%Y') }}</td>
+                                            <td style="text-align:center;">{{ subscription.subject.name }} ({{ subscription.subject.subject_type.description }})</td>
+                                            <td width="8%" style="text-align:center;">{{ subscription.lessons_left }}</td>
+                                            <td width="8%" style="text-align:center;">{{ subscription.purchase_date.strftime('%d.%m.%y') }}</td>
+                                            <td width="8%" style="text-align:center;">{{ subscription.end_date.strftime('%d.%m.%y') }}</td>
+                                            <td style="text-align:center;">{{ subscription.type_of_subscription }}</td>
                                             <td style="text-align:center;">
                                                 {% if subscription.active %}
                                                     Действующий
@@ -44,7 +46,7 @@
                                                     Завершен
                                                 {% endif %}
                                             </td>
-                                            <td>
+                                            <td width="8%">
                                                 {% if current_user.rights == "admin" %}
                                                     <a href="#" data-toggle="modal" data-target="#change-{{ subscription.id }}-modal">
                                                         <i class="material-icons">edit</i>

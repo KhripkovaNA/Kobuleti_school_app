@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, get_today_date, format_subscription_types, \
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
     lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record, \
-    conjugate_lessons, calculate_week, get_date_range, day_school_lessons_dict
+    conjugate_lessons, calculate_week, get_date_range, day_school_lessons_dict, format_subscription_type
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
@@ -1121,23 +1121,8 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 #                     csvwriter.writerow(table_row)
 
 # subscription_lessons = StudentAttendance.query.filter(StudentAttendance.payment_method == "Абонемент").all()
-#
-# for les in subscription_lessons:
-#     subscription_id = les.subscription_id
-#     subscription = Subscription.query.filter(
-#         Subscription.id == subscription_id,
-#         Subscription.student_id == les.student_id,
-#         Subscription.subject_id == les.subject_id
-#     ).first()
-#     if subscription:
-#         subscription_price = subscription.subscription_type.price
-#         lessons = subscription.subscription_type.lessons
-#         one_lesson_price = subscription_price / lessons
-#         les.price_paid = one_lesson_price
-#     else:
-#         print("No!")
-# db.session.commit()
-# print_data(StudentAttendance, subscription_lessons)
+
+# print_table(StudentAttendance)
 # print_table(StudentAttendance)
 # print_table(Subscription)
 # date1 = datetime(2024, 6, 17).date()
@@ -1147,10 +1132,19 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 
 # total_balance = db.session.query(func.sum(Person.balance)).scalar()
 # print(total_balance)
-subjects = db.session.query(Subject.id, Subject.name).filter(
-    Subject.subject_type.has(SubjectType.name.in_(["individual", "extra"]))
+today = get_today_date()
+three_months_ago = today - timedelta(days=90)
+recent_subscriptions = Subscription.query.join(Person).filter(
+    Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school')),
+    or_(
+        and_(
+            Subscription.purchase_date >= three_months_ago,
+            ~Subscription.active
+        ),
+        Subscription.active
+    )
+).order_by(
+    Subscription.purchase_date.desc(), Person.last_name, Person.first_name
 ).all()
-print(subjects)
-for subject in subjects:
-    print(f"lesson_{subject[0]}_{subject[1]}", subject[1])
-# names_list = [name[0] for name in subject_names]
+recent_subscriptions[0].type_of_subscription = format_subscription_type(recent_subscriptions[0].subscription_type)
+print(recent_subscriptions[0].type_of_subscription)

@@ -311,7 +311,7 @@ class StudentAttendance(db.Model):
     date = db.Column(db.Date)
     lesson_time = db.Column(db.Time)
     payment_method = db.Column(db.String(50))
-    price_paid = db.Column(db.Numeric(8, 2))
+    price_paid = db.Column(db.Numeric(8, 3))
     subscription_lessons = db.Column(db.Integer)
     subscription_id = db.Column(db.Integer)
 

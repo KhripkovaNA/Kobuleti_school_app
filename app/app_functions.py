@@ -983,13 +983,17 @@ def add_new_subject(form, subject_type):
     return new_subject if not same_subject else None
 
 
+def format_subscription_type(subscription_type):
+    type_of_subscription = f"{conjugate_lessons(subscription_type.lessons)} за {subscription_type.price:.0f} " \
+                           f"({subscription_type.duration} дней)"
+    return type_of_subscription
+
+
 def format_subscription_types(subscription_types):
     types_of_subscription = []
     for subscription_type in subscription_types:
         if subscription_type.lessons:
-            type_of_subscription = f"{conjugate_lessons(subscription_type.lessons)} за {subscription_type.price:.0f} " \
-                                   f"({subscription_type.duration} дней)"
-            types_of_subscription.append((subscription_type.id, type_of_subscription))
+            types_of_subscription.append((subscription_type.id, format_subscription_type(subscription_type)))
 
     return types_of_subscription
 
@@ -1058,6 +1062,7 @@ def check_subscriptions(subscriptions):
         cond2 = subscription.lessons_left > 0
         subscription.active = True if cond1 and cond2 else False
         db.session.commit()
+        subscription.type_of_subscription = format_subscription_type(subscription.subscription_type)
 
 
 def get_payment_options(student, subject_id, lesson):
@@ -1113,19 +1118,20 @@ def carry_out_lesson(form, subject, lesson, user):
                     subscription = Subscription.query.filter_by(id=subscription_id).first()
                     if subscription.lessons_left > 0:
                         subscription.lessons_left -= 1
-                        payment_info = ("Абонемент", subscription.lessons_left)
+                        price_paid = subscription.subscription_type.price / subscription.subscription_type.lessons
+                        payment_info = ("Абонемент", price_paid, subscription.lessons_left)
                     else:
                         description = f"Списание за занятие {subject.name}"
                         finance_operation(student, -lesson_price, 'balance', description, 'lesson',
                                           lesson.id, subject_id=subject.id)
-                        payment_info = ("Разовое", int(lesson_price))
+                        payment_info = ("Разовое", lesson_price, None)
                 else:
                     price = lesson_school_price if payment_option == 'after_school' else lesson_price
                     description = f"Списание за занятие {subject.name} {lesson.date:%d.%m.%y}"
                     finance_operation(student, -price, 'balance', description, 'lesson',
                                       lesson.id, subject_id=subject.id)
-                    payment_info = ("Продленка", int(price)) if payment_option == 'after_school' \
-                        else ("Разовое", int(price))
+                    payment_info = ("Продленка", price, None) if payment_option == 'after_school' \
+                        else ("Разовое", price, None)
                     subscription_id = None
 
                 attendance = StudentAttendance(
@@ -1136,8 +1142,8 @@ def carry_out_lesson(form, subject, lesson, user):
                     subject_id=subject.id,
                     attending_status=form.get(f'attending_status_{student.id}'),
                     payment_method=payment_info[0],
-                    price_paid=payment_info[1] if payment_info[0] in ["Продленка", "Разовое"] else None,
-                    subscription_lessons=payment_info[1] if payment_info[0] == "Абонемент" else None,
+                    price_paid=payment_info[1],
+                    subscription_lessons=payment_info[2],
                     subscription_id=subscription_id
                 )
                 db.session.add(attendance)

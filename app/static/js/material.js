@@ -188,7 +188,13 @@ $(document).ready(function(){
 
     $(".datepicker").datepicker({
         dateFormat: "dd.mm.yy",
+        changeYear: true
+    });
+
+    $(".datepicker-limit").datepicker({
+        dateFormat: "dd.mm.yy",
         changeYear: true,
+        minDate: new Date(2024, 5, 1)
     });
 
     $('.timepicker').wickedpicker();

@@ -19,7 +19,7 @@ from app.app_functions import DAYS_OF_WEEK, MONTHS, get_today_date, basic_studen
     calc_day_index, download_finance_report
 from decimal import Decimal
 from datetime import datetime, timedelta
-from sqlalchemy import distinct
+from sqlalchemy import distinct, and_, or_
 from app import app, db
 from io import BytesIO
 from openpyxl import Workbook
@@ -2141,11 +2141,18 @@ def subscriptions():
     today = get_today_date()
     three_months_ago = today - timedelta(days=90)
     recent_subscriptions = Subscription.query.join(Person).filter(
-        Subscription.purchase_date >= three_months_ago,
-        Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school'))
+        Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school')),
+        or_(
+            and_(
+                Subscription.purchase_date >= three_months_ago,
+                ~Subscription.active
+            ),
+            Subscription.active
+        )
     ).order_by(
         Subscription.purchase_date.desc(), Person.last_name, Person.first_name
     ).all()
+
     check_subscriptions(recent_subscriptions)
 
     return render_template('subscriptions.html', subscriptions=recent_subscriptions)
