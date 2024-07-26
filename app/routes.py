@@ -1992,8 +1992,6 @@ def add_finance_operation():
                 else:
                     description = OPERATION_CATEGORIES[service]
 
-            # if finance_date != get_today_date():
-            #     description += f" (от {finance_date:%d.%m.%y})"
             amount = float(request.form.get('amount'))
             type_of_operation = request.form.get('operation_type')
             if type_of_operation.startswith('minus'):

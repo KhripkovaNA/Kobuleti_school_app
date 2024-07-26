@@ -2811,6 +2811,27 @@ def sort_finance_operations(report_date):
     return day_finance_operations, subject_list
 
 
+def day_completed_lessons(report_date):
+    completed_lessons = StudentAttendance.query.join(Subject).filter(
+        StudentAttendance.date == report_date
+    ).order_by(Subject.name).all()
+    day_lessons_dict = {}
+    subjects_list = []
+
+    if completed_lessons:
+        for record in completed_lessons:
+            subject_name = record.subject.name
+            subject_type = 'доп' if record.subject.subject_type.name == 'extra' else 'инд'
+            subject = (subject_name, subject_type)
+            if subject not in subjects_list:
+                subjects_list.append(subject)
+                day_lessons_dict[subject] = record.price_paid
+            else:
+                day_lessons_dict[subject] += record.price_paid
+
+    return day_lessons_dict, subjects_list
+
+
 def download_finance_report(report_date):
     fields = ["Категория", "Приход", "Расход"]
     categories = ['Продленка', 'Депозит, пополнение/возврат', 'Зарплата', 'Питание', 'Школа',
@@ -2818,6 +2839,8 @@ def download_finance_report(report_date):
     operation_types = OPERATION_TYPES.keys()
     day_finance_operations, subject_categories = sort_finance_operations(report_date)
     all_categories = subject_categories + categories
+
+    completed_lessons_dict, subjects_list = day_completed_lessons(report_date)
 
     workbook = Workbook()
     sheet = workbook.active
@@ -2898,12 +2921,47 @@ def download_finance_report(report_date):
 
         last_row_ind += 3
 
+    if subjects_list:
+        sheet.merge_cells(f'A{last_row_ind}:C{last_row_ind}')
+        sheet[f'A{last_row_ind}'] = f'Занятия {report_date:%d.%m.%y}'
+        sheet[f'A{last_row_ind}'].alignment = central
+        for row in sheet[f'A{last_row_ind}:C{last_row_ind}']:
+            for cell in row:
+                cell.border = thick_border
+        sheet[f'A{last_row_ind}'].font = large_font
+        last_row_ind += 1
+
+        subject_fields = ['Занятие', 'Вид', 'Сумма']
+        for ind, field in enumerate(subject_fields, start=1):
+            sheet.cell(last_row_ind, ind).value = field
+            sheet.cell(last_row_ind, ind).alignment = central
+            sheet.cell(last_row_ind, ind).border = thin_border
+            sheet.cell(last_row_ind, ind).font = bold_font
+        last_row_ind += 1
+        first_subject_row = last_row_ind
+
+        for subject in subjects_list:
+            sheet.cell(last_row_ind, 1).value = subject[0]
+            sheet.cell(last_row_ind, 1).font = bold_font
+            sheet.cell(last_row_ind, 1).border = thin_border
+            sheet.cell(last_row_ind, 2).value = subject[1]
+            sheet.cell(last_row_ind, 2).border = thin_border
+            sheet.cell(last_row_ind, 3).value = float(completed_lessons_dict[subject])
+            sheet.cell(last_row_ind, 3).border = thin_border
+            last_row_ind += 1
+        subject_func_str = f'= SUM(C{first_subject_row}:C{last_row_ind - 1})'
+        sheet.cell(last_row_ind, 1).value = 'Всего'
+        sheet.cell(last_row_ind, 1).border = thin_border
+        sheet.cell(last_row_ind, 2).border = thin_border
+        sheet.cell(last_row_ind, 3).value = subject_func_str
+        sheet.cell(last_row_ind, 3).border = thin_border
+
     for col_ind in range(1, sheet.max_column + 1):
         max_length = 0
         for row_ind in range(1, sheet.max_row + 1):
             current_cell = sheet.cell(row_ind, col_ind)
             if current_cell.value:
-                if len(str(current_cell.value)) > max_length and not current_cell.value.startswith('='):
+                if len(str(current_cell.value)) > max_length and not str(current_cell.value).startswith('='):
                     max_length = len(current_cell.value)
         adjusted_width = max_length + 2
         sheet.column_dimensions[get_column_letter(col_ind)].width = adjusted_width
