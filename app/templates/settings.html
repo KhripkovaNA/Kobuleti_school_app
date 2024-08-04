@@ -118,6 +118,65 @@
                         </form>
                     </div>
 
+            <!-- *-*-*-*-*-*-*-*-*-* Add parent section *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="row" style="margin-left:30px;">
+                        <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
+                            <a href="#" data-toggle="collapse" data-target="#add-parent">
+                                <i class="material-icons">group_add</i> Добавить родителя
+                            </a>
+                        </button>
+                    </div>
+                    <div  class="collapse" id="add-parent">
+                        <form class="add-parent-form" method="post" action="{{ url_for('create_user') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Имя пользователя:</label>
+                                        <div class="col-md-4 field-div">
+                                            <input type="text" name="username" class="form-control field-input required">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Пароль:</label>
+                                        <div class="col-md-4 password-div">
+                                            <input name="password" type="password" class="form-control password-input">
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span class="material-icons" style="cursor:pointer; margin:5px 0 0 -55px; color:#AAAAAA;" title="Не менее 7 символов, латинские буквы и цифры, символы не обязательно">help_outline</span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Повторить пароль:</label>
+                                        <div class="col-md-4 repeat-password-div">
+                                            <input type="password" name="repeat_password" class="form-control repeat-password-input">
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="rights" value="parent">
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Дети:</label>
+                                        <div class="col-md-4">
+                                            <select name="children" class="form-control select-search" multiple>
+                                                {% for child in children %}
+                                                    <option value="{{ child.id }}">{{ child.last_name }} {{ child.first_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer">
+                                <div class="row" style="margin-left:30px;">
+                                    <div class="col-md-6">
+                                        <button type="submit" class="btn btn-sm" data-background-color="main">Добавить</button>
+                                        <button type="button" class="btn btn-sm" data-background-color="red" data-toggle="collapse" data-target="#add-parent">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
             <!-- *-*-*-*-*-*-*-*-*-* Change or add rooms section *-*-*-*-*-*-*-*-*-* -->
 
                     <div class="row" style="margin-left:30px;">

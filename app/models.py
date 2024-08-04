@@ -66,6 +66,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     rights = db.Column(db.String(20), default='')
+    user_persons = db.relationship('Person', backref='user', lazy='dynamic')
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -105,6 +106,7 @@ class Person(db.Model):
                                       backref='teachers', lazy='dynamic')
     subscriptions = db.relationship('Subscription', backref='student', lazy='dynamic')
     school_class_id = db.Column(db.Integer, db.ForeignKey('school_classes.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     parents = db.relationship('Person', secondary=parent_child_table,
                               primaryjoin=(parent_child_table.c.child_id == id),

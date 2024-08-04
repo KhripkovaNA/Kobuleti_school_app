@@ -16,7 +16,8 @@ MONTHS = ["январь", "февраль", "март", "апрель", "май"
 OPERATION_TYPES = {"cash": "нал", "bank": "счет", "balance": "депозит"}
 OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school': 'Продленка', 'subscription': 'Абонемент',
                         'del_subscription': 'Абонемент', 'lesson': 'Занятие', 'del_lesson': 'Занятие',
-                        'balance': 'Депозит, пополнение/возврат', 'salary': 'Зарплата', 'dining': 'Питание', 'school': 'Школа',
+                        'balance': 'Депозит, пополнение/возврат', 'salary': 'Зарплата', 'dining': 'Питание',
+                        'school': 'Школа',
                         'stationery': 'Канцелярия', 'finance': 'Прочее', 'sublease': 'Аренда',
                         'assessment': 'Аттестация', 'collection': 'Инкассация', 'household': 'Хозтовары'}
 CHILD = "Ребенок"
@@ -1040,8 +1041,8 @@ def check_subscription(student, lesson, subject_id):
             cond31 = subscription.purchase_date > date
             cond32 = subscription.period in ["month", "week"]
             subscription.active = True if (
-                ((cond11 and cond12) or cond2)
-                or (cond31 and cond32 and cond)
+                    ((cond11 and cond12) or cond2)
+                    or (cond31 and cond32 and cond)
             ) else False
             db.session.commit()
         else:
@@ -1049,8 +1050,8 @@ def check_subscription(student, lesson, subject_id):
             cond2 = subscription.lessons_left > 0
             cond3 = subscription.purchase_date > date
             subscription.active = True if (
-                (cond1 and cond2)
-                or (cond3 and cond)
+                    (cond1 and cond2)
+                    or (cond3 and cond)
             ) else False
             db.session.commit()
 
@@ -2219,16 +2220,20 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
         ~SchoolLessonJournal.final_grade
     ).all()
     dates_topic_set = set()
-    record_dict = {f"{student.last_name} {student.first_name}": {} for student in school_students}
+    record_dict = {
+        f"{student.last_name} {student.first_name}":
+            {"student_id": student.id, "class_id": student.school_class_id} for student in school_students
+    }
 
     for record in subject_records:
-        date_string = f"{record.date:%d.%m}"
+        date_string = f"{record.date:%d.%m.%Y}"
         topic = record.grade_type if record.grade_type else record.lesson.lesson_topic
         lesson_id = record.lesson_id if record.lesson_id else 0
         dates_topic_set.add((date_string, topic, lesson_id))
         student_name = f"{record.student.last_name} {record.student.first_name}"
         if record.student in school_students:
             record_dict[student_name][(date_string, topic, lesson_id)] = {
+                "id": record.id,
                 "grade": record.grade,
                 "comment": record.lesson_comment
             }
@@ -2241,7 +2246,7 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
         Lesson.lesson_completed
     ).all()
     for lesson in subject_lessons:
-        date_string = f"{lesson.date:%d.%m}"
+        date_string = f"{lesson.date:%d.%m.%Y}"
         topic = lesson.lesson_topic
         dates_topic_set.add((date_string, topic, lesson.id))
 
@@ -2260,13 +2265,14 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
     if final_grades:
         final_grades_set = set()
         for final_grade in final_grades:
-            date_string = f"{final_grade.date:%d.%m}"
+            date_string = f"{final_grade.date:%d.%m.%Y}"
             topic = final_grade.grade_type
-            lesson_id = 0
+            lesson_id = -1
             final_grades_set.add((date_string, topic, lesson_id))
             student_name = f"{final_grade.student.last_name} {final_grade.student.first_name}"
             if final_grade.student in school_students:
                 record_dict[student_name][(date_string, topic, lesson_id)] = {
+                    "id": final_grade.id,
                     "grade": final_grade.grade,
                     "comment": final_grade.lesson_comment
                 }
@@ -2274,45 +2280,6 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
         final_grades_list = sorted(list(final_grades_set))
 
     return record_dict, dates_topic, school_students, final_grades_list
-
-
-def subject_record(subject_id, month_index):
-    result_date = get_today_date() + relativedelta(months=month_index)
-    first_date = datetime(result_date.year, result_date.month, 1).date()
-    last_date = first_date + relativedelta(months=+1, days=-1)
-
-    subject_records = StudentAttendance.query.filter(
-        StudentAttendance.date >= first_date,
-        StudentAttendance.date <= last_date,
-        StudentAttendance.subject_id == subject_id
-    ).order_by(StudentAttendance.date, StudentAttendance.lesson_time).all()
-
-    subject_students = []
-    lesson_datetimes = []
-    record_dict = {}
-    for record in subject_records:
-        date_time_string = f"{record.date:%d.%m} {record.lesson_time:%H:%M}"
-        lesson_date_time = (date_time_string, record.lesson_id)
-        subject_student = (f"{record.student.last_name} {record.student.first_name}", record.student_id)
-        if record.payment_method:
-            student_payment_method = record.payment_method
-            student_subscription_info = f"({record.subscription_lessons})" \
-                if record.subscription_lessons is not None else ''
-            student_payment = student_payment_method + student_subscription_info
-        else:
-            student_payment = "?"
-        if subject_student not in subject_students:
-            subject_students.append(subject_student)
-            record_dict[subject_student] = {lesson_date_time: student_payment}
-        else:
-            record_dict[subject_student][lesson_date_time] = student_payment
-        if lesson_date_time not in lesson_datetimes:
-            lesson_datetimes.append(lesson_date_time)
-
-    sorted_subject_students = sorted(subject_students, key=lambda x: x[0])
-    month = MONTHS[first_date.month - 1]
-
-    return record_dict, lesson_datetimes, sorted_subject_students, month
 
 
 def add_new_grade(form, students, subject_id, grade):
@@ -2339,81 +2306,78 @@ def add_new_grade(form, students, subject_id, grade):
     return grade_date, grade_type
 
 
-def change_grade(form, subject, classes_ids, month_index, user):
-    result_date = get_today_date() + relativedelta(months=month_index)
-    month, year = (result_date.month, result_date.year)
-    grade_date_topic = form.get('grade_date_topic')
-    if not grade_date_topic:
-        return 'Оценка не выбрана', 'error'
-
-    date, topic, lesson_id = grade_date_topic.split('-')
-    if lesson_id != 'final':
-        record_date = datetime(year, month, int(date.split('.')[0])).date()
-        lesson_id = int(lesson_id) if lesson_id.isdigit() and lesson_id != '0' else None
-        final_grade = False
-    else:
-        school_start_year = year if 9 <= month <= 12 else year - 1
-        record_day, record_month = map(int, date.split('.'))
-        record_year = school_start_year if 9 <= record_month <= 12 else school_start_year + 1
-        record_date = datetime(record_year, record_month, record_day).date()
-        lesson_id = None
-        final_grade = True
-    if form.get('change_mode') == 'delete':
-        records = SchoolLessonJournal.query.filter(
+def change_grade(form, subject, classes_ids, user):
+    grade_id = int(form.get('grade_id')) if form.get('grade_id') else None
+    final_grade = int(form.get('final_grade'))
+    if grade_id is None:
+        date, topic = form.get('grade_date_topic').split('-|-')
+        record_date = datetime.strptime(date, '%d.%m.%Y').date()
+        final_grade = bool(final_grade)
+        grade_records = SchoolLessonJournal.query.filter(
             SchoolLessonJournal.date == record_date,
             SchoolLessonJournal.grade_type == topic,
             SchoolLessonJournal.subject_id == subject.id,
+            SchoolLessonJournal.lesson_id.is_(None),
             SchoolLessonJournal.school_class_id.in_(classes_ids),
-            SchoolLessonJournal.lesson_id == lesson_id,
             SchoolLessonJournal.final_grade == final_grade
         ).all()
-        [db.session.delete(record) for record in records]
+        for record in grade_records:
+            db.session.delete(record)
+
         description = f"Удаление оценок по предмету {subject.name} от {record_date:%d.%m.%Y} ({topic})"
         user_action(user, description)
         db.session.flush()
         return 'Оценки удалены', 'success'
 
-    else:
-        student_id = int(form.get('student_id')) if form.get('student_id') else None
-        if not student_id:
-            return 'Ученик не выбран', 'error'
-        student = Person.query.filter_by(id=student_id).first()
-        new_grade = int(form.get('grade')) if form.get('grade') and form.get('grade').isdigit() else None
-        new_comment = form.get('comment')
-        if not new_comment and not new_grade:
+    new_grade = int(form.get('grade')) if form.get('grade') and form.get('grade').isdigit() else None
+    new_comment = form.get('comment')
+    if grade_id == 0:
+        if not new_grade and not new_comment:
             return 'Нет новой оценки или комментария', 'error'
-        record = SchoolLessonJournal.query.filter(
-            SchoolLessonJournal.date == record_date,
-            SchoolLessonJournal.student_id == student_id,
-            SchoolLessonJournal.grade_type == topic,
-            SchoolLessonJournal.subject_id == subject.id,
-            SchoolLessonJournal.lesson_id == lesson_id,
-            SchoolLessonJournal.final_grade == final_grade
-        ).first()
-        if record:
-            record.grade = new_grade
-            record.lesson_comment = new_comment
-            db.session.flush()
+
         else:
+            student_id, school_class_id = map(int, form.get('student').split('-'))
+            date, topic = form.get('grade_date_topic').split('-|-')
+            record_date = datetime.strptime(date, '%d.%m.%Y').date()
+            lesson_id = None
+            final_grade = bool(final_grade)
             new_record = SchoolLessonJournal(
                 date=record_date,
                 student_id=student_id,
                 grade_type=topic,
                 subject_id=subject.id,
                 lesson_id=lesson_id,
-                school_class_id=student.school_class_id,
+                school_class_id=school_class_id,
                 final_grade=final_grade,
                 grade=new_grade,
                 lesson_comment=new_comment
             )
             db.session.add(new_record)
             db.session.flush()
+            grade_description = "Изменение оценки ученика" if final_grade else "Изменение итоговой оценки ученика"
 
-        description = f"Изменение оценки ученика {student.last_name} {student.first_name} по предмету {subject.name} " \
-                      f"от {record_date:%d.%m.%Y} ({topic})"
-        user_action(user, description)
+            description = grade_description + f" {new_record.student.last_name} {new_record.student.first_name} " \
+                                              f"по предмету {subject.name} от {record_date:%d.%m.%Y} ({topic})"
 
-        return 'Изменения внесены', 'success'
+    else:
+        grade_record = SchoolLessonJournal.query.filter_by(id=grade_id).first()
+        if not new_grade and not new_comment:
+            db.session.delete(grade_record)
+            db.session.flush()
+
+        else:
+            grade_record.grade = new_grade
+            grade_record.lesson_comment = new_comment
+            db.session.flush()
+        grade_description = "Изменение оценки ученика" if grade_record.final_grade \
+            else "Изменение итоговой оценки ученика"
+
+        description = grade_description + f" {grade_record.student.last_name} {grade_record.student.first_name} " \
+                                          f"по предмету {subject.name} от {grade_record.date:%d.%m.%Y} " \
+                                          f"({grade_record.grade_type})"
+
+    user_action(user, description)
+    return 'Изменения внесены', 'success'
 
 
 def calc_month_index(date):
@@ -2421,9 +2385,6 @@ def calc_month_index(date):
     date2 = get_today_date().replace(day=1)
 
     return relativedelta(date1, date2).months
-
-
-
 
 
 def student_record(student, month_index):
@@ -2477,6 +2438,45 @@ def student_record(student, month_index):
                                                                                 "comment": final_grade.lesson_comment}}
 
     return subjects_dict, dates_grade_type, final_grade_types
+
+
+def subject_record(subject_id, month_index):
+    result_date = get_today_date() + relativedelta(months=month_index)
+    first_date = datetime(result_date.year, result_date.month, 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
+
+    subject_records = StudentAttendance.query.filter(
+        StudentAttendance.date >= first_date,
+        StudentAttendance.date <= last_date,
+        StudentAttendance.subject_id == subject_id
+    ).order_by(StudentAttendance.date, StudentAttendance.lesson_time).all()
+
+    subject_students = []
+    lesson_datetimes = []
+    record_dict = {}
+    for record in subject_records:
+        date_time_string = f"{record.date:%d.%m} {record.lesson_time:%H:%M}"
+        lesson_date_time = (date_time_string, record.lesson_id)
+        subject_student = (f"{record.student.last_name} {record.student.first_name}", record.student_id)
+        if record.payment_method:
+            student_payment_method = record.payment_method
+            student_subscription_info = f"({record.subscription_lessons})" \
+                if record.subscription_lessons is not None else ''
+            student_payment = student_payment_method + student_subscription_info
+        else:
+            student_payment = "?"
+        if subject_student not in subject_students:
+            subject_students.append(subject_student)
+            record_dict[subject_student] = {lesson_date_time: student_payment}
+        else:
+            record_dict[subject_student][lesson_date_time] = student_payment
+        if lesson_date_time not in lesson_datetimes:
+            lesson_datetimes.append(lesson_date_time)
+
+    sorted_subject_students = sorted(subject_students, key=lambda x: x[0])
+    month = MONTHS[first_date.month - 1]
+
+    return record_dict, lesson_datetimes, sorted_subject_students, month
 
 
 def get_period(month_index):
@@ -2658,7 +2658,6 @@ def handle_after_school_adding(student_id, form, period):
 
 def finance_operation(person, amount, operation_type, description, service,
                       service_id=None, balance=False, subject_id=None, date=None):
-
     if not date:
         date = get_today_date()
 
@@ -2901,8 +2900,8 @@ def download_finance_report(report_date):
             sheet.cell(last_row_ind + 1, 1).font = bold_font
             sheet.cell(last_row_ind + 1, 2).border = thin_border
 
-            func_str = f'= C{last_row_ind} + SUM(B{first_row}:B{last_row_ind-2}) - ' \
-                       f'SUM(C{first_row}:C{last_row_ind-2})'
+            func_str = f'= C{last_row_ind} + SUM(B{first_row}:B{last_row_ind - 2}) - ' \
+                       f'SUM(C{first_row}:C{last_row_ind - 2})'
             last_row_ind += 1
             sheet.cell(last_row_ind, 3).value = func_str
             sheet.cell(last_row_ind, 3).border = thin_border
@@ -3231,7 +3230,7 @@ def del_record(form, record_type, user):
                                       subject_id=del_subscription.subject_id)
                 else:
                     finance_operation(del_subscription.student, price, 'cash', fin_description,
-                                       'del_subscription', None, subject_id=del_subscription.subject_id)
+                                      'del_subscription', None, subject_id=del_subscription.subject_id)
 
                 description = f"Удаление абонемента {del_subscription.subject.name} клиента " \
                               f"{del_subscription.student.last_name} {del_subscription.student.first_name}"

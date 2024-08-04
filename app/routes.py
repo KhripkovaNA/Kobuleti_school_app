@@ -59,8 +59,11 @@ def settings():
     school_classes = SchoolClass.query.order_by(SchoolClass.school_class, SchoolClass.school_name).all()
     subscription_types = SubscriptionType.query.filter(SubscriptionType.lessons.isnot(None)).all()
     after_school_prices = SubscriptionType.query.filter(SubscriptionType.period != '').all()
+    school_children = Person.query.filter(
+        Person.school_class_id.is_not(None)
+    ).order_by(Person.last_name, Person.first_name).all()
 
-    return render_template('settings.html', rooms=rooms, school_classes=school_classes,
+    return render_template('settings.html', rooms=rooms, school_classes=school_classes, children=school_children,
                            subscription_types=subscription_types, after_school_prices=after_school_prices)
 
 
@@ -329,12 +332,18 @@ def create_user():
             if password == repeat_password:
                 same_username = User.query.filter_by(username=username).all()
                 if not same_username:
-                    new_user = User(
-                        username=username,
-                        rights=rights
-                    )
+                    new_user = User(username=username, rights=rights)
                     new_user.set_password(password)
                     db.session.add(new_user)
+                    db.session.flush()
+                    if rights == 'parent':
+                        children_ids = [int(child) for child in request.form.getlist('children')] \
+                            if request.form.getlist('children') else []
+                        children = Person.query.filter(Person.id.in_(children_ids)).all()
+                        for child in children:
+                            new_user.user_persons.append(child)
+                            flash(f'{child.first_name}!')
+
                     user_action(current_user, f"Добавление пользователя {new_user.username}")
                     db.session.commit()
                     flash(f'Новый пользователь {new_user.username} зарегистрирован', 'success')
@@ -1735,26 +1744,11 @@ def school_subject(subject_classes, month_index):
         flash("Журнал не найден", 'error')
         return redirect(url_for('school_subjects', school_class=0))
 
-    subject_records, dates_topics, sc_students, final_grades_list = school_subject_record(subject_id, classes_ids, month_index)
+    subject_records, dates_topics, sc_students, final_grades_list = school_subject_record(subject_id, classes_ids,
+                                                                                          month_index)
     subject = Subject.query.filter_by(id=subject_id).first()
     school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).order_by(SchoolClass.school_class).all()
     school_classes_names = ', '.join([cl.school_name for cl in school_classes])
-    distinct_grade_types = db.session.query(
-        distinct(SchoolLessonJournal.grade_type)
-    ).filter(
-        SchoolLessonJournal.final_grade.is_(False)
-    ).all()
-    grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
-    finals = ["1 четверть", "2 четверть", "3 четверть", "4 четверть", "год"]
-    distinct_finals = db.session.query(
-        distinct(SchoolLessonJournal.grade_type)
-    ).filter(
-        SchoolLessonJournal.final_grade.is_(True)
-    ).all()
-    final_grade_types = [grade_type[0] for grade_type in distinct_finals
-                         if grade_type[0] and grade_type[0] not in finals]
-
-    finals += final_grade_types
 
     if request.method == 'POST':
         try:
@@ -1778,15 +1772,18 @@ def school_subject(subject_classes, month_index):
                 db.session.commit()
                 flash("Оценки выставлены", 'success')
 
-                return redirect(url_for('school_subject', subject_classes=subject_classes,
-                                        month_index=month_index))
             if 'change_grade_btn' in request.form:
-                message = change_grade(request.form, subject, classes_ids, month_index, current_user)
+                message = change_grade(request.form, subject, classes_ids, current_user)
                 db.session.commit()
                 flash(message[0], message[1])
 
-                return redirect(url_for('school_subject', subject_classes=subject_classes,
-                                        month_index=month_index))
+            if 'delete_grade_btn' in request.form:
+                message = change_grade(request.form, subject, classes_ids, current_user)
+                db.session.commit()
+                flash(message[0], message[1])
+
+            return redirect(url_for('school_subject', subject_classes=subject_classes,
+                                    month_index=month_index))
 
         except Exception as e:
             db.session.rollback()
@@ -1794,6 +1791,24 @@ def school_subject(subject_classes, month_index):
 
             return redirect(url_for('school_subject', subject_classes=subject_classes,
                                     month_index=month_index))
+
+    distinct_grade_types = db.session.query(
+        distinct(SchoolLessonJournal.grade_type)
+    ).filter(
+        SchoolLessonJournal.final_grade.is_(False)
+    ).all()
+    grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
+    finals = ["1 четверть", "2 четверть", "3 четверть", "4 четверть", "год"]
+    distinct_finals = db.session.query(
+        distinct(SchoolLessonJournal.grade_type)
+    ).filter(
+        SchoolLessonJournal.final_grade.is_(True)
+    ).all()
+    final_grade_types = [grade_type[0] for grade_type in distinct_finals
+                         if grade_type[0] and grade_type[0] not in finals]
+
+    finals += final_grade_types
+    dates_topics += final_grades_list
 
     return render_template('school_subject.html', subject_records=subject_records, dates_topics=dates_topics,
                            final_grades_list=final_grades_list, students=sc_students, subject=subject,

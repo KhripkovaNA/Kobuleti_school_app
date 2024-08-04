@@ -37,30 +37,32 @@
             </div>
             <div class="sidebar-wrapper">
                 <ul class="nav">
-                    <li id="menu-students">
-                        <a style="cursor:pointer" href="{{ url_for('students') }}">
-                            <i class="material-icons">diversity_3</i>
-                            <p>Клиенты</p>
-                        </a>
-                    </li>
-                    <li id="menu-teachers">
-                        <a style="cursor:pointer" href="{{ url_for('employees') }}">
-                            <i class="material-icons">group</i>
-                            <p>Сотрудники</p>
-                        </a>
-                    </li>
-                    <li id="menu-subjects">
-                        <a style="cursor:pointer" href="{{ url_for('subjects') }}">
-                            <i class="material-icons">library_books</i>
-                            <p>Занятия</p>
-                        </a>
-                    </li>
-                    <li id="menu-subscriptions">
-                        <a style="cursor:pointer" href="{{ url_for('subscriptions') }}">
-                            <i class="material-icons">addchart</i>
-                            <p>Абонементы</p>
-                        </a>
-                    </li>
+                    {% if current_user.rights in ['admin', 'user'] %}
+                        <li id="menu-students">
+                            <a style="cursor:pointer" href="{{ url_for('students') }}">
+                                <i class="material-icons">diversity_3</i>
+                                <p>Клиенты</p>
+                            </a>
+                        </li>
+                        <li id="menu-teachers">
+                            <a style="cursor:pointer" href="{{ url_for('employees') }}">
+                                <i class="material-icons">group</i>
+                                <p>Сотрудники</p>
+                            </a>
+                        </li>
+                        <li id="menu-subjects">
+                            <a style="cursor:pointer" href="{{ url_for('subjects') }}">
+                                <i class="material-icons">library_books</i>
+                                <p>Занятия</p>
+                            </a>
+                        </li>
+                        <li id="menu-subscriptions">
+                            <a style="cursor:pointer" href="{{ url_for('subscriptions') }}">
+                                <i class="material-icons">addchart</i>
+                                <p>Абонементы</p>
+                            </a>
+                        </li>
+                    {% endif %}
                     <li class="dropup" id="menu-school">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                             <i class="material-icons">school</i>

@@ -12,7 +12,8 @@ from dateutil.relativedelta import relativedelta
 from app.app_functions import subjects_data, get_weekday_date, get_today_date, format_subscription_types, \
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
     lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record, \
-    conjugate_lessons, calculate_week, get_date_range, day_school_lessons_dict, format_subscription_type
+    conjugate_lessons, calculate_week, get_date_range, day_school_lessons_dict, format_subscription_type, \
+    school_subject_record
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
@@ -1132,19 +1133,10 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 
 # total_balance = db.session.query(func.sum(Person.balance)).scalar()
 # print(total_balance)
-today = get_today_date()
-three_months_ago = today - timedelta(days=90)
-recent_subscriptions = Subscription.query.join(Person).filter(
-    Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school')),
-    or_(
-        and_(
-            Subscription.purchase_date >= three_months_ago,
-            ~Subscription.active
-        ),
-        Subscription.active
-    )
-).order_by(
-    Subscription.purchase_date.desc(), Person.last_name, Person.first_name
-).all()
-recent_subscriptions[0].type_of_subscription = format_subscription_type(recent_subscriptions[0].subscription_type)
-print(recent_subscriptions[0].type_of_subscription)
+
+# print_table(SchoolLessonJournal)
+# print_table(User)
+# user = User.query.filter_by(id=3).first()
+# print(user.user_persons.all())
+# db.session.delete(user)
+# db.session.commit()

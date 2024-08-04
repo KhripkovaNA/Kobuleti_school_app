@@ -764,7 +764,7 @@ $(document).ready(function(){
     });
 
     // Validate add-user and change-password forms
-    $('form.add-user-form, form.change-password-form').submit(function(event) {
+    $('form.add-user-form, form.change-password-form, form.add-parent-form').submit(function(event) {
         var currentForm = $(this);
         validateFieldInput(currentForm);
         validatePasswordInput(currentForm);
@@ -1280,17 +1280,7 @@ $(document).ready(function(){
             gradeForm.find(".student-select").append(restoreOption);
         }
 
-        $(".#input-" + studentId).remove();
-    });
-
-    // Handle change of grade change-mode selector
-    $("#change-grade-modal").on("change", ".change_mode_select", function () {
-        var changeMode = $(this).val();
-        if (changeMode === 'delete') {
-            $(".change-grade-row").hide();
-        } else {
-            $(".change-grade-row").show();
-        }
+        $("#input-" + studentId).remove();
     });
 
     // Handle term selector change when adding after-school student
