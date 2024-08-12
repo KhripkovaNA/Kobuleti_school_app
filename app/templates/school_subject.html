@@ -6,7 +6,7 @@
     <div class="col-lg-12 col-md-12">
         <div class="card data-tables">
             <div class="card-header" data-background-color="main">
-                <h4 class="title">Журнал. {{ subject.name }}. {{ school_classes }}</h4>
+                <h4 class="title">Журнал. {{ subject.name }} {{ school_classes }} {{ month.capitalize() }}</h4>
             </div>
             <div class="card-content">
                 <div class="scroll-timetable" style="height:80vh;">
@@ -16,7 +16,11 @@
                                 <th class="fixed-column" style="width:50px; vertical-align:bottom;">Дата</th>
                                 <th class="fixed-column-next" width="30%" style="vertical-align:bottom;">Тема урока</th>
                                 {% for student in subject_records.keys() %}
-                                    <th style="writing-mode:vertical-rl;">{{ student }}</th>
+                                    <th style="writing-mode:vertical-rl;">
+                                        <a href="{{ url_for('student_school_record', student_id=subject_records[student].student_id, month_index=month_index) }}">
+                                            {{ student }}
+                                        </a>
+                                    </th>
                                 {% endfor %}
                             </tr>
                         </thead>
@@ -92,89 +96,87 @@
                                         {% for student in subject_records.keys() %}
                                             <td style="text-align:center;">
                                                 {% if lesson_id <= 0 %}
-                                                <a href="#" style="color:black;" data-toggle="modal" data-target="#change-grade-{{ outer_loop.index }}-{{ loop.index }}-modal">
+                                                    <a href="#" style="color:#555;" data-toggle="modal" data-target="#change-grade-{{ outer_loop.index }}-{{ loop.index }}-modal">
                                                 {% endif %}
-                                                    <div>
-                                                        {% if subject_records[student].get((date, topic, lesson_id)) %}
-                                                            <p style="display:inline-block;">
-                                                                {% if lesson_id < 0 %}
+                                                <div>
+                                                    {% if subject_records[student].get((date, topic, lesson_id)) %}
+                                                        <p style="display:inline-block;">
+                                                            {% if lesson_id < 0 %}
                                                                 <b>{{ subject_records[student][(date, topic, lesson_id)].grade if subject_records[student][(date, topic, lesson_id)].grade }}</b>
-                                                                {% else %}
-                                                                    {{ subject_records[student][(date, topic, lesson_id)].grade if subject_records[student][(date, topic, lesson_id)].grade }}
-                                                                {% endif %}
-                                                            </p>
-                                                            {% if subject_records[student][(date, topic, lesson_id)].comment %}
-                                                                <div class="comment" style="display:inline-block;" title="{{ subject_records[student][(date, topic, lesson_id)].comment }}">&#9913;</div>
+                                                            {% else %}
+                                                                {{ subject_records[student][(date, topic, lesson_id)].grade if subject_records[student][(date, topic, lesson_id)].grade }}
                                                             {% endif %}
-                                                        {% else %}
-                                                        &nbsp;
+                                                        </p>
+                                                        {% if subject_records[student][(date, topic, lesson_id)].comment %}
+                                                            <div class="comment" style="display:inline-block;" title="{{ subject_records[student][(date, topic, lesson_id)].comment }}">&#9913;</div>
                                                         {% endif %}
-                                                    </div>
+                                                    {% endif %}
+                                                </div>
                                                 {% if lesson_id <= 0 %}
-                                                </a>
+                                                    </a>
 
-                                        <!-- *-*-*-*-*-*-*-*-*-* Change grade modal *-*-*-*-*-*-*-*-*-* -->
+                                            <!-- *-*-*-*-*-*-*-*-*-* Change grade modal *-*-*-*-*-*-*-*-*-* -->
 
-                                                <div class="modal fade" id="change-grade-{{ outer_loop.index }}-{{ loop.index }}-modal" role="dialog">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                                <h4 class="modal-title">
-                                                                    {% if lesson_id < 0 %}
-                                                                        <b>{{ date[:5] }} {{ topic }}. Изменить итоговую оценку</b>
-                                                                    {% else %}
-                                                                        {{ date[:5] }} {{ topic }}. Изменить оценку
-                                                                    {% endif %}
-                                                                </h4>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <form class="change-grade-form" action="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index) }}" method="post">
-                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                                    <input type="hidden" name="final_grade" value="{{ 1 if lesson_id < 0 else 0 }}">
-                                                                    <input type="hidden" name="grade_date_topic" value="{{ date }}-|-{{ topic }}">
-                                                                    <input type="hidden" name="grade_id" value="{{ subject_records[student][(date, topic, lesson_id)].id if subject_records[student].get((date, topic, lesson_id)) else 0 }}">
-                                                                    <input type="hidden" name="student" value="{{ subject_records[student].student_id }}-{{ subject_records[student].class_id }}">                                                                    <div class="row">
-                                                                        <label class="control-label col-md-4" style="padding-left:44px;">Ученик:</label>
-                                                                        <div class="col-md-7">
-                                                                            <div class="form-control">{{ student }}</div>
+                                                    <div class="modal fade" id="change-grade-{{ outer_loop.index }}-{{ loop.index }}-modal" role="dialog">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                                    <h4 class="modal-title">
+                                                                        {% if lesson_id < 0 %}
+                                                                            <b>{{ date[:5] }} {{ topic }}. Изменить итоговую оценку</b>
+                                                                        {% else %}
+                                                                            {{ date[:5] }} {{ topic }}. Изменить оценку
+                                                                        {% endif %}
+                                                                    </h4>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <form class="change-grade-form" action="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index) }}" method="post">
+                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                        <input type="hidden" name="final_grade" value="{{ 1 if lesson_id < 0 else 0 }}">
+                                                                        <input type="hidden" name="grade_date_topic" value="{{ date }}-|-{{ topic }}">
+                                                                        <input type="hidden" name="grade_id" value="{{ subject_records[student][(date, topic, lesson_id)].id if subject_records[student].get((date, topic, lesson_id)) else 0 }}">
+                                                                        <input type="hidden" name="student" value="{{ subject_records[student].student_id }}-{{ subject_records[student].class_id }}">                                                                    <div class="row">
+                                                                            <label class="control-label col-md-4" style="padding-left:44px;">Ученик:</label>
+                                                                            <div class="col-md-7">
+                                                                                <div class="form-control">{{ student }}</div>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="row">
-                                                                        <label class="control-label col-md-4" style="padding-left:44px;">Оценка:</label>
-                                                                        <div class="col-md-3">
-                                                                            {% if subject_records[student].get((date, topic, lesson_id)) %}
-                                                                                <input type="number" name="grade" min="1" max="5" value="{{ subject_records[student][(date, topic, lesson_id)].grade if subject_records[student][(date, topic, lesson_id)].grade }}">
-                                                                            {% else %}
-                                                                                <input type="number" name="grade" min="1" max="5">
-                                                                            {% endif %}
+                                                                        <div class="row">
+                                                                            <label class="control-label col-md-4" style="padding-left:44px;">Оценка:</label>
+                                                                            <div class="col-md-3">
+                                                                                {% if subject_records[student].get((date, topic, lesson_id)) %}
+                                                                                    <input type="number" name="grade" min="1" max="5" value="{{ subject_records[student][(date, topic, lesson_id)].grade if subject_records[student][(date, topic, lesson_id)].grade }}">
+                                                                                {% else %}
+                                                                                    <input type="number" name="grade" min="1" max="5">
+                                                                                {% endif %}
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="row">
-                                                                        <label class="control-label col-md-4" style="padding-left:44px;">Комментарий:</label>
-                                                                        <div class="col-md-7">
-                                                                            {% if subject_records[student].get((date, topic, lesson_id)) %}
-                                                                                <input type="text" name="comment" value="{{ subject_records[student][(date, topic, lesson_id)].comment if subject_records[student][(date, topic, lesson_id)].comment }}">
-                                                                            {% else %}
-                                                                                <input type="text" name="comment">
-                                                                            {% endif %}
+                                                                        <div class="row">
+                                                                            <label class="control-label col-md-4" style="padding-left:44px;">Комментарий:</label>
+                                                                            <div class="col-md-7">
+                                                                                {% if subject_records[student].get((date, topic, lesson_id)) %}
+                                                                                    <input type="text" name="comment" value="{{ subject_records[student][(date, topic, lesson_id)].comment if subject_records[student][(date, topic, lesson_id)].comment }}">
+                                                                                {% else %}
+                                                                                    <input type="text" name="comment">
+                                                                                {% endif %}
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="row">
-                                                                        <div class="col-md-6 col-md-offset-3">
-                                                                            <button type="submit" name="change_grade_btn" class="btn btn-sm" data-background-color="main">
-                                                                                Изменить
-                                                                            </button>
-                                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                                Отмена
-                                                                            </button>
+                                                                        <div class="row">
+                                                                            <div class="col-md-6 col-md-offset-3">
+                                                                                <button type="submit" name="change_grade_btn" class="btn btn-sm" data-background-color="main">
+                                                                                    Изменить
+                                                                                </button>
+                                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                                    Отмена
+                                                                                </button>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                </form>
+                                                                    </form>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
                                                 {% endif %}
 
                                             </td>

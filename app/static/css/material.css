@@ -230,7 +230,7 @@ h2.title {
     content: "";
     display: block;
     background: #FFFFFF;
-    opacity: .93;
+    opacity: .9;
 }
 
 .sidebar .logo,
@@ -1898,6 +1898,16 @@ a .material-icons {
 
 legend {
     border-bottom: 0;
+}
+
+.banner-sec {
+    background: url(../img/hogwarts.png)  no-repeat top;
+    background-size: cover;
+    min-height: 550px;
+    border-radius: 5px;
+    margin: -5px -25px;
+    padding:0;
+    opacity: 0.7;
 }
 
 *:focus {

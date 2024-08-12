@@ -13,7 +13,7 @@ from app.app_functions import subjects_data, get_weekday_date, get_today_date, f
     get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
     lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record, \
     conjugate_lessons, calculate_week, get_date_range, day_school_lessons_dict, format_subscription_type, \
-    school_subject_record
+    school_subject_record, student_record
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
@@ -1135,8 +1135,18 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 # print(total_balance)
 
 # print_table(SchoolLessonJournal)
-# print_table(User)
+# print_table(Person)
 # user = User.query.filter_by(id=3).first()
 # print(user.user_persons.all())
 # db.session.delete(user)
 # db.session.commit()
+
+school_student = Person.query.filter(
+    Person.id == 1,
+    Person.school_class_id.is_not(None)
+).first()
+month_index = 0
+student_records, dates_topics, finals, month = student_record(school_student, int(month_index))
+if school_student and month_index is not None:
+    print(student_records)
+print_table(Lesson)

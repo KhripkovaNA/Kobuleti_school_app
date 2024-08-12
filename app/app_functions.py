@@ -1294,7 +1294,10 @@ def get_lesson_students(lesson):
                 Person.lessons_registered.any(Lesson.id == lesson.id),
                 Person.subjects.any(Subject.id == lesson.subject_id)
             )
-        ).order_by(Person.last_name, Person.first_name).all()
+        ).order_by(
+            Person.lessons_registered.any(Lesson.id == lesson.id).desc(),
+            Person.last_name, Person.first_name
+        ).all()
 
     if lesson_students:
         for student in lesson_students:
@@ -1998,7 +2001,7 @@ def show_school_lesson(lesson_str):
                 student_id=student.id,
                 lesson_id=sc_lesson.id
             ).first()
-            student.attending_status = attendance.attending_status if attendance else 'not_attend'
+            student.attending_status = attendance.attending_status if attendance else None
         sc_lesson.lesson_students = lesson_students
         sc_lesson.prev, sc_lesson.next = prev_next_school_lessons(sc_lesson)
 
@@ -2208,6 +2211,7 @@ def employee_record(employees, week):
 def school_subject_record(subject_id, school_classes_ids, month_index):
     result_date = get_today_date() + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
+    month = MONTHS[first_date.month - 1]
     last_date = first_date + relativedelta(months=+1, days=-1)
     school_students = Person.query.filter(
         Person.school_class_id.in_(school_classes_ids)
@@ -2279,7 +2283,7 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
 
         final_grades_list = sorted(list(final_grades_set))
 
-    return record_dict, dates_topic, school_students, final_grades_list
+    return record_dict, dates_topic, school_students, final_grades_list, month
 
 
 def add_new_grade(form, students, subject_id, grade):
@@ -2391,6 +2395,7 @@ def student_record(student, month_index):
     result_date = get_today_date() + relativedelta(months=month_index)
     first_date = datetime(result_date.year, result_date.month, 1).date()
     last_date = first_date + relativedelta(months=+1, days=-1)
+    month = MONTHS[first_date.month - 1]
 
     student_records = SchoolLessonJournal.query.filter(
         SchoolLessonJournal.date >= first_date,
@@ -2437,7 +2442,7 @@ def student_record(student, month_index):
             subjects_dict[final_grade.subject.name] = {final_grade.grade_type: {"grade": final_grade.grade,
                                                                                 "comment": final_grade.lesson_comment}}
 
-    return subjects_dict, dates_grade_type, final_grade_types
+    return subjects_dict, dates_grade_type, final_grade_types, month
 
 
 def subject_record(subject_id, month_index):

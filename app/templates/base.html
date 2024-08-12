@@ -44,7 +44,9 @@
                                 <p>Клиенты</p>
                             </a>
                         </li>
-                        <li id="menu-teachers">
+                    {% endif %}
+                    {% if current_user.rights in ['admin', 'user', 'teacher'] %}
+                        <li id="menu-employees">
                             <a style="cursor:pointer" href="{{ url_for('employees') }}">
                                 <i class="material-icons">group</i>
                                 <p>Сотрудники</p>
@@ -63,21 +65,41 @@
                             </a>
                         </li>
                     {% endif %}
-                    <li class="dropup" id="menu-school">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <i class="material-icons">school</i>
-                            <p>Школа<span class="caret"></span></p>
-                        </a>
-                        <ul class="dropdown-menu" style="margin-left: 50px;">
-                            <li id="menu-school-students">
-                                <a style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">Школьные классы</a>
+                    {% if current_user.rights != 'parent' %}
+                        <li class="{{ 'dropup' if current_user.rights in ['admin', 'user'] else 'dropdown' }}" id="menu-school">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                <i class="material-icons">school</i>
+                                <p>Школа<span class="caret"></span></p>
+                            </a>
+                            <ul class="dropdown-menu" style="margin-left: 50px;">
+                                <li id="menu-school-students">
+                                    <a style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">Школьные классы</a>
+                                </li>
+                                <li id="menu-school-subjects">
+                                    <a style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">Школьные занятия</a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if current_user.rights == 'parent' %}
+                        {% for child in current_user.user_persons %}
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                    <i class="material-icons">person</i>
+                                    <p>{{ child.last_name}} {{ child.first_name}}<span class="caret"></span></p>
+                                </a>
+                                <ul class="dropdown-menu" style="margin-left: 50px;">
+                                    <li>
+                                        <a style="cursor:pointer" href="{{ url_for('show_edit_student', student_id=child.id) }}">Профиль</a>
+                                    </li>
+                                    <li>
+                                        <a style="cursor:pointer" href="{{ url_for('student_school_record', student_id=child.id, month_index=0) }}">Табель</a>
+                                    </li>
+                                </ul>
                             </li>
-                            <li id="menu-school-subjects">
-                                <a style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">Школьные занятия</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="dropup" id="menu-timetable">
+                        {% endfor %}
+                    {% endif %}
+                    <li class="{{ 'dropup' if current_user.rights in ['admin', 'user'] else 'dropdown' }}" id="menu-timetable">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                             <i class="material-icons">calendar_month</i>
                             <p>Расписание<span class="caret"></span></p>
@@ -97,12 +119,14 @@
                             </li>
                         </ul>
                     </li>
-                    <li id="menu-after-school">
-                        <a style="cursor:pointer" href="{{ url_for('after_school', month_index=0) }}">
-                            <i class="material-icons">diversity_2</i>
-                            <p>Продленка</p>
-                        </a>
-                    </li>
+                    {% if current_user.rights != 'parent' %}
+                        <li id="menu-after-school">
+                            <a style="cursor:pointer" href="{{ url_for('after_school', month_index=0) }}">
+                                <i class="material-icons">diversity_2</i>
+                                <p>Продленка</p>
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -155,7 +179,11 @@
                     {% endif %}
                 {% endwith %}
                 <div class="container-fluid">
-                    {% block content %}{% endblock %}
+                    {% if index %}
+                        <div class="banner-sec"></div>
+                    {% else %}
+                        {% block content %}{% endblock %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -171,5 +199,6 @@
 <script src="{{ url_for('static', filename='js/material.min.js') }}" type="text/javascript"></script>
 <script src="{{ url_for('static', filename='js/perfect-scrollbar.jquery.min.js') }}" type="text/javascript"></script>
 <script src="{{ url_for('static', filename='js/material.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='js/material-dashboard.js') }}" type="text/javascript"></script>
 <script src="{{ url_for('static', filename='js/selectize.min.js') }}" type="text/javascript"></script>
 </html>
