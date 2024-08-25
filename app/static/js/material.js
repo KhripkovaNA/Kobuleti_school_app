@@ -940,10 +940,10 @@ $(document).ready(function(){
     // Function to initialize search in select options
     function initializeSelectize(selector, create = false) {
         const selectizeOptions = {
-            onDropdownOpen: function ($dropdown) {
+            onDropdownOpen: function($dropdown) {
                 $dropdown.find('.selectize-dropdown-content').perfectScrollbar();
             },
-            onDropdownClose: function ($dropdown) {
+            onDropdownClose: function($dropdown) {
                 $dropdown.find('.selectize-dropdown-content').perfectScrollbar('destroy');
             },
             plugins: ['remove_button', 'auto_position']
@@ -1365,6 +1365,65 @@ $(document).ready(function(){
         if (selectorVal.indexOf(schoolClass) === -1) {
             $(this)[0].selectize.addItem(schoolClass);
         }
+    });
+
+    // Change the list of parents' children in add parent settings
+    $(document).on("click", ".del-child-btn", function () {
+        var childId = $(this).val();
+        var parentRow = $(this).closest(".parent-row");
+        var childP = $(this).closest(".child-p");
+        var childName = childP.find(".child-name").text();
+        childSelector = parentRow.find(".child-select")[0].selectize;
+        childSelector.addOption({value:childId,text:childName});
+        childP.remove();
+//        if (selectedStudent.length > 0) {
+//            var studentId = selectedStudent.val();
+//            var studentName = selectedStudent.text();
+//            var grade = gradeForm.find(".student-grade").val();
+//            var comment = gradeForm.find(".student-comment").val();
+//            if (grade || comment) {
+//                var studentGradeText = studentName + ": " + grade + " - " + comment;
+//                var gradeInputName = "new_grade_" + studentId;
+//                var commentInputName = "new_comment_" + studentId;
+//                selectedStudent.remove();
+//
+//                var studentGradeRow = `
+//                    <div class="student-grade-row">${studentGradeText}<a href="#" class="delete-grade" data-student="${studentId}">×</a></div>`;
+//
+//                var studentInput = `
+//                    <div id="input-${studentId}">
+//                        <input type="hidden" name="${gradeInputName}" value="${grade}">
+//                        <input type="hidden" name="${commentInputName}" value="${comment}">
+//                    </div>`;
+//                gradeForm.find(".grades-container").append(studentGradeRow);
+//                gradeForm.find(".input-container").append(studentInput);
+//
+//                $(".student-comment").val('');
+//            }
+//        }
+    });
+
+    $(document).on("change", ".child-select", function () {
+        var childSelector = $(this)[0].selectize;
+        var childId = childSelector.getValue();
+        var selectedOption = $.map(childSelector.items, function(value) {
+            return childSelector.options[value];
+        });
+        if (selectedOption[0]) {
+            var childName = selectedOption[0].text;
+            var parentRow = $(this).closest(".parent-row");
+            var parentId = parentRow.data('target');
+            var childP = `
+            <p class="child-p">
+                <button type="button" value="${childId}" class="btn btn-danger del-btn del-child-btn" style="margin-bottom:2px">&times;</button>
+                <span class="child-name">${childName}</span>
+                <input type="hidden" name="children_${parentId}" value="${childId}">
+            </p>`;
+            parentRow.find(".children-container").append(childP);
+        }
+        childSelector.removeOption(childId);
+        childSelector.clear();
+        childSelector.refreshOptions(true);
     });
 
 });

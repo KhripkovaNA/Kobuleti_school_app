@@ -79,13 +79,13 @@
                                             {% for student in school_lesson.lesson_students %}
                                                 <tr>
                                                     <td>
-                                                        <button type="submit" name="del_student_btn" value="{{ student.id }}" class="btn btn-danger del-btn" style="margin-bottom:0">x</button>
+                                                        <button type="submit" name="del_student_btn" value="{{ student.id }}" class="btn btn-danger del-btn" style="margin-bottom:0">&times;</button>
                                                         <a style="color:#555;" href="{{ url_for('student_school_record', student_id=student.id, month_index=month_index) }}">
                                                             {{ student.last_name }} {{ student.first_name }}
                                                         </a>
                                                     </td>
                                                     <td style="padding-left:20px;">
-                                                        <label class="contact-radio-label">
+                                                        <label class="contact-radio-label" style="margin-bottom:5px;">
                                                             {% if not student.attending_status or student.attending_status == "attend" %}
                                                                 <input type="checkbox" name="attended_{{ student.id }}" checked="checked">
                                                             {% else %}
@@ -177,22 +177,22 @@
                                                 <div class="row">
                                                     <div class="col-md-7">
                                                         <div class="row">
-                                                            <label class="control-label col-md-4" style="padding-left:44px;">Оценка за:</label>
-                                                            <div class="col-md-8">
-                                                                <select name="grade_type" class="form-control select-search-add">
-                                                                    {% for grade_type in grade_types %}
-                                                                        <option value="{{ grade_type }}">{{ grade_type }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div>
+                                                            <label class="control-label" style="padding-left:44px;">Оценка за:</label>
+                                                        </div>
+                                                        <div class="row">
+                                                            <select name="grade_type" class="form-control select-search-add">
+                                                                {% for grade_type in grade_types %}
+                                                                    <option value="{{ grade_type }}">{{ grade_type }}</option>
+                                                                {% endfor %}
+                                                            </select>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-5">
+                                                    <div class="col-md-4">
                                                         <div class="row">
-                                                            <label class="control-label col-md-3" style="padding-left:44px;">Дата:</label>
-                                                            <div class="col-md-5 date-div">
-                                                                <input type="text" name="grade_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ school_lesson.date.strftime('%d.%m.%Y') }}">
-                                                            </div>
+                                                            <label class="control-label" style="padding-left:44px;">Дата:</label>
+                                                        </div>
+                                                        <div class="row date-div">
+                                                            <input type="text" name="grade_date" class="form-control  col-md-3 date-input required datepicker" placeholder="дд.мм.гггг" value="{{ school_lesson.date.strftime('%d.%m.%Y') }}">
                                                         </div>
                                                     </div>
                                                 </div>

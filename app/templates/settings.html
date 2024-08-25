@@ -123,14 +123,59 @@
                     <div class="row" style="margin-left:30px;">
                         <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
                             <a href="#" data-toggle="collapse" data-target="#add-parent">
-                                <i class="material-icons">group_add</i> Добавить родителя
+                                <i class="material-icons">group_add</i> Родители
                             </a>
                         </button>
                     </div>
                     <div  class="collapse" id="add-parent">
+                        <form class="change-class-form" method="post" action="{{ url_for('change_parent') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label class="control-label col-md-4">Имя пользователя:</label>
+                                        <label class="control-label col-md-4">Дети:</label>
+                                    </div>
+                                    {% for parent in parents %}
+                                        <div class="row parent-row" data-target="{{ parent.id }}">
+                                            <div class="col-md-4" style="padding-left:44px;">
+                                                <div class="form-control">{{ parent.username }}</div>
+                                            </div>
+                                            <div class="col-md-4" style="padding-left:44px;">
+                                                <div class="form-control">
+                                                    <div class="children-container">
+                                                        {% for child in parent.user_persons %}
+                                                            <p class="child-p">
+                                                                <button type="button" value="{{ child.id }}" class="btn btn-danger del-btn del-child-btn" style="margin-bottom:2px">&times;</button>
+                                                                <span class="child-name">{{ child.last_name }} {{ child.first_name }}</span>
+                                                                <input type="hidden" name="children_{{ parent.id }}" value="{{ child.id }}">
+                                                            </p>
+                                                        {% endfor %}
+                                                    </div>
+                                                    <select class="form-control select-search child-select" placeholder="Добавить ребенка">
+                                                        <option value="" selected disabled></option>
+                                                        {% for child in children %}
+                                                            {% if child not in parent.user_persons %}
+                                                                <option value="{{ child.id }}">{{ child.last_name }} {{ child.first_name }}</option>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </select>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="submit" name="change_parent_btn" value="{{ parent.id }}" class="btn btn-xs" style="margin:0;" data-background-color="main"><i class="material-icons">done</i></button>
+                                                <button type="submit" name="delete_parent_btn" value="{{ parent.id }}" class="btn btn-xs" style="margin:0;" data-background-color="red"><i class="material-icons">delete</i></button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </form>
                         <form class="add-parent-form" method="post" action="{{ url_for('create_user') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
+                                <h4 class="title" style="margin-left: 27px;">Добавить родителя</h4>
                                 <div class="form-group">
                                     <div class="row">
                                         <label class="control-label col-md-3">Имя пользователя:</label>
@@ -175,6 +220,7 @@
                                 </div>
                             </div>
                         </form>
+
                     </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Change or add rooms section *-*-*-*-*-*-*-*-*-* -->

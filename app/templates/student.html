@@ -1251,7 +1251,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* Finance section *-*-*-*-*-*-*-*-*-* -->
 
                 <div id="show-finances" style="display: none;">
-                    <h4 class="title" style="margin-left:27px;">Финансовые операции</h4>
+                    <h4 class="title" style="margin-left:27px;">{{ 'Финансовые операции' if current_user.rights != "parent" }}</h4>
 
             <!-- *-*-*-*-*-*-*-*-*-* Finance information show *-*-*-*-*-*-*-*-*-* -->
 
@@ -1264,7 +1264,7 @@
                                         <div class="form-control">{{ student.balance|round(1) }} Лари</div>
                                     </div>
                                 </div>
-                                {% if student.finance_operations %}
+                                {% if student.finance_operations and current_user.rights != "parent" %}
                                     <div style="margin-top:15px;" class="row">
                                         <div class="col-md-12 table-responsive" style="padding-left:44px;">
                                             <div class="scroll-timetable" style="height: 25vh;">
@@ -1314,6 +1314,8 @@
                                             </div>
                                         </div>
                                     </div>
+                                {% elif current_user.rights == "parent" %}
+                                    <div class="row" style="margin-left:10px;"></div>
                                 {% else %}
                                     <div class="row" style="margin-left:10px;">
                                         <p>Финансовых операций пока нет</p>

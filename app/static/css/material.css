@@ -2068,11 +2068,8 @@ label {
     border-radius: 0 4px 4px 0;
 }
 
-
-
 .selectize-dropdown-content {
     position:relative;
-    /*max-height: 100px;*/
 }
 
 .form-control-static {

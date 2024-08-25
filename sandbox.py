@@ -1140,13 +1140,12 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 # print(user.user_persons.all())
 # db.session.delete(user)
 # db.session.commit()
+#
+# user = User.query.filter_by(id=3).first()
+# class_ids = [person.school_class_id for person in user.user_persons.all()]
+# school_classes_query = SchoolClass.query.order_by(
+#     SchoolClass.school_class,
+#     SchoolClass.school_name
+# )
+# school_classes = school_classes_query.filter(SchoolClass.id.in_(class_ids)).all()
 
-school_student = Person.query.filter(
-    Person.id == 1,
-    Person.school_class_id.is_not(None)
-).first()
-month_index = 0
-student_records, dates_topics, finals, month = student_record(school_student, int(month_index))
-if school_student and month_index is not None:
-    print(student_records)
-print_table(Lesson)

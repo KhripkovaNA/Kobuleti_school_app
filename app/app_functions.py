@@ -2689,7 +2689,7 @@ def finance_operation(person, amount, operation_type, description, service,
     db.session.flush()
 
 
-def download_timetable(week):
+def download_timetable(week, user):
     workbook = Workbook()
     sheet = workbook.active
     central = Alignment(horizontal="center")
@@ -2709,8 +2709,14 @@ def download_timetable(week):
     dates = get_date_range(week)
     max_length = 1
     last_row_ind = 1
+    school_classes_query = SchoolClass.query.order_by(SchoolClass.school_class)
 
-    school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
+    if user.rights == "parent":
+        class_list = [person.school_class_id for person in user.user_persons.all()]
+        school_classes = school_classes_query.filter(SchoolClass.id.in_(class_list)).all()
+    else:
+        school_classes = school_classes_query.all()
+
     for school_class in school_classes:
         timetable = Lesson.query.filter(
             Lesson.date >= date_start,

@@ -56,6 +56,7 @@ def logout():
     return redirect(url_for('login'))
 
 
+@app.route('/')
 @app.route('/index')
 @login_required
 def index():
@@ -73,12 +74,60 @@ def settings():
         school_children = Person.query.filter(
             Person.school_class_id.is_not(None)
         ).order_by(Person.last_name, Person.first_name).all()
+        parent_users = User.query.filter_by(rights="parent").all()
 
         return render_template('settings.html', rooms=rooms, school_classes=school_classes, children=school_children,
-                               subscription_types=subscription_types, after_school_prices=after_school_prices)
+                               subscription_types=subscription_types, after_school_prices=after_school_prices,
+                               parents=parent_users)
 
     else:
         return render_template('settings.html')
+
+
+@app.route('/change_parent', methods=['POST'])
+@login_required
+def change_parent():
+    try:
+        if current_user.rights == 'admin':
+            if 'change_parent_btn' in request.form:
+                parent_id = int(request.form.get('change_parent_btn'))
+                children_ids = request.form.getlist(f'children_{parent_id}')
+                parent = User.query.filter_by(id=parent_id).first()
+
+                if parent and children_ids:
+                    children_ids = [int(child_id) for child_id in children_ids]
+                    children = Person.query.filter(
+                        Person.id.in_(children_ids),
+                        Person.school_class_id.is_not(None)
+                    ).all()
+                    if set(parent.user_persons) != set(children):
+                        parent.user_persons = [child for child in children]
+                        user_action(current_user, f"Изменение списка детей у родителя {parent.username}")
+                        db.session.commit()
+                        flash("Изменения внесены", 'success')
+
+                elif parent and not children_ids:
+                    flash("Не выбраны дети", 'error')
+
+                else:
+                    flash("Такого родителя нет", 'error')
+
+            if 'delete_parent_btn' in request.form:
+                parent_id = int(request.form.get('delete_parent_btn'))
+                parent = User.query.filter_by(id=parent_id).first()
+                db.session.delete(parent)
+                user_action(current_user, f"Удаление родителя {parent.username}")
+                db.session.commit()
+                flash(f"Родитель {parent.username} удален", 'success')
+
+        else:
+            flash('Нет прав руководителя', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при изменении родителя: {str(e)}', 'error')
+
+    return redirect(url_for('settings'))
 
 
 @app.route('/change-add-room', methods=['POST'])
@@ -356,7 +405,6 @@ def create_user():
                         children = Person.query.filter(Person.id.in_(children_ids)).all()
                         for child in children:
                             new_user.user_persons.append(child)
-                            flash(f'{child.first_name}!')
 
                     user_action(current_user, f"Добавление пользователя {new_user.username}")
                     db.session.commit()
@@ -1739,10 +1787,15 @@ def school_timetable(week, day):
     if week_day > 7:
         return redirect(url_for('school_timetable', week=week+1, day=1))
 
-    school_classes = SchoolClass.query.order_by(
+    school_classes_query = SchoolClass.query.order_by(
         SchoolClass.school_class,
         SchoolClass.school_name
-    ).all()
+    )
+    if current_user.rights == "parent":
+        class_list = [person.school_class_id for person in current_user.user_persons.all()]
+        school_classes = school_classes_query.filter(SchoolClass.id.in_(class_list)).all()
+    else:
+        school_classes = school_classes_query.all()
     day_school_lessons, date_str, time_range = day_school_lessons_dict(week_day, week, school_classes)
     dates = get_date_range(week)
     filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
@@ -2053,7 +2106,7 @@ def generate_employee_report(week):
 @login_required
 def generate_timetable(week):
     try:
-        workbook, dates = download_timetable(int(week))
+        workbook, dates = download_timetable(int(week), current_user)
 
         filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
         excel_buffer = BytesIO()
