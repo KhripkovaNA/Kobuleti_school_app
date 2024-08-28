@@ -28,7 +28,7 @@
                                 <tbody>
                                     {% for student in students %}
                                         <tr>
-                                            <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                            <td>{{ loop.index }}. {{ student.last_name }} {{ student.first_name }}</td>
                                             <td>
                                                 <p>{{ student.birth_date if student.birth_date }}</p>
                                                 <p>{{ student.age if student.age }}</p>
@@ -42,14 +42,6 @@
                                                     <p style="color:red"><b>Баланс: {{ student.balance_minus }}</b></p>
                                                 {% endif %}
                                             </td>
-                                            <!--<td width="15%">-->
-                                            <!--    {% if student.subjects_info %}-->
-                                            <!--        {% if student.status in ["Клиент", "Лид"] %}-->
-                                            <!--            {{ 'Интересуется:' if student.status == "Лид" }}-->
-                                            <!--            {{ student.subjects_info if student.subjects_info }}-->
-                                            <!--        {% endif %}-->
-                                            <!--    {% endif %}-->
-                                            <!--</td>-->
                                             <td>
                                                 {{ student.contact_name if student.contact_name }}
                                                 {{ student.contact if student.contact }}

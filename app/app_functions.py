@@ -2972,7 +2972,7 @@ def download_finance_report(report_date):
             current_cell = sheet.cell(row_ind, col_ind)
             if current_cell.value:
                 if len(str(current_cell.value)) > max_length and not str(current_cell.value).startswith('='):
-                    max_length = len(current_cell.value)
+                    max_length = len(str(current_cell.value))
         adjusted_width = max_length + 2
         sheet.column_dimensions[get_column_letter(col_ind)].width = adjusted_width
 

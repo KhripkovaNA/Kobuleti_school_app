@@ -75,7 +75,7 @@
                                         <tbody>
                                             {% for student in school_class.class_students %}
                                                 <tr>
-                                                    <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                                    <td>{{ loop.index }}. {{ student.last_name }} {{ student.first_name }}</td>
                                                     <td>
                                                         <p>{{ student.birth_date if student.birth_date }}</p>
                                                         <p>{{ student.age if student.age }}</p>
