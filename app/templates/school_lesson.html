@@ -49,7 +49,7 @@
                                             {% for student in school_lesson.lesson_students %}
                                                 <tr>
                                                     <td>
-                                                        <a style="color:#555;" href="{{ url_for('student_school_record', student_id=student.id, month_index=month_index) }}">
+                                                        <a class="spinner-trigger" style="color:#555;" href="{{ url_for('student_school_record', student_id=student.id, month_index=month_index) }}">
                                                             {{ student.last_name }} {{ student.first_name }}
                                                         </a>
                                                     </td>
@@ -80,7 +80,7 @@
                                                 <tr>
                                                     <td>
                                                         <button type="submit" name="del_student_btn" value="{{ student.id }}" class="btn btn-danger del-btn" style="margin-bottom:0">&times;</button>
-                                                        <a style="color:#555;" href="{{ url_for('student_school_record', student_id=student.id, month_index=month_index) }}">
+                                                        <a class="spinner-trigger" style="color:#555;" href="{{ url_for('student_school_record', student_id=student.id, month_index=month_index) }}">
                                                             {{ student.last_name }} {{ student.first_name }}
                                                         </a>
                                                     </td>
@@ -106,7 +106,7 @@
                                                 <td>
                                                     <button type="button" id="add-client-btn" class="btn btn-xs add-client-btn" data-background-color="orange">Добавить ученика</button>
                                                     <div class="add-client-form" style="display: none;">
-                                                        <select name="added_client_id" class="form-control select-search">
+                                                        <select name="added_student_id" class="form-control select-search">
                                                             {% for student in school_students %}
                                                                 <option value="{{ student.id }}">{{ student.last_name }} {{ student.first_name }}</option>
                                                             {% endfor %}
@@ -139,14 +139,14 @@
                         <div class="col-md-6">
                             {% if school_lesson.prev %}
                                 <button class="btn btn-sm" data-background-color="orange">
-                                    <a style="color: #FFFFFF;" href="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.prev|string) }}">
+                                    <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.prev|string) }}">
                                         <i class="material-icons">navigate_before</i>Предыдущee занятие
                                     </a>
                                 </button>
                             {% endif %}
                             {% if school_lesson.next %}
                                 <button class="btn btn-sm" data-background-color="orange">
-                                    <a style="color: #FFFFFF;" href="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.next|string) }}">
+                                    <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_lesson', lesson_str='0-'+school_lesson.next|string) }}">
                                         Следующее занятие<i class="material-icons">navigate_next</i>
                                     </a>
                                 </button>
@@ -154,7 +154,7 @@
                         </div>
                         <div class="col-md-6">
                             <button class="btn btn-sm pull-right" data-background-color="purple">
-                                <a style="color: #FFFFFF;" href="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index) }}">
+                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index) }}">
                                     <i class="material-icons">article</i> Журнал
                                 </a>
                             </button>

@@ -99,7 +99,7 @@
                                         <label class="control-label col-md-3">{{ "Учителя:" if loop.first }}</label>
                                         <div class="col-md-6">
                                             <div class="form-control">
-                                                <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=teacher.id) }}">
+                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=teacher.id) }}">
                                                     {{ teacher.last_name }} {{ teacher.first_name }} {{ teacher.patronym if teacher.patronym }}
                                                 </a>
                                             </div>
@@ -113,7 +113,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <button type="submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
-                                <a href="{{ url_for('subjects') }}" class="btn btn-sm" data-background-color="red">Закрыть</a>
+                                <a href="{{ url_for('subjects') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

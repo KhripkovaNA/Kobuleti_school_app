@@ -66,7 +66,7 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                            <a class="spinner-trigger" href="{{ url_for('show_edit_student', student_id=student.id) }}">
                                                                 <i class="material-icons" style="color: purple;">info</i>Профиль
                                                             </a>
                                                         </li>
@@ -303,7 +303,7 @@
                 {% endif %}
                 {% if current_user.rights in ["admin", "user"] %}
                     <button class="btn btn-sm" data-background-color="orange">
-                        <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
+                        <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_student') }}">
                             <i class="material-icons">add_box</i> Добавить клиента
                         </a>
                     </button>

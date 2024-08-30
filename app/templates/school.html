@@ -19,11 +19,11 @@
                                 class="btn btn-sm {{ 'btn-success' if sc_cl.id == school_class.id else '' }}"
                                 style="width:80px; padding: 5px 5px;">
                             {% if render_type=="students" %}
-                                <a style="color: #FFFFFF;" href="{{ url_for('school_students', school_class=sc_cl.id) }}">
+                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_students', school_class=sc_cl.id) }}">
                                     {{ sc_cl.school_name }}
                                 </a>
                             {% else %}
-                                <a style="color: #FFFFFF;" href="{{ url_for('school_subjects', school_class=sc_cl.id) }}">
+                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_subjects', school_class=sc_cl.id) }}">
                                     {{ sc_cl.school_name }}
                                 </a>
                             {% endif %}
@@ -104,12 +104,12 @@
                                                             </button>
                                                             <ul class="dropdown-menu">
                                                                 <li>
-                                                                    <a href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                                    <a class="spinner-trigger" href="{{ url_for('show_edit_student', student_id=student.id) }}">
                                                                         <i class="material-icons" style="color: purple;">info</i>Профиль
                                                                     </a>
                                                                 </li>
                                                                 <li>
-                                                                    <a href="{{ url_for('student_school_record', student_id=student.id, month_index=0) }}">
+                                                                    <a class="spinner-trigger" href="{{ url_for('student_school_record', student_id=student.id, month_index=0) }}">
                                                                         <i class="material-icons" style="color: purple;">newspaper</i>Табель
                                                                     </a>
                                                                 </li>
@@ -211,7 +211,7 @@
                                                     <td>
                                                         {% for school_teacher in subject.school_teachers %}
                                                             <p>
-                                                                <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=school_teacher.id) }}">
+                                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=school_teacher.id) }}">
                                                                     {{ school_teacher.last_name }} {{ school_teacher.first_name }} {{ school_teacher.patronym if school_teacher.patronym }}
                                                                 </a>
                                                             </p>
@@ -225,12 +225,12 @@
                                                             </button>
                                                             <ul class="dropdown-menu">
                                                                 <li>
-                                                                    <a href="{{ url_for('school_lesson', lesson_str=school_class.id|string+'-'+subject.id|string) }}">
+                                                                    <a class="spinner-trigger" href="{{ url_for('school_lesson', lesson_str=school_class.id|string+'-'+subject.id|string) }}">
                                                                         <i class="material-icons" style="color: purple;">info</i>Урок
                                                                     </a>
                                                                 </li>
                                                                 <li>
-                                                                    <a href="{{ url_for('school_subject', subject_classes=subject.id|string+'-'+school_class.id|string, month_index=0) }}">
+                                                                    <a class="spinner-trigger" href="{{ url_for('school_subject', subject_classes=subject.id|string+'-'+school_class.id|string, month_index=0) }}">
                                                                         <i class="material-icons" style="color: purple;">article</i>Журнал
                                                                     </a>
                                                                 </li>

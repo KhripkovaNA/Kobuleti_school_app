@@ -394,6 +394,15 @@ h2.title {
     margin-bottom: 0;
 }
 
+#spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -50px;
+    z-index: 1000;
+}
+
 .btn,
 .navbar .navbar-nav>li>a.btn {
     border: none;

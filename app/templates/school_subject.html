@@ -17,7 +17,7 @@
                                 <th class="fixed-column-next" width="30%" style="vertical-align:bottom;">Тема урока</th>
                                 {% for student in subject_records.keys() %}
                                     <th style="writing-mode:vertical-rl;">
-                                        <a href="{{ url_for('student_school_record', student_id=subject_records[student].student_id, month_index=month_index) }}">
+                                        <a class="spinner-trigger" href="{{ url_for('student_school_record', student_id=subject_records[student].student_id, month_index=month_index) }}">
                                             {{ student }}
                                         </a>
                                     </th>
@@ -40,7 +40,7 @@
                                             {% if lesson_id < 0 %}
                                                 <b>{{ topic }}</b>
                                             {% elif lesson_id > 0 %}
-                                                <a style="color:#555;" href="{{ url_for('school_lesson', lesson_str='0-'+lesson_id|string) }}">
+                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school_lesson', lesson_str='0-'+lesson_id|string) }}">
                                                     {{ topic }}
                                                 </a>
                                             {% else %}
@@ -196,13 +196,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn btn-sm" data-background-color="orange">
-                            <a style="color: #FFFFFF;" href="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index-1) }}">
+                            <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index-1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущий месяц
                             </a>
                         </button>
                         {% if month_index < 0 %}
                         <button class="btn btn-sm" data-background-color="orange">
-                            <a style="color: #FFFFFF;" href="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index+1) }}">
+                            <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_subject', subject_classes=subject_classes, month_index=month_index+1) }}">
                                 Следующий месяц<i class="material-icons">navigate_next</i>
                             </a>
                         </button>

@@ -30,6 +30,7 @@
 </head>
 
 <body>
+    <img src="{{ url_for('static', filename='img/spinner.gif') }}" id="spinner" style="display:none;">
     <div class="wrapper">
         <div class="sidebar" data-color="main" data-image="{{ url_for('static', filename='img/sidebar.jpg') }}">
             <div class="logo">
@@ -39,7 +40,7 @@
                 <ul class="nav">
                     {% if current_user.rights in ['admin', 'user'] %}
                         <li id="menu-students">
-                            <a style="cursor:pointer" href="{{ url_for('students') }}">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('students') }}">
                                 <i class="material-icons">diversity_3</i>
                                 <p>Клиенты</p>
                             </a>
@@ -47,19 +48,19 @@
                     {% endif %}
                     {% if current_user.rights in ['admin', 'user', 'teacher'] %}
                         <li id="menu-employees">
-                            <a style="cursor:pointer" href="{{ url_for('employees') }}">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('employees') }}">
                                 <i class="material-icons">group</i>
                                 <p>Сотрудники</p>
                             </a>
                         </li>
                         <li id="menu-subjects">
-                            <a style="cursor:pointer" href="{{ url_for('subjects') }}">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('subjects') }}">
                                 <i class="material-icons">library_books</i>
                                 <p>Занятия</p>
                             </a>
                         </li>
                         <li id="menu-subscriptions">
-                            <a style="cursor:pointer" href="{{ url_for('subscriptions') }}">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('subscriptions') }}">
                                 <i class="material-icons">addchart</i>
                                 <p>Абонементы</p>
                             </a>
@@ -73,10 +74,10 @@
                             </a>
                             <ul class="dropdown-menu" style="margin-left: 50px;">
                                 <li id="menu-school-students">
-                                    <a style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">Школьные классы</a>
+                                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">Школьные классы</a>
                                 </li>
                                 <li id="menu-school-subjects">
-                                    <a style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">Школьные занятия</a>
+                                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">Школьные занятия</a>
                                 </li>
                             </ul>
                         </li>
@@ -90,10 +91,10 @@
                                 </a>
                                 <ul class="dropdown-menu" style="margin-left: 50px;">
                                     <li>
-                                        <a style="cursor:pointer" href="{{ url_for('show_edit_student', student_id=child.id) }}">Профиль</a>
+                                        <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('show_edit_student', student_id=child.id) }}">Профиль</a>
                                     </li>
                                     <li>
-                                        <a style="cursor:pointer" href="{{ url_for('student_school_record', student_id=child.id, month_index=0) }}">Табель</a>
+                                        <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('student_school_record', student_id=child.id, month_index=0) }}">Табель</a>
                                     </li>
                                 </ul>
                             </li>
@@ -106,22 +107,22 @@
                         </a>
                         <ul class="dropdown-menu" style="margin-left: 50px;">
                             <li id="menu-gen-timetable">
-                                <a href="{{ url_for('timetable', week=0) }}">Расписание общее</a>
+                                <a class="spinner-trigger" href="{{ url_for('timetable', week=0) }}">Расписание общее</a>
                             </li>
                             <li id="menu-extra-timetable">
-                                <a href="{{ url_for('extra_timetable', week=0) }}">Расписание допов</a>
+                                <a class="spinner-trigger" href="{{ url_for('extra_timetable', week=0) }}">Расписание допов</a>
                             </li>
                             <li id="menu-individual-timetable">
-                                <a href="{{ url_for('individual_timetable', week=0) }}">Расписание индив</a>
+                                <a class="spinner-trigger" href="{{ url_for('individual_timetable', week=0) }}">Расписание индив</a>
                             </li>
                             <li id="menu-school-timetable">
-                                <a href="{{ url_for('school_timetable', week=0, day=0) }}">Расписание школьное</a>
+                                <a class="spinner-trigger" href="{{ url_for('school_timetable', week=0, day=0) }}">Расписание школьное</a>
                             </li>
                         </ul>
                     </li>
                     {% if current_user.rights != 'parent' %}
                         <li id="menu-after-school">
-                            <a style="cursor:pointer" href="{{ url_for('after_school', month_index=0) }}">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('after_school', month_index=0) }}">
                                 <i class="material-icons">diversity_2</i>
                                 <p>Продленка</p>
                             </a>
@@ -145,19 +146,19 @@
                     <ul class="nav navbar-nav navbar-right" style="margin-right:20px;">
                         {% if current_user.rights in ['admin', 'user'] %}
                             <li>
-                                <a style="cursor:pointer" href="{{ url_for('finances') }}">
+                                <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('finances') }}">
                                     <i class="material-icons">account_balance</i>
                                 </a>
                             </li>
                         {% endif %}
                         <li>
-                            <a style="cursor:pointer" href="{{ url_for('settings') }}">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('settings') }}">
                                 <i class="material-icons">settings</i>
                             </a>
                         </li>
                         <li style="margin-top:8px; font-weight:500">{{ current_user.username }}</li>
                         <li>
-                            <a style="cursor:pointer" href="{{ url_for('logout') }}">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('logout') }}">
                                 <i class="material-icons">exit_to_app</i>
                             </a>
                         </li>

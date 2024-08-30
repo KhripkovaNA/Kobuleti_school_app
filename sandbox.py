@@ -1148,4 +1148,4 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 #     SchoolClass.school_name
 # )
 # school_classes = school_classes_query.filter(SchoolClass.id.in_(class_ids)).all()
-
+print_table(UserAction)

@@ -30,7 +30,7 @@
                                     {% for subscription in subscriptions %}
                                         <tr>
                                             <td>
-                                                <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=subscription.student_id) }}">
+                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_student', student_id=subscription.student_id) }}">
                                                     {{ subscription.student.last_name }} {{ subscription.student.first_name }}
                                                 </a>
                                             </td>

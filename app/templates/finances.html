@@ -38,11 +38,11 @@
                                             <td style="text-align:center;">{{ operation.date.strftime('%d.%m.%Y') }}</td>
                                             <td width="20%">
                                                 {% if operation.person.status %}
-                                                    <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=operation.person_id) }}">
+                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_student', student_id=operation.person_id) }}">
                                                         {{ operation.person.last_name }} {{ operation.person.first_name }}
                                                     </a>
                                                 {% elif operation.person.roles %}
-                                                    <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=operation.person_id) }}">
+                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=operation.person_id) }}">
                                                         {{ operation.person.last_name }} {{ operation.person.first_name }}
                                                     </a>
                                                 {% else %}
@@ -231,7 +231,7 @@
                             </div>
                         <div class="col-md-6">
                             <button class="btn btn-sm pull-right" data-background-color="purple">
-                                <a href="{{ url_for('all_finances') }}">
+                                <a class="spinner-trigger" href="{{ url_for('all_finances') }}">
                                     <i class="material-icons">assured_workload</i> Все финансовые операции
                                 </a>
                             </button>
@@ -793,7 +793,7 @@
                 {% else %}
                     <div class="col-md-12">
                         <button class="btn btn-sm pull-right" data-background-color="purple">
-                            <a href="{{ url_for('finances') }}">
+                            <a class="spinner-trigger" href="{{ url_for('finances') }}">
                                 <i class="material-icons">account_balance</i> Последние финансовые операции
                             </a>
                         </button>

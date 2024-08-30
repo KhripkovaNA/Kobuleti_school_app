@@ -40,7 +40,7 @@
                                         <div class="form-control">
                                             {% for child in student.children_info %}
                                                 <p>
-                                                    <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
+                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_student', student_id=child[0]) }}">
                                                         {{ child[1] }}
                                                     </a>
                                                 </p>
@@ -54,7 +54,7 @@
                                     <label class="control-label col-md-3">Сотрудник:</label>
                                     <div class="col-md-6">
                                         <div class="form-control">
-                                            <a style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=student.id) }}">
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_employee', employee_id=student.id) }}">
                                                 {{ student.employee_roles }}
                                             </a>
                                         </div>

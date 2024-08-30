@@ -153,7 +153,7 @@ $(document).ready(function(){
     // Comment submission to the database
     $(document).on("submit", ".comment-form", function (e) {
         e.preventDefault();
-
+        $('#spinner').hide();
         var personId = $(this).data("person-id");
         var commentText = $(this).find("textarea[name='comment']").val();
         var csrfToken = $(this).find("input[name='csrf_token']").val();
@@ -413,6 +413,7 @@ $(document).ready(function(){
     });
 
     var contactCount = Number($("#contact-count").val());
+
     // Function to add a new contact section dynamically
     function addContactSection() {
         var firstContactSection = $(".contact-section").first()
@@ -759,8 +760,15 @@ $(document).ready(function(){
             event.preventDefault();
             return;
         }
-
         $(this).data('submitted', true);
+    });
+
+    $('form').on('submit', function() {
+        $('#spinner').show();
+    });
+
+    $('.spinner-trigger').on('click', function() {
+        $('#spinner').show();
     });
 
     // Validate add-user and change-password forms
@@ -1358,7 +1366,6 @@ $(document).ready(function(){
         $(".main-teacher, .main-teacher-form").toggle();
     });
 
-
     $('#school-class-select').on('change', function() {
         var schoolClass = $('#school_class').val()
         var selectorVal = $(this).val();
@@ -1376,31 +1383,6 @@ $(document).ready(function(){
         childSelector = parentRow.find(".child-select")[0].selectize;
         childSelector.addOption({value:childId,text:childName});
         childP.remove();
-//        if (selectedStudent.length > 0) {
-//            var studentId = selectedStudent.val();
-//            var studentName = selectedStudent.text();
-//            var grade = gradeForm.find(".student-grade").val();
-//            var comment = gradeForm.find(".student-comment").val();
-//            if (grade || comment) {
-//                var studentGradeText = studentName + ": " + grade + " - " + comment;
-//                var gradeInputName = "new_grade_" + studentId;
-//                var commentInputName = "new_comment_" + studentId;
-//                selectedStudent.remove();
-//
-//                var studentGradeRow = `
-//                    <div class="student-grade-row">${studentGradeText}<a href="#" class="delete-grade" data-student="${studentId}">×</a></div>`;
-//
-//                var studentInput = `
-//                    <div id="input-${studentId}">
-//                        <input type="hidden" name="${gradeInputName}" value="${grade}">
-//                        <input type="hidden" name="${commentInputName}" value="${comment}">
-//                    </div>`;
-//                gradeForm.find(".grades-container").append(studentGradeRow);
-//                gradeForm.find(".input-container").append(studentInput);
-//
-//                $(".student-comment").val('');
-//            }
-//        }
     });
 
     $(document).on("change", ".child-select", function () {

@@ -27,7 +27,7 @@
                                     <tr>
                                         <td>{{ student.shift if student.shift < 10 }}</td>
                                         <td>
-                                            <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
                                                 {{ loop.index }}. {{ student.last_name }} {{ student.first_name }}
                                             </a>
                                         </td>
@@ -178,33 +178,33 @@
                     <div class="col-md-12">
                         {% if render_type == "month" %}
                             <button class="btn btn-sm" data-background-color="orange">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index - 1) }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index - 1) }}">
                                     <i class="material-icons">navigate_before</i>Предыдущий месяц
                                 </a>
                             </button>
                             <button class="btn btn-sm" data-background-color="orange">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index + 1) }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index + 1) }}">
                                     Следующий месяц<i class="material-icons">navigate_next</i>
                                 </a>
                             </button>
                             <button class="btn btn-xs pull-right" data-background-color="purple">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index) }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index) }}">
                                     <i class="material-icons">today</i> Дни
                                 </a>
                             </button>
                         {% else %}
                             <button class="btn btn-sm" data-background-color="orange">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index - 1) }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index - 1) }}">
                                     <i class="material-icons">navigate_before</i>Предыдущий день
                                 </a>
                             </button>
                             <button class="btn btn-sm" data-background-color="orange">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index + 1) }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school_days', day_index=day_index + 1) }}">
                                     Следующий день<i class="material-icons">navigate_next</i>
                                 </a>
                             </button>
                             <button class="btn btn-xs pull-right" data-background-color="purple">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index) }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school', month_index=month_index) }}">
                                     <i class="material-icons">calendar_month</i> Месяц
                                 </a>
                             </button>

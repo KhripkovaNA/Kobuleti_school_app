@@ -28,7 +28,7 @@
                                             {% for student in subject_lesson.students %}
                                                 <tr>
                                                     <td>
-                                                        <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                        <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
                                                             {{ loop.index }}. {{ student.last_name }} {{ student.first_name }}
                                                         </a>
                                                     </td>
@@ -84,7 +84,7 @@
                                                 <tr>
                                                     <td>
                                                         <button type="submit" name="del_client_btn" value="{{ student.id }}" class="btn btn-danger del-btn" style="margin-bottom:2px">x</button>
-                                                        <a style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
+                                                        <a class="spinner-trigger" style="color:#555;" href="{{ url_for('show_edit_student', student_id=student.id) }}">
                                                             {{ loop.index }}. {{ student.last_name }} {{ student.first_name }}
                                                         </a>
                                                     </td>
@@ -182,14 +182,14 @@
                         <div class="col-md-6">
                             {% if subject_lesson.prev %}
                                 <button class="btn btn-sm" data-background-color="orange">
-                                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', lesson_str='1-'+subject_lesson.prev|string) }}">
+                                    <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', lesson_str='1-'+subject_lesson.prev|string) }}">
                                         <i class="material-icons">navigate_before</i>Предыдущee занятие
                                     </a>
                                 </button>
                             {% endif %}
                             {% if subject_lesson.next %}
                                 <button class="btn btn-sm" data-background-color="orange">
-                                    <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', lesson_str='1-'+subject_lesson.next|string) }}">
+                                    <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('lesson', lesson_str='1-'+subject_lesson.next|string) }}">
                                         Следующее занятие<i class="material-icons">navigate_next</i>
                                     </a>
                                 </button>
@@ -204,15 +204,15 @@
                                 <ul class="dropdown-menu">
                                     {% for other_lesson in other_lessons %}
                                         {% if other_lesson.subject_type.name != "after_school" %}
-                                            <li><a href="{{ url_for('lesson', lesson_str='0-'+other_lesson.id|string) }}">{{ other_lesson.name }}</a></li>
+                                            <li><a class="spinner-trigger" href="{{ url_for('lesson', lesson_str='0-'+other_lesson.id|string) }}">{{ other_lesson.name }}</a></li>
                                         {% else %}
-                                            <li><a href="{{ url_for('after_school', month_index=0) }}">{{ other_lesson.name }}</a></li>
+                                            <li><a class="spinner-trigger" href="{{ url_for('after_school', month_index=0) }}">{{ other_lesson.name }}</a></li>
                                         {% endif %}
                                     {% endfor %}
                                 </ul>
                             </div>
                             <button class="btn btn-sm pull-right" data-background-color="purple">
-                                <a style="color: #FFFFFF;" href="{{ url_for('subject', subject_id=lesson_subject.id, month_index=month_index) }}">
+                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('subject', subject_id=lesson_subject.id, month_index=month_index) }}">
                                     <i class="material-icons">article</i> Журнал
                                 </a>
                             </button>
@@ -272,9 +272,9 @@
                                 <ul class="dropdown-menu">
                                     {% for other_lesson in other_lessons %}
                                         {% if other_lesson.subject_type.name != "after_school" %}
-                                            <li><a href="{{ url_for('lesson', lesson_str='0-'+other_lesson.id|string) }}">{{ other_lesson.name }}</a></li>
+                                            <li><a class="spinner-trigger" href="{{ url_for('lesson', lesson_str='0-'+other_lesson.id|string) }}">{{ other_lesson.name }}</a></li>
                                         {% else %}
-                                            <li><a href="{{ url_for('after_school', month_index=0) }}">{{ other_lesson.name }}</a></li>
+                                            <li><a class="spinner-trigger" href="{{ url_for('after_school', month_index=0) }}">{{ other_lesson.name }}</a></li>
                                         {% endif %}
                                     {% endfor %}
                                 </ul>

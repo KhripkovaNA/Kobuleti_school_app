@@ -39,12 +39,12 @@
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn btn-sm" style="background-color: #ff9800;">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=week-1) }}">
+                            <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=week-1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущая неделя
                             </a>
                         </button>
                         <button class="btn btn-sm" style="background-color: #ff9800;">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=week+1) }}">
+                            <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=week+1) }}">
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
                         </button>

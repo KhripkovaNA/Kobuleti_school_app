@@ -57,13 +57,13 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a href="{{ url_for('show_edit_employee', employee_id=employee.id) }}">
+                                                            <a class="spinner-trigger" href="{{ url_for('show_edit_employee', employee_id=employee.id) }}">
                                                                 <i class="material-icons" style="color: purple;">info</i>Профиль
                                                             </a>
                                                         </li>
                                                         {% if employee.teacher %}
                                                             <li>
-                                                                <a href="{{ url_for('teacher_timetable', teacher_id=employee.id, week=0) }}">
+                                                                <a class="spinner-trigger" href="{{ url_for('teacher_timetable', teacher_id=employee.id, week=0) }}">
                                                                     <i class="material-icons" style="color: purple;">date_range</i>Расписание
                                                                 </a>
                                                             </li>
@@ -129,14 +129,14 @@
                     {% if current_user.rights in ["admin", "user"] %}
                         <div class="col-md-2">
                             <button class="btn btn-sm" data-background-color="orange">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_employee') }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('add_employee') }}">
                                     <i class="material-icons">add_box</i> Добавить сотрудника
                                 </a>
                             </button>
                         </div>
                         <div class="col-md-2 col-md-offset-8">
                             <button class="btn btn-sm pull-right" data-background-color="purple">
-                                <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=0) }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('employee_report', week=0) }}">
                                     <i class="material-icons">summarize</i> Недельный отчет
                                 </a>
                             </button>

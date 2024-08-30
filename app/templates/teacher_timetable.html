@@ -50,19 +50,19 @@
                                                                     <p style="text-align:center; font-weight:500; background-color:{{ lesson.color }}; border-radius:3px; margin: 0 5px 0 5px;">{{ lesson.subject }}</p>
                                                                     {% if lesson.lesson_type_name not in ["school", "after_school", "event"] %}
                                                                         <li>
-                                                                            <a href="{{ url_for('lesson', lesson_str='1-'+lesson.id|string) }}">
+                                                                            <a class="spinner-trigger" href="{{ url_for('lesson', lesson_str='1-'+lesson.id|string) }}">
                                                                                 <i class="material-icons" style="color: purple;">info</i>Занятие
                                                                             </a>
                                                                         </li>
                                                                     {% elif lesson.lesson_type_name == "school" %}
                                                                         <li>
-                                                                            <a href="{{ url_for('school_lesson', lesson_str='0-'+lesson.id|string) }}">
+                                                                            <a class="spinner-trigger" href="{{ url_for('school_lesson', lesson_str='0-'+lesson.id|string) }}">
                                                                                 <i class="material-icons" style="color: purple;">book</i>Урок
                                                                             </a>
                                                                         </li>
                                                                     {% elif lesson.lesson_type_name == "after_school" %}
                                                                         <li>
-                                                                            <a href="{{ url_for('after_school', month_index=lesson.month_index) }}">
+                                                                            <a class="spinner-trigger" href="{{ url_for('after_school', month_index=lesson.month_index) }}">
                                                                                 <i class="material-icons" style="color: purple;">diversity_2</i>Продленка
                                                                             </a>
                                                                         </li>
@@ -90,12 +90,12 @@
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn btn-sm" data-background-color="orange">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('teacher_timetable', teacher_id=lessons_teacher.id, week = week - 1) }}">
+                            <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('teacher_timetable', teacher_id=lessons_teacher.id, week = week - 1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущая неделя
                             </a>
                         </button>
                         <button class="btn btn-sm" data-background-color="orange">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('teacher_timetable', teacher_id=lessons_teacher.id, week = week + 1) }}">
+                            <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('teacher_timetable', teacher_id=lessons_teacher.id, week = week + 1) }}">
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
                         </button>
@@ -108,8 +108,8 @@
                                     <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
-                                    <li><a href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
+                                    <li><a class="spinner-trigger" href="{{ url_for('copy_lessons') }}">Копировать занятия</a></li>
+                                    <li><a class="spinner-trigger" href="{{ url_for('add_lessons') }}">Новые занятия</a></li>
                                 </ul>
                             </div>
                         {% endif %}
@@ -119,10 +119,10 @@
                                 <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu">
-                                <li><a href="{{ url_for('timetable', week=week) }}">Общее расписание</a></li>
-                                <li><a href="{{ url_for('extra_timetable', week=week) }}">Расписание допов</a></li>
-                                <li><a href="{{ url_for('individual_timetable', week=week) }}">Расписание индив</a></li>
-                                <li><a href="{{ url_for('school_timetable', week=week, day=0) }}">Расписание школьное</a></li>
+                                <li><a class="spinner-trigger" href="{{ url_for('timetable', week=week) }}">Общее расписание</a></li>
+                                <li><a class="spinner-trigger" href="{{ url_for('extra_timetable', week=week) }}">Расписание допов</a></li>
+                                <li><a class="spinner-trigger" href="{{ url_for('individual_timetable', week=week) }}">Расписание индив</a></li>
+                                <li><a class="spinner-trigger" href="{{ url_for('school_timetable', week=week, day=0) }}">Расписание школьное</a></li>
                             </ul>
                         </div>
                     </div>
