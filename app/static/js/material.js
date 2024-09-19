@@ -1,5 +1,8 @@
 $(document).ready(function(){
 
+    // Hide the loader when the page is loaded
+    $('#spinner').hide();
+
     // Adjust the width of class boxes based on the width of table cells
     function adjustClassBoxWidth() {
         var table = $('.table-adjust');
@@ -751,6 +754,26 @@ $(document).ready(function(){
         }
     }
 
+    // Function to validate selectize field
+    function validateSelectize(validatedForm) {
+        var selectizeSelector = validatedForm.find('.selectize-select');
+        var errorDiv = selectizeSelector.closest('.row');
+        if (selectizeSelector[0].selectize) {
+            var selectorVal = selectizeSelector[0].selectize.getValue();
+            if (!selectorVal) {
+                errorDiv.addClass("has-error");
+                var errorSpan = `<span class="error-span" style="color:red;">Заполните это поле</span>`;
+                var existingErrorSpan = selectizeSelector.find('.error-span');
+                if (existingErrorSpan.length === 0) {
+                    selectizeSelector.append(errorSpan);
+                }
+            } else {
+                errorDiv.removeClass("has-error");
+                errorDiv.find('.error-span').remove();
+            }
+        }
+    }
+
     // Reset form submission status on page load or reload
     $('form').data('submitted', false);
 
@@ -771,6 +794,13 @@ $(document).ready(function(){
         $('#spinner').show();
     });
 
+    // Hide the loader when the user navigates back (using back button)
+    $(window).on('pageshow', function(event) {
+        if (event.originalEvent.persisted) {
+            $('#spinner').hide();
+        }
+    });
+
     // Validate add-user and change-password forms
     $('form.add-user-form, form.change-password-form, form.add-parent-form').submit(function(event) {
         var currentForm = $(this);
@@ -784,10 +814,22 @@ $(document).ready(function(){
         }
     });
 
-    // Validate subscription, copy-lessons, change-lessons, finance-report and grade forms
-    $('form.subscription-form, form.copy-lessons-form, form.change-lessons-form, form.finance-report-form, form.grade-form').submit(function(event) {
+    // Validate subscription, copy-lessons, change-lessons and finance-report
+    $('form.subscription-form, form.copy-lessons-form, form.change-lessons-form, form.finance-report-form').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
+
+        if ($(this).find('.has-error').length > 0) {
+            event.preventDefault();
+            $('form').data('submitted', false);
+        }
+    });
+
+    // Validate grade forms
+    $('form.grade-form').submit(function(event) {
+        var currentForm = $(this);
+        validateDateInput(currentForm);
+        validateSelectize(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();

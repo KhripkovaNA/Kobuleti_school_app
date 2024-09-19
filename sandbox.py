@@ -1148,4 +1148,18 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 #     SchoolClass.school_name
 # )
 # school_classes = school_classes_query.filter(SchoolClass.id.in_(class_ids)).all()
-print_table(UserAction)
+# print_table(UserAction)
+weekdays = [0]
+week_date = datetime.strptime('02.09.2024', '%d.%m.%Y').date()
+start_date = get_weekday_date(0, week_date)
+lessons_dates = [get_weekday_date(int(day), start_date) for day in weekdays if weekdays]
+query = Lesson.query.filter(Lesson.date.in_(lessons_dates))
+subject_types_list = [1]
+query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
+filtered_lessons = query.all()
+# print_data(Lesson, filtered_lessons)
+school_type_id = SubjectType.query.filter_by(name='school').first().id
+print(school_type_id)
+school_classes = 'all'
+cond = school_classes != 'all' and (school_type_id in subject_types_list)
+print(cond)

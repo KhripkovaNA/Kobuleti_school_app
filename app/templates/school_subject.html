@@ -241,7 +241,7 @@
                                                     <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Оценка за:</label>
                                                         <div class="col-md-8">
-                                                            <select name="grade_type" class="form-control select-search-add">
+                                                            <select name="grade_type" class="form-control select-search-add selectize-select">
                                                                 {% for grade_type in grade_types %}
                                                                     <option value="{{ grade_type }}">{{ grade_type }}</option>
                                                                 {% endfor %}
@@ -330,7 +330,7 @@
                                                     <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Оценка за:</label>
                                                         <div class="col-md-8">
-                                                            <select name="grade_type" class="form-control select-search-add">
+                                                            <select name="grade_type" class="form-control select-search-add selectize-select">
                                                                 {% for final_grade_type in finals %}
                                                                     <option value="{{ final_grade_type }}">{{ final_grade_type }}</option>
                                                                 {% endfor %}

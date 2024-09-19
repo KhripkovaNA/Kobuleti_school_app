@@ -1561,35 +1561,24 @@ def day_school_lessons_dict(day, week, school_classes):
     return class_lessons, lesson_date_str, (day_start_hour, day_end_hour)
 
 
-def check_conflicting_lessons(date, start_time, end_time, classes, room, teacher, split_classes, lesson_id=None):
+def check_conflicting_lessons(lessons, date, start_time, end_time, classes,
+                              room, teacher, split_classes, lesson_id=None):
     filter_conditions = [
-        and_(
-            Lesson.start_time < end_time,
-            Lesson.end_time > start_time,
-            Lesson.room_id == room
-        ),
-        and_(
-            Lesson.start_time < end_time,
-            Lesson.end_time > start_time,
-            Lesson.teacher_id == teacher
-        )
+        lambda lesson: lesson.start_time < end_time and lesson.end_time > start_time and lesson.room_id == room,
+        lambda
+            lesson: lesson.start_time < end_time and lesson.end_time > start_time and lesson.teacher_id == teacher
     ]
 
     if not split_classes:
-        class_condition = and_(
-            Lesson.start_time < end_time,
-            Lesson.end_time > start_time,
-            Lesson.school_classes.any(SchoolClass.id.in_(classes))
+        filter_conditions.append(
+            lambda lesson: lesson.start_time < end_time and lesson.end_time > start_time and
+                           any(cl.id in classes for cl in lesson.school_classes)
         )
-        filter_conditions.append(class_condition)
 
-    conflicting_lessons = Lesson.query.filter(
-        and_(
-            Lesson.id != lesson_id,
-            Lesson.date == date,
-            or_(*filter_conditions)
-        )
-    ).all()
+    conflicting_lessons = [
+        lesson for lesson in lessons
+        if lesson.id != lesson_id and lesson.date == date and any(cond(lesson) for cond in filter_conditions)
+    ]
 
     return conflicting_lessons
 
@@ -1623,6 +1612,9 @@ def create_check_lesson(lesson_date, form, i):
     split_classes = form.split_classes.data
     teacher_id = int(form.teacher.data)
     school_type = SubjectType.query.filter_by(name='school').first().id
+    day_lessons = Lesson.query.filter(
+        Lesson.date == lesson_date
+    ).all()
 
     if end_time <= start_time:
         lesson = None
@@ -1634,45 +1626,45 @@ def create_check_lesson(lesson_date, form, i):
         message_text = f'Занятие {i} не добавлено в расписание. Классы не выбраны'
         return lesson, message_text
 
-    conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time,
-                                                    classes, room_id, teacher_id, split_classes)
+    if day_lessons:
+        conflicting_lessons = check_conflicting_lessons(day_lessons, lesson_date, start_time, end_time,
+                                                        classes, room_id, teacher_id, split_classes)
+        if conflicting_lessons:
+            intersection = analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes)
 
-    if conflicting_lessons:
-        intersection = analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes)
+            message_text = f'Занятие {i} не добавлено в расписание. Пересечения по ' + ', '.join(intersection)
+            lesson = None
+            return lesson, message_text
 
-        message_text = f'Занятие {i} не добавлено в расписание. Пересечения по ' + ', '.join(intersection)
-        lesson = None
+    lesson = Lesson(
+        date=lesson_date,
+        start_time=start_time,
+        end_time=end_time,
+        lesson_type_id=int(lesson_type_id),
+        room_id=room_id,
+        subject_id=int(subject_id),
+        teacher_id=teacher_id,
+    )
 
-    else:
-        lesson = Lesson(
-            date=lesson_date,
-            start_time=start_time,
-            end_time=end_time,
-            lesson_type_id=int(lesson_type_id),
-            room_id=room_id,
-            subject_id=int(subject_id),
-            teacher_id=teacher_id,
-        )
-
-        school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
-        if school_classes:
-            lesson.school_classes.extend(school_classes)
-            lesson.split_classes = split_classes
-            school_students = Person.query.filter(
-                Person.status == "Клиент",
-                Person.school_class_id.in_(classes)
+    school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
+    if school_classes:
+        lesson.school_classes.extend(school_classes)
+        lesson.split_classes = split_classes
+        school_students = Person.query.filter(
+            Person.status == "Клиент",
+            Person.school_class_id.in_(classes)
+        ).all()
+        for student in school_students:
+            student_lessons = Lesson.query.filter(
+                Lesson.date == lesson.date,
+                Lesson.start_time < lesson.end_time,
+                Lesson.end_time > lesson.start_time,
+                Lesson.students_registered.any(Person.id == student.id)
             ).all()
-            for student in school_students:
-                student_lessons = Lesson.query.filter(
-                    Lesson.date == lesson.date,
-                    Lesson.start_time < lesson.end_time,
-                    Lesson.end_time > lesson.start_time,
-                    Lesson.students_registered.any(Person.id == student.id)
-                ).all()
-                if not student_lessons:
-                    lesson.students_registered.append(student)
+            if not student_lessons:
+                lesson.students_registered.append(student)
 
-        message_text = f'Занятие {i} добавлено в расписание'
+    message_text = f'Занятие {i} добавлено в расписание'
 
     return lesson, message_text
 
@@ -1710,61 +1702,66 @@ def lesson_edit(form, lesson):
         if lesson.lesson_type.name == 'school' else []
     split_classes = form.split_classes.data
     teacher_id = int(form.teacher.data) if form.teacher.data else None
+    day_lessons = Lesson.query.filter(
+        Lesson.date == lesson_date
+    ).all()
 
     if end_time <= start_time:
         message = ('Ошибка во времени проведения', 'error')
         return message
 
-    conflicting_lessons = check_conflicting_lessons(lesson_date, start_time, end_time, classes,
-                                                    room_id, teacher_id, split_classes, lesson.id)
+    if day_lessons:
+        conflicting_lessons = check_conflicting_lessons(day_lessons, lesson_date, start_time, end_time, classes,
+                                                        room_id, teacher_id, split_classes, lesson.id)
 
-    if conflicting_lessons:
-        intersection = analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes)
+        if conflicting_lessons:
+            intersection = analyze_conflicts(conflicting_lessons, room_id, teacher_id, classes)
 
-        message = ('Занятие не изменено. Пересечения по ' + ', '.join(intersection), 'error')
+            message = ('Занятие не изменено. Пересечения по ' + ', '.join(intersection), 'error')
 
-    else:
-        lesson.date = lesson_date
-        lesson.start_time = start_time
-        lesson.end_time = end_time
-        lesson.room_id = room_id
-        lesson.teacher_id = teacher_id
-        if lesson.lesson_type.name == 'school':
-            lesson.split_classes = split_classes
-            classes_set = set(classes)
-            if before_classes != classes_set:
-                added_classes = list(classes_set.difference(before_classes))
-                removed_classes = list(before_classes.difference(classes_set))
-                school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
-                lesson.school_classes = [school_class for school_class in school_classes]
+            return message
 
-                school_students = Person.query.filter(
-                    Person.status == "Клиент",
-                    Person.school_class_id.in_(added_classes + removed_classes)
-                ).all()
+    lesson.date = lesson_date
+    lesson.start_time = start_time
+    lesson.end_time = end_time
+    lesson.room_id = room_id
+    lesson.teacher_id = teacher_id
+    if lesson.lesson_type.name == 'school':
+        lesson.split_classes = split_classes
+        classes_set = set(classes)
+        if before_classes != classes_set:
+            added_classes = list(classes_set.difference(before_classes))
+            removed_classes = list(before_classes.difference(classes_set))
+            school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
+            lesson.school_classes = [school_class for school_class in school_classes]
 
-                for student in school_students:
-                    if student.school_class_id in removed_classes and student in lesson.students_registered:
-                        lesson.students_registered.remove(student)
-                        attendance = StudentAttendance.query.filter_by(
-                            student_id=student.id, lesson_id=lesson.id
-                        ).first()
-                        if attendance:
-                            db.session.delete(attendance)
-                        db.session.flush()
+            school_students = Person.query.filter(
+                Person.status == "Клиент",
+                Person.school_class_id.in_(added_classes + removed_classes)
+            ).all()
 
-                    if student.school_class_id in added_classes and student not in lesson.students_registered:
-                        student_lessons = Lesson.query.filter(
-                            Lesson.date == lesson.date,
-                            Lesson.start_time < lesson.end_time,
-                            Lesson.end_time > lesson.start_time,
-                            Lesson.students_registered.any(Person.id == student.id)
-                        ).all()
-                        if not student_lessons:
-                            lesson.students_registered.append(student)
-                        db.session.flush()
+            for student in school_students:
+                if student.school_class_id in removed_classes and student in lesson.students_registered:
+                    lesson.students_registered.remove(student)
+                    attendance = StudentAttendance.query.filter_by(
+                        student_id=student.id, lesson_id=lesson.id
+                    ).first()
+                    if attendance:
+                        db.session.delete(attendance)
+                    db.session.flush()
 
-        message = ('Занятие изменено', 'success')
+                if student.school_class_id in added_classes and student not in lesson.students_registered:
+                    student_lessons = Lesson.query.filter(
+                        Lesson.date == lesson.date,
+                        Lesson.start_time < lesson.end_time,
+                        Lesson.end_time > lesson.start_time,
+                        Lesson.students_registered.any(Person.id == student.id)
+                    ).all()
+                    if not student_lessons:
+                        lesson.students_registered.append(student)
+                    db.session.flush()
+
+    message = ('Занятие изменено', 'success')
 
     return message
 
@@ -1792,7 +1789,7 @@ def filter_lessons(form):
     weekdays = form.getlist('lessons_days_specific')
 
     subject_types = form.get('subject_types')
-    school_classes = form.getlist('school_classes')
+    school_classes = form.get('school_classes')
     rooms = form.get('rooms')
     teachers = form.get('teachers')
     school_type_id = SubjectType.query.filter_by(name='school').first().id
@@ -1808,18 +1805,21 @@ def filter_lessons(form):
     if rooms != "all":
         rooms_list = [int(room) for room in form.getlist('rooms_specific') if form.getlist('rooms_specific')]
         query = query.filter(Lesson.room_id.in_(rooms_list))
+
     if subject_types != "all":
-        subject_types_list = [int(room) for room in form.getlist('subject_types_specific')
+        subject_types_list = [int(subject_type) for subject_type in form.getlist('subject_types_specific')
                               if form.getlist('subject_types_specific')]
         query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
+
         if school_classes != 'all' and (school_type_id in subject_types_list):
             school_classes_list = [int(school_class) for school_class in form.getlist('school_classes_specific')
                                    if form.getlist('school_classes_specific')]
             query = query.filter(Lesson.school_classes.any(SchoolClass.id.in_(school_classes_list)))
+
     if teachers != "all":
         teachers_list = [int(teacher) for teacher in form.getlist('teachers_specific')
                          if form.getlist('teachers_specific')]
-        query = query.filter(Lesson.lesson_type_id.in_(teachers_list))
+        query = query.filter(Lesson.teacher_id.in_(teachers_list))
 
     filtered_lessons = query.all()
 
@@ -1829,6 +1829,12 @@ def filter_lessons(form):
 def copy_filtered_lessons(filtered_lessons, week_diff):
     copied_lessons = 0
     conflicts = 0
+    start_date = min(lesson.date for lesson in filtered_lessons) + timedelta(weeks=week_diff)
+    end_date = max(lesson.date for lesson in filtered_lessons) + timedelta(weeks=week_diff)
+    all_lessons_in_period = Lesson.query.filter(
+        Lesson.date.between(start_date, end_date)
+    ).all()
+
     for lesson in filtered_lessons:
         date = lesson.date + timedelta(weeks=week_diff)
         start_time = lesson.start_time
@@ -1838,43 +1844,43 @@ def copy_filtered_lessons(filtered_lessons, week_diff):
         teacher = lesson.teacher_id
         split_classes = lesson.split_classes
 
-        conflicting_lessons = check_conflicting_lessons(date, start_time, end_time, classes,
-                                                        room, teacher, split_classes)
+        if all_lessons_in_period:
+            conflicting_lessons = check_conflicting_lessons(all_lessons_in_period, date, start_time, end_time,
+                                                            classes, room, teacher, split_classes)
+            if conflicting_lessons:
+                conflicts += 1
+                continue
 
-        if not conflicting_lessons:
-            new_lesson = Lesson(
-                date=date,
-                start_time=start_time,
-                end_time=end_time,
-                room_id=room,
-                subject_id=lesson.subject_id,
-                teacher_id=teacher,
-                lesson_type_id=lesson.lesson_type_id
-            )
-            db.session.add(new_lesson)
-            if lesson.lesson_type.name == "school":
-                new_lesson.school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
-                lesson.split_classes = split_classes
-                if lesson.students_registered.all():
-                    lesson_students = lesson.students_registered.all()
-                else:
-                    lesson_students = Person.query.filter(Person.school_class_id.in_(classes)).all()
-                for student in lesson_students:
-                    if student.status == "Клиент":
-                        student_lessons = Lesson.query.filter(
-                            Lesson.date == new_lesson.date,
-                            Lesson.start_time < new_lesson.end_time,
-                            Lesson.end_time > new_lesson.start_time,
-                            Lesson.students_registered.any(Person.id == student.id)
-                        ).all()
-                        if not student_lessons:
-                            new_lesson.students_registered.append(student)
+        new_lesson = Lesson(
+            date=date,
+            start_time=start_time,
+            end_time=end_time,
+            room_id=room,
+            subject_id=lesson.subject_id,
+            teacher_id=teacher,
+            lesson_type_id=lesson.lesson_type_id
+        )
+        db.session.add(new_lesson)
+        if lesson.lesson_type.name == "school":
+            new_lesson.school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes)).all()
+            new_lesson.split_classes = split_classes
+            if lesson.students_registered.all():
+                lesson_students = lesson.students_registered.all()
+            else:
+                lesson_students = Person.query.filter(Person.school_class_id.in_(classes)).all()
+            for student in lesson_students:
+                if student.status == "Клиент":
+                    student_lessons = Lesson.query.filter(
+                        Lesson.date == new_lesson.date,
+                        Lesson.start_time < new_lesson.end_time,
+                        Lesson.end_time > new_lesson.start_time,
+                        Lesson.students_registered.any(Person.id == student.id)
+                    ).all()
+                    if not student_lessons:
+                        new_lesson.students_registered.append(student)
 
-            db.session.flush()
-            copied_lessons += 1
-
-        else:
-            conflicts += 1
+        db.session.flush()
+        copied_lessons += 1
 
     return copied_lessons, conflicts
 
@@ -2231,7 +2237,7 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
 
     for record in subject_records:
         date_string = f"{record.date:%d.%m.%Y}"
-        topic = record.grade_type if record.grade_type else record.lesson.lesson_topic
+        topic = record.grade_type if record.grade_type else record.lesson.lesson_topic if record.lesson_id else '-'
         lesson_id = record.lesson_id if record.lesson_id else 0
         dates_topic_set.add((date_string, topic, lesson_id))
         student_name = f"{record.student.last_name} {record.student.first_name}"
@@ -2289,6 +2295,9 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
 def add_new_grade(form, students, subject_id, grade):
     grade_type = form.get('grade_type')
     grade_date = datetime.strptime(form.get('grade_date'), '%d.%m.%Y').date()
+    if not grade_type:
+        return grade_date, grade_type
+
     for student in students:
         new_grade = form.get(f'new_grade_{student.id}')
         new_comment = form.get(f'new_comment_{student.id}')
@@ -2412,7 +2421,7 @@ def student_record(student, month_index):
     dates_grade_type_set = set()
     for record in student_records:
         date_str = f'{record.date:%d.%m}'
-        grade_type = record.grade_type if record.grade_type else record.lesson.lesson_topic
+        grade_type = record.grade_type if record.grade_type else record.lesson.lesson_topic if record.lesson_id else '-'
         dates_grade_type_set.add((date_str, grade_type))
         if record.subject.name in subjects_dict.keys():
             subjects_dict[record.subject.name][(date_str, grade_type)] = {"grade": record.grade,
@@ -3266,6 +3275,10 @@ def change_lessons_date(form):
     if change_lessons:
         les = len(change_lessons)
         change_les = 0
+        new_date_lessons = Lesson.query.filter(
+            Lesson.date == new_date
+        ).all()
+
         for lesson in change_lessons:
             if not lesson.lesson_completed:
                 start_time = lesson.start_time
@@ -3275,12 +3288,15 @@ def change_lessons_date(form):
                 teacher = lesson.teacher_id
                 split_classes = lesson.split_classes
 
-                conflicting_lessons = check_conflicting_lessons(new_date, start_time, end_time, classes,
-                                                                room, teacher, split_classes)
-                if not conflicting_lessons:
-                    lesson.date = new_date
-                    change_les += 1
-                    db.session.flush()
+                if new_date_lessons:
+                    conflicting_lessons = check_conflicting_lessons(new_date_lessons, new_date, start_time, end_time,
+                                                                    classes, room, teacher, split_classes)
+                    if conflicting_lessons:
+                        continue
+
+                lesson.date = new_date
+                change_les += 1
+                db.session.flush()
 
         if change_les == les:
             message = [("Все занятия перенесены", 'success')]

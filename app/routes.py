@@ -1838,8 +1838,9 @@ def school_lesson(lesson_str):
             ).all()
             grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
             days_dict = {day_num: day for (day_num, day) in enumerate(DAYS_OF_WEEK)}
+            week = calculate_week(sc_lesson.date)
 
-            return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
+            return render_template('school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict, week=week,
                                    school_students=sc_students, grade_types=grade_types, school_subject=sc_subject,
                                    subject_classes=subject_classes, month_index=month_index, today=get_today_date())
 
@@ -1878,6 +1879,11 @@ def school_subject(subject_classes, month_index):
             try:
                 if 'new_grade_btn' in request.form:
                     grade_info = add_new_grade(request.form, sc_students, subject_id, "grade")
+
+                    if not grade_info[1]:
+                        flash("Не выбрано за что оценка", 'error')
+                        return redirect(request.referrer)
+
                     grade_month_index = calc_month_index(grade_info[0])
                     description = f"Добавление оценок по предмету {subject.name} {grade_info[0]:%d.%m.%Y} " \
                                   f"({school_classes_names}, {grade_info[1]})"
@@ -1890,6 +1896,10 @@ def school_subject(subject_classes, month_index):
 
                 if 'new_final_grade_btn' in request.form:
                     grade_info = add_new_grade(request.form, sc_students, subject_id, "final")
+                    if not grade_info[1]:
+                        flash("Не выбрано за что оценка", 'error')
+                        return redirect(request.referrer)
+
                     description = f"Добавление итоговых оценок по предмету {subject.name} {grade_info[0]:%d.%m.%Y} " \
                                   f"({school_classes_names}, {grade_info[1]})"
                     user_action(current_user, description)
