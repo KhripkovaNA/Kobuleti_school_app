@@ -1258,7 +1258,7 @@ def handle_lesson(form, subject, lesson, user):
                     user_action(user, description)
                 else:
                     messages.append(f"Клиент {student.last_name} {student.first_name}" +
-                                    f" уже записан на занятие в это же время")
+                                    f" уже записан на занятие {student_lessons[0].subject.name} в это же время")
             elif (
                     student in lesson.students_registered
                     and not form.get(f'registered_{student.id}')
@@ -2055,7 +2055,7 @@ def handle_school_lesson(form, lesson, user):
                 return "Ученик добавлен", 'success'
 
             else:
-                return "Ученик записан на другое занятие в это же время", 'error'
+                return f"Ученик записан на занятие {new_student_lessons[0].subject.name} в это же время", 'error'
 
     if 'complete_btn' in form:
         if not lesson.lesson_completed:
