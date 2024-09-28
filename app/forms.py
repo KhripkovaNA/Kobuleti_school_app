@@ -131,7 +131,7 @@ class SubscriptionForm(Form):
 
 
 class SubscriptionsEditForm(FlaskForm):
-    subscriptions = FieldList(FormField(SubscriptionForm), min_entries=0, max_entries=5)
+    subscriptions = FieldList(FormField(SubscriptionForm), min_entries=0, max_entries=20)
 
 
 class EmployeeForm(AdultPersonForm):

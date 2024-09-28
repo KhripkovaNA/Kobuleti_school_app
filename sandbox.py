@@ -393,8 +393,6 @@ def get_date(day_of_week, week=0):
     return day_of_week_date
 
 
-
-
 new_student_info = {
     "student": {
         "last_name": "Никитина",
@@ -1003,7 +1001,6 @@ lesson_dict = {
 # print_table(StudentAttendance)
 
 def print_data(table_model, table_rows):
-
     mapper = class_mapper(table_model)
     fields = [column.key for column in mapper.columns]
 
@@ -1011,7 +1008,7 @@ def print_data(table_model, table_rows):
         for column in fields:
             value = getattr(row, column)
             print(f"{column}: {value}", end='\t')
-        print('\n'+'*'*20)
+        print('\n' + '*' * 20)
 
 
 # persons = {}
@@ -1072,8 +1069,8 @@ OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school'
 fields = ["Категория", "Занятие", "Приход", "Расход"]
 
 categories = ['Продленка', 'Депозит, пополнение', 'Зарплата', 'Инкассация', 'Хозрасходы'
-              'Питание', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация']
-
+                                                                            'Питание', 'Школа', 'Канцелярия', 'Аренда',
+              'Аттестация']
 
 # operation_types = ["cash", "bank", "balance"]
 # day_finance_operations = {oper_type: {} for oper_type in operation_types}
@@ -1149,17 +1146,4 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 # )
 # school_classes = school_classes_query.filter(SchoolClass.id.in_(class_ids)).all()
 # print_table(UserAction)
-weekdays = [0]
-week_date = datetime.strptime('02.09.2024', '%d.%m.%Y').date()
-start_date = get_weekday_date(0, week_date)
-lessons_dates = [get_weekday_date(int(day), start_date) for day in weekdays if weekdays]
-query = Lesson.query.filter(Lesson.date.in_(lessons_dates))
-subject_types_list = [1]
-query = query.filter(Lesson.lesson_type_id.in_(subject_types_list))
-filtered_lessons = query.all()
-# print_data(Lesson, filtered_lessons)
-school_type_id = SubjectType.query.filter_by(name='school').first().id
-print(school_type_id)
-school_classes = 'all'
-cond = school_classes != 'all' and (school_type_id in subject_types_list)
-print(cond)
+
