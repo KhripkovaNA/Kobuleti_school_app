@@ -38,4 +38,4 @@ def logout():
         logout_user()
         flash('Вы вышли из системы', "success")
 
-    return redirect(url_for('login'))
+    return redirect(url_for('auth/login.html'))

@@ -5,9 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-from app import routes, models
-from app.auth.routes import auth
-from app.main.routes import main
+
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -25,7 +23,12 @@ db = SQLAlchemy(app, metadata=metadata)
 csrf = CSRFProtect(app)
 migrate = Migrate(app, db, render_as_batch=True)
 login = LoginManager(app)
-login.login_view = 'login'
+login.login_view = 'auth.login'
 
+from app.auth.routes import auth
 app.register_blueprint(auth)
+
+from app.main.routes import main
 app.register_blueprint(main)
+
+from app import routes, models
