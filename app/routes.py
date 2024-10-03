@@ -1,8 +1,9 @@
 from flask import render_template, flash, redirect, url_for, request, send_file
-from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Person, Employee, Lesson, Subscription, SubjectType, Subject, Room, SchoolClass, \
+from flask_login import current_user, login_required
+from app.auth.models import User
+from app.models import Person, Employee, Lesson, Subscription, SubjectType, Subject, Room, SchoolClass, \
     SubscriptionType, SchoolLessonJournal, Finance
-from app.forms import LoginForm, ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
+from app.forms import ChildForm, AdultForm, EditStudentForm, EditContactPersonForm, ContactForm, \
     EditAddContPersonForm, AddContForm, NewContactPersonForm, SubscriptionsEditForm, EmployeeForm, PersonForm, \
     ExtraSubjectForm, EditExtraSubjectForm, AddLessonsForm, EditLessonForm
 from wtforms.validators import InputRequired
@@ -23,37 +24,6 @@ from sqlalchemy import distinct, and_, or_
 from app import app, db
 from io import BytesIO
 from openpyxl import Workbook
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash('Неправильное имя пользователя или пароль', "error")
-            return redirect(url_for('login'))
-
-        login_user(user)
-        user_action(user, "Вход в систему")
-        db.session.commit()
-        flash('Вы успешно вошли в систему', "success")
-        return redirect(url_for('index'))
-
-    return render_template('login.html', form=form)
-
-
-@app.route('/logout')
-def logout():
-    if current_user.is_authenticated:
-        user_action(current_user, "Выход из системы")
-        db.session.commit()
-        logout_user()
-        flash('Вы вышли из системы', "success")
-    return redirect(url_for('login'))
 
 
 @app.route('/')

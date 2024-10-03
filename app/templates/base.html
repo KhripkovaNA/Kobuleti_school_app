@@ -180,11 +180,7 @@
                     {% endif %}
                 {% endwith %}
                 <div class="container-fluid">
-                    {% if index %}
-                        <div class="banner-sec"></div>
-                    {% else %}
-                        {% block content %}{% endblock %}
-                    {% endif %}
+                    {% block content %}{% endblock %}
                 </div>
             </div>
         </div>

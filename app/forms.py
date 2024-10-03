@@ -1,4 +1,3 @@
-from flask import request
 from flask_wtf import FlaskForm, Form
 from wtforms import StringField, TextAreaField, PasswordField, SelectField, FormField, FieldList, \
     HiddenField, BooleanField, IntegerField, SelectMultipleField, ColorField, DecimalField
@@ -39,11 +38,6 @@ def validate_subject_school_price(form, field):
 def validate_subscription_types(form, field):
     if not form.no_subscription.data and not field.data:
         raise ValidationError('Заполните это поле')
-
-
-class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(message='Заполните это поле')])
-    password = PasswordField(validators=[DataRequired(message='Заполните это поле')])
 
 
 class ContactForm(FlaskForm):
