@@ -1012,8 +1012,8 @@ def print_data(table_model, table_rows):
 
 
 # persons = {}
-# finances = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
-# for fin_op in finances:
+# finance = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
+# for fin_op in finance:
 #     if fin_op.person_id not in persons.keys():
 #         fin_op.balance_state = fin_op.person.balance if fin_op.person.balance else 0
 #     else:
@@ -1035,9 +1035,9 @@ def print_data(table_model, table_rows):
 # categories = ['after_school', 'subscription', 'del_after_school', 'school', 'lesson', 'balance', 'stationery',
 #               'dining', 'del_subscription', 'finance', 'del_lesson', 'salary', 'sublease', 'assessment']
 # print([cat[0] for cat in cats])
-# finances = Finance.query.all()
+# finance = Finance.query.all()
 # n = 1
-# for fin in finances:
+# for fin in finance:
 #     if fin.service == 'finance':
 #         if any(substring in fin.description for substring in ['продленка']):
 #             fin.service = 'after_school'
@@ -1047,10 +1047,10 @@ def print_data(table_model, table_rows):
 #
 # db.session.commit()
 
-# finances = Finance.query.filter(Finance.service.in_(['subscription', 'lesson', 'del_subscription', 'del_lesson'])).all()
+# finance = Finance.query.filter(Finance.service.in_(['subscription', 'lesson', 'del_subscription', 'del_lesson'])).all()
 # n = 1
 # regex = r''
-# for fin in finances:
+# for fin in finance:
 #     text = fin.description.replace('Покупка абонемента', '').replace('Списание за занятие', '')\
 #         .replace('Возврат за абонемент', '').replace('Возврат за занятие', '')
 #     date_pattern = r'\b\d{2}\.\d{2}\.\d{2}\b'
@@ -1075,7 +1075,7 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 # operation_types = ["cash", "bank", "balance"]
 # day_finance_operations = {oper_type: {} for oper_type in operation_types}
 # report_date = datetime(2024, 6, 9).date()
-# finances = Finance.query.filter_by(date=report_date).all()
+# finance = Finance.query.filter_by(date=report_date).all()
 #
 #
 # def sort_finances(oper_type, category, subject):
@@ -1089,7 +1089,7 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 #             day_finance_operations[oper_type][category][subject]["Расход"] += minus
 
 
-# for fin in finances:
+# for fin in finance:
 #     if fin.student_balance:
 #         plus = fin.amount if fin.amount > 0 else 0
 #         minus = abs(fin.amount) if fin.amount < 0 else 0

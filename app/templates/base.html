@@ -5,11 +5,9 @@
     <meta charset="utf-8">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    {% if title %}
-    <title>{{ title }}</title>
-    {% else %}
-    <title>Школа Кобулети</title>
-    {% endif %}
+
+    <title>{{ title if title else 'Школа Кобулети' }}</title>
+
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <!--  Bootstrap core CSS  -->
@@ -25,160 +23,23 @@
     <link href="{{ url_for('static', filename='css/jquery-ui.min.css') }}" rel="stylesheet">
     <!--  Scrollbar  -->
     <link href="{{ url_for('static', filename='css/perfect-scrollbar.min.css') }}" rel="stylesheet">
-
-
 </head>
 
 <body>
     <img src="{{ url_for('static', filename='img/spinner.gif') }}" id="spinner" style="display:none;">
     <div class="wrapper">
-        <div class="sidebar" data-color="main" data-image="{{ url_for('static', filename='img/sidebar.jpg') }}">
-            <div class="logo">
-              <img class="dashboard-logo" src="{{ url_for('static', filename='img/logo.jpg') }}">
-            </div>
-            <div class="sidebar-wrapper">
-                <ul class="nav">
-                    {% if current_user.rights in ['admin', 'user'] %}
-                        <li id="menu-students">
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('students') }}">
-                                <i class="material-icons">diversity_3</i>
-                                <p>Клиенты</p>
-                            </a>
-                        </li>
-                    {% endif %}
-                    {% if current_user.rights in ['admin', 'user', 'teacher'] %}
-                        <li id="menu-employees">
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('employees') }}">
-                                <i class="material-icons">group</i>
-                                <p>Сотрудники</p>
-                            </a>
-                        </li>
-                        <li id="menu-subjects">
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('subjects') }}">
-                                <i class="material-icons">library_books</i>
-                                <p>Занятия</p>
-                            </a>
-                        </li>
-                        <li id="menu-subscriptions">
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('subscriptions') }}">
-                                <i class="material-icons">addchart</i>
-                                <p>Абонементы</p>
-                            </a>
-                        </li>
-                    {% endif %}
-                    {% if current_user.rights != 'parent' %}
-                        <li class="{{ 'dropup' if current_user.rights in ['admin', 'user'] else 'dropdown' }}" id="menu-school">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                <i class="material-icons">school</i>
-                                <p>Школа<span class="caret"></span></p>
-                            </a>
-                            <ul class="dropdown-menu" style="margin-left: 50px;">
-                                <li id="menu-school-students">
-                                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">Школьные классы</a>
-                                </li>
-                                <li id="menu-school-subjects">
-                                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">Школьные занятия</a>
-                                </li>
-                            </ul>
-                        </li>
-                    {% endif %}
-                    {% if current_user.rights == 'parent' %}
-                        {% for child in current_user.user_persons %}
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                    <i class="material-icons">person</i>
-                                    <p>{{ child.last_name}} {{ child.first_name}}<span class="caret"></span></p>
-                                </a>
-                                <ul class="dropdown-menu" style="margin-left: 50px;">
-                                    <li>
-                                        <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('show_edit_student', student_id=child.id) }}">Профиль</a>
-                                    </li>
-                                    <li>
-                                        <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('student_school_record', student_id=child.id, month_index=0) }}">Табель</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        {% endfor %}
-                    {% endif %}
-                    <li class="{{ 'dropup' if current_user.rights in ['admin', 'user'] else 'dropdown' }}" id="menu-timetable">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <i class="material-icons">calendar_month</i>
-                            <p>Расписание<span class="caret"></span></p>
-                        </a>
-                        <ul class="dropdown-menu" style="margin-left: 50px;">
-                            <li id="menu-gen-timetable">
-                                <a class="spinner-trigger" href="{{ url_for('timetable', week=0) }}">Расписание общее</a>
-                            </li>
-                            <li id="menu-extra-timetable">
-                                <a class="spinner-trigger" href="{{ url_for('extra_timetable', week=0) }}">Расписание допов</a>
-                            </li>
-                            <li id="menu-individual-timetable">
-                                <a class="spinner-trigger" href="{{ url_for('individual_timetable', week=0) }}">Расписание индив</a>
-                            </li>
-                            <li id="menu-school-timetable">
-                                <a class="spinner-trigger" href="{{ url_for('school_timetable', week=0, day=0) }}">Расписание школьное</a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% if current_user.rights != 'parent' %}
-                        <li id="menu-after-school">
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('after_school', month_index=0) }}">
-                                <i class="material-icons">diversity_2</i>
-                                <p>Продленка</p>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
+        {% block sidebar %}
+            {% include 'sidebar.html' %}
+        {% endblock %}
+
         <div class="main-panel">
-            <nav class="navbar navbar-transparent navbar-absolute">
-                <div class="container-fluid">
-                    <div class="navbar-header">
-                        <ul class="nav navbar-nav navbar-left">
-                            <li class="open">
-                                <a id="toggle-sidebar" href="#pablo" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
-                                    <i class="material-icons">menu</i>
-                                <div class="ripple-container"></div></a>
-                            </li>
-                        </ul>
-                    </div>
-                    <ul class="nav navbar-nav navbar-right" style="margin-right:20px;">
-                        {% if current_user.rights in ['admin', 'user'] %}
-                            <li>
-                                <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('finances') }}">
-                                    <i class="material-icons">account_balance</i>
-                                </a>
-                            </li>
-                        {% endif %}
-                        <li>
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('settings') }}">
-                                <i class="material-icons">settings</i>
-                            </a>
-                        </li>
-                        <li style="margin-top:8px; font-weight:500">{{ current_user.username }}</li>
-                        <li>
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('auth.logout') }}">
-                                <i class="material-icons">exit_to_app</i>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+            {% block navbar %}
+                {% include 'navbar.html' %}
+            {% endblock %}
             <div class="content">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert {{ 'alert-danger' if category == 'error' else 'alert-success' if category == 'success' else 'alert-info' }} alert-with-icon" data-notify="container">
-                                <button type="button" aria-hidden="true" class="close" onclick="$('.alert').hide();">×</button>
-                                <i data-notify="icon" class="material-icons">add_alert</i>
-                                <span data-notify="message">
-                                    <b> {{ message }} </b>
-                                </span>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
+                {% block messages %}
+                    {% include 'messages.html' %}
+                {% endblock %}
                 <div class="container-fluid">
                     {% block content %}{% endblock %}
                 </div>

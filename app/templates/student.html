@@ -1389,7 +1389,7 @@
                                                     <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Финансовая операция</h4>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
+                                                    <form class="finance-form" action="{{ url_for('finance.add_finance_operation') }}" method="post">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                         <input type="hidden" name="person_id" value="{{ student.id }}">
                                                         <div class="row">

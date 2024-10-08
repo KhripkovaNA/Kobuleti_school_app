@@ -1,36 +1,18 @@
-from app.models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, SchoolClass, \
-    SubjectType, SubscriptionType, StudentAttendance, SchoolLessonJournal, Finance, UserAction
+from .app_settings.models import SubscriptionType
+from .app_settings.service import user_action
+from .common_servicies.service import (
+    DAYS_OF_WEEK, MONTHS,
+    CHILD, ADULT, TEACHER, CHILD_SELF, CHOOSE, OTHER, LOCAL_TZ,
+    get_today_date, get_period, get_date
+)
+from .finance.models import Finance
+from .finance.service import finance_operation
+from .models import Person, Contact, parent_child_table, Employee, Subject, Subscription, Lesson, SchoolClass, \
+    SubjectType, StudentAttendance, SchoolLessonJournal
 from datetime import datetime, timedelta
-import pytz
 from app import db
 from sqlalchemy import and_, or_
 from dateutil.relativedelta import relativedelta
-from decimal import Decimal
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, Side, PatternFill, GradientFill
-from openpyxl.utils import get_column_letter
-
-DAYS_OF_WEEK = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
-MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль",
-          "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
-OPERATION_TYPES = {"cash": "нал", "bank": "счет", "balance": "депозит"}
-OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school': 'Продленка', 'subscription': 'Абонемент',
-                        'del_subscription': 'Абонемент', 'lesson': 'Занятие', 'del_lesson': 'Занятие',
-                        'balance': 'Депозит, пополнение/возврат', 'salary': 'Зарплата', 'dining': 'Питание',
-                        'school': 'Школа',
-                        'stationery': 'Канцелярия', 'finance': 'Прочее', 'sublease': 'Аренда',
-                        'assessment': 'Аттестация', 'collection': 'Инкассация', 'household': 'Хозтовары'}
-CHILD = "Ребенок"
-ADULT = "Взрослый"
-TEACHER = "Учитель"
-CHILD_SELF = "Сам ребенок"
-CHOOSE = "Выбрать"
-OTHER = "Другое"
-LOCAL_TZ = pytz.timezone('Asia/Tbilisi')
-
-
-def get_today_date():
-    return datetime.now(LOCAL_TZ).date()
 
 
 def conjugate_lessons(number):
@@ -1461,12 +1443,6 @@ def day_lessons_list(day_room_lessons):
     return lessons_for_day
 
 
-def get_date(day_of_week, week=0):
-    today = get_today_date()
-    day_of_week_date = today - timedelta(days=today.weekday()) + timedelta(days=day_of_week) + week * timedelta(weeks=1)
-    return day_of_week_date
-
-
 def get_weekday_date(day_of_week, date=None):
     if date is None:
         date = get_today_date()
@@ -1565,14 +1541,14 @@ def check_conflicting_lessons(lessons, date, start_time, end_time, classes,
                               room, teacher, split_classes, lesson_id=None):
     filter_conditions = [
         lambda lesson: lesson.start_time < end_time and lesson.end_time > start_time and lesson.room_id == room,
-        lambda
-            lesson: lesson.start_time < end_time and lesson.end_time > start_time and lesson.teacher_id == teacher
+        lambda lesson: lesson.start_time < end_time and lesson.end_time > start_time and lesson.teacher_id == teacher
     ]
 
     if not split_classes:
         filter_conditions.append(
-            lambda lesson: lesson.start_time < end_time and lesson.end_time > start_time and
-                           any(cl.id in classes for cl in lesson.school_classes)
+            lambda lesson: lesson.start_time < end_time and lesson.end_time > start_time and any(
+                cl.id in classes for cl in lesson.school_classes
+            )
         )
 
     conflicting_lessons = [
@@ -2493,11 +2469,6 @@ def subject_record(subject_id, month_index):
     return record_dict, lesson_datetimes, sorted_subject_students, month
 
 
-def get_period(month_index):
-    result_date = get_today_date() + relativedelta(months=month_index)
-    return result_date.month, result_date.year
-
-
 def get_day(day_index):
     result_date = get_today_date() + timedelta(days=day_index)
     return result_date
@@ -2668,330 +2639,6 @@ def handle_after_school_adding(student_id, form, period):
         )
 
         return new_after_school_subscription, period_text
-
-
-def finance_operation(person, amount, operation_type, description, service,
-                      service_id=None, balance=False, subject_id=None, date=None):
-    if not date:
-        date = get_today_date()
-
-    if balance:
-        person.balance += Decimal(amount)
-    elif operation_type == 'balance':
-        person.balance += Decimal(amount)
-        operation_type = None
-        balance = True
-
-    new_operation = Finance(
-        person_id=person.id if person else None,
-        date=date,
-        amount=amount,
-        operation_type=operation_type,
-        student_balance=balance,
-        description=description,
-        service=service,
-        service_id=service_id,
-        balance_state=person.balance if person else None,
-        subject_id=subject_id
-    )
-    db.session.add(new_operation)
-    db.session.flush()
-
-
-def download_timetable(week, user):
-    workbook = Workbook()
-    sheet = workbook.active
-    central = Alignment(horizontal="center")
-    thin_border = Border(left=Side(style='thin'),
-                         right=Side(style='thin'),
-                         top=Side(style='thin'),
-                         bottom=Side(style='thin'))
-    thick_border = Border(left=Side(style='thick'),
-                          right=Side(style='thick'),
-                          top=Side(style='thick'),
-                          bottom=Side(style='thick'))
-    large_font = Font(bold=True, size=16)
-    bold_font = Font(bold=True)
-
-    date_start = get_date(0, week)
-    date_end = get_date(4, week)
-    dates = get_date_range(week)
-    max_length = 1
-    last_row_ind = 1
-    school_classes_query = SchoolClass.query.order_by(SchoolClass.school_class)
-
-    if user.rights == "parent":
-        class_list = [person.school_class_id for person in user.user_persons.all()]
-        school_classes = school_classes_query.filter(SchoolClass.id.in_(class_list)).all()
-    else:
-        school_classes = school_classes_query.all()
-
-    for school_class in school_classes:
-        timetable = Lesson.query.filter(
-            Lesson.date >= date_start,
-            Lesson.date <= date_end,
-            Lesson.school_classes.any(SchoolClass.id == school_class.id)
-        ).order_by(Lesson.start_time).all()
-
-        start_end_time = []
-
-        sheet.cell(last_row_ind + 1, 1).value = school_class.school_name
-        sheet.cell(last_row_ind + 1, 1).alignment = central
-        sheet.cell(last_row_ind + 1, 1).border = thick_border
-        sheet.cell(last_row_ind + 1, 1).font = large_font
-
-        for ind, date in enumerate(dates, start=2):
-            sheet.cell(last_row_ind, ind).value = DAYS_OF_WEEK[ind - 2]
-            sheet.cell(last_row_ind, ind).alignment = central
-            sheet.cell(last_row_ind, ind).border = thick_border
-            sheet.cell(last_row_ind, ind).font = bold_font
-            sheet.cell(last_row_ind + 1, ind).value = date
-            sheet.cell(last_row_ind + 1, ind).alignment = central
-            sheet.cell(last_row_ind + 1, ind).border = thick_border
-
-        last_row_ind = sheet.max_row
-
-        for lesson in timetable:
-            lesson_time = f"{lesson.start_time:%H:%M}-{lesson.end_time:%H:%M}"
-            lesson_date = f"{lesson.date:%d.%m}"
-            col_ind = dates.index(lesson_date) + 2
-            if lesson_time not in start_end_time:
-                start_end_time.append(lesson_time)
-                ind = len(start_end_time) + last_row_ind
-                sheet.cell(ind, 1).value = lesson_time
-                sheet.cell(ind, 1).border = thick_border
-                sheet.cell(ind, 1).alignment = central
-            row_ind = start_end_time.index(lesson_time) + last_row_ind + 1
-            cell = sheet.cell(row_ind, col_ind)
-            if cell.value:
-                cell.value += f" / {lesson.subject.name}"
-                first_color = cell.fill.start_color.index
-                second_color = lesson.room.color.replace('#', '')
-                cell.fill = GradientFill(stop=(first_color, second_color))
-            else:
-                cell.value = lesson.subject.name
-                color = lesson.room.color.replace('#', '')
-                cell.fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
-                cell.alignment = central
-
-        new_last_row_ind = sheet.max_row
-
-        for col_ind in range(2, len(dates) + 2):
-            for row_ind in range(last_row_ind + 1, new_last_row_ind + 1):
-                current_cell = sheet.cell(row_ind, col_ind)
-                current_cell.border = thin_border
-                if current_cell.value:
-                    if len(str(current_cell.value)) > max_length:
-                        max_length = len(current_cell.value)
-
-        last_row_ind = new_last_row_ind + 2
-
-    for col in range(1, sheet.max_column + 1):
-        adjusted_width = 12 if col == 1 else max_length + 2
-        sheet.column_dimensions[get_column_letter(col)].width = adjusted_width
-
-    return workbook, dates
-
-
-def sort_finance_operations(report_date):
-    lesson_categories = ['Абонемент', 'Занятие']
-    finances = Finance.query.filter_by(date=report_date).all()
-    day_finance_operations = {oper_type: {} for oper_type in OPERATION_TYPES.keys()}
-    day_subjects = set()
-
-    def sort_finances(oper_type, category):
-        if category not in day_finance_operations[oper_type].keys():
-            day_finance_operations[oper_type][category] = {"Приход": plus, "Расход": minus}
-        else:
-            day_finance_operations[oper_type][category]["Приход"] += plus
-            day_finance_operations[oper_type][category]["Расход"] += minus
-
-    for fin in finances:
-        if fin.student_balance:
-            plus = fin.amount if fin.amount > 0 else 0
-            minus = abs(fin.amount) if fin.amount < 0 else 0
-        else:
-            plus = abs(fin.amount) if fin.amount < 0 else 0
-            minus = fin.amount if fin.amount > 0 else 0
-        category = OPERATION_CATEGORIES[fin.service]
-        if category in lesson_categories:
-            category = fin.subject.name if fin.subject_id else "Занятие"
-            day_subjects.add(category)
-
-        if fin.operation_type == "cash":
-            sort_finances("cash", category)
-        elif fin.operation_type == "bank":
-            sort_finances("bank", category)
-        if fin.student_balance:
-            sort_finances("balance", category)
-
-    subject_list = sorted(list(day_subjects)) if day_subjects else []
-
-    return day_finance_operations, subject_list
-
-
-def day_completed_lessons(report_date):
-    completed_lessons = StudentAttendance.query.join(Subject).filter(
-        StudentAttendance.date == report_date
-    ).order_by(Subject.name).all()
-    day_lessons_dict = {}
-    subjects_list = []
-
-    if completed_lessons:
-        for record in completed_lessons:
-            subject_name = record.subject.name
-            subject_type = 'доп' if record.subject.subject_type.name == 'extra' else 'инд'
-            subject = (subject_name, subject_type)
-            if subject not in subjects_list:
-                subjects_list.append(subject)
-                day_lessons_dict[subject] = record.price_paid
-            else:
-                day_lessons_dict[subject] += record.price_paid
-
-    return day_lessons_dict, subjects_list
-
-
-def download_finance_report(report_date):
-    fields = ["Категория", "Приход", "Расход"]
-    categories = ['Продленка', 'Депозит, пополнение/возврат', 'Зарплата', 'Питание', 'Школа',
-                  'Канцелярия', 'Инкассация', 'Хозтовары', 'Аренда', 'Аттестация', 'Прочее']
-    operation_types = OPERATION_TYPES.keys()
-    day_finance_operations, subject_categories = sort_finance_operations(report_date)
-    all_categories = subject_categories + categories
-
-    completed_lessons_dict, subjects_list = day_completed_lessons(report_date)
-
-    workbook = Workbook()
-    sheet = workbook.active
-    central = Alignment(horizontal="center")
-    thin_border = Border(left=Side(style='thin'),
-                         right=Side(style='thin'),
-                         top=Side(style='thin'),
-                         bottom=Side(style='thin'))
-    thick_border = Border(left=Side(style='thick'),
-                          right=Side(style='thick'),
-                          top=Side(style='thick'),
-                          bottom=Side(style='thick'))
-    large_font = Font(bold=True, size=16)
-    bold_font = Font(bold=True)
-    last_row_ind = 1
-    for oper_type in operation_types:
-        sheet.merge_cells(f'A{last_row_ind}:C{last_row_ind}')
-        sheet[f'A{last_row_ind}'] = OPERATION_TYPES[oper_type]
-        sheet[f'A{last_row_ind}'].alignment = central
-        for row in sheet[f'A{last_row_ind}:C{last_row_ind}']:
-            for cell in row:
-                cell.border = thick_border
-        sheet[f'A{last_row_ind}'].font = large_font
-        last_row_ind += 1
-
-        for ind, field in enumerate(fields, start=1):
-            sheet.cell(last_row_ind, ind).value = field
-            sheet.cell(last_row_ind, ind).alignment = central
-            sheet.cell(last_row_ind, ind).border = thin_border
-            sheet.cell(last_row_ind, ind).font = bold_font
-        last_row_ind += 1
-        first_row = last_row_ind
-
-        for category in all_categories:
-            if category in day_finance_operations[oper_type].keys():
-                sheet.cell(last_row_ind, 1).value = category
-                sheet.cell(last_row_ind, 1).border = thin_border
-                plus = day_finance_operations[oper_type][category]["Приход"]
-                minus = day_finance_operations[oper_type][category]["Расход"]
-                sheet.cell(last_row_ind, 2).value = plus
-                sheet.cell(last_row_ind, 3).value = minus
-                sheet.cell(last_row_ind, 2).border = thin_border
-                sheet.cell(last_row_ind, 3).border = thin_border
-                last_row_ind += 1
-
-        last_row_ind += 1
-
-        if oper_type == "cash":
-            sheet.cell(last_row_ind, 1).value = "Остаток на начало дня"
-            sheet.cell(last_row_ind, 1).border = thin_border
-            sheet.cell(last_row_ind, 1).font = bold_font
-            sheet.cell(last_row_ind, 2).border = thin_border
-            sheet.cell(last_row_ind, 3).value = 0
-            sheet.cell(last_row_ind, 3).font = bold_font
-            sheet.cell(last_row_ind, 3).border = thin_border
-            sheet.cell(last_row_ind + 1, 1).value = "Остаток на конец дня"
-            sheet.cell(last_row_ind + 1, 1).border = thin_border
-            sheet.cell(last_row_ind + 1, 1).font = bold_font
-            sheet.cell(last_row_ind + 1, 2).border = thin_border
-
-            func_str = f'= C{last_row_ind} + SUM(B{first_row}:B{last_row_ind - 2}) - ' \
-                       f'SUM(C{first_row}:C{last_row_ind - 2})'
-            last_row_ind += 1
-            sheet.cell(last_row_ind, 3).value = func_str
-            sheet.cell(last_row_ind, 3).border = thin_border
-            sheet.cell(last_row_ind, 3).font = bold_font
-
-        else:
-            sheet.cell(last_row_ind, 1).value = "Оборот за день"
-            sheet.cell(last_row_ind, 1).border = thin_border
-            sheet.cell(last_row_ind, 1).font = bold_font
-            sheet.cell(last_row_ind, 2).border = thin_border
-            func_str = f'= SUM(B{first_row}:B{last_row_ind - 2}) - ' \
-                       f'SUM(C{first_row}:C{last_row_ind - 2})'
-            sheet.cell(last_row_ind, 3).value = func_str
-            sheet.cell(last_row_ind, 3).font = bold_font
-            sheet.cell(last_row_ind, 3).border = thin_border
-
-        last_row_ind += 3
-
-    if subjects_list:
-        sheet.merge_cells(f'A{last_row_ind}:C{last_row_ind}')
-        sheet[f'A{last_row_ind}'] = f'Занятия {report_date:%d.%m.%y}'
-        sheet[f'A{last_row_ind}'].alignment = central
-        for row in sheet[f'A{last_row_ind}:C{last_row_ind}']:
-            for cell in row:
-                cell.border = thick_border
-        sheet[f'A{last_row_ind}'].font = large_font
-        last_row_ind += 1
-
-        subject_fields = ['Занятие', 'Вид', 'Сумма']
-        for ind, field in enumerate(subject_fields, start=1):
-            sheet.cell(last_row_ind, ind).value = field
-            sheet.cell(last_row_ind, ind).alignment = central
-            sheet.cell(last_row_ind, ind).border = thin_border
-            sheet.cell(last_row_ind, ind).font = bold_font
-        last_row_ind += 1
-        first_subject_row = last_row_ind
-
-        for subject in subjects_list:
-            sheet.cell(last_row_ind, 1).value = subject[0]
-            sheet.cell(last_row_ind, 1).font = bold_font
-            sheet.cell(last_row_ind, 1).border = thin_border
-            sheet.cell(last_row_ind, 2).value = subject[1]
-            sheet.cell(last_row_ind, 2).border = thin_border
-            sheet.cell(last_row_ind, 3).value = float(completed_lessons_dict[subject])
-            sheet.cell(last_row_ind, 3).border = thin_border
-            last_row_ind += 1
-        subject_func_str = f'= SUM(C{first_subject_row}:C{last_row_ind - 1})'
-        sheet.cell(last_row_ind, 1).value = 'Всего'
-        sheet.cell(last_row_ind, 1).border = thin_border
-        sheet.cell(last_row_ind, 2).border = thin_border
-        sheet.cell(last_row_ind, 3).value = subject_func_str
-        sheet.cell(last_row_ind, 3).border = thin_border
-
-    for col_ind in range(1, sheet.max_column + 1):
-        max_length = 0
-        for row_ind in range(1, sheet.max_row + 1):
-            current_cell = sheet.cell(row_ind, col_ind)
-            if current_cell.value:
-                if len(str(current_cell.value)) > max_length and not str(current_cell.value).startswith('='):
-                    max_length = len(str(current_cell.value))
-        adjusted_width = max_length + 2
-        sheet.column_dimensions[get_column_letter(col_ind)].width = adjusted_width
-
-    return workbook
-
-
-def get_date_range(week):
-    date_start = get_date(0, week)
-    dates = [f"{date_start + timedelta(day):%d.%m}" for day in range(7)]
-    return dates
 
 
 def filter_day_lessons(form):
@@ -3361,11 +3008,3 @@ def add_new_event(form):
 
     else:
         return ('Мероприятие не добавлено, есть занятия в это же время', 'error'), None
-
-
-def user_action(user, action_description):
-    new_action = UserAction(
-        user_id=user.id,
-        description=action_description
-    )
-    db.session.add(new_action)

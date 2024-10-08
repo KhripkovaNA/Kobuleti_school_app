@@ -1,0 +1,13 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert {{ 'alert-danger' if category == 'error' else 'alert-success' if category == 'success' else 'alert-info' }} alert-with-icon" data-notify="container">
+                <button type="button" aria-hidden="true" class="close" onclick="$('.alert').hide();">×</button>
+                <i data-notify="icon" class="material-icons">add_alert</i>
+                <span data-notify="message">
+                    <b> {{ message }} </b>
+                </span>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}

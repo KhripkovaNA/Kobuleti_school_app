@@ -125,7 +125,7 @@
                                                                     <h4 class="modal-title">Изменить финансовую операцию</h4>
                                                                 </div>
                                                                 <div class="modal-body" style="padding-top:10px;">
-                                                                    <form class="change-finance-form" action="{{ url_for('finances') }}" method="post">
+                                                                    <form class="change-finance-form" action="{{ url_for('finance.finances') }}" method="post">
                                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                                         <input type="hidden" name="operation_id" value="{{ operation.id }}">
                                                                         <div class="row">
@@ -175,7 +175,7 @@
                         </div>
                     </div>
                 {% else %}
-                    <p>Финансовых операций пока нет</p>
+                    <p style="height: 120px; padding-top:20px;">Финансовых операций пока нет</p>
                 {% endif %}
                 {% if render_type == 'last_weeks' %}
                     <div class="row">
@@ -231,7 +231,7 @@
                             </div>
                         <div class="col-md-6">
                             <button class="btn btn-sm pull-right" data-background-color="purple">
-                                <a class="spinner-trigger" href="{{ url_for('all_finances') }}">
+                                <a class="spinner-trigger" href="{{ url_for('finance.all_finances') }}">
                                     <i class="material-icons">assured_workload</i> Все финансовые операции
                                 </a>
                             </button>
@@ -252,7 +252,7 @@
                                         <h4 class="modal-title">Финансовая операция</h4>
                                     </div>
                                     <div class="modal-body">
-                                        <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
+                                        <form class="finance-form" action="{{ url_for('finance.add_finance_operation') }}" method="post">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <div class="row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
@@ -475,7 +475,7 @@
                                         <h4 class="modal-title">Зарплата</h4>
                                     </div>
                                     <div class="modal-body">
-                                        <form class="salary-form" action="{{ url_for('salary') }}" method="post">
+                                        <form class="salary-form" action="{{ url_for('finance.salary') }}" method="post">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <div class="row">
                                                 <label class="control-label col-md-3" style="padding-left:44px;">Сотрудник:</label>
@@ -638,7 +638,7 @@
                                         <h4 class="modal-title">Возврат за занятие</h4>
                                     </div>
                                     <div class="modal-body">
-                                        <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
+                                        <form class="finance-form" action="{{ url_for('finance.add_finance_operation') }}" method="post">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <div class="row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
@@ -717,7 +717,7 @@
                                         <h4 class="modal-title">Инкассация</h4>
                                     </div>
                                     <div class="modal-body">
-                                        <form class="finance-form" action="{{ url_for('add_finance_operation') }}" method="post">
+                                        <form class="finance-form" action="{{ url_for('finance.add_finance_operation') }}" method="post">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <input type="hidden" name="operation_category" value="collection">
                                             <div class="row">
@@ -768,7 +768,7 @@
                                         <h4 class="modal-title">Сформировать отчет</h4>
                                     </div>
                                     <div class="modal-body">
-                                        <form class="finance-report-form" action="{{ url_for('finance_report') }}" method="post">
+                                        <form class="finance-report-form" action="{{ url_for('finance.finance_report') }}" method="post">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <div class="row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
@@ -793,7 +793,7 @@
                 {% else %}
                     <div class="col-md-12">
                         <button class="btn btn-sm pull-right" data-background-color="purple">
-                            <a class="spinner-trigger" href="{{ url_for('finances') }}">
+                            <a class="spinner-trigger" href="{{ url_for('finance.finances') }}">
                                 <i class="material-icons">account_balance</i> Последние финансовые операции
                             </a>
                         </button>

@@ -31,4 +31,10 @@ app.register_blueprint(auth)
 from app.main.routes import main
 app.register_blueprint(main)
 
+from app.app_settings.routes import app_settings
+app.register_blueprint(app_settings)
+
+from app.finance.routes import finance
+app.register_blueprint(finance)
+
 from app import routes, models

@@ -20,7 +20,7 @@
                     </button>
                 </div>
                 <div  class="collapse" id="edit-password">
-                    <form class="change-password-form" method="post" action="{{ url_for('change_password') }}">
+                    <form class="change-password-form" method="post" action="{{ url_for('settings.change_password') }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="row">
                             <div class="form-group">
@@ -70,7 +70,7 @@
                         </button>
                     </div>
                     <div  class="collapse" id="add-user">
-                        <form class="add-user-form" method="post" action="{{ url_for('create_user') }}">
+                        <form class="add-user-form" method="post" action="{{ url_for('settings.create_user') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group">
@@ -128,7 +128,7 @@
                         </button>
                     </div>
                     <div  class="collapse" id="add-parent">
-                        <form class="change-class-form" method="post" action="{{ url_for('change_parent') }}">
+                        <form class="change-class-form" method="post" action="{{ url_for('settings.change_parent') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group">
@@ -172,7 +172,7 @@
                                 </div>
                             </div>
                         </form>
-                        <form class="add-parent-form" method="post" action="{{ url_for('create_user') }}">
+                        <form class="add-parent-form" method="post" action="{{ url_for('settings.create_user') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <h4 class="title" style="margin-left: 27px;">Добавить родителя</h4>
@@ -233,7 +233,7 @@
                         </button>
                     </div>
                     <div  class="collapse" id="rooms">
-                        <form class="change-room-form" method="post" action="{{ url_for('change_add_room') }}">
+                        <form class="change-room-form" method="post" action="{{ url_for('settings.change_add_room') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group">
@@ -258,7 +258,7 @@
                                 </div>
                             </div>
                         </form>
-                        <form class="add-room-form" method="post" action="{{ url_for('change_add_room') }}">
+                        <form class="add-room-form" method="post" action="{{ url_for('settings.change_add_room') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <h4 class="title" style="margin-left: 27px;">Добавить кабинет</h4>
@@ -296,7 +296,7 @@
                         </button>
                     </div>
                     <div  class="collapse" id="school_classes">
-                        <form class="change-class-form" method="post" action="{{ url_for('change_add_class') }}">
+                        <form class="change-class-form" method="post" action="{{ url_for('settings.change_add_class') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group">
@@ -321,7 +321,7 @@
                                 </div>
                             </div>
                         </form>
-                        <form class="add-class-form" method="post" action="{{ url_for('change_add_class') }}">
+                        <form class="add-class-form" method="post" action="{{ url_for('settings.change_add_class') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <h4 class="title" style="margin-left: 27px;">Добавить класс</h4>
@@ -359,7 +359,7 @@
                         </button>
                     </div>
                     <div  class="collapse" id="subscriptions">
-                        <form class="change-subscription-form" method="post" action="{{ url_for('change_add_subscription') }}">
+                        <form class="change-subscription-form" method="post" action="{{ url_for('settings.change_add_subscription') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group">
@@ -399,7 +399,7 @@
                                 </div>
                             </div>
                         </form>
-                        <form class="add-subscription-form" method="post" action="{{ url_for('change_add_subscription') }}">
+                        <form class="add-subscription-form" method="post" action="{{ url_for('settings.change_add_subscription') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <h4 class="title" style="margin-left: 27px;">Добавить абонемент</h4>
@@ -453,7 +453,7 @@
                         </button>
                     </div>
                     <div  class="collapse" id="after-school">
-                        <form class="change-after-school-form" method="post" action="{{ url_for('change_add_after_school') }}">
+                        <form class="change-after-school-form" method="post" action="{{ url_for('settings.change_add_after_school') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group">
@@ -497,7 +497,7 @@
                                 </div>
                             </div>
                         </form>
-                        <form class="add-after-school-form" method="post" action="{{ url_for('change_add_after_school') }}">
+                        <form class="add-after-school-form" method="post" action="{{ url_for('settings.change_add_after_school') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <h4 class="title" style="margin-left: 27px;">Добавить цену на продленку</h4>

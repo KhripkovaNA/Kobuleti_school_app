@@ -136,28 +136,6 @@ class Subscription(db.Model):
     period = db.Column(db.String(50))
 
 
-class SubscriptionType(db.Model):
-    __tablename__ = 'subscription_types'
-
-    id = db.Column(db.Integer, primary_key=True)
-    lessons = db.Column(db.Integer)
-    period = db.Column(db.String(50), default="")
-    duration = db.Column(db.Integer)
-    price = db.Column(db.Numeric(8, 2))
-    subscriptions = db.relationship('Subscription', backref='subscription_type')
-
-
-class Room(db.Model):
-    __tablename__ = 'rooms'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    color = db.Column(db.String(16))
-
-    def __repr__(self):
-        return f"<Room {self.id}: {self.name}>"
-
-
 class Lesson(db.Model):
     __tablename__ = 'lessons'
 
@@ -249,34 +227,6 @@ class Report(db.Model):
 
     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     person = db.relationship('Person', backref='reports')
-
-
-class Finance(db.Model):
-    __tablename__ = 'finances'
-
-    id = db.Column(db.Integer, primary_key=True)
-    person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
-    person = db.relationship('Person', backref='finances')
-    date = db.Column(db.Date, default=lambda: datetime.now(pytz.timezone('Asia/Tbilisi')).date())
-    amount = db.Column(db.Numeric(8, 2))
-    operation_type = db.Column(db.String(50))
-    student_balance = db.Column(db.Boolean, default=False)
-    description = db.Column(db.String(120))
-    service = db.Column(db.String(16))
-    service_id = db.Column(db.Integer)
-    balance_state = db.Column(db.Numeric(8, 2))
-    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
-    subject = db.relationship('Subject', backref='purchases')
-
-
-class UserAction(db.Model):
-    __tablename__ = 'user_actions'
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship('User', backref='actions')
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Tbilisi')))
-    description = db.Column(db.String(120))
 
 
 class StudentAttendance(db.Model):
