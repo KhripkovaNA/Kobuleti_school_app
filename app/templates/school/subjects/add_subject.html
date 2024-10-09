@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Новый предмет</h4>
+            </div>
+            <div class="card-content">
+                <form class="login-form" action="{{ url_for('school.add_subject') }}" method="post" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="row">
+                        <div class="form-group">
+                            <div class="row {{ 'has-error' if form.subject_name.errors }}">
+                                <label class="control-label col-md-3">Название:</label>
+                                <div class="col-md-6">
+                                    {{ form.subject_name(class="form-control") }}
+                                    {% for error in form.subject_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="row {{ 'has-error' if form.subject_short_name.errors }}">
+                                <label class="control-label col-md-3">Короткое название:</label>
+                                <div class="col-md-6">
+                                    {{ form.subject_short_name(class="form-control") }}
+                                    {% for error in form.subject_short_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Тип занятия:</label>
+                                <div class="col-md-6">
+                                    {{ form.subject_type(class="form-control") }}
+                                </div>
+                            </div>
+                            <div class="row {{ 'has-error' if form.subject_price.errors }}">
+                                <label class="control-label col-md-3">Цена разового занятия:</label>
+                                <div class="col-md-3">
+                                    {{ form.subject_price(class="form-control float-field") }}
+                                    {% for error in form.subject_price.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="row price_row {{ 'has-error' if form.subject_school_price.errors }}">
+                                <label class="control-label col-md-3">Специальная цена (Продленка):</label>
+                                <div class="col-md-3 optional-field">
+                                    {{ form.subject_school_price(class="form-control float-field") }}
+                                    {% for error in form.subject_school_price.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-2 checkbox-option">
+                                    <label class="contact-radio-label">Нет
+                                        {{ form.no_subject_school_price }}
+                                        <span class="custom-checkbox"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row subscription-row {{ 'has-error' if form.subscription_types.errors }}">
+                                <label class="control-label col-md-3">Абонемент:</label>
+                                <div class="col-md-6 optional-field">
+                                    {{ form.subscription_types(class="form-control select-search", placeholder="Добавить абонемент") }}
+                                    {% for error in form.subscription_types.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-2 checkbox-option">
+                                    <label class="contact-radio-label">Нет
+                                        {{ form.no_subscription }}
+                                        <span class="custom-checkbox"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="control-label col-md-3">Учителя:</label>
+                                <div class="col-md-6">
+                                    {{ form.teachers(class="form-control select-search", placeholder="Добавить учителя") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-sm" data-background-color="main">Добавить занятие</button>
+                                <a href="{{ url_for('school.subjects') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

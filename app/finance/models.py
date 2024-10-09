@@ -1,14 +1,14 @@
 from app import db
 from datetime import datetime
-from ..common_servicies.service import LOCAL_TZ
+from app.common_servicies.service import LOCAL_TZ
 
 
 class Finance(db.Model):
-    __tablename__ = 'finance'
+    __tablename__ = 'finances'
 
     id = db.Column(db.Integer, primary_key=True)
     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
-    person = db.relationship('Person', backref='finance')
+    person = db.relationship('Person', backref='finances')
     date = db.Column(db.Date, default=lambda: datetime.now(LOCAL_TZ).date())
     amount = db.Column(db.Numeric(8, 2))
     operation_type = db.Column(db.String(50))

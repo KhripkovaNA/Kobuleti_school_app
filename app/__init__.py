@@ -37,4 +37,14 @@ app.register_blueprint(app_settings)
 from app.finance.routes import finance
 app.register_blueprint(finance)
 
-from app import routes, models
+from app.school import school
+app.register_blueprint(school)
+
+from app.timetable.routes import timetable
+app.register_blueprint(timetable)
+
+from app.school_classes.routes import school_classes
+app.register_blueprint(school_classes)
+
+from app.after_school.routes import after_school
+app.register_blueprint(after_school)

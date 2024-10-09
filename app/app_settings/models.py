@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-from ..common_servicies.service import LOCAL_TZ
+from app.common_servicies.service import LOCAL_TZ
 
 
 class Room(db.Model):

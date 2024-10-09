@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">{{ after_school_subject.name }}. {% if render_type == "month" %}{{ months[period[0] - 1].capitalize() }} {{ period[1] }}{% else %}{{ date }}{% endif %}</h4>
+            </div>
+            <div class="card-content">
+                {% if after_school_subject.students %}
+                    <div class="scroll-timetable" style="height:73vh;">
+                        <table class="table table-hover">
+                            <thead class="text-success">
+                                <th width="6%">Смена</th>
+                                <th>Клиент</th>
+                                <th>Дата рождения, Возраст</th>
+                                <th>Посещение</th>
+                                {% if (render_type == "month" and period == current_period) or (render_type == "day" and day_index == 0) %}
+                                    <th width="20%">Доп занятия</th>
+                                    <th>Баланс</th>
+                                {% endif %}
+                            </thead>
+                            <tbody>
+                                {% for student in after_school_subject.students %}
+                                    <tr>
+                                        <td>{{ student.shift if student.shift < 10 }}</td>
+                                        <td>
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=student.id) }}">
+                                                {{ loop.index }}. {{ student.last_name }} {{ student.first_name }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <p>{{ student.birth_date if student.birth_date }}</p>
+                                            <p>{{ student.age if student.age }}</p>
+                                        </td>
+                                        <td>
+                                            {% for attendance in student.attendance %}
+                                                {% if render_type == "month" %}
+                                                    <p>{{ attendance }}</p>
+                                                {% else %}
+                                                    <p>{{ attendance.split('(')[0] }}</p>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        {% if (render_type == "month" and period == current_period) or (render_type == "day" and day_index == 0) %}
+                                            <td width="20%">
+                                                {% for activity in student.activities %}
+                                                    {{ activity }}{{',' if not loop.last }}
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                                {% if student.balance_plus %}
+                                                    <p style="color:green"><b>{{ student.balance_plus }}</b></p>
+                                                {% elif student.balance_minus %}
+                                                    <p style="color:red"><b>{{ student.balance_minus }}</b></p>
+                                                {% else %}
+                                                    <p><b>0</b></p>
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p style="height: 120px; padding-top:20px;">Клиентов пока нет</p>
+                {% endif %}
+                {% if render_type == "month" and month_index >= 0 %}
+                    <div class="row" style="margin-left:45px;">
+                        {% if current_user.rights in ["admin", "user"] %}
+                            <button class="btn btn-xs" data-background-color="orange" data-toggle="modal" data-target="#after-school-modal">
+                                <i class="material-icons">add_box</i> Добавить клиента
+                            </button>
+                        {% else %}
+                            <button class="btn btn-xs" data-background-color="orange" title="Нет прав администратора" disabled>
+                                <i class="material-icons">add_box</i> Добавить клиента
+                            </button>
+                        {% endif %}
+                        <div class="modal fade" id="after-school-modal" role="dialog">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h4 class="modal-title">{{ months[period[0] - 1].capitalize() }}. Добавить клиента</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form class="after-school-form" action="{{ url_for('after_school.after_school_purchase') }}" method="post">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <input type="hidden" class="period" name="period" value="{{ period[0] }}-{{ period[1] }}">
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
+                                                <div class="col-md-7">
+                                                    <select name="selected_client" class="form-control select-search">
+                                                        <option disabled selected></option>
+                                                        {% for client in possible_clients %}
+                                                            <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Срок:</label>
+                                                <div class="col-md-7">
+                                                    <select name="term" class="form-control term-selector">
+                                                        <option value="month">Месяц</option>
+                                                        <option value="week">Неделя</option>
+                                                        <option value="day">День</option>
+                                                        <option value="hour">Часы</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row shift-row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Смена:</label>
+                                                <div class="col-md-7">
+                                                    <select name="shift" class="form-control">
+                                                        <option value="0">Нет</option>
+                                                        <option value="1">1 смена</option>
+                                                        <option value="2">2 смена</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row hours-row" style="display:none;">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Часы:</label>
+                                                <div class="col-md-7 field-div">
+                                                    <input type="number" name="hours" class="form-control field-input hour-number" min="1" max="4" value="1">
+                                                </div>
+                                            </div>
+                                            <div class="row day-row" style="display:none;">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
+                                                <div class="col-md-7 date-div">
+                                                    <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ date }}">
+                                                </div>
+                                            </div>
+                                            <div class="row week-range-div" style="display: none;">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Выбранная неделя:</label>
+                                                <div class="col-md-7">
+                                                    <div class="form-control week-range"></div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
+                                                <div class="col-md-7">
+                                                    <select name="operation_type" class="form-control">
+                                                        <option value="cash">Оплата наличными</option>
+                                                        <option value="bank">Оплата на счет</option>
+                                                        <option value="balance">Оплата с депозита</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row price-row">
+                                                <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
+                                                <div class="col-md-7">
+                                                    <select name="subscription_type" class="form-control price-selector"></select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 col-md-offset-3">
+                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                        Оплатить
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                        Отмена
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-12">
+                        {% if render_type == "month" %}
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school.after_school_month', month_index=month_index - 1) }}">
+                                    <i class="material-icons">navigate_before</i>Предыдущий месяц
+                                </a>
+                            </button>
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school.after_school_month', month_index=month_index + 1) }}">
+                                    Следующий месяц<i class="material-icons">navigate_next</i>
+                                </a>
+                            </button>
+                            <button class="btn btn-xs pull-right" data-background-color="purple">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school.after_school_days', day_index=day_index) }}">
+                                    <i class="material-icons">today</i> Дни
+                                </a>
+                            </button>
+                        {% else %}
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school.after_school_days', day_index=day_index - 1) }}">
+                                    <i class="material-icons">navigate_before</i>Предыдущий день
+                                </a>
+                            </button>
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school.after_school_days', day_index=day_index + 1) }}">
+                                    Следующий день<i class="material-icons">navigate_next</i>
+                                </a>
+                            </button>
+                            <button class="btn btn-xs pull-right" data-background-color="purple">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('after_school.after_school_month', month_index=month_index) }}">
+                                    <i class="material-icons">calendar_month</i> Месяц
+                                </a>
+                            </button>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% if render_type == "month" %}
+    <script type="text/javascript">
+        var afterSchoolPrices = {{ after_school_prices | tojson | safe }};
+    </script>
+{% endif %}
+{% endblock %}

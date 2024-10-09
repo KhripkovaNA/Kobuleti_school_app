@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Журнал заятия {{ subject.name }} ({{ subject.subject_type.description }}). {{ month.capitalize() }}</h4>
+            </div>
+            <div class="card-content">
+                {% if subject_records %}
+                    <div class="scroll-timetable" style="height:80vh;">
+                        <table class="table table-hover" id="table-report" style="width:auto;">
+                            <thead class="text-success">
+                                <tr>
+                                    <th class="fixed-column" style="width:50px; vertical-align:bottom;">Клиент</th>
+                                    {% for datetime in datetimes %}
+                                        <th>
+                                            <a class="spinner-trigger" href="{{ url_for('timetable.lesson', lesson_str='1-'+datetime[1]|string) }}">
+                                                Занятие {{ datetime[0] }}
+                                            </a>
+                                        </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                    <tr>
+                                        <td class="fixed-column">
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=student[1]) }}">
+                                                {{ student[0] }}
+                                            </a>
+                                        </td>
+                                        {% for datetime in datetimes %}
+                                            <td style="font-size: 12px;">
+                                                {{ subject_records[student][datetime] if subject_records[student].get(datetime) }}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p style="margin-top: 15px;">Нет пройденных занятий в этом месяце</p>
+                {% endif %}
+                <div class="row" style="{{ 'margin-top: 100px;' if not subject_records }}">
+                    <div class="col-md-12">
+                        <button class="btn btn-sm" data-background-color="orange">
+                            <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school.subject', subject_id=subject.id, month_index=month_index-1) }}">
+                                <i class="material-icons">navigate_before</i>Предыдущий месяц
+                            </a>
+                        </button>
+                        {% if month_index < 0 %}
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school.subject', subject_id=subject.id, month_index=month_index+1) }}">
+                                    Следующий месяц<i class="material-icons">navigate_next</i>
+                                </a>
+                            </button>
+                        {% endif %}
+                        <div class="dropup pull-right">
+                            <button class="btn btn-sm dropdown-toggle" type="button" data-toggle="dropdown" data-background-color="main">
+                                <i class="material-icons" style="color: white;">library_books</i> Другое занятие
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                {% for other_subject in other_subjects %}
+                                    <li><a class="spinner-trigger" href="{{ url_for('school.subject', subject_id=other_subject.id, month_index=month_index) }}">{{ other_subject.name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

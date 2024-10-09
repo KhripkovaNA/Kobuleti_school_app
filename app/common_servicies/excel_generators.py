@@ -2,8 +2,10 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Side, Font, GradientFill, PatternFill
 from openpyxl.utils import get_column_letter
 from .service import OPERATION_TYPES, get_date, get_date_range, OPERATION_CATEGORIES, DAYS_OF_WEEK
-from ..finance.models import Finance
-from ..models import SchoolClass, StudentAttendance, Subject, Lesson
+from app.finance.models import Finance
+from app.school.subjects.models import Subject
+from app.school_classes.models import SchoolClass
+from app.timetable.models import StudentAttendance, Lesson
 
 
 def sort_finance_operations(report_date):

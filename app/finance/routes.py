@@ -4,14 +4,15 @@ from datetime import timedelta, datetime
 from io import BytesIO
 from decimal import Decimal
 from .models import Finance
-from .service import finance_operation
-from .. import db
-from ..app_functions import subscription_subjects_data, get_after_school_prices
-from ..app_settings.service import user_action
-from ..common_servicies.excel_generators import download_finance_report
-from ..common_servicies.service import MONTHS, OPERATION_CATEGORIES, OPERATION_TYPES, get_today_date, get_period
-from ..models import Person, Subject, SubjectType
-
+from .service import finance_operation, purchase_subscription
+from app import db
+from app.app_settings.service import user_action
+from app.common_servicies.excel_generators import download_finance_report
+from app.common_servicies.service import MONTHS, OPERATION_CATEGORIES, OPERATION_TYPES, get_today_date, get_period
+from app.school.models import Person
+from app.school.subjects.models import Subject, SubjectType
+from app.school.subjects.service import subscription_subjects_data
+from ..after_school.service import get_after_school_prices
 
 finance = Blueprint('finance', __name__)
 
@@ -71,14 +72,15 @@ def finances():
             Subject.subject_type.has(SubjectType.name.in_(["individual", "extra"]))
         ).all()
 
-        return render_template('finance/finances.html', finance_operations=finance_operations, all_persons=all_persons,
-                               today=f'{today:%d.%m.%Y}', subscription_subjects=subscription_subjects,
-                               after_school_prices=after_school_prices, months=months, subjects=subject_tuples,
-                               render_type="last_weeks")
+        return render_template(
+            'finance/finances.html', finance_operations=finance_operations, all_persons=all_persons,
+            today=f'{today:%d.%m.%Y}', subscription_subjects=subscription_subjects, months=months,
+            after_school_prices=after_school_prices, subjects=subject_tuples, render_type="last_weeks"
+        )
 
     else:
         flash('Нет прав администратора', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
 
 @finance.route('/all-finances')
@@ -87,11 +89,13 @@ def all_finances():
     if current_user.rights in ["admin", "user"]:
         finance_operations = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
 
-        return render_template('finance/finances.html', finance_operations=finance_operations, render_type="all")
+        return render_template(
+            'finance/finances.html', finance_operations=finance_operations, render_type="all"
+        )
 
     else:
         flash('Нет прав администратора', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
 
 @finance.route('/finance-report', methods=['POST'])
@@ -114,7 +118,7 @@ def finance_report():
 
     else:
         flash('Нет прав администратора', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
 
 @finance.route('/finance-operation', methods=['POST'])
@@ -206,5 +210,71 @@ def salary():
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при внесении депозита: {str(e)}', 'error')
+
+    return redirect(request.referrer)
+
+
+@finance.route('/deposit', methods=['POST'])
+@login_required
+def deposit():
+    try:
+        if current_user.rights in ["admin", "user"]:
+            student_id = int(request.form.get('student_id')) if request.form.get('student_id') else None
+            amount = request.form.get('deposit')
+            student = Person.query.filter_by(id=student_id).first()
+            if not student:
+                flash('Клиент не выбран', 'error')
+                return redirect(request.referrer)
+
+            if amount:
+                type_of_operation = request.form.get('operation_type')
+                if type_of_operation.startswith('minus'):
+                    deposit = -Decimal(amount)
+                else:
+                    deposit = Decimal(amount)
+
+                operation_type = type_of_operation.split("_")[1]
+                description = f"Пополнение баланса клиента"
+                finance_operation(student, deposit, operation_type, description, "balance", None, True)
+                user_description = f"{description} {student.last_name} {student.first_name} " \
+                                   f"({OPERATION_TYPES.get(operation_type, '?')} {deposit:.1f})"
+                user_action(current_user, user_description)
+                db.session.commit()
+                flash(f'Депозит внесен на счет клиента {student.last_name} {student.first_name}', 'success')
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при внесении депозита: {str(e)}', 'error')
+
+    return redirect(request.referrer)
+
+
+@finance.route('/subscription', methods=['POST'])
+@login_required
+def subscription():
+    try:
+        if current_user.rights in ["admin", "user"]:
+            new_subscription, price, operation_type = purchase_subscription(request.form)
+            db.session.add(new_subscription)
+            db.session.flush()
+            description = f"Покупка абонемента {new_subscription.subject.name}"
+            finance_operation(new_subscription.student, -price, operation_type, description,
+                              "subscription", new_subscription.id, subject_id=new_subscription.subject_id)
+            user_action(current_user, f"Покупка абонемента {new_subscription.subject.name} клиентом "
+                                      f"{new_subscription.student.last_name} {new_subscription.student.first_name}")
+            db.session.commit()
+            flash('Новый абонемент добавлен в систему', 'success')
+
+            return redirect(url_for('school.show_edit_student', student_id=new_subscription.student_id))
+
+        else:
+            flash('Нет прав администратора', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при добавлении абонемента: {str(e)}', 'error')
 
     return redirect(request.referrer)

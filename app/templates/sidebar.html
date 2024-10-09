@@ -6,7 +6,7 @@
         <ul class="nav">
             {% if current_user.rights in ['admin', 'user'] %}
                 <li id="menu-students">
-                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('students') }}">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.students') }}">
                         <i class="material-icons">diversity_3</i>
                         <p>Клиенты</p>
                     </a>
@@ -14,13 +14,13 @@
             {% endif %}
             {% if current_user.rights in ['admin', 'user', 'teacher'] %}
                 <li id="menu-employees">
-                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('employees') }}">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.employees') }}">
                         <i class="material-icons">group</i>
                         <p>Сотрудники</p>
                     </a>
                 </li>
                 <li id="menu-subjects">
-                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('subjects') }}">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.subjects') }}">
                         <i class="material-icons">library_books</i>
                         <p>Занятия</p>
                     </a>
@@ -40,10 +40,10 @@
                     </a>
                     <ul class="dropdown-menu" style="margin-left: 50px;">
                         <li id="menu-school-students">
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_students', school_class=0) }}">Школьные классы</a>
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_classes.school_students', school_class=0) }}">Школьные классы</a>
                         </li>
                         <li id="menu-school-subjects">
-                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_subjects', school_class=0) }}">Школьные занятия</a>
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_classes.school_subjects', school_class=0) }}">Школьные занятия</a>
                         </li>
                     </ul>
                 </li>
@@ -57,10 +57,10 @@
                         </a>
                         <ul class="dropdown-menu" style="margin-left: 50px;">
                             <li>
-                                <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('show_edit_student', student_id=child.id) }}">Профиль</a>
+                                <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.show_edit_student', student_id=child.id) }}">Профиль</a>
                             </li>
                             <li>
-                                <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('student_school_record', student_id=child.id, month_index=0) }}">Табель</a>
+                                <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_classes.student_school_record', student_id=child.id, month_index=0) }}">Табель</a>
                             </li>
                         </ul>
                     </li>
@@ -73,22 +73,22 @@
                 </a>
                 <ul class="dropdown-menu" style="margin-left: 50px;">
                     <li id="menu-gen-timetable">
-                        <a class="spinner-trigger" href="{{ url_for('timetable', week=0) }}">Расписание общее</a>
+                        <a class="spinner-trigger" href="{{ url_for('timetable.full_timetable', week=0) }}">Расписание общее</a>
                     </li>
                     <li id="menu-extra-timetable">
-                        <a class="spinner-trigger" href="{{ url_for('extra_timetable', week=0) }}">Расписание допов</a>
+                        <a class="spinner-trigger" href="{{ url_for('timetable.extra_timetable', week=0) }}">Расписание допов</a>
                     </li>
                     <li id="menu-individual-timetable">
-                        <a class="spinner-trigger" href="{{ url_for('individual_timetable', week=0) }}">Расписание индив</a>
+                        <a class="spinner-trigger" href="{{ url_for('timetable.individual_timetable', week=0) }}">Расписание индив</a>
                     </li>
                     <li id="menu-school-timetable">
-                        <a class="spinner-trigger" href="{{ url_for('school_timetable', week=0, day=0) }}">Расписание школьное</a>
+                        <a class="spinner-trigger" href="{{ url_for('school_classes.school_timetable', week=0, day=0) }}">Расписание школьное</a>
                     </li>
                 </ul>
             </li>
             {% if current_user.rights != 'parent' %}
                 <li id="menu-after-school">
-                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('after_school', month_index=0) }}">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('after_school.after_school_month', month_index=0) }}">
                         <i class="material-icons">diversity_2</i>
                         <p>Продленка</p>
                     </a>

@@ -3,8 +3,10 @@ from flask_login import login_required, current_user
 from .models import Room, SubscriptionType
 from .service import user_action
 from app import db
-from ..auth.models import User
-from ..models import SchoolClass, Person
+from app.auth.models import User
+from app.school.models import Person
+from app.school_classes.models import SchoolClass
+
 
 app_settings = Blueprint('settings', __name__)
 

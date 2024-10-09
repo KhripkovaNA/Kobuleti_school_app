@@ -3,7 +3,8 @@ from flask_login import login_user, logout_user, current_user
 from app import db
 from .forms import LoginForm
 from .models import User
-from ..app_settings.service import user_action
+from app.app_settings.service import user_action
+
 
 auth = Blueprint('auth', __name__)
 

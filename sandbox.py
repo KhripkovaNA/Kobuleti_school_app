@@ -1,24 +1,14 @@
 from app import app, db
-from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, \
-    parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
-    student_lesson_registered_table, StudentAttendance, student_subject_table, \
-    teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
-    SchoolLessonJournal, Report, Finance, UserAction
 from sqlalchemy.orm import class_mapper
-from sqlalchemy import and_, or_, distinct, text, func
+from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-import pytz
-from dateutil.relativedelta import relativedelta
-from app.app_functions import subjects_data, get_weekday_date, get_today_date, format_subscription_types, \
-    get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
-    lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record, \
-    conjugate_lessons, calculate_week, get_date_range, day_school_lessons_dict, format_subscription_type, \
-    school_subject_record, student_record
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from openpyxl.utils import get_column_letter
-import re
-import csv
+from app.app_settings.models import Room
+from app.school.employees.models import Employee
+from app.school.models import Contact, Person
+from app.school.subjects.models import Subject, SubjectType
+from app.school.subscriptions.models import Subscription
+from app.school_classes.models import SchoolClass
+from app.timetable.models import Lesson
 
 app.app_context().push()
 

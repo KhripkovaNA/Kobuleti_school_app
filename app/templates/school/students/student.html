@@ -1,0 +1,1457 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <div class="card data-tables">
+            <div class="card-header" data-background-color="main">
+                <h4 class="title">Информация о клиенте</h4>
+            </div>
+            <div class="card-content">
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student information show *-*-*-*-*-*-*-*-*-* -->
+
+                <div class="section section-student" data-target="student" style="{{ 'display:none' if render_type == 'edit_student' else 'display:block' }};">
+                    <div class="row">
+                        <h4 class="title" style="margin-left:27px;">{{ student.last_name }} {{ student.first_name }} {{ student.patronym }}</h4>
+                        <div class="form-group">
+                            {% if student.person_type == 'Ребенок' %}
+                            <div class="row">
+                                <label class="control-label col-md-3">Дата рождения:</label>
+                                <div class="col-md-2">
+                                    <div class="form-control">
+                                        {% if student.birth_date %}
+                                            {{ student.birth_date }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="row">
+                                <label class="control-label col-md-3">Статус:</label>
+                                <div class="col-md-6">
+                                    <div class="form-control">{{ student.status_info }}</div>
+                                </div>
+                            </div>
+                            {% if student.children_info %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Дети:</label>
+                                    <div class="col-md-6">
+                                        <div class="form-control">
+                                            {% for child in student.children_info %}
+                                                <p>
+                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=child[0]) }}">
+                                                        {{ child[1] }}
+                                                    </a>
+                                                </p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if student.roles %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Сотрудник:</label>
+                                    <div class="col-md-6">
+                                        <div class="form-control">
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_employee', employee_id=student.id) }}">
+                                                {{ student.employee_roles }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if current_user.rights in ["admin", "user"] %}
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student information edit *-*-*-*-*-*-*-*-*-* -->
+
+                <div class="form form-student" data-target="student" style="{{ 'display:block' if render_type == 'edit_student' else 'display:none' }};">
+                    <form class="login-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                        {{ edit_student_form.hidden_tag() }}
+                        <div class="row">
+                            <div class="form-group">
+                                <div class="row {{ 'has-error' if edit_student_form.last_name.errors }}">
+                                    <label class="control-label col-md-3">Фамилия:</label>
+                                    <div class="col-md-6">
+                                        {{ edit_student_form.last_name(class="form-control") }}
+                                        {% for error in edit_student_form.last_name.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="row {{ 'has-error' if edit_student_form.first_name.errors }}">
+                                    <label class="control-label col-md-3">Имя:</label>
+                                    <div class="col-md-6">
+                                        {{ edit_student_form.first_name(class="form-control") }}
+                                        {% for error in edit_student_form.first_name.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Отчество:</label>
+                                    <div class="col-md-6">
+                                        {{ edit_student_form.patronym(class="form-control") }}
+                                    </div>
+                                </div>
+                                {% if student.person_type == 'Ребенок' %}
+                                    <div class="row {{ 'has-error' if edit_student_form.dob.errors }}">
+                                        <label class="control-label col-md-3">Дата рождения:</label>
+                                        <div class="col-md-2 datepicker-container">
+                                            {{ edit_student_form.dob(class="form-control datepicker", placeholder="дд.мм.гггг") }}
+                                            {% for error in edit_student_form.dob.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif  %}
+                                <div class="row">
+                                    <label class="control-label col-md-3">Статус:</label>
+                                    <div class="col-md-3">
+                                        {% if current_user.rights != 'admin' %}
+                                            {{ edit_student_form.status(class="form-control", id="status-select", disabled=True, style="cursor:default; background-color:#eee;", title="Нет прав руководителя") }}
+                                        {% else %}
+                                            {{ edit_student_form.status(class="form-control", id="status-select") }}
+                                        {% endif %}
+                                    </div>
+                                    <div id="pause-date" style="display: none;" class="{{ 'has-error' if edit_student_form.pause_until.errors }}">
+                                        <label class="control-label col-md-1">до:</label>
+                                        <div class="col-md-2">
+                                            <input type="text" name="pause_until" class="form-control datepicker" placeholder="дд.мм.гггг" value="{{ student.pause_date }}">
+                                            {% for error in edit_student_form.pause_until.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div id="leaving-reason" style="display: none;">
+                                        <label class="control-label col-md-3">Причина:</label>
+                                        <div class="col-md-6">
+                                            <textarea name="leaving_reason" class="form-control">{{ student.leaving_reason }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="submit" name="form_student_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
+                                    <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <hr>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Switch buttons between sections *-*-*-*-*-*-*-*-*-* -->
+
+                <div class="row switch-buttons-row">
+                    <div class="col-md-2 col-md-offset-1">
+                        <button type="button" id="show-contacts-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
+                            <i class="material-icons">people</i> Контакты
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        {% if student.status in ["Клиент", "Лид"] %}
+                            <button type="button" id="show-subjects-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
+                                <i class="material-icons">school</i> Занятия
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn btn-sm" data-background-color="orange" disabled>
+                                <i class="material-icons">school</i> Занятия
+                            </button>
+                        {% endif %}
+                    </div>
+                    {% if student.status == "Клиент" %}
+                        <div class="col-md-2">
+                            <button type="button" id="show-subscriptions-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
+                                <i class="material-icons">ballot</i> Абонементы
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" id="show-after-school-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
+                                <i class="material-icons">diversity_2</i> Продленка
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm" data-background-color="orange" disabled>
+                                <i class="material-icons">ballot</i> Абонементы
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm" data-background-color="orange" disabled>
+                                <i class="material-icons">diversity_2</i> Продленка
+                            </button>
+                        </div>
+                    {% endif %}
+                    <div class="col-md-2">
+                        <button type="button" id="show-finances-btn" class="btn btn-sm subsection-btn" data-background-color="orange">
+                            <i class="material-icons">request_quote</i> Финансы
+                        </button>
+                    </div>
+                </div>
+                <hr>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Contact section *-*-*-*-*-*-*-*-*-* -->
+
+                <div id="show-contacts" style="{{ 'display:block' if render_type.startswith('contact') else 'display:none' }};">
+                    <h4 class="title" style="margin-left: 27px;">Основной контакт</h4>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Main contact information show *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="section section-main-contact" data-target="main-contact" style="{{ 'display:none' if render_type == 'contact_main_edit' else 'display:block' }};">
+                        <div class="row">
+                            {% if student.main_contact.id!=student.id %}
+                                <h5 class="title" style="margin-left:54px;">
+                                    {{ student.main_contact.type }} {{ student.main_contact.last_name }} {{ student.main_contact.first_name }} {{ student.main_contact.patronym }}
+                                </h5>
+                            {% elif student.person_type == 'Ребенок' %}
+                                <h5 class="title" style="margin-left:54px;">
+                                    {{ student.main_contact.type }}
+                                </h5>
+                            {% endif %}
+                            <div class="form-group">
+                                <div class="row">
+                                    <label class="control-label col-md-3">Телеграм:</label>
+                                    <div class="col-md-6">
+                                        <div class="form-control">{{ student.main_contact.contacts[0].telegram }}</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Телефон:</label>
+                                    <div class="col-md-6">
+                                        <div class="form-control">{{ student.main_contact.contacts[0].phone }}</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="control-label col-md-3">Другое:</label>
+                                    <div class="col-md-6">
+                                        <div class="form-control">{{ student.main_contact.contacts[0].other_contact }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if current_user.rights in ["admin", "user"] %}
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Main contact information edit *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="form form-main-contact" data-target="main-contact" style="{{ 'display:block' if render_type == 'contact_main_edit' else 'display:none' }};">
+                        <form class="login-form contact-section" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                            {{ main_contact.hidden_tag() }}
+                            <div class="row">
+                                <h5 class="title" style="margin-left:54px;">Изменить контакт</h5>
+                                <div class="form-group">
+                                    {% if student.person_type == 'Ребенок' %}
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Контакт:</label>
+                                            <div class="col-md-6">
+                                                <div class="form-control">{{ student.main_contact.type }}</div>
+                                            </div>
+                                        </div>
+                                        {% if student.main_contact.id!=student.id %}
+                                            <div class="contact-info">
+                                                <div class="row {{ 'has-error' if main_contact.last_name.errors }}">
+                                                    <label class="control-label col-md-3">Фамилия:</label>
+                                                    <div class="col-md-6">
+                                                        {{ main_contact.last_name(class="form-control") }}
+                                                        {% for error in main_contact.last_name.errors %}
+                                                            <span>{{ error }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <div class="row {{ 'has-error' if main_contact.first_name.errors }}">
+                                                    <label class="control-label col-md-3">Имя:</label>
+                                                    <div class="col-md-6">
+                                                        {{ main_contact.first_name(class="form-control") }}
+                                                        {% for error in main_contact.last_name.errors %}
+                                                            <span>{{ error }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="control-label col-md-3">Отчество:</label>
+                                                    <div class="col-md-6">
+                                                        {{ main_contact.patronym(class="form-control") }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Телеграм:</label>
+                                        <div class="col-md-6">
+                                            {{ main_contact.telegram(class="form-control") }}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Телефон:</label>
+                                        <div class="col-md-6">
+                                            {{ main_contact.phone(class="form-control") }}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Другое:</label>
+                                        <div class="col-md-6">
+                                            {{ main_contact.other_contact(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button type="submit" name="form_main_contact_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
+                                        <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Additional contacts information show *-*-*-*-*-*-*-*-*-* -->
+
+                    {% if student.additional_contacts %}
+                        <h4 class="title" style="margin-left: 27px;">Дополнительные контакты</h4>
+                        {% for contact in student.additional_contacts %}
+                            <div class="section section-cont-{{ loop.index }}" data-target="cont-{{ loop.index }}" style="{{ 'display:none' if render_type == 'contact_edit_' + loop.index|string else 'display:block' }};">
+                                <div class="row">
+                                    {% if contact.id!=student.id %}
+                                        <h5 class="title" style="margin-left:54px;">
+                                            {{ contact.type }} {{ contact.last_name }} {{ contact.first_name }} {{ contact.patronym }}
+                                        </h5>
+                                    {% else %}
+                                        <h5 class="title" style="margin-left:54px;">
+                                            {{ contact.type }}
+                                        </h5>
+                                    {% endif %}
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Телеграм:</label>
+                                            <div class="col-md-6">
+                                                <div class="form-control">{{ contact.contacts[0].telegram }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Телефон:</label>
+                                            <div class="col-md-6">
+                                                <div class="form-control">{{ contact.contacts[0].phone }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Другое:</label>
+                                            <div class="col-md-6">
+                                                <div class="form-control">{{ contact.contacts[0].other_contact }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if current_user.rights in ["admin", "user"] %}
+                                    <div class="footer" style="margin-left:30px;">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                                <a class="btn btn-sm" data-background-color="red" href="#" data-toggle="modal" data-target="#delete-contact-{{ contact.id }}-modal">
+                                                    <i class="material-icons">delete_forever</i> Удалить
+                                                </a>
+                                            </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Contact delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                                            <div class="modal fade" id="delete-contact-{{ contact.id }}-modal" role="dialog">
+                                                <div class="modal-dialog modal-sm">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление контакта</h4>
+                                                        </div>
+                                                        <div class="modal-body" style="padding-top:10px;">
+                                                            <p class="control-label">
+                                                                {% if student.id != contact.id %}
+                                                                    Вы уверены, что хотите удалить контакт {{ contact.last_name }} {{ contact.first_name }}?
+                                                                {% else %}
+                                                                    Вы уверены, что хотите удалить контакты клиента {{ student.last_name }} {{ student.first_name }}?
+                                                                {% endif %}
+                                                            </p>
+                                                            <form class="login-form" action="{{ url_for('main.delete_record') }}" method="post">
+                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                                <input type="hidden" name="record_type" value="contact">
+                                                                <input type="hidden" name="contact_id" value="{{ contact.id }}">
+                                                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                                                <div class="row">
+                                                                    <div class="col-md-10 col-md-offset-1">
+                                                                        <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                            Да
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                            Нет
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Additional contacts information edit *-*-*-*-*-*-*-*-*-* -->
+
+                            <div class="form form-cont-{{ loop.index }}" data-target="cont-{{ loop.index }}" style="{{ 'display:block' if render_type == 'contact_edit_' + loop.index|string else 'display:none' }};">
+                                <form class="login-form contact-section" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                                    {{ add_cont_forms[loop.index0].hidden_tag() }}
+                                    <div class="row">
+                                        <h5 class="title" style="margin-left:54px;">Изменить контакт</h5>
+                                        <div class="form-group">
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Контакт:</label>
+                                                <div class="col-md-6">
+                                                    <div class="form-control">{{ contact.type }}</div>
+                                                </div>
+                                                <div class="col-md-3 checkbox-option">
+                                                    <label class="contact-radio-label">Сделать основным
+                                                        {{ add_cont_forms[loop.index0].primary_contact }}
+                                                        <span class="custom-checkbox"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% if contact.id!=student.id %}
+                                                <div class="contact-info">
+                                                    <div class="row {{ 'has-error' if add_cont_forms[loop.index0].last_name.errors }}">
+                                                        <label class="control-label col-md-3">Фамилия:</label>
+                                                        <div class="col-md-6">
+                                                            {{ add_cont_forms[loop.index0].last_name(class="form-control") }}
+                                                            {% for error in add_cont_forms[loop.index0].last_name.errors %}
+                                                                <span>{{ error }}</span>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                    <div class="row {{ 'has-error' if add_cont_forms[loop.index0].first_name.errors }}">
+                                                        <label class="control-label col-md-3">Имя:</label>
+                                                        <div class="col-md-6">
+                                                            {{ add_cont_forms[loop.index0].first_name(class="form-control") }}
+                                                            {% for error in add_cont_forms[loop.index0].first_name.errors %}
+                                                                <span>{{ error }}</span>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-3">Отчество:</label>
+                                                        <div class="col-md-6">
+                                                            {{ add_cont_forms[loop.index0].patronym(class="form-control") }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Телеграм:</label>
+                                                <div class="col-md-6">
+                                                    {{ add_cont_forms[loop.index0].telegram(class="form-control") }}
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Телефон:</label>
+                                                <div class="col-md-6">
+                                                    {{ add_cont_forms[loop.index0].phone(class="form-control") }}
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Другое:</label>
+                                                <div class="col-md-6">
+                                                    {{ add_cont_forms[loop.index0].other_contact(class="form-control") }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer" style="margin-left:30px;">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <button type="submit" name="form_cont_{{ loop.index }}_submit" class="btn btn-sm" style="background-color:#4BD1A0;">Сохранить</button>
+                                                <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+            <!-- *-*-*-*-*-*-*-*-*-* Add new contact button *-*-*-*-*-*-*-*-*-* -->
+
+                    {% if student.person_type == 'Ребенок' and current_user.rights in ["admin", "user"] %}
+                        <div class="row" id="show-new-contact" style="margin-left:10px; {{ 'display:none' if render_type == 'contact_new' else 'display:block' }};">
+                            <div class="col-md-2">
+                                <button type="button" id="show-new-contact-btn" class="btn btn-sm" data-background-color="orange">
+                                    Добавить контакт
+                                </button>
+                            </div>
+                        </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* New contact form *-*-*-*-*-*-*-*-*-* -->
+
+                        <form class="login-form contact-section" id="new-contact-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" style="{{ 'display:block' if render_type == 'contact_new' else 'display:none' }};">
+                            {{ new_contact_form.hidden_tag() }}
+                            <div class="row">
+                                <h5 class="title" style="margin-left:54px;">Добавить контакт</h5>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label class="control-label col-md-3">Контакт:</label>
+                                        <div class="col-md-6">
+                                            {{ new_contact_form.relation(class="form-control contact-relation") }}
+                                        </div>
+                                        <div class="col-md-3 checkbox-option">
+                                            <label class="contact-radio-label">Сделать основным
+                                                {{ new_contact_form.primary_contact }}
+                                                <span class="custom-checkbox"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="row relation-other-row" style="display: none;">
+                                        <label class="control-label col-md-3">Контактное лицо:</label>
+                                        <div class="col-md-6">
+                                            {{ new_contact_form.other_relation(class="form-control") }}
+                                        </div>
+                                    </div>
+                                    <div  class="contact-selection">
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Данные контактного лица:</label>
+                                            <div class="col-md-6">
+                                                {{ new_contact_form.contact_select(class="form-control contact-select") }}
+                                            </div>
+                                        </div>
+                                        <div class="row contact-options-row {{ 'has-error' if new_contact_form.selected_contact.errors }}" style="display: none; margin-bottom: 10px;">
+                                            <label class="control-label col-md-3"></label>
+                                            <div class="col-md-6">
+                                                {{ new_contact_form.selected_contact(class="form-control contact-options select-search") }}
+                                                {% for error in new_contact_form.selected_contact.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="contact-information person-info-basic"></div>
+                                        <div class="contact-information person-info-contacts"></div>
+                                    </div>
+                                    <div class="contact-input" style="display: none;">
+                                        <div class="contact-info">
+                                            <div class="row {{ 'has-error' if new_contact_form.parent_last_name.errors }}">
+                                                <label class="control-label col-md-3">Фамилия:</label>
+                                                <div class="col-md-6">
+                                                    {{ new_contact_form.parent_last_name(class="form-control") }}
+                                                    {% for error in new_contact_form.parent_last_name.errors %}
+                                                        <span>{{ error }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <div class="row {{ 'has-error' if new_contact_form.parent_first_name.errors }}">
+                                                <label class="control-label col-md-3">Имя:</label>
+                                                <div class="col-md-6">
+                                                    {{ new_contact_form.parent_first_name(class="form-control") }}
+                                                    {% for error in new_contact_form.parent_first_name.errors %}
+                                                        <span>{{ error }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <label class="control-label col-md-3">Отчество:</label>
+                                                <div class="col-md-6">
+                                                    {{ new_contact_form.parent_patronym(class="form-control") }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Телеграм:</label>
+                                            <div class="col-md-6">
+                                                {{ new_contact_form.telegram(class="form-control") }}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Телефон:</label>
+                                            <div class="col-md-6">
+                                                {{ new_contact_form.phone(class="form-control") }}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="control-label col-md-3">Другое:</label>
+                                            <div class="col-md-6">
+                                                {{ new_contact_form.other_contact(class="form-control") }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button type="submit" name="form_cont_new_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
+                                        <button type="button" id="hide-new-contact-btn" class="btn btn-sm" data-background-color="red">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Subjects section *-*-*-*-*-*-*-*-*-* -->
+
+                <div id="show-subjects" style="display:none;">
+                    <h4 class="title" style="margin-left:27px;">Занятия</h4>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Subjects information show *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="section section-subjects" data-target="subjects">
+                        <div class="row">
+                            <div class="form-group">
+                                {% if student.all_subjects %}
+                                    <div class="row">
+                                        {% if student.status=="Лид"%}
+                                            <label class="control-label col-md-3">Интересуется:</label>
+                                        {% else %}
+                                            <label class="control-label col-md-3">Посещает:</label>
+                                        {% endif %}
+                                        <div class="col-md-6">
+                                            <div class="form-control">
+                                                {% for subject in student.all_subjects %}
+                                                    <p>{{ subject[0] }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row" style="margin-left:10px;">
+                                        <p>Занятий пока нет</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% if current_user.rights in ["admin", "user"] %}
+                                        {% if student.extra_subjects %}
+                                            <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                        {% endif %}
+                                        {% if student.status=="Клиент" and lesson_subjects %}
+                                            <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#lesson-modal">
+                                                <i class="material-icons">date_range</i> Записать
+                                            </a>
+                                        {% elif student.status=="Лид"  %}
+                                            <a href="" class="btn btn-sm lesson-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subject-modal">
+                                                <i class="material-icons">post_add</i> Интересующие направления
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Register for a lesson modal *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="lesson-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Запись на занятие</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="login-form" action="{{ url_for('timetable.lesson_register', student_id=student.id) }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="selected_subject" class="form-control lesson-subjects-select">
+                                                                {% for subject in lesson_subjects %}
+                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата и время занятия:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="lesson" class="form-control lesson-select"></select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Записать
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Add potential subject modal *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="subject-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Добавить интересующие направления</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="login-form" action="{{ url_for('school.student_subjects_add', student_id=student.id) }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятия:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="selected_subjects" class="form-control select-search" placeholder="Добавить занятие" multiple>
+                                                                {% for subject in potential_subjects.subjects %}
+                                                                    <option value="{{ subject[0] }}">{{ subject[1] }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Школа:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="selected_class" class="form-control select-search">
+                                                                <option value="">Нет</option>
+                                                                {% for school_class in potential_subjects.school %}
+                                                                    <option value="{{ school_class[0] }}">{{ school_class[1] }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Добавить
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Subjects information edit *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="form form-subjects" data-target="subjects" style="display: none;">
+                        <form class="login-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="form-group">
+                                    {% if student.all_subjects %}
+                                        {% for subject in student.all_subjects %}
+                                            <div class="row">
+                                                {% if student.status=="Лид" %}
+                                                    <label class="control-label col-md-3">{{ "Интересуется:" if loop.first }}</label>
+                                                    <div class="col-md-5">
+                                                        <p class="form-control" style="border-radius: 4px;">{{ subject[0] }}</p>
+                                                    </div>
+                                                    <div class="col-md-1">
+                                                        <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger del-btn-sm">Удалить</button>
+                                                    </div>
+                                                {% else %}
+                                                    <label class="control-label col-md-3">{{ "Посещает: " if loop.first }}</label>
+                                                    {% if subject[0] in student.extra_subjects %}
+                                                        <div class="col-md-5">
+                                                            <p class="form-control" style="border-radius: 4px;">{{ subject[0] }}</p>
+                                                        </div>
+                                                        <div class="col-md-1">
+                                                            <button type="submit" name="del_subject_btn" value="{{ subject[1] }}" class="btn btn-danger del-btn-sm">Удалить</button>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="col-md-6">
+                                                            <p class="form-control">{{ subject[0] }}</p>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-sm section-form-btn" style="background-color:#ef5350;">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Subscriptions section *-*-*-*-*-*-*-*-*-* -->
+
+                <div id="show-subscriptions" style="{{ 'display:block' if render_type == 'subscription' else 'display:none' }};">
+                    <h4 class="title" style="margin-left:27px;">Абонементы</h4>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Subscriptions information show *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="section section-subscriptions" data-target="subscriptions" style="{{ 'display:none' if render_type == 'subscription' else 'display:block' }};">
+                        <div class="row">
+                            <div class="form-group">
+                                {% if student.subscriptions_info %}
+                                    <div class="row">
+                                        <div class="col-md-9 table-responsive" style="padding-left:44px;">
+                                            <table class="table table-hover" style="table-layout: fixed;">
+                                                <thead class="text-success">
+                                                    <th>Занятие</th>
+                                                    <th style="text-align:center;">Остаток уроков</th>
+                                                    <th style="text-align:center;">Дата покупки</th>
+                                                    <th style="text-align:center;">Срок действия</th>
+                                                </thead>
+                                                <tbody>
+                                                    {% for subscription in student.subscriptions_info %}
+                                                        <tr>
+                                                            <td style="padding-top:15px; vertical-align:top;">{{ subscription.subject_name }}</td>
+                                                            <td style="padding: 12px 40px; vertical-align:top;">
+                                                                <div class="form-control">{{ subscription.lessons_left if subscription.lessons_left }}</div>
+                                                            </td>
+                                                            <td style="padding: 12px 30px; vertical-align:top;">
+                                                                <div class="form-control">{{ subscription.purchase_date }}</div>
+                                                            </td>
+                                                            <td style="padding: 12px 30px; vertical-align:top;">
+                                                                <div class="form-control">{{ subscription.end_date }}</div>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row" style="margin-left:10px;">
+                                        <p>Абонементов пока нет</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% if current_user.rights == "admin" %}
+                                        {% if student.subscriptions_info %}
+                                            <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if current_user.rights in ["admin", "user"] %}
+                                        <a href="#" class="btn btn-sm subscription-modal-trigger" data-background-color="purple" data-toggle="modal" data-target="#subscription-modal">
+                                            <i class="material-icons">addchart</i> Купить абонемент
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student subscription purchase *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="subscription-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="subscription-form" action="{{ url_for('subscription') }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <input type="hidden" name="student_id" value="{{ student.id }}"/>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="selected_subject" class="form-control subscription-select">
+                                                                {% for subject in subscription_subjects %}
+                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Тип абонемента:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="subscription_type" class="form-control subscription-type-select"></select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата покупки:</label>
+                                                        <div class="col-md-7 date-div">
+                                                            <input type="text" name="purchase_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="operation_type" class="form-control">
+                                                                <option value="cash">Оплата наличными</option>
+                                                                <option value="bank">Оплата на счет</option>
+                                                                <option value="balance">Оплата с депозита</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
+                                                        <div class="col-md-7">
+                                                            <p class="form-control price-display" style="color:green"></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-sm purchase-subscription" data-background-color="main">
+                                                                Оплатить
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+            <!-- *-*-*-*-*-*-*-*-*-* Subscriptions information edit *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="form form-subscriptions" data-target="subscriptions" style="{{ 'display:block' if render_type == 'subscription' else 'display:none' }};">
+                        <form class="login-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                            {{ subscriptions_form.hidden_tag() }}
+                            <div class="row">
+                                <div class="form-group">
+                                    {% if student.subscriptions_info %}
+                                        <div class="row">
+                                            <div class="col-md-11 table-responsive" style="padding-left:44px;">
+                                                <table class="table table-hover" style="table-layout: fixed;">
+                                                    <thead class="text-success">
+                                                        <th>Занятие</th>
+                                                        <th style="text-align:center;">Остаток уроков</th>
+                                                        <th style="text-align:center;">Дата покупки</th>
+                                                        <th style="text-align:center;">Срок действия</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for subscription_form in subscriptions_form.subscriptions %}
+                                                            <tr>
+                                                                <td style="padding-top:15px; vertical-align:top;">{{ subscription_form.subject_name.data }}</td>
+                                                                <td style="padding: 12px 40px; vertical-align:top;" class="{{ 'has-error' if subscription_form.lessons.errors }}">
+                                                                    {{ subscription_form.lessons(class="form-control") }}
+                                                                    {% for error in subscription_form.lessons.errors %}
+                                                                        <span>{{ error }}</span>
+                                                                    {% endfor %}
+                                                                </td>
+                                                                <td style="padding: 12px 30px; vertical-align:top;" class="{{ 'has-error' if subscription_form.purchase_date.errors }}">
+                                                                    {{ subscription_form.purchase_date(class="form-control datepicker", placeholder="дд.мм.гггг") }}
+                                                                    {% for error in subscription_form.purchase_date.errors %}
+                                                                        <span>{{ error }}</span>
+                                                                    {% endfor %}
+                                                                </td>
+                                                                <td style="padding: 12px 30px; vertical-align:top;" class="{{ 'has-error' if subscription_form.end_date.errors }}">
+                                                                    {{ subscription_form.end_date(class="form-control datepicker", placeholder="дд.мм.гггг") }}
+                                                                    {% for error in subscription_form.end_date.errors %}
+                                                                        <span>{{ error }}</span>
+                                                                    {% endfor %}
+                                                                </td>
+                                                                {{ subscription_form.subscription_id }}
+                                                                {% if subscription_form.full_subscription.data %}
+                                                                    <td>
+                                                                        <a class="btn btn-danger del-btn-sm" href="#" data-toggle="modal" data-target="#del-subscription-{{ subscription_form.subscription_id.data }}-modal">
+                                                                            Удалить
+                                                                        </a>
+                                                                    </td>
+                                                                {% endif %}
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button type="submit" name="form_subscriptions_submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
+                                        <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Subscription delete conformation *-*-*-*-*-*-*-*-*-* -->
+
+                        {% for subscription_form in subscriptions_form.subscriptions %}
+                            {% if subscription_form.full_subscription.data and current_user.rights == "admin" %}
+                                <div class="modal fade" id="del-subscription-{{ subscription_form.subscription_id.data }}-modal" role="dialog">
+                                    <div class="modal-dialog modal-sm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление абонемента</h4>
+                                            </div>
+                                            <div class="modal-body" style="padding-top:10px;">
+                                                <p class="control-label">
+                                                    Вы уверены, что хотите удалить абонемент {{ subscription_form.subject_name.data }}?
+                                                </p>
+                                                <form class="login-form" action="{{ url_for('main.delete_record') }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <input type="hidden" name="record_type" value="subscription">
+                                                    <input type="hidden" name="subscription_id" value="{{ subscription_form.subscription_id.data }}">
+                                                    <div class="row">
+                                                        <div class="col-md-10 col-md-offset-1">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Да
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Нет
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                    </div>
+                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* After-school section *-*-*-*-*-*-*-*-*-* -->
+
+                <div id="show-after-school" style="display: none;">
+                    <h4 class="title" style="margin-left:27px;">Продленка</h4>
+
+            <!-- *-*-*-*-*-*-*-*-*-* After-school information show *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="section section-after-school" data-target="after-school">
+                        <div class="row">
+                            <div class="form-group">
+                                {% if student.after_school_info %}
+                                    <div class="row">
+                                        <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                                            <table class="table table-hover" style="table-layout: fixed;">
+                                                <thead class="text-success">
+                                                    <th style="text-align:center;">Смена</th>
+                                                    <th style="text-align:center;">Период</th>
+                                                    <th style="text-align:center;">Срок</th>
+                                                </thead>
+                                                <tbody>
+                                                    {% for after_school_info in student.after_school_info %}
+                                                        <tr>
+                                                            <td style="text-align:center;">{% if after_school_info.shift %}{{ after_school_info.shift }} смена{% else %}Нет{% endif %}</td>
+                                                            <td style="text-align:center;">{{ after_school_info.period }}</td>
+                                                            <td style="text-align:center;">{{ after_school_info.validity }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row" style="margin-left:10px;">
+                                        <p>Не посещает продленку</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="footer" style="margin-left:30px;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% if student.after_school_info and current_user.rights == 'admin' %}
+                                        <button class="btn btn-sm section-form-btn" data-background-color="main">Изменить</button>
+                                    {% endif %}
+                                    {% if current_user.rights in ["admin", "user"] %}
+                                        <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#after-school-modal">
+                                            <i class="material-icons">addchart</i> Записать на продленку
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student after-school purchase *-*-*-*-*-*-*-*-*-* -->
+
+                                <div class="modal fade" id="after-school-modal" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Запись на продленку</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form class="after-school-form" action="{{ url_for('after_school.after_school_purchase') }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <input type="hidden" name="selected_client" value="{{ student.id }}">
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Месяц:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="period" class="form-control period">
+                                                                {% for month in months %}
+                                                                    <option value="{{ month[0] }}">{{ month[1] }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Срок:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="term" class="form-control term-selector">
+                                                                <option value="month">Месяц</option>
+                                                                <option value="week">Неделя</option>
+                                                                <option value="day">День</option>
+                                                                <option value="hour">Часы</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row shift-row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Смена:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="shift" class="form-control">
+                                                                <option value="0">Нет</option>
+                                                                <option value="1">1 смена</option>
+                                                                <option value="2">2 смена</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row hours-row" style="display:none;">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Часы:</label>
+                                                        <div class="col-md-7 field-div">
+                                                            <input type="number" name="hours" class="form-control field-input hour-number" min="1" max="4" value="1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row day-row" style="display:none;">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
+                                                        <div class="col-md-7 date-div">
+                                                            <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row week-range-div" style="display: none;">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Выбранная неделя:</label>
+                                                        <div class="col-md-7">
+                                                            <div class="form-control week-range"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="operation_type" class="form-control">
+                                                                <option value="cash">Оплата наличными</option>
+                                                                <option value="bank">Оплата на счет</option>
+                                                                <option value="balance">Оплата с депозита</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row price-row">
+                                                        <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
+                                                        <div class="col-md-7">
+                                                            <select name="subscription_type" class="form-control price-selector">
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6 col-md-offset-3">
+                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                Оплатить
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                Отмена
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* After-school information edit *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="form form-after-school" data-target="after-school" style="display: none;">
+                        <form class="login-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="form-group">
+                                    {% if student.after_school_info %}
+                                    <div class="row">
+                                        <div class="col-md-9 table-responsive" style="padding-left:44px;">
+                                            <table class="table table-hover" style="table-layout: fixed;">
+                                                <thead class="text-success">
+                                                    <th style="text-align:center;">Смена</th>
+                                                    <th style="text-align:center;">Период</th>
+                                                    <th style="text-align:center;">Срок</th>
+                                                </thead>
+                                                <tbody>
+                                                    {% for after_school_info in student.after_school_info %}
+                                                        <tr>
+                                                            <td style="text-align:center;">{% if after_school_info.shift %}{{ after_school_info.shift }} смена{% else %}Нет{% endif %}</td>
+                                                            <td style="text-align:center;">{{ after_school_info.period }}</td>
+                                                            <td style="text-align:center;">{{ after_school_info.validity }}</td>
+                                                            <td><button type="submit" name="del_after_school" value="{{ after_school_info.subscription_id }}" class="btn btn-danger del-btn-sm">Удалить</button></td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="row" style="margin-left:10px;">
+                                        <p>Не посещает продленку</p>
+                                    </div>
+                                {% endif %}
+                                </div>
+                            </div>
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-sm section-form-btn" data-background-color="red">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Finance section *-*-*-*-*-*-*-*-*-* -->
+
+                <div id="show-finances" style="display: none;">
+                    <h4 class="title" style="margin-left:27px;">{{ 'Финансовые операции' if current_user.rights != "parent" }}</h4>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Finance information show *-*-*-*-*-*-*-*-*-* -->
+
+                    <div class="section section-finances" data-target="finances">
+                        <div class="row">
+                            <div class="form-group">
+                                <div class="row">
+                                    <label class="control-label col-md-3">Баланс:</label>
+                                    <div class="col-md-2">
+                                        <div class="form-control">{{ student.balance|round(1) }} Лари</div>
+                                    </div>
+                                </div>
+                                {% if student.finance_operations and current_user.rights != "parent" %}
+                                    <div style="margin-top:15px;" class="row">
+                                        <div class="col-md-12 table-responsive" style="padding-left:44px;">
+                                            <div class="scroll-timetable" style="height: 25vh;">
+                                                <table class="table table-hover" style="table-layout: fixed;">
+                                                    <thead class="text-success">
+                                                        <th style="text-align:center;">Дата</th>
+                                                        <th style="text-align:center;">Нал/счет</th>
+                                                        <th style="text-align:center;">Депозит</th>
+                                                        <th style="text-align:center;">Остаток</th>
+                                                        <th width="50%">Описание</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for operation in student.finance_operations %}
+                                                            <tr>
+                                                                <td style="text-align:center;">{{ operation.date.strftime('%d.%m.%y') }}</td>
+                                                                {% if operation.student_balance %}
+                                                                    <td style="text-align:center;"></td>
+                                                                    <td style="text-align:center;">
+                                                                        {% if operation.amount > 0 %}
+                                                                            <p style="color:green"><b>+{{ operation.amount|round(1) }}</b></p>
+                                                                        {% elif operation.amount < 0 %}
+                                                                            <p style="color:red"><b>{{ operation.amount|round(1) }}</b></p>
+                                                                        {% else %}
+                                                                            <p><b>{{ operation.amount|round(1) }}</b></p>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                {% else %}
+                                                                    <td style="text-align:center;">
+                                                                        {% if operation.operation_type in ['cash', 'bank'] %}
+                                                                            {% if operation.amount > 0 %}
+                                                                                <p style="color:green"><b>+{{ operation.amount|round(1) }}</b></p>
+                                                                            {% elif operation.amount < 0 %}
+                                                                                <p style="color:red"><b>{{ operation.amount|round(1) }}</b></p>
+                                                                            {% else %}
+                                                                                <p><b>{{ operation.amount|round(1) }}</b></p>
+                                                                            {% endif %}
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td style="text-align:center;"></td>
+                                                                {% endif %}
+                                                                <td style="text-align:center; font-weight:400;"><i>{{ operation.balance_state|round(1) }}</i></td>
+                                                                <td>{{ operation.description }}</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% elif current_user.rights == "parent" %}
+                                    <div class="row" style="margin-left:10px;"></div>
+                                {% else %}
+                                    <div class="row" style="margin-left:10px;">
+                                        <p>Финансовых операций пока нет</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if current_user.rights in ["admin", "user"] %}
+                            <div class="footer" style="margin-left:30px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#deposit-modal">
+                                            <i class="material-icons">money</i> Пополнить баланс
+                                        </a>
+                                        <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#finance-modal">
+                                            <i class="material-icons">attach_money</i> Финансовая операция
+                                        </a>
+                                    </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student balance replenishment *-*-*-*-*-*-*-*-*-* -->
+
+                                    <div class="modal fade" id="deposit-modal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                    <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Пополнение депозита</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form class="login-form" action="{{ url_for('finance.deposit') }}" method="post">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <input type="hidden" name="student_id" value="{{ student.id }}">
+                                                        <div class="row">
+                                                            <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
+                                                            <div class="col-md-4">
+                                                                <select name="operation_type" class="form-control">
+                                                                    <option value="cash">Наличными</option>
+                                                                    <option value="bank">На счет</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <label class="control-label col-md-3" style="padding-left:44px;">Сумма:</label>
+                                                            <div class="col-md-4 field-div">
+                                                                <input type="number" class="form-control field-input required" name="deposit" step="any" min="0">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-6 col-md-offset-3">
+                                                                <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                    Внести
+                                                                </button>
+                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                    Отмена
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+            <!-- *-*-*-*-*-*-*-*-*-* Student finance operation *-*-*-*-*-*-*-*-*-* -->
+
+                                    <div class="modal fade" id="finance-modal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                    <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Финансовая операция</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form class="finance-form" action="{{ url_for('finance.add_finance_operation') }}" method="post">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <input type="hidden" name="person_id" value="{{ student.id }}">
+                                                        <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
+                                                            <div class="col-md-7 date-div">
+                                                                <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
+                                                            <div class="col-md-7">
+                                                                <select name="operation_type" class="form-control">
+                                                                    <option value="minus_cash">Оплата наличными</option>
+                                                                    <option value="minus_bank">Оплата на счет</option>
+                                                                    <option value="minus_balance">Оплата с депозита</option>
+                                                                    <option value="plus_cash">Возврат наличными</option>
+                                                                    <option value="plus_bank">Возврат co счета</option>
+                                                                    <option value="plus_balance">Возврат на депозит</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Описание:</label>
+                                                            <div class="col-md-7 field-div">
+                                                                <input type="text" name="description" class="form-control field-input required">
+                                                            </div>
+                                                        </div>
+                                                         <div class="row">
+                                                            <label class="control-label col-md-4" style="padding-left:44px;">Сумма:</label>
+                                                            <div class="col-md-4 field-div">
+                                                                <input type="number" name="amount" class="form-control field-input required" step="any" min="0">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-6 col-md-offset-3">
+                                                                <button type="submit" class="btn btn-sm" data-background-color="main">
+                                                                    Провести
+                                                                </button>
+                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                                                                    Отмена
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var clientsData = {{ clients | tojson | safe }};
+    var lessonSubjectsData = {{ lesson_subjects | tojson | safe }};
+    var subscriptionSubjectsData = {{ subscription_subjects | tojson | safe }};
+    var afterSchoolPrices = {{ after_school_prices | tojson | safe }};
+</script>
+{% endblock %}
