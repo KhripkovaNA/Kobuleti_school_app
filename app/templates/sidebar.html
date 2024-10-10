@@ -1,0 +1,99 @@
+<div class="sidebar" data-color="main" data-image="{{ url_for('static', filename='img/sidebar.jpg') }}">
+    <div class="logo">
+      <img class="dashboard-logo" src="{{ url_for('static', filename='img/logo.jpg') }}">
+    </div>
+    <div class="sidebar-wrapper">
+        <ul class="nav">
+            {% if current_user.rights in ['admin', 'user'] %}
+                <li id="menu-students">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.students.students') }}">
+                        <i class="material-icons">diversity_3</i>
+                        <p>Клиенты</p>
+                    </a>
+                </li>
+            {% endif %}
+            {% if current_user.rights in ['admin', 'user', 'teacher'] %}
+                <li id="menu-employees">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.employees.employees') }}">
+                        <i class="material-icons">group</i>
+                        <p>Сотрудники</p>
+                    </a>
+                </li>
+                <li id="menu-subjects">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.subjects.subjects') }}">
+                        <i class="material-icons">library_books</i>
+                        <p>Занятия</p>
+                    </a>
+                </li>
+                <li id="menu-subscriptions">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.subjects.subscriptions') }}">
+                        <i class="material-icons">addchart</i>
+                        <p>Абонементы</p>
+                    </a>
+                </li>
+            {% endif %}
+            {% if current_user.rights != 'parent' %}
+                <li class="{{ 'dropup' if current_user.rights in ['admin', 'user'] else 'dropdown' }}" id="menu-school">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="material-icons">school</i>
+                        <p>Школа<span class="caret"></span></p>
+                    </a>
+                    <ul class="dropdown-menu" style="margin-left: 50px;">
+                        <li id="menu-school-students">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_classes.school_students', school_class=0) }}">Школьные классы</a>
+                        </li>
+                        <li id="menu-school-subjects">
+                            <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_classes.school_subjects', school_class=0) }}">Школьные занятия</a>
+                        </li>
+                    </ul>
+                </li>
+            {% endif %}
+            {% if current_user.rights == 'parent' %}
+                {% for child in current_user.user_persons %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <i class="material-icons">person</i>
+                            <p>{{ child.last_name}} {{ child.first_name}}<span class="caret"></span></p>
+                        </a>
+                        <ul class="dropdown-menu" style="margin-left: 50px;">
+                            <li>
+                                <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school.students.show_edit_student', student_id=child.id) }}">Профиль</a>
+                            </li>
+                            <li>
+                                <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('school_classes.student_school_record', student_id=child.id, month_index=0) }}">Табель</a>
+                            </li>
+                        </ul>
+                    </li>
+                {% endfor %}
+            {% endif %}
+            <li class="{{ 'dropup' if current_user.rights in ['admin', 'user'] else 'dropdown' }}" id="menu-timetable">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                    <i class="material-icons">calendar_month</i>
+                    <p>Расписание<span class="caret"></span></p>
+                </a>
+                <ul class="dropdown-menu" style="margin-left: 50px;">
+                    <li id="menu-gen-timetable">
+                        <a class="spinner-trigger" href="{{ url_for('timetable.full_timetable', week=0) }}">Расписание общее</a>
+                    </li>
+                    <li id="menu-extra-timetable">
+                        <a class="spinner-trigger" href="{{ url_for('timetable.extra_timetable', week=0) }}">Расписание допов</a>
+                    </li>
+                    <li id="menu-individual-timetable">
+                        <a class="spinner-trigger" href="{{ url_for('timetable.individual_timetable', week=0) }}">Расписание индив</a>
+                    </li>
+                    <li id="menu-school-timetable">
+                        <a class="spinner-trigger" href="{{ url_for('school_classes.school_timetable', week=0, day=0) }}">Расписание школьное</a>
+                    </li>
+                </ul>
+            </li>
+            {% if current_user.rights != 'parent' %}
+                <li id="menu-after-school">
+                    <a class="spinner-trigger" style="cursor:pointer" href="{{ url_for('after_school.after_school_month', month_index=0) }}">
+                        <i class="material-icons">diversity_2</i>
+                        <p>Продленка</p>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>

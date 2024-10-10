@@ -1,24 +1,14 @@
 from app import app, db
-from app.models import User, Person, Contact, Subject, Subscription, SubscriptionType, \
-    parent_child_table, Room, Lesson, SchoolClass, SubjectType, teacher_class_table, \
-    student_lesson_registered_table, StudentAttendance, student_subject_table, \
-    teacher_subject_table, subscription_types_table, class_lesson_table, Employee, subject_class_table, \
-    SchoolLessonJournal, Report, Finance, UserAction
 from sqlalchemy.orm import class_mapper
-from sqlalchemy import and_, or_, distinct, text, func
+from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
-import pytz
-from dateutil.relativedelta import relativedelta
-from app.app_functions import subjects_data, get_weekday_date, get_today_date, format_subscription_types, \
-    get_after_school_students, extensive_student_info, potential_client_subjects, subscription_subjects_data, \
-    lesson_subjects_data, week_lessons_dict, check_conflicting_lessons, analyze_conflicts, subject_record, \
-    conjugate_lessons, calculate_week, get_date_range, day_school_lessons_dict, format_subscription_type, \
-    school_subject_record, student_record
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from openpyxl.utils import get_column_letter
-import re
-import csv
+from app.app_settings.models import Room
+from app.school.employees.models import Employee
+from app.school.models import Contact, Person
+from app.school.subjects.models import Subject, SubjectType
+from app.school.subscriptions.models import Subscription
+from app.school_classes.models import SchoolClass
+from app.timetable.models import Lesson
 
 app.app_context().push()
 
@@ -1012,8 +1002,8 @@ def print_data(table_model, table_rows):
 
 
 # persons = {}
-# finances = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
-# for fin_op in finances:
+# finance = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
+# for fin_op in finance:
 #     if fin_op.person_id not in persons.keys():
 #         fin_op.balance_state = fin_op.person.balance if fin_op.person.balance else 0
 #     else:
@@ -1035,9 +1025,9 @@ def print_data(table_model, table_rows):
 # categories = ['after_school', 'subscription', 'del_after_school', 'school', 'lesson', 'balance', 'stationery',
 #               'dining', 'del_subscription', 'finance', 'del_lesson', 'salary', 'sublease', 'assessment']
 # print([cat[0] for cat in cats])
-# finances = Finance.query.all()
+# finance = Finance.query.all()
 # n = 1
-# for fin in finances:
+# for fin in finance:
 #     if fin.service == 'finance':
 #         if any(substring in fin.description for substring in ['продленка']):
 #             fin.service = 'after_school'
@@ -1047,10 +1037,10 @@ def print_data(table_model, table_rows):
 #
 # db.session.commit()
 
-# finances = Finance.query.filter(Finance.service.in_(['subscription', 'lesson', 'del_subscription', 'del_lesson'])).all()
+# finance = Finance.query.filter(Finance.service.in_(['subscription', 'lesson', 'del_subscription', 'del_lesson'])).all()
 # n = 1
 # regex = r''
-# for fin in finances:
+# for fin in finance:
 #     text = fin.description.replace('Покупка абонемента', '').replace('Списание за занятие', '')\
 #         .replace('Возврат за абонемент', '').replace('Возврат за занятие', '')
 #     date_pattern = r'\b\d{2}\.\d{2}\.\d{2}\b'
@@ -1075,7 +1065,7 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 # operation_types = ["cash", "bank", "balance"]
 # day_finance_operations = {oper_type: {} for oper_type in operation_types}
 # report_date = datetime(2024, 6, 9).date()
-# finances = Finance.query.filter_by(date=report_date).all()
+# finance = Finance.query.filter_by(date=report_date).all()
 #
 #
 # def sort_finances(oper_type, category, subject):
@@ -1089,7 +1079,7 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 #             day_finance_operations[oper_type][category][subject]["Расход"] += minus
 
 
-# for fin in finances:
+# for fin in finance:
 #     if fin.student_balance:
 #         plus = fin.amount if fin.amount > 0 else 0
 #         minus = abs(fin.amount) if fin.amount < 0 else 0
