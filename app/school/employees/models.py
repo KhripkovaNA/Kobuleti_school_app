@@ -18,5 +18,8 @@ class Report(db.Model):
     duty_type = db.Column(db.String(50))
     duty_hours = db.Column(db.Integer)
 
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
+    subject = db.relationship('Subject', backref='emp_reports')
+
     person_id = db.Column(db.Integer, db.ForeignKey('persons.id'))
     person = db.relationship('Person', backref='reports')
