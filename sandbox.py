@@ -1,4 +1,4 @@
-from app import app, db
+from app import create_app, db
 from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
@@ -10,6 +10,7 @@ from app.school.subscriptions.models import Subscription
 from app.school_classes.models import SchoolClass
 from app.timetable.models import Lesson
 
+app = create_app()
 app.app_context().push()
 
 days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
@@ -792,20 +793,6 @@ ninth_grade_list = [
 ]
 
 
-# unique_rooms = Lesson.query.filter(Lesson.date == today).with_entities(Lesson.room_id).distinct().all()
-# unique_rooms = [room[0] for room in unique_rooms]
-# first_date = today - timedelta(days=2)
-# last_date = today + timedelta(days=2)
-# unique_rooms = (
-#     db.session.query(Lesson.room_id)
-#     .filter(Lesson.date >= first_date, Lesson.date <= last_date)
-#     .distinct().all()
-# )
-# print([room[0] for room in unique_rooms])
-# school_subjects = Subject.query.filter(~Subject.subject_types.any(name='school')).all()
-# print(school_subjects)
-
-
 def show_lesson(lesson):
     lesson_dict = {
         'id': lesson.id,
@@ -844,152 +831,6 @@ lesson_dict = {
 }
 
 
-# workbook = Workbook()
-# sheet = workbook.active
-#
-# last_row_ind = 1
-#
-# school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-# for school_class in school_classes:
-#     main_teacher = Person.query.filter_by(id=school_class.main_teacher_id).first()
-#
-#     sheet.cell(last_row_ind, 1).value = school_class.school_name
-#     sheet.cell(last_row_ind, 2).value = "Классный руководитель"
-#     sheet.cell(last_row_ind+1, 1).value = "Имя"
-#     sheet.cell(last_row_ind + 1, 2).value = "Дата рождения"
-#     sheet.cell(last_row_ind + 1, 3).value = "Мама"
-#     sheet.cell(last_row_ind + 1, 4).value = "Контакт"
-#     sheet.cell(last_row_ind + 1, 2).value = "Папа"
-#     sheet.cell(last_row_ind + 1, 2).value = "Контакт"
-#
-#     if main_teacher:
-#         sheet.cell(last_row_ind, 2).value = f"{main_teacher.last_name} {main_teacher.first_name} {main_teacher.patronym}"
-#
-#     school_students = sorted(school_class.school_students, key=lambda x: (x.last_name, x.first_name))
-#     for ind, student in enumerate(school_students, 2):
-#         student_name = f"{student.last_name} {student.first_name} {student.patronym}"
-#         student_dob = f"{student.dob:%d.%m%Y}" if student.dob else None
-#         sheet.cell(last_row_ind + ind, 1).value = student_name
-#         sheet.cell(last_row_ind + ind, 2).value = student_dob
-#         student_mom = db.session.query(parent_child_table).filter(
-#             parent_child_table.c.child_id == student.id,
-#             parent_child_table.c.relation == 'Мама'
-#         ).first()
-#         if student_mom:
-#             parent = Person.query.filter_by(id=student_mom[0]).first()
-#             parent_name = f"{parent.last_name} {parent.first_name} {parent.patronym}"
-#             parent_contact = parent.contacts[0].telegram if parent.contacts[0].telegram \
-#                 else parent.contacts[0].phone if parent.contacts[0].phone else parent.contacts[0].other_contact
-#             sheet.cell(last_row_ind + ind, 3).value = parent_name
-#             sheet.cell(last_row_ind + ind, 4).value = parent_contact
-#         student_dad = db.session.query(parent_child_table).filter(
-#             parent_child_table.c.child_id == student.id,
-#             parent_child_table.c.relation == 'Папа'
-#         ).first()
-#         if student_dad:
-#             parent = Person.query.filter_by(id=student_dad[0]).first()
-#             parent_name = f"{parent.last_name} {parent.first_name} {parent.patronym}"
-#             parent_contact = parent.contacts[0].telegram if parent.contacts[0].telegram \
-#                 else parent.contacts[0].phone if parent.contacts[0].phone else parent.contacts[0].other_contact
-#             sheet.cell(last_row_ind + ind, 5).value = parent_name
-#             sheet.cell(last_row_ind + ind, 6).value = parent_contact
-#
-#     last_row_ind = sheet.max_row + 2
-#
-# workbook.save(filename="school_students.xlsx")
-# teachers_data = []
-# teacher_ids = [int(teacher) for teacher in teachers_data]
-# teachers = Person.query.filter(Person.id.in_(teacher_ids)).all()
-# print(teachers)
-
-# actions = []
-# for user_action in UserAction.query.all():
-#     action_dict = {
-#         "Пользователь": user_action.user.username,
-#         "Дата": f'{user_action.timestamp:%d.%m.%y}',
-#         "Время": f'{user_action.timestamp:%H:%M}',
-#         "Действие": user_action.description
-#     }
-#     actions.append(action_dict)
-#
-# print(*actions, sep='\n')
-
-
-# for i in range(21, 36):
-#     delete_record(UserAction, i)
-
-
-# edited_lesson = Lesson.query.filter_by(id=3085).first()
-# before_classes = {2, 3}
-# classes = [school_class.id for school_class in edited_lesson.school_classes]
-# classes_set = set(classes)
-# if before_classes != classes_set:
-#     print(before_classes)
-#     print(classes_set)
-#     added_classes = list(classes_set.difference(before_classes))
-#     removed_classes = list(before_classes.difference(classes_set))
-#     school_students = Person.query.filter(
-#         Person.status == "Клиент",
-#         Person.school_class_id.in_(added_classes + removed_classes)
-#     ).all()
-#     print(school_students)
-
-# all_finances = Finance.query.all()
-# for oper in all_finances:
-#     if oper.description.startswith("Пополнение баланса") or oper.description.startswith("Списание за занятие"):
-#         oper.operation_type = 'balance'
-#     else:
-#         oper.operation_type = 'cash'
-#
-# db.session.commit()
-
-# all_finances = Finance.query.all()
-# for oper in all_finances:
-#     if oper.operation_type == 'balance':
-#         oper.student_balance = True
-#         if oper.description.startswith('Пополнение баланса'):
-#             oper.operation_type = 'cash'
-#         else:
-#             oper.operation_type = None
-#
-#     else:
-#         oper.student_balance = False
-#
-# db.session.commit()
-# print_table(Finance)
-
-# extra_lessons = StudentAttendance.query.filter(
-#     StudentAttendance.lesson.has(Lesson.lesson_type.has(SubjectType.name != "school"))
-# ).all()
-# for lesson in extra_lessons:
-#     print(lesson.id, lesson.lesson_id, lesson.date, lesson.student.last_name, lesson.student.first_name,
-#           lesson.payment_method, lesson.price_paid, lesson.subscription_lessons, lesson.subscription_id)
-
-
-# record = Finance.query.filter(
-#     Finance.person_id == 1,
-#     Finance.date == datetime(2024, 4, 1).date(),
-#     Finance.amount == -20,
-#     Finance.description.startswith("Списание за занятие"),
-#     or_(Finance.service_id == 3083, Finance.service_id.is_(None))
-# ).first()
-#
-# print(record)
-#
-# print(Finance.query.filter_by(id=11).first().service_id)
-
-
-# all_finances = Finance.query.all()
-# for oper in all_finances:
-#     if oper.student_balance:
-#         if oper.description.startswith('Пополнение баланса'):
-#             oper.operation_type = 'cash'
-#         else:
-#             oper.operation_type = None
-#
-# db.session.commit()
-# print_table(StudentAttendance)
-
 def print_data(table_model, table_rows):
     mapper = class_mapper(table_model)
     fields = [column.key for column in mapper.columns]
@@ -1001,56 +842,6 @@ def print_data(table_model, table_rows):
         print('\n' + '*' * 20)
 
 
-# persons = {}
-# finance = Finance.query.order_by(Finance.date.desc(), Finance.id.desc()).all()
-# for fin_op in finance:
-#     if fin_op.person_id not in persons.keys():
-#         fin_op.balance_state = fin_op.person.balance if fin_op.person.balance else 0
-#     else:
-#         fin_op.balance_state = persons[fin_op.person_id]
-#     db.session.flush()
-#     if fin_op.student_balance:
-#         balance_state = fin_op.balance_state - fin_op.amount
-#     else:
-#         balance_state = fin_op.balance_state
-#
-#     persons[fin_op.person_id] = balance_state
-
-# print_table(Finance)
-# """
-# школа, продленка, депозит, абон (по предм), занятия (по предм), обеды, аренда, канцел, аттестация, зарплата
-# """
-#
-# cats = db.session.query(Finance.service.distinct()).all()
-# categories = ['after_school', 'subscription', 'del_after_school', 'school', 'lesson', 'balance', 'stationery',
-#               'dining', 'del_subscription', 'finance', 'del_lesson', 'salary', 'sublease', 'assessment']
-# print([cat[0] for cat in cats])
-# finance = Finance.query.all()
-# n = 1
-# for fin in finance:
-#     if fin.service == 'finance':
-#         if any(substring in fin.description for substring in ['продленка']):
-#             fin.service = 'after_school'
-#         else:
-#             print(n, fin.description)
-#             n += 1
-#
-# db.session.commit()
-
-# finance = Finance.query.filter(Finance.service.in_(['subscription', 'lesson', 'del_subscription', 'del_lesson'])).all()
-# n = 1
-# regex = r''
-# for fin in finance:
-#     text = fin.description.replace('Покупка абонемента', '').replace('Списание за занятие', '')\
-#         .replace('Возврат за абонемент', '').replace('Возврат за занятие', '')
-#     date_pattern = r'\b\d{2}\.\d{2}\.\d{2}\b'
-#     subj_name = re.sub(date_pattern, '', text).strip()
-#     subject = Subject.query.filter_by(name=subj_name).first()
-#     if subject:
-#         fin.subject_id = subject.id
-# db.session.commit()
-
-# print_table(Finance)
 OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school': 'Продленка', 'subscription': 'Абонемент',
                         'del_subscription': 'Абонемент', 'lesson': 'Занятие', 'del_lesson': 'Занятие',
                         'balance': 'Депозит, пополнение', 'salary': 'Зарплата', 'dining': 'Обед', 'school': 'Школа',
@@ -1062,78 +853,4 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
                                                                             'Питание', 'Школа', 'Канцелярия', 'Аренда',
               'Аттестация']
 
-# operation_types = ["cash", "bank", "balance"]
-# day_finance_operations = {oper_type: {} for oper_type in operation_types}
-# report_date = datetime(2024, 6, 9).date()
-# finance = Finance.query.filter_by(date=report_date).all()
-#
-#
-# def sort_finances(oper_type, category, subject):
-#     if category not in day_finance_operations[oper_type].keys():
-#         day_finance_operations[oper_type][category] = {subject: {"Приход": plus, "Расход": minus}}
-#     else:
-#         if subject not in day_finance_operations[oper_type][category].keys():
-#             day_finance_operations[oper_type][category][subject] = {"Приход": plus, "Расход": minus}
-#         else:
-#             day_finance_operations[oper_type][category][subject]["Приход"] += plus
-#             day_finance_operations[oper_type][category][subject]["Расход"] += minus
-
-
-# for fin in finance:
-#     if fin.student_balance:
-#         plus = fin.amount if fin.amount > 0 else 0
-#         minus = abs(fin.amount) if fin.amount < 0 else 0
-#     else:
-#         plus = abs(fin.amount) if fin.amount < 0 else 0
-#         minus = fin.amount if fin.amount > 0 else 0
-#     category = OPERATION_CATEGORIES[fin.service]
-#     subject = fin.subject.name if fin.subject_id else "Нет"
-#     if fin.operation_type == "cash":
-#         sort_finances("cash", category, subject)
-#     elif fin.operation_type == "bank":
-#         sort_finances("bank", category, subject)
-#     if fin.student_balance:
-#         sort_finances("balance", category, subject)
-
-# with open('finance_report.csv', 'w', encoding="utf-8") as csvfile:
-#     csvwriter = csv.writer(csvfile)
-#     for oper_type in operation_types:
-#         csvwriter.writerow([oper_type])
-#         csvwriter.writerow(fields)
-#         for category in categories:
-#             if category in day_finance_operations[oper_type].keys():
-#                 for subject in day_finance_operations[oper_type][category].keys():
-#                     plus = day_finance_operations[oper_type][category][subject]["Приход"]
-#                     minus = day_finance_operations[oper_type][category][subject]["Расход"]
-#                     table_row = [category, subject, plus, minus]
-#                     csvwriter.writerow(table_row)
-
-# subscription_lessons = StudentAttendance.query.filter(StudentAttendance.payment_method == "Абонемент").all()
-
-# print_table(StudentAttendance)
-# print_table(StudentAttendance)
-# print_table(Subscription)
-# date1 = datetime(2024, 6, 17).date()
-# date2 = datetime(2024, 6, 11).date()
-#
-# print(-7 <= (date1 - date2).days <= 7)
-
-# total_balance = db.session.query(func.sum(Person.balance)).scalar()
-# print(total_balance)
-
-# print_table(SchoolLessonJournal)
-# print_table(Person)
-# user = User.query.filter_by(id=3).first()
-# print(user.user_persons.all())
-# db.session.delete(user)
-# db.session.commit()
-#
-# user = User.query.filter_by(id=3).first()
-# class_ids = [person.school_class_id for person in user.user_persons.all()]
-# school_classes_query = SchoolClass.query.order_by(
-#     SchoolClass.school_class,
-#     SchoolClass.school_name
-# )
-# school_classes = school_classes_query.filter(SchoolClass.id.in_(class_ids)).all()
-# print_table(UserAction)
 
