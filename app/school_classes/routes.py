@@ -289,7 +289,7 @@ def school_lesson(lesson_str):
             week = calculate_week(sc_lesson.date)
 
             return render_template(
-                'school_classe/school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
+                'school_classes/school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
                 week=week, school_students=sc_students, grade_types=grade_types, school_subject=sc_subject,
                 subject_classes=subject_classes, month_index=month_index, today=get_today_date()
             )

@@ -1,8 +1,11 @@
 from flask import request, flash
 from flask_login import login_required, current_user
 from app import db
-from app.school import school
 from .models import Person
+from flask import Blueprint
+
+
+school = Blueprint('school', __name__)
 
 
 @school.route('/add-comment', methods=['POST'])
@@ -20,3 +23,13 @@ def add_comment():
     else:
         flash('Нет прав администратора', 'error')
         return
+
+
+from .employees.routes import school_employees
+school.register_blueprint(school_employees)
+
+from .students.routes import school_students
+school.register_blueprint(school_students)
+
+from .subjects.routes import school_subjects
+school.register_blueprint(school_subjects)

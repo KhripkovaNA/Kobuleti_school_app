@@ -417,7 +417,7 @@ def lesson(lesson_str):
 
             else:
                 flash("Такого занятия нет", 'error')
-                return redirect(url_for('school.subjects'))
+                return redirect(url_for('school.subjects.subjects'))
 
     else:
         flash('Нет прав администратора', 'error')

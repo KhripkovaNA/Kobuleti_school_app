@@ -30,7 +30,7 @@
                                     {% for subscription in subscriptions %}
                                         <tr>
                                             <td>
-                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=subscription.student_id) }}">
+                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.students.show_edit_student', student_id=subscription.student_id) }}">
                                                     {{ subscription.student.last_name }} {{ subscription.student.first_name }}
                                                 </a>
                                             </td>
@@ -67,7 +67,7 @@
                                                                 <h4 class="modal-title">Изменить абонемент {{ subscription.subject.name }} клиента {{ subscription.student.last_name }} {{ subscription.student.first_name }}</h4>
                                                             </div>
                                                             <div class="modal-body" style="padding-top:10px;">
-                                                                <form class="form-subscription" action="{{ url_for('school.subscriptions') }}" method="post">
+                                                                <form class="form-subscription" action="{{ url_for('school.subjects.subscriptions') }}" method="post">
                                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                                     <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
                                                                     <div class="row">

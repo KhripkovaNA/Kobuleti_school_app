@@ -28,7 +28,7 @@
                                 {% for student in students %}
                                     <tr>
                                         <td class="fixed-column">
-                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=student[1]) }}">
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.students.show_edit_student', student_id=student[1]) }}">
                                                 {{ student[0] }}
                                             </a>
                                         </td>
@@ -48,13 +48,13 @@
                 <div class="row" style="{{ 'margin-top: 100px;' if not subject_records }}">
                     <div class="col-md-12">
                         <button class="btn btn-sm" data-background-color="orange">
-                            <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school.subject', subject_id=subject.id, month_index=month_index-1) }}">
+                            <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school.subjects.subject', subject_id=subject.id, month_index=month_index-1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущий месяц
                             </a>
                         </button>
                         {% if month_index < 0 %}
                             <button class="btn btn-sm" data-background-color="orange">
-                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school.subject', subject_id=subject.id, month_index=month_index+1) }}">
+                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school.subjects.subject', subject_id=subject.id, month_index=month_index+1) }}">
                                     Следующий месяц<i class="material-icons">navigate_next</i>
                                 </a>
                             </button>
@@ -66,7 +66,7 @@
                             </button>
                             <ul class="dropdown-menu">
                                 {% for other_subject in other_subjects %}
-                                    <li><a class="spinner-trigger" href="{{ url_for('school.subject', subject_id=other_subject.id, month_index=month_index) }}">{{ other_subject.name }}</a></li>
+                                    <li><a class="spinner-trigger" href="{{ url_for('school.subjects.subject', subject_id=other_subject.id, month_index=month_index) }}">{{ other_subject.name }}</a></li>
                                 {% endfor %}
                             </ul>
                         </div>

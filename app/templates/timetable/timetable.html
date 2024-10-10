@@ -258,7 +258,7 @@
                                             <h4 class="modal-title">Перенести занятия</h4>
                                         </div>
                                         <div class="modal-body">
-                                            <form class="change-lessons-form" action="{{ url_for('timetable.hange_lessons') }}" method="post">
+                                            <form class="change-lessons-form" action="{{ url_for('timetable.change_lessons') }}" method="post">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                 <input type="hidden" name="lessons_week" value="{{ week }}">
                                                 <div class="row">

@@ -4,7 +4,6 @@ from .service import (
     basic_student_info, clients_data, add_child, add_adult,
     extensive_student_info, potential_client_subjects, handle_student_edit
 )
-from app.school import school
 from app.school.models import Person
 from app.common_servicies.service import get_today_date, MONTHS, get_period
 from app.school.subjects.service import subscription_subjects_data, lesson_subjects_data
@@ -18,9 +17,13 @@ from app.school.forms import (
 from app.after_school.service import get_after_school_prices
 from app.finance.models import Finance
 from app.school.subscriptions.forms import SubscriptionsEditForm
+from flask import Blueprint
 
 
-@school.route('/students')
+school_students = Blueprint('students', __name__)
+
+
+@school_students.route('/students')
 @login_required
 def students():
     if current_user.rights in ["admin", "user"]:
@@ -42,7 +45,7 @@ def students():
         return redirect(request.referrer)
 
 
-@school.route('/student-subjects/<string:student_id>', methods=['POST'])
+@school_students.route('/student-subjects/<string:student_id>', methods=['POST'])
 @login_required
 def student_subjects_add(student_id):
     try:
@@ -75,7 +78,7 @@ def student_subjects_add(student_id):
     return redirect(request.referrer)
 
 
-@school.route('/add-student', methods=['GET', 'POST'])
+@school_students.route('/add-student', methods=['GET', 'POST'])
 @login_required
 def add_student():
     if current_user.rights in ["admin", "user"]:
@@ -99,7 +102,7 @@ def add_student():
                             user_action(current_user, f"Добавление клиента {student.last_name} {student.first_name}")
                             db.session.commit()
                             flash('Новый клиент добавлен в систему', 'success')
-                            return redirect(url_for('school.show_edit_student', student_id=student.id))
+                            return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                         else:
                             flash(message, 'error')
@@ -112,7 +115,7 @@ def add_student():
                             user_action(current_user, f"Добавление клиента {client.last_name} {client.first_name}")
                             db.session.commit()
                             flash('Новый клиент добавлен в систему', 'success')
-                            return redirect(url_for('school.show_edit_student', student_id=client.id))
+                            return redirect(url_for('school.students.show_edit_student', student_id=client.id))
 
                         else:
                             flash(message, 'error')
@@ -122,7 +125,7 @@ def add_student():
             except Exception as e:
                 db.session.rollback()
                 flash(f'Ошибка при добавлении киента: {str(e)}', 'error')
-                return redirect(url_for('school.add_student'))
+                return redirect(url_for('students.school.add_student'))
 
         return render_template('school/students/add_student.html', clients=clients, possible_clients=possible_clients,
                                form1=form1, form2=form2, render_type=render_type)
@@ -132,7 +135,7 @@ def add_student():
         return redirect(url_for('main.index'))
 
 
-@school.route('/student/<string:student_id>', methods=['GET', 'POST'])
+@school_students.route('/student/<string:student_id>', methods=['GET', 'POST'])
 @login_required
 def show_edit_student(student_id):
     student = Person.query.filter(Person.id == student_id, Person.status.isnot(None)).first()
@@ -234,7 +237,7 @@ def show_edit_student(student_id):
                                 user_action(current_user, description)
                                 db.session.commit()
                                 flash('Изменения внесены', 'success')
-                                return redirect(url_for('school.show_edit_student', student_id=student.id))
+                                return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                             else:
                                 flash(message, 'error')
@@ -249,7 +252,7 @@ def show_edit_student(student_id):
                                 user_action(current_user, description)
                                 db.session.commit()
                                 flash('Изменения внесены', 'success')
-                                return redirect(url_for('school.show_edit_student', student_id=student.id))
+                                return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                             else:
                                 flash(message, 'error')
@@ -266,7 +269,7 @@ def show_edit_student(student_id):
                                     user_action(current_user, description)
                                     db.session.commit()
                                     flash('Изменения внесены', 'success')
-                                    return redirect(url_for('school.show_edit_student', student_id=student.id))
+                                    return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                                 else:
                                     flash(message, 'error')
@@ -281,7 +284,7 @@ def show_edit_student(student_id):
                                 user_action(current_user, description)
                                 db.session.commit()
                                 flash('Новый контакт добавлен', 'success')
-                                return redirect(url_for('school.show_edit_student', student_id=student.id))
+                                return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                             else:
                                 flash(message, 'error')
@@ -292,7 +295,7 @@ def show_edit_student(student_id):
                         user_action(current_user, description)
                         db.session.commit()
                         flash('Изменения внесены', 'success')
-                        return redirect(url_for('school.show_edit_student', student_id=student.id))
+                        return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                     if 'form_subscriptions_submit' in request.form:
                         if current_user.rights == 'admin':
@@ -301,11 +304,11 @@ def show_edit_student(student_id):
                                 handle_student_edit(subscriptions_form, student, 'subscription', current_user)
                                 db.session.commit()
                                 flash('Изменения внесены', 'success')
-                                return redirect(url_for('school.show_edit_student', student_id=student.id))
+                                return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                         else:
                             flash('Нет прав руководителя', 'error')
-                            return redirect(url_for('school.show_edit_student', student_id=student.id))
+                            return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                     if 'del_after_school' in request.form:
                         if current_user.rights == 'admin':
@@ -318,7 +321,7 @@ def show_edit_student(student_id):
                         else:
                             flash('Нет прав руководителя', 'error')
 
-                        return redirect(url_for('school.show_edit_student', student_id=student.id))
+                        return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
                     flash('Ошибка в форме изменения клиента', 'error')
 
@@ -328,7 +331,7 @@ def show_edit_student(student_id):
             except Exception as e:
                 db.session.rollback()
                 flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
-                return redirect(url_for('school.show_edit_student', student_id=student.id))
+                return redirect(url_for('school.students.show_edit_student', student_id=student.id))
 
         return render_template('school/students/student.html', student=student, clients=clients, today=f'{get_today_date():%d.%m.%Y}',
                                lesson_subjects=lesson_subjects, subscription_subjects=subscription_subjects,

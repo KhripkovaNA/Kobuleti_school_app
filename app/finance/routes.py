@@ -268,7 +268,7 @@ def subscription():
             db.session.commit()
             flash('Новый абонемент добавлен в систему', 'success')
 
-            return redirect(url_for('school.show_edit_student', student_id=new_subscription.student_id))
+            return redirect(url_for('school.students.show_edit_student', student_id=new_subscription.student_id))
 
         else:
             flash('Нет прав администратора', 'error')

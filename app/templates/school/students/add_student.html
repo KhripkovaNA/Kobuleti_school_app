@@ -22,7 +22,7 @@
                         Взрослый
                     </button>
                 </div>
-                <form class="login-form target-table" id="form-1" action="{{ url_for('school.add_student') }}" method="post" style="{{ 'display:block' if render_type == 'child' else 'display:none' }};" novalidate>
+                <form class="login-form target-table" id="form-1" action="{{ url_for('school.students.add_student') }}" method="post" style="{{ 'display:block' if render_type == 'child' else 'display:none' }};" novalidate>
                     {{ form1.hidden_tag() }}
                     <div class="row">
                         <h4 class="title" style="margin-left: 27px;">Ребенок</h4>
@@ -174,13 +174,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <button type="submit" name="add_child_btn" class="btn btn-sm" data-background-color="main">Добавить клиента</button>
-                                <a href="{{ url_for('school.students') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
+                                <a href="{{ url_for('school.students.students') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>
                 </form>
 
-                <form class="login-form target-table" id="form-2" action="{{ url_for('school.add_student') }}" method="post" style="{{ 'display:block' if render_type == 'adult' else 'display:none' }};" novalidate>
+                <form class="login-form target-table" id="form-2" action="{{ url_for('school.students.add_student') }}" method="post" style="{{ 'display:block' if render_type == 'adult' else 'display:none' }};" novalidate>
                     {{ form2.hidden_tag() }}
                     <div class="client-section">
                         <div class="row">
@@ -270,7 +270,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <button type="submit" name="add_adult_btn" class="btn btn-sm" data-background-color="main">Добавить клиента</button>
-                                <a href="{{ url_for('school.students') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
+                                <a href="{{ url_for('school.students.students') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

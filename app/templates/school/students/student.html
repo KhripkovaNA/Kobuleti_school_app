@@ -40,7 +40,7 @@
                                         <div class="form-control">
                                             {% for child in student.children_info %}
                                                 <p>
-                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=child[0]) }}">
+                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.students.show_edit_student', student_id=child[0]) }}">
                                                         {{ child[1] }}
                                                     </a>
                                                 </p>
@@ -54,7 +54,7 @@
                                     <label class="control-label col-md-3">Сотрудник:</label>
                                     <div class="col-md-6">
                                         <div class="form-control">
-                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_employee', employee_id=student.id) }}">
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.employees.show_edit_employee', employee_id=student.id) }}">
                                                 {{ student.employee_roles }}
                                             </a>
                                         </div>
@@ -77,7 +77,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* Student information edit *-*-*-*-*-*-*-*-*-* -->
 
                 <div class="form form-student" data-target="student" style="{{ 'display:block' if render_type == 'edit_student' else 'display:none' }};">
-                    <form class="login-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                    <form class="login-form" action="{{ url_for('school.students.show_edit_student', student_id=student.id) }}" method="post" novalidate>
                         {{ edit_student_form.hidden_tag() }}
                         <div class="row">
                             <div class="form-group">
@@ -260,7 +260,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* Main contact information edit *-*-*-*-*-*-*-*-*-* -->
 
                     <div class="form form-main-contact" data-target="main-contact" style="{{ 'display:block' if render_type == 'contact_main_edit' else 'display:none' }};">
-                        <form class="login-form contact-section" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                        <form class="login-form contact-section" action="{{ url_for('school.students.show_edit_student', student_id=student.id) }}" method="post" novalidate>
                             {{ main_contact.hidden_tag() }}
                             <div class="row">
                                 <h5 class="title" style="margin-left:54px;">Изменить контакт</h5>
@@ -423,7 +423,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* Additional contacts information edit *-*-*-*-*-*-*-*-*-* -->
 
                             <div class="form form-cont-{{ loop.index }}" data-target="cont-{{ loop.index }}" style="{{ 'display:block' if render_type == 'contact_edit_' + loop.index|string else 'display:none' }};">
-                                <form class="login-form contact-section" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                                <form class="login-form contact-section" action="{{ url_for('school.students.show_edit_student', student_id=student.id) }}" method="post" novalidate>
                                     {{ add_cont_forms[loop.index0].hidden_tag() }}
                                     <div class="row">
                                         <h5 class="title" style="margin-left:54px;">Изменить контакт</h5>
@@ -514,7 +514,7 @@
 
             <!-- *-*-*-*-*-*-*-*-*-* New contact form *-*-*-*-*-*-*-*-*-* -->
 
-                        <form class="login-form contact-section" id="new-contact-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" style="{{ 'display:block' if render_type == 'contact_new' else 'display:none' }};">
+                        <form class="login-form contact-section" id="new-contact-form" action="{{ url_for('school.students.show_edit_student', student_id=student.id) }}" method="post" style="{{ 'display:block' if render_type == 'contact_new' else 'display:none' }};">
                             {{ new_contact_form.hidden_tag() }}
                             <div class="row">
                                 <h5 class="title" style="margin-left:54px;">Добавить контакт</h5>
@@ -721,7 +721,7 @@
                                                 <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Добавить интересующие направления</h4>
                                             </div>
                                             <div class="modal-body">
-                                                <form class="login-form" action="{{ url_for('school.student_subjects_add', student_id=student.id) }}" method="post">
+                                                <form class="login-form" action="{{ url_for('school.students.student_subjects_add', student_id=student.id) }}" method="post">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                     <div class="row">
                                                         <label class="control-label col-md-4" style="padding-left:44px;">Занятия:</label>
@@ -766,7 +766,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* Subjects information edit *-*-*-*-*-*-*-*-*-* -->
 
                     <div class="form form-subjects" data-target="subjects" style="display: none;">
-                        <form class="login-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post">
+                        <form class="login-form" action="{{ url_for('school.students.show_edit_student', student_id=student.id) }}" method="post">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group">
@@ -883,7 +883,7 @@
                                                 <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>
                                             </div>
                                             <div class="modal-body">
-                                                <form class="subscription-form" action="{{ url_for('subscription') }}" method="post">
+                                                <form class="subscription-form" action="{{ url_for('finance.subscription') }}" method="post">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                     <input type="hidden" name="student_id" value="{{ student.id }}"/>
                                                     <div class="row">
@@ -947,7 +947,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* Subscriptions information edit *-*-*-*-*-*-*-*-*-* -->
 
                     <div class="form form-subscriptions" data-target="subscriptions" style="{{ 'display:block' if render_type == 'subscription' else 'display:none' }};">
-                        <form class="login-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post" novalidate>
+                        <form class="login-form" action="{{ url_for('school.students.show_edit_student', student_id=student.id) }}" method="post" novalidate>
                             {{ subscriptions_form.hidden_tag() }}
                             <div class="row">
                                 <div class="form-group">
@@ -1203,7 +1203,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* After-school information edit *-*-*-*-*-*-*-*-*-* -->
 
                     <div class="form form-after-school" data-target="after-school" style="display: none;">
-                        <form class="login-form" action="{{ url_for('school.show_edit_student', student_id=student.id) }}" method="post">
+                        <form class="login-form" action="{{ url_for('school.students.show_edit_student', student_id=student.id) }}" method="post">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="row">
                                 <div class="form-group">
@@ -1330,9 +1330,6 @@
                                         <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#deposit-modal">
                                             <i class="material-icons">money</i> Пополнить баланс
                                         </a>
-                                        <a href="#" class="btn btn-sm" data-toggle="modal" data-background-color="purple" data-target="#finance-modal">
-                                            <i class="material-icons">attach_money</i> Финансовая операция
-                                        </a>
                                     </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Student balance replenishment *-*-*-*-*-*-*-*-*-* -->
@@ -1352,8 +1349,8 @@
                                                             <label class="control-label col-md-3" style="padding-left:44px;">Внести:</label>
                                                             <div class="col-md-4">
                                                                 <select name="operation_type" class="form-control">
-                                                                    <option value="cash">Наличными</option>
-                                                                    <option value="bank">На счет</option>
+                                                                    <option value="plus_cash">Наличными</option>
+                                                                    <option value="plus_bank">На счет</option>
                                                                 </select>
                                                             </div>
                                                         </div>
@@ -1367,66 +1364,6 @@
                                                             <div class="col-md-6 col-md-offset-3">
                                                                 <button type="submit" class="btn btn-sm" data-background-color="main">
                                                                     Внести
-                                                                </button>
-                                                                <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                    Отмена
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-            <!-- *-*-*-*-*-*-*-*-*-* Student finance operation *-*-*-*-*-*-*-*-*-* -->
-
-                                    <div class="modal fade" id="finance-modal" role="dialog">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                    <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Финансовая операция</h4>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <form class="finance-form" action="{{ url_for('finance.add_finance_operation') }}" method="post">
-                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                        <input type="hidden" name="person_id" value="{{ student.id }}">
-                                                        <div class="row">
-                                                            <label class="control-label col-md-4" style="padding-left:44px;">Дата:</label>
-                                                            <div class="col-md-7 date-div">
-                                                                <input type="text" name="finance_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
-                                                            </div>
-                                                        </div>
-                                                        <div class="row">
-                                                            <label class="control-label col-md-4" style="padding-left:44px;">Вид операции:</label>
-                                                            <div class="col-md-7">
-                                                                <select name="operation_type" class="form-control">
-                                                                    <option value="minus_cash">Оплата наличными</option>
-                                                                    <option value="minus_bank">Оплата на счет</option>
-                                                                    <option value="minus_balance">Оплата с депозита</option>
-                                                                    <option value="plus_cash">Возврат наличными</option>
-                                                                    <option value="plus_bank">Возврат co счета</option>
-                                                                    <option value="plus_balance">Возврат на депозит</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row">
-                                                            <label class="control-label col-md-4" style="padding-left:44px;">Описание:</label>
-                                                            <div class="col-md-7 field-div">
-                                                                <input type="text" name="description" class="form-control field-input required">
-                                                            </div>
-                                                        </div>
-                                                         <div class="row">
-                                                            <label class="control-label col-md-4" style="padding-left:44px;">Сумма:</label>
-                                                            <div class="col-md-4 field-div">
-                                                                <input type="number" name="amount" class="form-control field-input required" step="any" min="0">
-                                                            </div>
-                                                        </div>
-                                                        <div class="row">
-                                                            <div class="col-md-6 col-md-offset-3">
-                                                                <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                    Провести
                                                                 </button>
                                                                 <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
                                                                     Отмена

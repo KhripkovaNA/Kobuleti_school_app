@@ -7,15 +7,18 @@ from .forms import ExtraSubjectForm, EditExtraSubjectForm
 from .service import add_new_subject, handle_subject_edit, subject_record
 from .models import Subject, SubjectType
 from app.app_settings.models import SubscriptionType
-from app.school import school
 from app.school.models import Person
 from app.school.subscriptions.service import format_subscription_types, check_subscriptions
 from app.app_settings.service import user_action
 from app.school.subscriptions.models import Subscription
 from app.common_servicies.service import get_today_date
+from flask import Blueprint
 
 
-@school.route('/subjects')
+school_subjects = Blueprint('subjects', __name__)
+
+
+@school_subjects.route('/subjects')
 @login_required
 def subjects():
     if current_user.rights in ["admin", "user", "teacher"]:
@@ -32,7 +35,7 @@ def subjects():
         return redirect(url_for('main.index'))
 
 
-@school.route('/add-subject', methods=['GET', 'POST'])
+@school_subjects.route('/add-subject', methods=['GET', 'POST'])
 @login_required
 def add_subject():
     if current_user.rights in ["admin", "user"]:
@@ -58,11 +61,11 @@ def add_subject():
                         user_action(current_user, user_description)
                         db.session.commit()
                         flash('Новый предмет добавлен в систему', 'success')
-                        return redirect(url_for('school.subjects'))
+                        return redirect(url_for('school.subjects.subjects'))
 
                     else:
                         flash('Предмет с таким названием уже есть', 'error')
-                        return redirect(url_for('school.add_subject'))
+                        return redirect(url_for('school.subjects.add_subject'))
 
                 flash('Ошибка в форме добавления предмета', 'error')
 
@@ -70,7 +73,7 @@ def add_subject():
                 db.session.rollback()
                 flash(f'Ошибка при добавлении предмета: {str(e)}', 'error')
 
-                return redirect(url_for('school.add_subject'))
+                return redirect(url_for('school.subjects.add_subject'))
 
         return render_template('school/subjects/add_subject.html', form=form)
 
@@ -79,7 +82,7 @@ def add_subject():
         return redirect(url_for('main.index'))
 
 
-@school.route('/edit-subject/<string:subject_id>', methods=['GET', 'POST'])
+@school_subjects.route('/edit-subject/<string:subject_id>', methods=['GET', 'POST'])
 @login_required
 def edit_subject(subject_id):
     if current_user.rights in ["admin", "user"]:
@@ -110,7 +113,7 @@ def edit_subject(subject_id):
                         user_action(current_user, f'Внесение изменений в предмет {subject.name}')
                         db.session.commit()
                         flash('Изменения внесены', 'success')
-                        return redirect(url_for('school.subjects'))
+                        return redirect(url_for('school.subjects.subjects'))
 
                     flash(f'Ошибка в форме изменения предмета', 'error')
 
@@ -118,21 +121,21 @@ def edit_subject(subject_id):
                     db.session.rollback()
                     flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
 
-                    return redirect(url_for('school.edit_subject', subject_id=subject_id))
+                    return redirect(url_for('school.subjects.edit_subject', subject_id=subject_id))
 
             return render_template('school/subjects/edit_subject.html', subject=subject, form=form,
                                    subscription_types=subscription_types)
 
         else:
             flash("Такого занятия нет.", 'error')
-            return redirect(url_for('school.subjects'))
+            return redirect(url_for('school.subjects.subjects'))
 
     else:
         flash('Нет прав администратора', 'error')
         return redirect(url_for('main.index'))
 
 
-@school.route('/subject/<string:subject_id>/<string:month_index>')
+@school_subjects.route('/subject/<string:subject_id>/<string:month_index>')
 @login_required
 def subject(subject_id, month_index):
     if current_user.rights in ["admin", "user", "teacher"]:
@@ -144,7 +147,7 @@ def subject(subject_id, month_index):
         month_index = int(month_index) if str(month_index).lstrip('-').isdigit() else None
         if not subject or month_index is None:
             flash("Журнал не найден", 'error')
-            return redirect(url_for('school.subjects'))
+            return redirect(url_for('school.subjects.subjects'))
 
         subject_records, datetimes, subject_students, month = subject_record(subject_id, month_index)
         other_subjects = Subject.query.filter(
@@ -161,7 +164,7 @@ def subject(subject_id, month_index):
         return redirect(url_for('main.index'))
 
 
-@school.route('/subscriptions', methods=['GET', 'POST'])
+@school_subjects.route('/subscriptions', methods=['GET', 'POST'])
 @login_required
 def subscriptions():
     if current_user.rights in ["admin", "user", "teacher"]:
@@ -186,7 +189,7 @@ def subscriptions():
                 db.session.rollback()
                 flash(f'Ошибка при изменении абонемента: {str(e)}', 'error')
 
-            return redirect(url_for('school.subscriptions'))
+            return redirect(url_for('school.subjects.subscriptions'))
 
         today = get_today_date()
         three_months_ago = today - timedelta(days=90)
@@ -205,7 +208,7 @@ def subscriptions():
 
         check_subscriptions(recent_subscriptions)
 
-        return render_template('school/subscriptions/subjects.html', subscriptions=recent_subscriptions)
+        return render_template('school/subjects/subscriptions.html', subscriptions=recent_subscriptions)
 
     else:
         flash('Нет прав администратора', 'error')

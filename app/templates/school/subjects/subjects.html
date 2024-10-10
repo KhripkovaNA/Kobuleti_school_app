@@ -64,13 +64,13 @@
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a class="spinner-trigger" href="{{ url_for('school.subject', subject_id=subject.id, month_index=0) }}">
+                                                            <a class="spinner-trigger" href="{{ url_for('school.subjects.subject', subject_id=subject.id, month_index=0) }}">
                                                                 <i class="material-icons" style="color: purple;">article</i>Журнал
                                                             </a>
                                                         </li>
                                                         {% if current_user.rights in ["admin", "user"] %}
                                                             <li>
-                                                                <a class="spinner-trigger" href="{{ url_for('school.edit_subject', subject_id=subject.id) }}">
+                                                                <a class="spinner-trigger" href="{{ url_for('school.subjects.edit_subject', subject_id=subject.id) }}">
                                                                     <i class="material-icons" style="color: purple;">edit</i>Изменить
                                                                 </a>
                                                             </li>
@@ -128,7 +128,7 @@
                 {% endif %}
                 {% if current_user.rights in ["admin", "user"] %}
                     <button class="btn btn-sm" data-background-color="orange">
-                        <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.add_subject') }}">
+                        <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.subjects.add_subject') }}">
                             <i class="material-icons">add_box</i> Добавить предмет
                         </a>
                     </button>

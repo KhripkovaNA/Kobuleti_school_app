@@ -66,7 +66,7 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a class="spinner-trigger" href="{{ url_for('school.show_edit_student', student_id=student.id) }}">
+                                                            <a class="spinner-trigger" href="{{ url_for('school.students.show_edit_student', student_id=student.id) }}">
                                                                 <i class="material-icons" style="color: purple;">info</i>Профиль
                                                             </a>
                                                         </li>
@@ -158,7 +158,7 @@
                                                                 <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Покупка абонемента</h4>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form class="subscription-form" action="{{ url_for('school.subscription') }}" method="post">
+                                                                <form class="subscription-form" action="{{ url_for('finance.subscription') }}" method="post">
                                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                                                     <input type="hidden" name="student_id" value="{{ student.id }}"/>
                                                                     <div class="row">
@@ -303,7 +303,7 @@
                 {% endif %}
                 {% if current_user.rights in ["admin", "user"] %}
                     <button class="btn btn-sm" data-background-color="orange">
-                        <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.add_student') }}">
+                        <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.students.add_student') }}">
                             <i class="material-icons">add_box</i> Добавить клиента
                         </a>
                     </button>

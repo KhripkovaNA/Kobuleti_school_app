@@ -57,7 +57,7 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a class="spinner-trigger" href="{{ url_for('school.show_edit_employee', employee_id=employee.id) }}">
+                                                            <a class="spinner-trigger" href="{{ url_for('school.employees.show_edit_employee', employee_id=employee.id) }}">
                                                                 <i class="material-icons" style="color: purple;">info</i>Профиль
                                                             </a>
                                                         </li>
@@ -129,14 +129,14 @@
                     {% if current_user.rights in ["admin", "user"] %}
                         <div class="col-md-2">
                             <button class="btn btn-sm" data-background-color="orange">
-                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.add_employee') }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.employees.add_employee') }}">
                                     <i class="material-icons">add_box</i> Добавить сотрудника
                                 </a>
                             </button>
                         </div>
                         <div class="col-md-2 col-md-offset-8">
                             <button class="btn btn-sm pull-right" data-background-color="purple">
-                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.employee_report', week=0) }}">
+                                <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.employees.employee_report', week=0) }}">
                                     <i class="material-icons">summarize</i> Недельный отчет
                                 </a>
                             </button>

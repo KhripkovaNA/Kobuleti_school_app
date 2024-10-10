@@ -2,7 +2,6 @@ from io import BytesIO
 from flask import render_template, flash, redirect, url_for, request, send_file
 from flask_login import login_required, current_user
 from openpyxl import Workbook
-from app.school import school
 from app import db
 from app.common_servicies.service import get_today_date
 from .forms import EmployeeForm
@@ -15,9 +14,13 @@ from app.school.subjects.models import Subject, SubjectType
 from app.app_settings.service import user_action
 from app.school_classes.models import SchoolClass
 from app.timetable.models import Lesson
+from flask import Blueprint
 
 
-@school.route('/employees')
+school_employees = Blueprint('employees', __name__)
+
+
+@school_employees.route('/employees')
 @login_required
 def employees():
     if current_user.rights in ["admin", "user", "teacher"]:
@@ -34,7 +37,7 @@ def employees():
         return redirect(url_for('main.index'))
 
 
-@school.route('/employee-report/<string:week>')
+@school_employees.route('/employee-report/<string:week>')
 @login_required
 def employee_report(week):
     if current_user.rights in ["admin", "user"]:
@@ -54,7 +57,7 @@ def employee_report(week):
         return redirect(request.referrer)
 
 
-@school.route('/add-employee', methods=['GET', 'POST'])
+@school_employees.route('/add-employee', methods=['GET', 'POST'])
 @login_required
 def add_employee():
     if current_user.rights in ["admin", "user"]:
@@ -82,7 +85,7 @@ def add_employee():
                         user_action(current_user, description)
                         db.session.commit()
                         flash('Новый сотрудник добавлен в систему.', 'success')
-                        return redirect(url_for('school.show_edit_employee', employee_id=employee.id))
+                        return redirect(url_for('school.employees.show_edit_employee', employee_id=employee.id))
 
                     else:
                         flash(message, 'error')
@@ -92,7 +95,7 @@ def add_employee():
             except Exception as e:
                 db.session.rollback()
                 flash(f'Ошибка при добавлении сотрудника: {str(e)}', 'error')
-                return redirect(url_for('school.add_employee'))
+                return redirect(url_for('school.employees.add_employee'))
 
         return render_template('school/employees/add_employee.html', possible_employees=possible_employees, form=form)
 
@@ -101,7 +104,7 @@ def add_employee():
         return redirect(request.referrer)
 
 
-@school.route('/employee/<string:employee_id>', methods=['GET', 'POST'])
+@school_employees.route('/employee/<string:employee_id>', methods=['GET', 'POST'])
 @login_required
 def show_edit_employee(employee_id):
     if current_user.rights in ["admin", "user", "teacher"]:
@@ -135,7 +138,7 @@ def show_edit_employee(employee_id):
                                 user_action(current_user, description)
                                 db.session.commit()
                                 flash('Изменения внесены', 'success')
-                                return redirect(url_for('school.show_edit_employee', employee_id=employee.id))
+                                return redirect(url_for('school.employees.show_edit_employee', employee_id=employee.id))
 
                             else:
                                 flash(message, 'error')
@@ -144,13 +147,13 @@ def show_edit_employee(employee_id):
 
                     else:
                         flash('Нет прав администратора', 'error')
-                        return redirect(url_for('school.show_edit_employee', employee_id=employee.id))
+                        return redirect(url_for('school.employees.show_edit_employee', employee_id=employee.id))
 
                 except Exception as e:
                     db.session.rollback()
                     flash(f'Ошибка при внесении изменений: {str(e)}', 'error')
 
-                    return redirect(url_for('school.show_edit_employee', employee_id=employee.id))
+                    return redirect(url_for('school.employees.show_edit_employee', employee_id=employee.id))
 
             employee_roles = [role.role for role in employee.roles]
             possible_roles = db.session.query(Employee.role.distinct()).filter(
@@ -175,14 +178,14 @@ def show_edit_employee(employee_id):
                                    possible_classes=possible_classes, school_classes=all_classes)
         else:
             flash("Такого сотрудника нет", 'error')
-            return redirect(url_for('school.employees'))
+            return redirect(url_for('school.employees.employees'))
 
     else:
         flash('Нет прав администратора', 'error')
         return redirect(request.referrer)
 
 
-@employees.route('/generate-report/<string:week>')
+@school_employees.route('/generate-report/<string:week>')
 @login_required
 def generate_employee_report(week):
     try:

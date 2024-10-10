@@ -9,7 +9,7 @@
                 <h4 class="title">Новый предмет</h4>
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('school.add_subject') }}" method="post" novalidate>
+                <form class="login-form" action="{{ url_for('school.subjects.add_subject') }}" method="post" novalidate>
                     {{ form.hidden_tag() }}
                     <div class="row">
                         <div class="form-group">
@@ -88,7 +88,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <button type="submit" class="btn btn-sm" data-background-color="main">Добавить занятие</button>
-                                <a href="{{ url_for('school.subjects') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
+                                <a href="{{ url_for('school.subjects.subjects') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

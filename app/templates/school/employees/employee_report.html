@@ -39,19 +39,19 @@
                 <div class="row">
                     <div class="col-md-6">
                         <button class="btn btn-sm" style="background-color: #ff9800;">
-                            <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.employee_report', week=week-1) }}">
+                            <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.employees.employee_report', week=week-1) }}">
                                 <i class="material-icons">navigate_before</i>Предыдущая неделя
                             </a>
                         </button>
                         <button class="btn btn-sm" style="background-color: #ff9800;">
-                            <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.employee_report', week=week+1) }}">
+                            <a class="spinner-trigger" style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.employees.employee_report', week=week+1) }}">
                                 Следующая неделя<i class="material-icons">navigate_next</i>
                             </a>
                         </button>
                     </div>
                     <div class="col-md-3 col-md-offset-3">
                         <button class="btn btn-sm" style="background-color: #4bd1a0;">
-                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.generate_employee_report', week=week) }}" download=" {{ filename }} ">
+                            <a style="cursor:pointer; color: #FFFFFF;" href="{{ url_for('school.employees.generate_employee_report', week=week) }}" download=" {{ filename }} ">
                                 <i class="material-icons">file_download</i> Скачать таблицу
                             </a>
                         </button>

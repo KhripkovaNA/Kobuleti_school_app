@@ -27,7 +27,7 @@
                                     <tr>
                                         <td>{{ student.shift if student.shift < 10 }}</td>
                                         <td>
-                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=student.id) }}">
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.students.show_edit_student', student_id=student.id) }}">
                                                 {{ loop.index }}. {{ student.last_name }} {{ student.first_name }}
                                             </a>
                                         </td>

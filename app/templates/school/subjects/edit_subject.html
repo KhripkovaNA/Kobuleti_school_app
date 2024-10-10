@@ -8,7 +8,7 @@
                 <h4 class="title">{{ subject.name }}</h4>
             </div>
             <div class="card-content">
-                <form class="login-form" action="{{ url_for('school.edit_subject', subject_id=subject.id) }}" method="post" novalidate>
+                <form class="login-form" action="{{ url_for('school.subjects.edit_subject', subject_id=subject.id) }}" method="post" novalidate>
                     {{ form.hidden_tag() }}
                     <div class="row">
                         <div class="form-group">
@@ -99,7 +99,7 @@
                                         <label class="control-label col-md-3">{{ "Учителя:" if loop.first }}</label>
                                         <div class="col-md-6">
                                             <div class="form-control">
-                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_employee', employee_id=teacher.id) }}">
+                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.employees.show_edit_employee', employee_id=teacher.id) }}">
                                                     {{ teacher.last_name }} {{ teacher.first_name }} {{ teacher.patronym if teacher.patronym }}
                                                 </a>
                                             </div>
@@ -113,7 +113,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <button type="submit" class="btn btn-sm" data-background-color="main">Сохранить</button>
-                                <a href="{{ url_for('school.subjects') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
+                                <a href="{{ url_for('school.subjects.subjects') }}" class="btn btn-sm spinner-trigger" data-background-color="red">Закрыть</a>
                             </div>
                         </div>
                     </div>

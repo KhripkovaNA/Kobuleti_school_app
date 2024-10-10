@@ -66,7 +66,7 @@
                                         <div class="form-control">
                                             {% for child in employee.children_info %}
                                                 <p>
-                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=child[0]) }}">
+                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.students.show_edit_student', student_id=child[0]) }}">
                                                         {{ child[1] }}
                                                     </a>
                                                 </p>
@@ -80,7 +80,7 @@
                                     <label class="control-label col-md-3">Статус:</label>
                                     <div class="col-md-6">
                                         <div class="form-control">
-                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=employee.id) }}">
+                                            <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.students.show_edit_student', student_id=employee.id) }}">
                                                 {{ employee.status_info }}
                                             </a>
                                         </div>
@@ -125,7 +125,7 @@
             <!-- *-*-*-*-*-*-*-*-*-* Employee information edit *-*-*-*-*-*-*-*-*-* -->
 
                 <div class="form form-employee" data-target="employee" style="{{ 'display:block' if render_type == 'edit' else 'display:none' }};">
-                    <form class="login-form" action="{{ url_for('school.show_edit_employee', employee_id=employee.id) }}" method="post" novalidate>
+                    <form class="login-form" action="{{ url_for('school.employees.show_edit_employee', employee_id=employee.id) }}" method="post" novalidate>
                         {{ form.hidden_tag() }}
                         <div class="row">
                             <div class="form-group">

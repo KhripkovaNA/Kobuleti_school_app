@@ -38,11 +38,11 @@
                                             <td style="text-align:center;">{{ operation.date.strftime('%d.%m.%Y') }}</td>
                                             <td width="20%">
                                                 {% if operation.person.status %}
-                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_student', student_id=operation.person_id) }}">
+                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.students.show_edit_student', student_id=operation.person_id) }}">
                                                         {{ operation.person.last_name }} {{ operation.person.first_name }}
                                                     </a>
                                                 {% elif operation.person.roles %}
-                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.show_edit_employee', employee_id=operation.person_id) }}">
+                                                    <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school.employees.show_edit_employee', employee_id=operation.person_id) }}">
                                                         {{ operation.person.last_name }} {{ operation.person.first_name }}
                                                     </a>
                                                 {% else %}
@@ -338,7 +338,7 @@
                                         <h4 class="modal-title">Покупка абонемента</h4>
                                     </div>
                                     <div class="modal-body">
-                                        <form class="subscription-form" action="{{ url_for('school.subscription') }}" method="post">
+                                        <form class="subscription-form" action="{{ url_for('finance.subscription') }}" method="post">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <div class="row">
                                                 <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
