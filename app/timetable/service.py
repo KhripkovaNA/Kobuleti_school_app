@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from sqlalchemy import or_, and_
 from app import db
-from app.common_servicies.after_school_subject import after_school_subject
 from app.common_servicies.service import (
     DAYS_OF_WEEK, get_date, calc_month_index, conjugate_lessons, calculate_week, get_weekday_date, get_today_date
 )
@@ -636,7 +635,7 @@ def lesson_edit(form, lesson):
 def get_payment_options(student, subject_id, lesson):
     check_subscription(student, lesson, subject_id)
     after_school_sub = Subscription.query.filter_by(student_id=student.id,
-                                                    subject_id=after_school_subject().id,
+                                                    is_after_school=True,
                                                     active=True).first()
     subscriptions = Subscription.query.filter(
         Subscription.student_id == student.id,

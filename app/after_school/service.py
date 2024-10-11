@@ -1,17 +1,15 @@
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, or_
-from app.app_settings.models import SubscriptionType
-from app.common_servicies.after_school_subject import after_school_subject
 from app.common_servicies.service import (
     MONTHS, conjugate_hours, get_weekday_date, get_period, calc_month_index, get_today_date
 )
 from app.school.students.service import format_student_info
+from app.school.subjects.models import Subject, SubjectType
 from app.school.subscriptions.models import Subscription
 
 
-def get_after_school_prices():
-    after_school_prices = SubscriptionType.query.filter(SubscriptionType.period != '').all()
+def get_after_school_prices(after_school_prices):
     price_types = []
     for price_type in after_school_prices:
         price_dict = {
@@ -43,7 +41,6 @@ def calc_day_index(date):
 
 def get_after_school_students(period_index, period_type):
     current_period = get_period(0)
-    after_school_id = after_school_subject().id
     if period_type == "month":
         date = get_today_date()
         period = get_period(period_index)
@@ -54,7 +51,7 @@ def get_after_school_students(period_index, period_type):
     last_date = first_date + relativedelta(months=+1, days=-1)
     if period_type == "month":
         after_school_subscriptions = Subscription.query.filter(
-            Subscription.subject_id == after_school_id,
+            Subscription.is_after_school,
             or_(
                 and_(
                     Subscription.period != "week",
@@ -78,7 +75,7 @@ def get_after_school_students(period_index, period_type):
         ).all()
     else:
         after_school_subscriptions = Subscription.query.filter(
-            Subscription.subject_id == after_school_id,
+            Subscription.is_after_school,
             or_(
                 and_(
                     Subscription.period == "month",
@@ -158,7 +155,7 @@ def handle_after_school_adding(student_id, form, period):
     subscription_type_id = int(form.get("subscription_type"))
 
     check_after_school = Subscription.query.filter_by(
-        subject_id=after_school_subject().id,
+        is_after_school=True,
         student_id=student_id,
         purchase_date=purchase_date,
         end_date=end_date,
@@ -169,14 +166,18 @@ def handle_after_school_adding(student_id, form, period):
         return
 
     else:
+        after_school_subject = Subject.query.filter(
+            Subject.subject_type.has(SubjectType.name == 'after_school')
+        ).first()
         new_after_school_subscription = Subscription(
-            subject_id=after_school_subject().id,
+            subject_id=after_school_subject.id,
             student_id=student_id,
             subscription_type_id=subscription_type_id,
             purchase_date=purchase_date,
             end_date=end_date,
             shift=shift,
-            period=term
+            period=term,
+            is_after_school=True
         )
 
         return new_after_school_subscription, period_text

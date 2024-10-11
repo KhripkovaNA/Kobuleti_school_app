@@ -194,7 +194,7 @@ def subscriptions():
         today = get_today_date()
         three_months_ago = today - timedelta(days=90)
         recent_subscriptions = Subscription.query.join(Person).filter(
-            Subscription.subject.has(Subject.subject_type.has(SubjectType.name != 'after_school')),
+            ~Subscription.is_after_school,
             or_(
                 and_(
                     Subscription.purchase_date >= three_months_ago,

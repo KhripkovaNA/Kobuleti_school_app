@@ -38,7 +38,7 @@ def after_school_month(month_index):
             Person.status.in_(["Клиент", "Лид"]),
             Person.person_type == "Ребенок"
         ).order_by(Person.last_name, Person.first_name).all()
-        after_school_prices = get_after_school_prices()
+        after_school_prices = get_after_school_prices(after_school_prices)
 
         return render_template(
             'after_school/after_school.html', after_school_subject=after_school_subject,

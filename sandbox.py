@@ -854,3 +854,13 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
               'Аттестация']
 
 
+# subscriptions = Subscription.query.all()
+# after_school = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
+# for subscription in subscriptions:
+#     if subscription.subject_id == after_school.id:
+#         subscription.is_after_school = True
+#     else:
+#         subscription.is_after_school = False
+#
+# db.session.commit()
+

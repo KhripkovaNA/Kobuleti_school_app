@@ -13,6 +13,7 @@ from app.school.models import Person
 from app.school.subjects.models import Subject, SubjectType
 from app.school.subjects.service import subscription_subjects_data
 from ..after_school.service import get_after_school_prices
+from ..app_settings.models import SubscriptionType
 
 finance = Blueprint('finance', __name__)
 
@@ -67,7 +68,8 @@ def finances():
         subscription_subjects = subscription_subjects_data()
         periods = [get_period(0), get_period(1)]
         months = [(f"{period[0]}-{period[1]}", MONTHS[period[0] - 1].capitalize()) for period in periods]
-        after_school_prices = get_after_school_prices()
+        after_school_prices_objects = SubscriptionType.query.filter(SubscriptionType.period != '').all()
+        after_school_prices = get_after_school_prices(after_school_prices_objects)
         subject_tuples = db.session.query(Subject.id, Subject.name).filter(
             Subject.subject_type.has(SubjectType.name.in_(["individual", "extra"]))
         ).all()

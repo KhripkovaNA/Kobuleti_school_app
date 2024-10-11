@@ -19,6 +19,7 @@ from app.finance.models import Finance
 from app.school.subscriptions.forms import SubscriptionsEditForm
 from flask import Blueprint
 
+from ...app_settings.models import SubscriptionType
 
 school_students = Blueprint('students', __name__)
 
@@ -151,7 +152,8 @@ def show_edit_student(student_id):
         subscription_subjects = subscription_subjects_data()
         periods = [get_period(0), get_period(1)]
         months = [(f"{period[0]}-{period[1]}", MONTHS[period[0]-1].capitalize()) for period in periods]
-        after_school_prices = get_after_school_prices()
+        after_school_prices_objects = SubscriptionType.query.filter(SubscriptionType.period != '').all()
+        after_school_prices = get_after_school_prices(after_school_prices_objects)
 
         student_form = EditStudentForm(
             last_name=student.last_name,

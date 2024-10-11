@@ -1,7 +1,6 @@
 from app import db
 from datetime import datetime
 from app.app_settings.service import user_action
-from app.common_servicies.after_school_subject import after_school_subject
 from app.common_servicies.service import (
     ADULT, CHOOSE, OTHER, CHILD_SELF, CHILD, MONTHS, get_today_date, conjugate_years
 )
@@ -115,7 +114,7 @@ def format_subjects_and_subscriptions(student):
 
     for subscription in student.subscriptions:
         subject = subscription.subject
-        is_after_school = subject == after_school_subject()
+        is_after_school = subscription.is_after_school
         is_active = subscription.active
         subscription_dict = {}
 

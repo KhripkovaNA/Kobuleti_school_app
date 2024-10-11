@@ -2,7 +2,6 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, or_
 from app.app_settings.models import SubscriptionType
-from app.common_servicies.after_school_subject import after_school_subject
 from app.common_servicies.service import (
     MONTHS, DAYS_OF_WEEK, LOCAL_TZ, conjugate_lessons, conjugate_days, get_today_date
 )
@@ -14,7 +13,7 @@ from app.timetable.models import Lesson, StudentAttendance
 
 def subscription_subjects_data():
     filtered_subjects = Subject.query.filter(
-        Subject.id != after_school_subject().id,
+        Subject.subject_type.has(SubjectType.name != 'after_school'),
         Subject.subscription_types.any(SubscriptionType.id.isnot(None))
     ).order_by(Subject.name).all()
 

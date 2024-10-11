@@ -1,5 +1,5 @@
+from sqlalchemy import or_
 from app import db
-from app.common_servicies.after_school_subject import after_school_subject
 from app.common_servicies.service import conjugate_lessons, get_today_date
 from .models import Subscription
 
@@ -11,7 +11,6 @@ def format_subscription_type(subscription_type):
 
 
 def check_subscription(student, lesson, subject_id):
-    after_school = after_school_subject()
     cond = lesson == 0
     if cond:
         date = get_today_date()
@@ -20,10 +19,15 @@ def check_subscription(student, lesson, subject_id):
     if subject_id == 0:
         subscriptions = student.subscriptions
     else:
-        subscriptions = Subscription.query.filter(Subscription.subject_id.in_([subject_id, after_school.id]),
-                                                  Subscription.student_id == student.id).all()
+        subscriptions = Subscription.query.filter(
+            or_(
+                Subscription.subject_id == subject_id,
+                Subscription.is_after_school
+            ),
+            Subscription.student_id == student.id
+        ).all()
     for subscription in subscriptions:
-        if subscription.subject == after_school:
+        if subscription.is_after_school:
             cond11 = subscription.purchase_date.month == date.month
             cond12 = subscription.period == "month"
             if subscription.period == "week":

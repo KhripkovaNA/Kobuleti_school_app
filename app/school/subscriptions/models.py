@@ -23,3 +23,4 @@ class Subscription(db.Model):
     active = db.Column(db.Boolean, default=False)
     shift = db.Column(db.Integer)
     period = db.Column(db.String(50))
+    is_after_school = db.Column(db.Boolean, default=False)
