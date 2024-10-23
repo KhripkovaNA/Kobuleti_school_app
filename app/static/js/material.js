@@ -892,6 +892,7 @@ $(document).ready(function(){
         $('form.finance-report-form').submit();
         if ($('form.finance-report-form').data('submitted') === true) {
             $('#finance-report-modal').modal('hide');
+            $('#spinner').hide();
         }
     });
 

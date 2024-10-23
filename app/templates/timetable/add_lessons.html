@@ -9,7 +9,7 @@
                 <h4 class="title">Новое занятие</h4>
             </div>
             <div class="card-content">
-                <form class="lesson-form" action="{{ url_for('school.add_lessons') }}" method="post" novalidate>
+                <form class="lesson-form" action="{{ url_for('timetable.add_lessons') }}" method="post" novalidate>
                     {{ form.hidden_tag() }}
                     <div class="row">
                         <div id="lesson-sections">
