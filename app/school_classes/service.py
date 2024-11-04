@@ -1,7 +1,7 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, or_
-from app import db
+from app import db, cache
 from app.app_settings.service import user_action
 from app.common_servicies.service import get_today_date, MONTHS
 from app.school.models import Person
@@ -11,12 +11,50 @@ from .models import SchoolClass, SchoolLessonJournal
 from app.timetable.models import Lesson, StudentAttendance
 
 
+def get_school_class(school_class):
+    classes_school = cache.get('classes_school')
+    if not classes_school:
+        classes_school = SchoolClass.query.order_by(
+            SchoolClass.school_class,
+            SchoolClass.school_name
+        ).all()
+
+    if not classes_school:
+        return
+
+    school_class = int(school_class) if str(school_class).isdigit() else None
+    school = classes_school[0] if school_class == 0 else (
+        next((cls for cls in classes_school if cls.id == school_class), None))
+    return school, classes_school
+
+
+def get_school_class_ingo(school_class):
+    class_info = cache.get(f'class_info_{school_class.id}')
+
+    if class_info is None:
+        main_teacher = Person.query.filter_by(id=school_class.main_teacher_id).first()
+        class_students = Person.query.filter_by(
+            school_class_id=school_class.id,
+            status="Клиент"
+        ).order_by(Person.last_name, Person.last_name).all()
+        school_class_subjects = Subject.query.filter(
+            Subject.school_classes.any(SchoolClass.id == school_class.id)
+        ).order_by(Subject.name).all()
+        class_info = {
+            'class_name': school_class.school_name,
+            'main_teacher': main_teacher,
+            'students': class_students,
+            'subjects': school_class_subjects
+        }
+        cache.set(f'class_info_{school_class.id}', class_info)
+
+    return class_info
+
+
 def format_school_class_students(school_class):
-    school_class.main_teacher = Person.query.filter_by(id=school_class.main_teacher_id).first()
-    class_students = Person.query.filter_by(
-        school_class_id=school_class.id,
-        status="Клиент"
-    ).order_by(Person.last_name, Person.last_name).all()
+    class_info = get_school_class_ingo(school_class)
+    school_class.main_teacher = class_info["main_teacher"]
+    class_students = class_info["students"]
     for student in class_students:
         format_student_info(student)
         format_main_contact(student)
@@ -24,10 +62,9 @@ def format_school_class_students(school_class):
 
 
 def format_school_class_subjects(school_class):
-    school_class.main_teacher = Person.query.filter_by(id=school_class.main_teacher_id).first()
-    school_class_subjects = Subject.query.filter(
-        Subject.school_classes.any(SchoolClass.id == school_class.id)
-    ).order_by(Subject.name).all()
+    class_info = get_school_class_ingo(school_class)
+    school_class.main_teacher = class_info["main_teacher"]
+    school_class_subjects = class_info["subjects"]
     for school_subject in school_class_subjects:
         school_teachers = Person.query.filter(
             Person.lessons.any(

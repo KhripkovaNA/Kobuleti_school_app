@@ -52,7 +52,7 @@ def add_subject():
         if request.method == 'POST':
             try:
                 if form.validate_on_submit():
-                    new_subject = add_new_subject(form, "extra_school")
+                    new_subject = add_new_subject(form, "extra_school")[0]
                     if new_subject:
                         db.session.add(new_subject)
                         db.session.flush()

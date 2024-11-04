@@ -668,48 +668,9 @@
                                 </div>
 
             <!-- *-*-*-*-*-*-*-*-*-* Register for a lesson modal *-*-*-*-*-*-*-*-*-* -->
-
-                                <div class="modal fade" id="lesson-modal" role="dialog">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                <h4 class="modal-title">{{ student.last_name }} {{ student.first_name }}. Запись на занятие</h4>
-                                            </div>
-                                            <div class="modal-body">
-                                                <form class="login-form" action="{{ url_for('timetable.lesson_register', student_id=student.id) }}" method="post">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                    <div class="row">
-                                                        <label class="control-label col-md-4" style="padding-left:44px;">Занятие:</label>
-                                                        <div class="col-md-7">
-                                                            <select name="selected_subject" class="form-control lesson-subjects-select">
-                                                                {% for subject in lesson_subjects %}
-                                                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <label class="control-label col-md-4" style="padding-left:44px;">Дата и время занятия:</label>
-                                                        <div class="col-md-7">
-                                                            <select name="lesson" class="form-control lesson-select"></select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-md-6 col-md-offset-3">
-                                                            <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                Записать
-                                                            </button>
-                                                            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                Отмена
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                {% with modal_id='lesson-modal', modal_title=student.last_name ~ ' ' ~ student.first_name ~ '. Запись на занятие' %}
+                                    {% include 'school/students/register_student_modal.html'%}
+                                {% endwith %}
 
             <!-- *-*-*-*-*-*-*-*-*-* Add potential subject modal *-*-*-*-*-*-*-*-*-* -->
 

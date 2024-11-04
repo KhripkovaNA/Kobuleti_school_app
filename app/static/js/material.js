@@ -811,6 +811,7 @@ $(document).ready(function(){
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
             $('form').data('submitted', false);
+            $('#spinner').hide();
         }
     });
 
@@ -822,6 +823,7 @@ $(document).ready(function(){
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
             $('form').data('submitted', false);
+            $('#spinner').hide();
         }
     });
 
@@ -834,6 +836,7 @@ $(document).ready(function(){
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
             $('form').data('submitted', false);
+            $('#spinner').hide();
         }
     });
 
@@ -847,6 +850,7 @@ $(document).ready(function(){
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
             $('form').data('submitted', false);
+            $('#spinner').hide();
         }
     });
 
@@ -859,6 +863,7 @@ $(document).ready(function(){
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
             $('form').data('submitted', false);
+            $('#spinner').hide();
         }
     });
 
@@ -870,6 +875,7 @@ $(document).ready(function(){
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
             $('form').data('submitted', false);
+            $('#spinner').hide();
         }
     });
 
@@ -883,6 +889,7 @@ $(document).ready(function(){
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
             $('form').data('submitted', false);
+            $('#spinner').hide();
         }
     });
 

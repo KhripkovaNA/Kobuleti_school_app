@@ -1,0 +1,37 @@
+{% extends "modal_template.html" %}
+
+{% block modal_body %}
+<form class="login-form" action="{{ url_for('school_classes.school_journal', option='subject') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Предмет:</label>
+        <div class="col-md-7">
+            <select name="selected_subject" class="form-control select-search school-subject-select">
+                {% for subject in school_subjects %}
+                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Класс:</label>
+        <div class="col-md-7">
+            <select name="school_class" class="form-control school-class-select">
+                {% for school_class in classes_school %}
+                    <option value="{{ school_class.id }}">{{ school_class.school_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <button type="submit" class="btn btn-sm" data-background-color="main">
+                Открыть журнал
+            </button>
+            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                Отмена
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -3,17 +3,16 @@ from flask_login import login_required, current_user
 from sqlalchemy import distinct
 from .models import SchoolClass, SchoolLessonJournal
 from .service import (
-    format_school_class_subjects, show_school_lesson, handle_school_lesson,
+    get_school_class, format_school_class_subjects, show_school_lesson, handle_school_lesson,
     school_subject_record, add_new_grade, change_grade, student_record, format_school_class_students
 )
-from app import db
+from app import db, cache
 from app.app_settings.service import user_action
 from app.common_servicies.service import DAYS_OF_WEEK, get_today_date, get_date_range, calc_month_index, calculate_week
 from app.school.models import Person
 from app.school.subjects.models import Subject, SubjectType
 from app.school.subjects.service import add_new_subject
 from app.timetable.service import day_school_lessons_dict
-
 
 school_classes = Blueprint('school_classes', __name__)
 
@@ -22,18 +21,13 @@ school_classes = Blueprint('school_classes', __name__)
 @login_required
 def school_students(school_class):
     if current_user.rights in ["admin", "user", "teacher"]:
-        school_classes = SchoolClass.query.order_by(
-            SchoolClass.school_class,
-            SchoolClass.school_name
-        ).all()
+        school, classes_school = get_school_class(school_class)
 
-        if not school_classes:
+        if not classes_school:
             flash("Школьных классов еще нет", 'error')
             return redirect(url_for('main.index'))
 
-        school_class = int(school_class) if str(school_class).isdigit() else None
-        school = school_classes[0] if school_class == 0 else SchoolClass.query.filter_by(id=school_class).first()
-        if school:
+        if school is not None:
             format_school_class_students(school)
         else:
             flash("Такого класса нет", 'error')
@@ -43,7 +37,8 @@ def school_students(school_class):
             if 'add_client_btn' in request.form:
                 try:
                     if current_user.rights in ["admin", "user"]:
-                        added_student_id = int(request.form.get('added_student_id')) if request.form.get('added_student_id') else None
+                        added_student_id = int(request.form.get('added_student_id')) \
+                            if request.form.get('added_student_id') else None
                         if added_student_id:
                             new_school_student = Person.query.filter_by(id=added_student_id).first()
                             new_school_student.school_class_id = school.id
@@ -55,6 +50,8 @@ def school_students(school_class):
                                           f"{new_school_student.first_name} в класс '{school.school_name}'"
                             user_action(current_user, description)
                             db.session.commit()
+                            cache.delete('school_attending_students')
+                            cache.delete(f'class_info_{school.id}')
                             flash(f'Новый ученик добавлен в класс', 'success')
                         else:
                             flash('Ученик не выбран', 'error')
@@ -74,6 +71,7 @@ def school_students(school_class):
                         description = f"Изменение классного руководителя класса '{school.school_name}'"
                         user_action(current_user, description)
                         db.session.commit()
+                        cache.delete(f'class_info_{school.id}')
                         flash('Классный руководитель изменен', 'success')
 
                     else:
@@ -93,7 +91,7 @@ def school_students(school_class):
         teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
 
         return render_template(
-            'school_classes/school.html', school_classes=school_classes, school_class=school,
+            'school_classes/school.html', school_classes=classes_school, school_class=school,
             possible_students=possible_students, teachers=teachers, render_type="students"
         )
 
@@ -106,30 +104,33 @@ def school_students(school_class):
 @login_required
 def school_subjects(school_class):
     if current_user.rights in ["admin", "user", "teacher"]:
-        school_classes = SchoolClass.query.order_by(
-            SchoolClass.school_class,
-            SchoolClass.school_name
-        ).all()
+        school, classes_school = get_school_class(school_class)
 
-        if not school_classes:
+        if not classes_school:
             flash("Школьных классов еще нет", 'error')
             return redirect(url_for('main.index'))
 
-        school_class = int(school_class) if str(school_class).isdigit() else None
-        school = school_classes[0] if school_class == 0 else SchoolClass.query.filter_by(id=school_class).first()
-        if school:
+        if school is not None:
             format_school_class_subjects(school)
+        else:
+            flash("Такого класса нет", 'error')
+            return redirect(url_for('school_classes.school_subjects', school_class=0))
 
         if request.method == 'POST':
             try:
                 if current_user.rights in ["admin", "user"]:
                     if 'new_subject' in request.form:
-                        new_subject = add_new_subject(request.form, "school")
+                        new_subject, classes = add_new_subject(request.form, "school")
                         if new_subject:
                             db.session.add(new_subject)
                             description = f"Добавление нового школьного предмета {new_subject.name}"
                             user_action(current_user, description)
                             db.session.commit()
+                            cache.delete('school_subjects')
+                            cache.delete('classes_school')
+                            for class_id in classes:
+                                cache.delete(f'class_info_{class_id}')
+
                             flash('Новый предмет добавлен в систему', 'success')
 
                         else:
@@ -156,6 +157,8 @@ def school_subjects(school_class):
                             description = f"Добавление школьного предмета {new_subject.name} в класс '{school.school_name}'"
                             user_action(current_user, description)
                             db.session.commit()
+                            cache.delete('school_subjects')
+                            cache.delete('classes_school')
                             flash('Предмет добавлен классу', 'success')
 
                         else:
@@ -177,7 +180,7 @@ def school_subjects(school_class):
         ).order_by(Subject.name).all()
 
         return render_template(
-            'school_classes/school.html', school_classes=school_classes, school_class=school,
+            'school_classes/school.html', school_classes=classes_school, school_class=school,
             teachers=all_teachers, possible_subjects=possible_subjects, render_type="subjects"
         )
 
@@ -204,6 +207,8 @@ def edit_school_subject(subject_id):
                 school_subject.short_name = subject_new_short_name
                 user_action(current_user, f'Внесение изменений в школьный предмет {school_subject.name}')
                 db.session.commit()
+                cache.delete('school_subjects')
+                cache.delete('classes_school')
                 flash('Школьный предмет изменен', 'success')
 
             else:
@@ -239,15 +244,15 @@ def school_timetable(week, day):
     )
     if current_user.rights == "parent":
         class_list = [person.school_class_id for person in current_user.user_persons.all()]
-        school_classes = school_classes_query.filter(SchoolClass.id.in_(class_list)).all()
+        classes_school = school_classes_query.filter(SchoolClass.id.in_(class_list)).all()
     else:
-        school_classes = school_classes_query.all()
-    day_school_lessons, date_str, time_range = day_school_lessons_dict(week_day, week, school_classes)
+        classes_school = school_classes_query.all()
+    day_school_lessons, date_str, time_range = day_school_lessons_dict(week_day, week, classes_school)
     dates = get_date_range(week)
     filename = f"timetable_{dates[0].replace('.', '_')}_{dates[-1].replace('.', '_')}.xlsx"
 
     return render_template(
-        'school_classes/school_timetable.html', days=DAYS_OF_WEEK, school_classes=school_classes,
+        'school_classes/school_timetable.html', days=DAYS_OF_WEEK, school_classes=classes_school,
         dates=dates, classes=day_school_lessons, date=date_str, start_time=time_range[0], end_time=time_range[1],
         week=week, week_day=week_day, filename=filename
     )
@@ -323,8 +328,8 @@ def school_subject(subject_classes, month_index):
                                                                                                      classes_ids,
                                                                                                      month_index)
         subject = Subject.query.filter_by(id=subject_id).first()
-        school_classes = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).order_by(SchoolClass.school_class).all()
-        school_classes_names = ', '.join([cl.school_name for cl in school_classes])
+        classes_school = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).order_by(SchoolClass.school_class).all()
+        school_classes_names = ', '.join([cl.school_name for cl in classes_school])
 
         if request.method == 'POST':
             try:
@@ -433,3 +438,34 @@ def student_school_record(student_id, month_index):
     else:
         flash("Такого ученика нет", 'error')
         return redirect(url_for('main.index'))
+
+
+@school_classes.route('/school-journal/<string:option>', methods=['POST'])
+@login_required
+def school_journal(option):
+    if current_user.rights in ["admin", "user", "teacher"]:
+        if option == "student":
+            student_id = request.form.get("school_student")
+            if student_id:
+                return redirect(url_for('school_classes.student_school_record',
+                                        student_id=student_id, month_index=0))
+
+            else:
+                message = 'Не выбран ученик'
+
+        else:
+            subject_id = int(request.form.get("selected_subject")) if request.form.get("selected_subject") else None
+            school_class_id = int(request.form.get("school_class")) if request.form.get("school_class") else None
+
+            if subject_id and school_class_id:
+                return redirect(url_for('school_classes.school_subject',
+                                        subject_classes=f'{subject_id}-{school_class_id}',
+                                        month_index=0))
+
+            else:
+                message = 'Не выбран предмет или класс'
+    else:
+        message = 'Нет прав администратора'
+
+    flash(message, 'error')
+    return redirect(request.referrer)

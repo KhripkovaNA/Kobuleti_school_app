@@ -71,12 +71,17 @@ def lesson_subjects_data():
     return lesson_subjects
 
 
-def subjects_data():
-    all_subjects = Subject.query.filter(
-        Subject.subject_type.has(SubjectType.name != 'event')
-    ).order_by(Subject.name).all()
+def subjects_data(subject_type_name=None):
+    if subject_type_name is None:
+        filtered_subjects = Subject.query.filter(
+            Subject.subject_type.has(SubjectType.name != 'event')
+        ).order_by(Subject.name).all()
+    else:
+        filtered_subjects = Subject.query.filter(
+            Subject.subject_type.has(SubjectType.name == subject_type_name)
+        ).order_by(Subject.name).all()
     subjects_teachers = []
-    for subject in all_subjects:
+    for subject in filtered_subjects:
         subject_data = {
             "id": subject.id,
             "name": subject.name,
@@ -93,6 +98,7 @@ def subjects_data():
 
 
 def add_new_subject(form, subject_type):
+    classes = []
     if subject_type == "extra_school":
         name = form.subject_name.data
         subject_name = name[0].upper() + name[1:]
@@ -152,7 +158,7 @@ def add_new_subject(form, subject_type):
         subject_type_id=new_subject.subject_type_id
     ).all()
 
-    return new_subject if not same_subject else None
+    return new_subject if not same_subject else None, classes
 
 
 def handle_subject_edit(subject, form):

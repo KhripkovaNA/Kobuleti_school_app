@@ -5,7 +5,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-
+from flask_caching import Cache
+from app.service import get_sidebar_data_dict
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -16,11 +17,10 @@ convention = {
 }
 
 metadata = MetaData(naming_convention=convention)
-
-
 db = SQLAlchemy(metadata=metadata)
 csrf = CSRFProtect()
 migrate = Migrate(render_as_batch=True)
+cache = Cache()
 login = LoginManager()
 login.login_view = 'auth.login'
 
@@ -28,11 +28,18 @@ login.login_view = 'auth.login'
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.config['CACHE_TYPE'] = 'simple'
+    app.config['CACHE_DEFAULT_TIMEOUT'] = 86400
 
     db.init_app(app)
     csrf.init_app(app)
     migrate.init_app(app, db)
+    cache.init_app(app)
     login.init_app(app)
+
+    @app.context_processor
+    def inject_sidebar_data():
+        return get_sidebar_data_dict(cache)
 
     from app.auth.routes import auth
     app.register_blueprint(auth)
