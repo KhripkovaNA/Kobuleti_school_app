@@ -16,20 +16,20 @@
                             <div class="row">
                                 <label class="control-label col-md-2">Тема урока:</label>
                                 <div class="col-md-6">
-                                    {% if school_lesson.lesson_completed %}
+                                    {% if school_lesson.lesson_completed or current_user.rights not in ['admin', 'user', 'teacher'] %}
                                         <div class="form-control">{{ school_lesson.lesson_topic if school_lesson.lesson_topic }}</div>
                                     {% else %}
                                         <input type="text" name="lesson_topic" class="form-control" value="{{ school_lesson.lesson_topic }}">
                                     {% endif %}
                                 </div>
                                 <div class="col-md-2">
-                                    <button type="button" class="btn btn-xs" id="add-lesson-comment-btn" data-background-color="main" style="margin:5px;">Комментарий</button>
+                                    <button type="button" class="btn btn-xs" id="add-lesson-comment-btn" data-background-color="main" style="margin:5px;">Скрыть Комментарий</button>
                                 </div>
                             </div>
-                            <div class="row" id="comment-field-row" style="display: none;">
+                            <div class="row" id="comment-field-row">
                                 <label class="control-label col-md-2">Комментарий к уроку:</label>
                                 <div class="col-md-7">
-                                    {% if school_lesson.lesson_completed %}
+                                    {% if school_lesson.lesson_completed or current_user.rights not in ['admin', 'user', 'teacher'] %}
                                         <textarea class="form-control" rows="3" cols="8" disabled>{{ school_lesson.lesson_comment }}</textarea>
                                     {% else %}
                                         <textarea name="comment" class="form-control" rows="3" cols="8">{{ school_lesson.lesson_comment }}</textarea>
@@ -45,35 +45,50 @@
                                         <th>Комментарий</th>
                                     </thead>
                                     <tbody>
-                                        {% if school_lesson.lesson_completed %}
+                                        {% if school_lesson.lesson_completed or current_user.rights not in ['admin', 'user', 'teacher'] %}
                                             {% for student in school_lesson.lesson_students %}
-                                                <tr>
-                                                    <td>
-                                                        {{ loop.index }}.
-                                                        <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school_classes.student_school_record', student_id=student.id, month_index=month_index) }}">
-                                                            {{ student.last_name }} {{ student.first_name }}
-                                                        </a>
-                                                    </td>
-                                                    <td style="padding-left:20px;">
-                                                        {% if student.attending_status == "attend" %}
-                                                            <label class="contact-radio-label">
-                                                                <input type="checkbox" checked="checked" disabled>
-                                                                <span class="custom-checkbox"></span>
-                                                            </label>
-                                                        {% else %}
-                                                            Н/б
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>{% if student.grade %}<b>{{ student.grade }}</b>{% else %}б/о{% endif %}</td>
-                                                    <td>{{ student.lesson_comment if student.lesson_comment }}</td>
-                                                </tr>
+                                                {% if current_user.rights in ['admin', 'user', 'teacher'] or (current_user.rights == 'parent' and student in current_user.user_persons) %}
+                                                    <tr>
+                                                        <td>
+                                                            {% if current_user.rights in ['admin', 'user', 'teacher'] %}
+                                                                {{ loop.index }}.
+                                                                <a class="spinner-trigger" style="color:#555;" href="{{ url_for('school_classes.student_school_record', student_id=student.id, month_index=month_index) }}">
+                                                                    {{ student.last_name }} {{ student.first_name }}
+                                                                </a>
+                                                            {% else %}
+                                                                {{ student.last_name }} {{ student.first_name }}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td style="padding-left:20px;">
+                                                            {% if student.attending_status == "attend" or not student.attending_status %}
+                                                                <label class="contact-radio-label" style="margin-bottom:5px;">
+                                                                    <input type="checkbox" checked="checked" disabled>
+                                                                    <span class="custom-checkbox"></span>
+                                                                </label>
+                                                            {% else %}
+                                                                {% if school_lesson.lesson_completed %}
+                                                                    Н/б
+                                                                {% else %}
+                                                                    <label class="contact-radio-label" style="margin-bottom:5px;">
+                                                                        <input type="checkbox" disabled>
+                                                                        <span class="custom-checkbox"></span>
+                                                                    </label>
+                                                                {% endif %}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>{% if student.grade %}<b>{{ student.grade }}</b>{% else %}б/о{% endif %}</td>
+                                                        <td>{{ student.lesson_comment if student.lesson_comment }}</td>
+                                                    </tr>
+                                                {% endif %}
                                             {% endfor %}
                                             <tr>
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
                                                 <td>
-                                                    <button type="submit" name="change_btn" class="btn btn-xs" style="background-color: #ff9800;">Изменить</button>
+                                                    {% if current_user.rights in ['admin', 'user', 'teacher'] %}
+                                                        <button type="submit" name="change_btn" class="btn btn-xs" style="background-color: #ff9800;">Изменить</button>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                         {% else %}
@@ -138,23 +153,21 @@
                         </div>
                     </form>
                     <div class="row">
-                        <div class="col-md-5">
-                            {% if school_lesson.prev %}
-                                <button class="btn btn-sm" data-background-color="orange">
-                                    <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_classes.school_lesson', lesson_str='0-'+school_lesson.prev|string) }}">
-                                        <i class="material-icons">navigate_before</i>Предыдущee занятие
-                                    </a>
-                                </button>
-                            {% endif %}
-                            {% if school_lesson.next %}
-                                <button class="btn btn-sm" data-background-color="orange">
-                                    <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_classes.school_lesson', lesson_str='0-'+school_lesson.next|string) }}">
-                                        Следующее занятие<i class="material-icons">navigate_next</i>
-                                    </a>
-                                </button>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-7">
+                        {% if school_lesson.prev %}
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_classes.school_lesson', lesson_str='0-'+school_lesson.prev|string) }}">
+                                    <i class="material-icons">navigate_before</i>Предыдущee занятие
+                                </a>
+                            </button>
+                        {% endif %}
+                        {% if school_lesson.next %}
+                            <button class="btn btn-sm" data-background-color="orange">
+                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_classes.school_lesson', lesson_str='0-'+school_lesson.next|string) }}">
+                                    Следующее занятие<i class="material-icons">navigate_next</i>
+                                </a>
+                            </button>
+                        {% endif %}
+                        {% if current_user.rights in ['admin', 'user', 'teacher'] %}
                             <button class="btn btn-sm pull-right" data-background-color="purple">
                                 <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_classes.school_subject', subject_classes=subject_classes, month_index=month_index) }}">
                                     <i class="material-icons">article</i> Журнал
@@ -252,17 +265,16 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <button class="btn btn-sm pull-right" data-background-color="main">
-                                <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_classes.school_timetable', week=week, day=school_lesson.date.weekday() + 1) }}">
-                                    <i class="material-icons">calendar_month</i> Школьное расписание
-                                </a>
-                            </button>
-                        </div>
+                        {% endif %}
+                        <button class="btn btn-sm pull-right" data-background-color="main">
+                            <a class="spinner-trigger" style="color: #FFFFFF;" href="{{ url_for('school_classes.school_timetable', week=week, day=school_lesson.date.weekday() + 1) }}">
+                                <i class="material-icons">calendar_month</i> Школьное расписание
+                            </a>
+                        </button>
                     </div>
                 {% else %}
                     <div class="row">
-                        <p style="margin-left: 30px;">Запланированных занятий нет</p>
+                        <p style="margin-left: 30px;">Запланированных уроков нет</p>
                     </div>
                 {% endif %}
             </div>

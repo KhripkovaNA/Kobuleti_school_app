@@ -261,55 +261,50 @@ def school_timetable(week, day):
 @school_classes.route('/school-lesson/<string:lesson_str>', methods=['GET', 'POST'])
 @login_required
 def school_lesson(lesson_str):
-    if current_user.rights in ["admin", "user", "teacher"]:
-        sc_lesson, sc_subject = show_school_lesson(lesson_str)
-        if sc_lesson:
-            subject_classes = str(sc_lesson.subject_id) + '-' + '-'.join(map(str, sc_lesson.classes_ids))
-            month_index = calc_month_index(sc_lesson.date)
+    sc_lesson, sc_subject = show_school_lesson(lesson_str)
+    if sc_lesson:
+        subject_classes = str(sc_lesson.subject_id) + '-' + '-'.join(map(str, sc_lesson.classes_ids))
+        month_index = calc_month_index(sc_lesson.date)
 
-            if request.method == 'POST':
-                try:
-                    message = handle_school_lesson(request.form, sc_lesson, current_user)
-                    db.session.commit()
-                    if message:
-                        flash(message[0], message[1])
+        if request.method == 'POST' and current_user.rights in ["admin", "user", "teacher"]:
+            try:
+                message = handle_school_lesson(request.form, sc_lesson, current_user)
+                db.session.commit()
+                if message:
+                    flash(message[0], message[1])
 
-                except Exception as e:
-                    db.session.rollback()
-                    flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Ошибка при проведении занятия: {str(e)}', 'error')
 
-                return redirect(url_for('school_classes.school_lesson', lesson_str=f'0-{sc_lesson.id}'))
+            return redirect(url_for('school_classes.school_lesson', lesson_str=f'0-{sc_lesson.id}'))
 
-            sc_students = Person.query.filter(
-                Person.school_class_id.is_not(None),
-                ~Person.id.in_([student.id for student in sc_lesson.lesson_students])
-            ).order_by(Person.last_name, Person.first_name).all()
-            distinct_grade_types = db.session.query(
-                distinct(SchoolLessonJournal.grade_type)
-            ).filter(
-                SchoolLessonJournal.final_grade.is_(False)
-            ).all()
-            grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
-            days_dict = {day_num: day for (day_num, day) in enumerate(DAYS_OF_WEEK)}
-            week = calculate_week(sc_lesson.date)
+        sc_students = Person.query.filter(
+            Person.school_class_id.is_not(None),
+            ~Person.id.in_([student.id for student in sc_lesson.lesson_students])
+        ).order_by(Person.last_name, Person.first_name).all()
+        distinct_grade_types = db.session.query(
+            distinct(SchoolLessonJournal.grade_type)
+        ).filter(
+            SchoolLessonJournal.final_grade.is_(False)
+        ).all()
+        grade_types = [grade_type[0] for grade_type in distinct_grade_types if grade_type[0]]
+        days_dict = {day_num: day for (day_num, day) in enumerate(DAYS_OF_WEEK)}
+        week = calculate_week(sc_lesson.date)
 
-            return render_template(
-                'school_classes/school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
-                week=week, school_students=sc_students, grade_types=grade_types, school_subject=sc_subject,
-                subject_classes=subject_classes, month_index=month_index, today=get_today_date()
-            )
-
-        else:
-            if sc_subject:
-                return render_template('school_classes/school_lesson.html', school_lesson=sc_lesson,
-                                       school_subject=sc_subject)
-            else:
-                flash("Такого урока нет", 'error')
-                return redirect(url_for('school_classes.school_subjects', school_class=0))
+        return render_template(
+            'school_classes/school_lesson.html', school_lesson=sc_lesson, days_dict=days_dict,
+            week=week, school_students=sc_students, grade_types=grade_types, school_subject=sc_subject,
+            subject_classes=subject_classes, month_index=month_index, today=get_today_date()
+        )
 
     else:
-        flash('Нет прав администратора', 'error')
-        return redirect(url_for('main.index'))
+        if sc_subject:
+            return render_template('school_classes/school_lesson.html', school_lesson=sc_lesson,
+                                   school_subject=sc_subject)
+        else:
+            flash("Такого урока нет", 'error')
+            return redirect(url_for('school_classes.school_subjects', school_class=0))
 
 
 @school_classes.route('/school-subject/<subject_classes>/<string:month_index>', methods=['GET', 'POST'])

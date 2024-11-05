@@ -507,14 +507,13 @@ $(document).ready(function(){
 
     // Toggle lesson comment field based on button clicks
     $("#add-lesson-comment-btn").click(function() {
-        $("#comment-field-row").show();
-    });
-
-    // Close comment field when clicking anywhere outside of it
-    $(document).mouseup(function(e) {
-        var container = $("#comment-field-row");
-        if (!container.is(e.target) && container.has(e.target).length === 0) {
-            container.hide();
+        var CommentFieldRow = $("#comment-field-row");
+        if (CommentFieldRow.is(':visible')) {
+            CommentFieldRow.hide();
+            $(this).html("Показать комментарий");
+        } else {
+            CommentFieldRow.show();
+            $(this).html("Скрыть комментарий");
         }
     });
 
