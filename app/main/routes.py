@@ -20,7 +20,7 @@ def delete_record():
     record_type = request.form.get('record_type')
 
     try:
-        if record_type in ['student', 'employee', 'school_student', 'fin_operation', 'subscription']:
+        if record_type in ['student', 'employee', 'fin_operation', 'subscription']:
             if current_user.rights == 'admin':
                 message = del_record(request.form, record_type, current_user)
                 db.session.commit()

@@ -50,8 +50,9 @@ def school_students(school_class):
                                           f"{new_school_student.first_name} в класс '{school.school_name}'"
                             user_action(current_user, description)
                             db.session.commit()
-                            cache.delete('school_attending_students')
-                            cache.delete(f'class_info_{school.id}')
+                            cache.delete_many('school_attending_students',
+                                              'possible_students',
+                                              f'class_{school.id}_students')
                             flash(f'Новый ученик добавлен в класс', 'success')
                         else:
                             flash('Ученик не выбран', 'error')
@@ -83,12 +84,19 @@ def school_students(school_class):
 
             return redirect(request.referrer)
 
-        possible_students = Person.query.filter(
-            Person.person_type == 'Ребенок',
-            Person.status == 'Клиент',
-            Person.school_class_id.is_(None)
-        ).order_by(Person.last_name, Person.first_name).all()
-        teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+        possible_students = cache.get('possible_students')
+        if not possible_students:
+            possible_students = Person.query.filter(
+                Person.person_type == 'Ребенок',
+                Person.status == 'Клиент',
+                Person.school_class_id.is_(None)
+            ).order_by(Person.last_name, Person.first_name).all()
+            cache.set('possible_students', possible_students)
+
+        teachers = cache.get('teachers')
+        if not teachers:
+            teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+            cache.set('teachers', teachers)
 
         return render_template(
             'school_classes/school.html', school_classes=classes_school, school_class=school,
@@ -127,9 +135,8 @@ def school_subjects(school_class):
                             user_action(current_user, description)
                             db.session.commit()
                             cache.delete('school_subjects')
-                            cache.delete('classes_school')
                             for class_id in classes:
-                                cache.delete(f'class_info_{class_id}')
+                                cache.delete(f'class_{class_id}_subjects')
 
                             flash('Новый предмет добавлен в систему', 'success')
 
@@ -154,11 +161,11 @@ def school_subjects(school_class):
                                     teacher.teaching_classes.append(school)
                                 if new_subject not in teacher.subjects_taught.all():
                                     teacher.subjects_taught.append(new_subject)
-                            description = f"Добавление школьного предмета {new_subject.name} в класс '{school.school_name}'"
+                            description = (f"Добавление школьного предмета {new_subject.name} "
+                                           f"в класс '{school.school_name}'")
                             user_action(current_user, description)
                             db.session.commit()
-                            cache.delete('school_subjects')
-                            cache.delete('classes_school')
+                            cache.delete_many('school_subjects', f'class_{school.id}_subjects')
                             flash('Предмет добавлен классу', 'success')
 
                         else:
@@ -195,20 +202,24 @@ def edit_school_subject(subject_id):
     try:
         if current_user.rights in ["admin", "user"]:
             subject_id = int(subject_id) if str(subject_id).isdigit() else None
-            school_subject = Subject.query.filter(
-                Subject.id == subject_id,
-                Subject.subject_type.has(SubjectType.name == 'school')
-            ).first()
+            school_subjects = cache.get('school_subjects')
+            if school_subjects:
+                school_subject = next((subject for subject in school_subjects if subject.id == subject_id), None)
+            else:
+                school_subject = Subject.query.filter(
+                    Subject.id == subject_id,
+                    Subject.subject_type.has(SubjectType.name == 'school')
+                ).first()
             if school_subject:
                 subject_new_name = request.form.get('subject_name')
                 subject_new_short_name = request.form.get('subject_short_name')
-
                 school_subject.name = subject_new_name
                 school_subject.short_name = subject_new_short_name
                 user_action(current_user, f'Внесение изменений в школьный предмет {school_subject.name}')
                 db.session.commit()
                 cache.delete('school_subjects')
-                cache.delete('classes_school')
+                for school_class in school_subject.school_classes:
+                    cache.delete(f'class_{school_class.id}_subjects')
                 flash('Школьный предмет изменен', 'success')
 
             else:
@@ -317,15 +328,21 @@ def school_subject(subject_classes, month_index):
         month_index = int(month_index) if str(month_index).lstrip('-').isdigit() else None
         if not subject_id or not classes_ids or month_index is None:
             flash("Журнал не найден", 'error')
-            return redirect(url_for('school_classes.school_subjects', school_class=0))
+            return redirect(url_for('main.index'))
 
+        subject = Subject.query.filter_by(id=subject_id).first()
+        classes_school = SchoolClass.query.filter(
+            SchoolClass.id.in_(classes_ids),
+            SchoolClass.school_subjects.any(Subject.id == subject_id)
+        ).order_by(SchoolClass.school_class).all()
+        if not classes_school:
+            flash(f"Журнал не найден", 'error')
+            return redirect(url_for('main.index'))
+
+        school_classes_names = ', '.join([cl.school_name for cl in classes_school])
         subject_records, dates_topics, sc_students, final_grades_list, month = school_subject_record(subject_id,
                                                                                                      classes_ids,
                                                                                                      month_index)
-        subject = Subject.query.filter_by(id=subject_id).first()
-        classes_school = SchoolClass.query.filter(SchoolClass.id.in_(classes_ids)).order_by(SchoolClass.school_class).all()
-        school_classes_names = ', '.join([cl.school_name for cl in classes_school])
-
         if request.method == 'POST':
             try:
                 if 'new_grade_btn' in request.form:

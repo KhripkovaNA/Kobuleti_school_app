@@ -116,7 +116,7 @@
                                                                 <li class="divider"></li>
 
                                                                 <li>
-                                                                    {% if current_user.rights != 'admin' %}
+                                                                    {% if current_user.rights not in ['admin', 'user'] %}
                                                                         <a href="#" title="Нет прав руководителя">
                                                                             <i class="material-icons" style="color: red;">delete_forever</i>Удалить
                                                                         </a>

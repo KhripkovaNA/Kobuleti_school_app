@@ -3,6 +3,7 @@ from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
 from app.app_settings.models import Room
+from app.auth.models import User
 from app.school.employees.models import Employee
 from app.school.models import Contact, Person
 from app.school.subjects.models import Subject, SubjectType
@@ -864,5 +865,6 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 #
 # db.session.commit()
 
+# print_table(User)
 
 
