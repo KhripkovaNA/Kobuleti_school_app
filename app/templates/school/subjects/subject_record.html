@@ -65,8 +65,10 @@
                                 <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu">
-                                {% for other_subject in other_subjects %}
-                                    <li><a class="spinner-trigger" href="{{ url_for('school.subjects.subject', subject_id=other_subject.id, month_index=month_index) }}">{{ other_subject.name }}</a></li>
+                                {% for other_subject in all_subjects %}
+                                    {% if other_subject.id != subject.id %}
+                                        <li><a class="spinner-trigger" href="{{ url_for('school.subjects.subject', subject_id=other_subject.id, month_index=month_index) }}">{{ other_subject.name }}</a></li>
+                                    {% endif %}
                                 {% endfor %}
                             </ul>
                         </div>

@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from sqlalchemy import or_, and_
-from app import db
+from app import db, cache
 from .forms import ExtraSubjectForm, EditExtraSubjectForm
 from .service import add_new_subject, handle_subject_edit, subject_record
 from .models import Subject, SubjectType
@@ -22,11 +22,16 @@ school_subjects = Blueprint('subjects', __name__)
 @login_required
 def subjects():
     if current_user.rights in ["admin", "user", "teacher"]:
-        all_subjects = Subject.query.filter(
-            Subject.subject_type.has(SubjectType.name.in_(['extra', 'individual']))
-        ).order_by(Subject.name).all()
-        for subject in all_subjects:
-            subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
+        all_subjects = cache.get('all_subjects')
+        if not all_subjects:
+            all_subjects = Subject.query.filter(
+                Subject.subject_type.has(SubjectType.name.in_(['extra', 'individual']))
+            ).order_by(Subject.name).all()
+            for subject in all_subjects:
+                subject.subject_description = subject.subject_type.description
+                subject.teachers = subject.teachers
+                subject.types_of_subscription = format_subscription_types(subject.subscription_types.all())
+            cache.set('all_subjects', all_subjects)
 
         return render_template('school/subjects/subjects.html', subjects=all_subjects)
 
@@ -41,7 +46,9 @@ def add_subject():
     if current_user.rights in ["admin", "user"]:
         subject_types = SubjectType.query.filter(~SubjectType.name.in_(['after_school', 'school', 'event'])).all()
         subscription_types = format_subscription_types(SubscriptionType.query.all())
-        all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
+        all_teachers = cache.get('teachers')
+        if not all_teachers:
+            all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
         form = ExtraSubjectForm()
         form.subject_type.choices = [(subject_type.id, subject_type.description) for subject_type in subject_types]
         form.subscription_types.choices = [(type_of_subscription[0], type_of_subscription[1])
@@ -60,6 +67,7 @@ def add_subject():
                                            f"({new_subject.subject_type.description})"
                         user_action(current_user, user_description)
                         db.session.commit()
+                        cache.delete_many('all_subjects', 'subscription_subjects_data')
                         flash('Новый предмет добавлен в систему', 'success')
                         return redirect(url_for('school.subjects.subjects'))
 
@@ -112,6 +120,7 @@ def edit_subject(subject_id):
                         handle_subject_edit(subject, request.form)
                         user_action(current_user, f'Внесение изменений в предмет {subject.name}')
                         db.session.commit()
+                        cache.delete_many('all_subjects', 'subscription_subjects_data')
                         flash('Изменения внесены', 'success')
                         return redirect(url_for('school.subjects.subjects'))
 
@@ -150,14 +159,15 @@ def subject(subject_id, month_index):
             return redirect(url_for('school.subjects.subjects'))
 
         subject_records, datetimes, subject_students, month = subject_record(subject_id, month_index)
-        other_subjects = Subject.query.filter(
-            Subject.id != subject_id,
-            ~Subject.subject_type.has(SubjectType.name.in_(['school', 'event', 'after_school']))
-        ).order_by(Subject.name).all()
+        all_subjects = cache.get('all_subjects')
+        if not all_subjects:
+            all_subjects = Subject.query.filter(
+                ~Subject.subject_type.has(SubjectType.name.in_(['school', 'event', 'after_school']))
+            ).order_by(Subject.name).all()
 
         return render_template('school/subjects/subject_record.html', subject_records=subject_records,
                                datetimes=datetimes, students=subject_students, subject=subject, month_index=month_index,
-                               other_subjects=other_subjects, month=month)
+                               all_subjects=all_subjects, month=month)
 
     else:
         flash('Нет прав администратора', 'error')

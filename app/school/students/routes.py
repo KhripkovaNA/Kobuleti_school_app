@@ -8,7 +8,7 @@ from app.school.models import Person
 from app.common_servicies.service import get_today_date, MONTHS, get_period
 from app.school.subjects.service import subscription_subjects_data, lesson_subjects_data
 from app.school.subjects.models import Subject
-from app import db
+from app import db, cache
 from app.app_settings.service import user_action
 from app.school.forms import (
     ChildForm, AdultForm, NewContactPersonForm, AddContForm, EditAddContPersonForm,
@@ -19,7 +19,7 @@ from app.finance.models import Finance
 from app.school.subscriptions.forms import SubscriptionsEditForm
 from flask import Blueprint
 
-from ...app_settings.models import SubscriptionType
+from app.app_settings.models import SubscriptionType
 
 school_students = Blueprint('students', __name__)
 
@@ -38,8 +38,11 @@ def students():
         subscription_subjects = subscription_subjects_data()
         lesson_subjects = lesson_subjects_data()
 
-        return render_template('school/students/students.html', students=all_students, subscription_subjects=subscription_subjects,
-                               today=f'{get_today_date():%d.%m.%Y}', lesson_subjects=lesson_subjects)
+        return render_template(
+            'school/students/students.html', students=all_students,
+            subscription_subjects=subscription_subjects, today=f'{get_today_date():%d.%m.%Y}',
+            lesson_subjects=lesson_subjects
+        )
 
     else:
         flash('Нет прав администратора', 'error')

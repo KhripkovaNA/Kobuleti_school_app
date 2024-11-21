@@ -1,4 +1,9 @@
 def get_sidebar_data_dict(cache):
+    if hasattr(cache.cache, '_cache'):
+        cache_keys = list(cache.cache._cache.keys())
+        with open('cache.txt', "a", encoding='utf-8') as file:
+            file.write(', '.join(cache_keys) + '\n')
+
     classes_school = cache.get('classes_school')
     school_subjects = cache.get('school_subjects')
     school_attending_students = cache.get('school_attending_students')
@@ -22,8 +27,6 @@ def get_sidebar_data_dict(cache):
         ).order_by(Subject.name).all()
 
         cache.set('school_subjects', school_subjects)
-
-
 
     if school_attending_students is None:
         from app.school.models import Person

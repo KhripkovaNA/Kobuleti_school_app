@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from sqlalchemy import or_, and_
-from app import db
+from app import db, cache
 from app.common_servicies.service import (
     DAYS_OF_WEEK, get_date, calc_month_index, conjugate_lessons, calculate_week, get_weekday_date, get_today_date
 )
@@ -876,6 +876,7 @@ def undo_lesson(subject, lesson):
 
 
 def handle_lesson(form, subject, lesson, user):
+    month_index = calc_month_index(lesson.date)
     if 'del_client_btn' in form:
         del_client_id = int(form.get('del_client_btn'))
         del_client = Person.query.filter_by(id=del_client_id).first()
@@ -889,6 +890,7 @@ def handle_lesson(form, subject, lesson, user):
         description = f"Удаление клиента {del_client.last_name} {del_client.first_name} c занятия {subject.name}"
         user_action(user, description)
         db.session.flush()
+        cache.delete(f'subject_record_{subject.id}_{month_index}')
         return 'Клиент удален', 'success'
 
     if 'add_client_btn' in form:
@@ -940,9 +942,11 @@ def handle_lesson(form, subject, lesson, user):
 
     if 'attended_btn' in form and user.rights in ["admin", "user"]:
         message = carry_out_lesson(form, subject, lesson, user)
+        cache.delete(f'subject_record_{subject.id}_{month_index}')
         return message
 
     if 'change_btn' in form and user.rights in ["admin", "user"]:
         message = undo_lesson(subject, lesson)
         user_action(user, f"Отмена проведения занятия {subject.name} {lesson.date:%d.%m.%Y}")
+        cache.delete(f'subject_record_{subject.id}_{month_index}')
         return message

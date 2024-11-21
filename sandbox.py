@@ -8,7 +8,7 @@ from app.school.employees.models import Employee
 from app.school.models import Contact, Person
 from app.school.subjects.models import Subject, SubjectType
 from app.school.subscriptions.models import Subscription
-from app.school_classes.models import SchoolClass
+from app.school_classes.models import SchoolClass, SchoolLessonJournal
 from app.timetable.models import Lesson
 
 app = create_app()
@@ -854,7 +854,6 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
                                                                             'Питание', 'Школа', 'Канцелярия', 'Аренда',
               'Аттестация']
 
-
 # subscriptions = Subscription.query.all()
 # after_school = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
 # for subscription in subscriptions:
@@ -866,5 +865,3 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
 # db.session.commit()
 
 # print_table(User)
-
-
