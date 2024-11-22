@@ -1,0 +1,26 @@
+{% extends "modal_template_alert.html" %}
+
+{% block modal_body %}
+<p class="control-label">
+    {% if lesson_id < 0 %}
+        <b>Вы уверены, что хотите полностью удалить все итоговые оцени от {{ date }} ({{ topic }})?</b>
+    {% else %}
+        Вы уверены, что хотите полностью удалить все оценки от {{ date }} ({{ topic }})?
+    {% endif %}
+</p>
+<form class="login-form" action="{{ url_for('school_classes.school_subject', subject_classes=subject_classes, month_index=month_index) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <input type="hidden" name="final_grade" value="{{ 1 if lesson_id < 0 else 0 }}">
+    <input type="hidden" name="grade_date_topic" value="{{ date }}-|-{{ topic }}">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <button type="submit" name="delete_grade_btn" class="btn btn-sm" data-background-color="main">
+                Да
+            </button>
+            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                Нет
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

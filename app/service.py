@@ -1,8 +1,8 @@
 def get_sidebar_data_dict(cache):
-    if hasattr(cache.cache, '_cache'):
-        cache_keys = list(cache.cache._cache.keys())
-        with open('cache.txt', "a", encoding='utf-8') as file:
-            file.write(', '.join(cache_keys) + '\n')
+    # if hasattr(cache.cache, '_cache'):
+    #     cache_keys = list(cache.cache._cache.keys())
+    #     with open('cache.txt', "a", encoding='utf-8') as file:
+    #         file.write(', '.join(cache_keys) + '\n')
 
     classes_school = cache.get('classes_school')
     school_subjects = cache.get('school_subjects')

@@ -264,7 +264,7 @@ def handle_school_lesson(form, lesson, user):
                     lesson_id=lesson.id,
                     student_id=student.id
                 ).first()
-                if grade or lesson_comment:
+                if grade is not None or lesson_comment:
                     if journal_record:
                         journal_record.grade = grade
                         journal_record.lesson_comment = lesson_comment
@@ -386,7 +386,7 @@ def add_new_grade(form, students, subject_id, grade):
     for student in students:
         new_grade = form.get(f'new_grade_{student.id}')
         new_comment = form.get(f'new_comment_{student.id}')
-        if new_grade or new_comment:
+        if new_grade is not None or new_comment:
             journal_record = SchoolLessonJournal(
                 date=grade_date,
                 grade_type=grade_type,
@@ -430,7 +430,7 @@ def change_grade(form, subject, classes_ids, user):
     new_grade = int(form.get('grade')) if form.get('grade') and form.get('grade').isdigit() else None
     new_comment = form.get('comment')
     if grade_id == 0:
-        if not new_grade and not new_comment:
+        if new_grade is None and not new_comment:
             return 'Нет новой оценки или комментария', 'error'
 
         else:
@@ -459,7 +459,7 @@ def change_grade(form, subject, classes_ids, user):
 
     else:
         grade_record = SchoolLessonJournal.query.filter_by(id=grade_id).first()
-        if not new_grade and not new_comment:
+        if new_grade is None and not new_comment:
             db.session.delete(grade_record)
             db.session.flush()
 

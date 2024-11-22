@@ -20,7 +20,7 @@
             <div class="row">
                 <label class="control-label col-md-3" style="padding-left:44px;">Дата:</label>
                 <div class="col-md-5 date-div">
-                    <input type="text" name="grade_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ school_lesson.date.strftime('%d.%m.%Y') }}">
+                    <input type="text" name="grade_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ lesson_date if lesson_date }}">
                 </div>
             </div>
         </div>
@@ -32,7 +32,7 @@
             </div>
             <div class="row" style="padding: 0 20px 0 44px; margin-top:0;">
                 <select class="form-control student-select">
-                    {% for student in school_lesson.lesson_students %}
+                    {% for student in students %}
                         <option value="{{ student.id }}">{{ student.last_name }} {{ student.first_name }}</option>
                     {% endfor %}
                 </select>
@@ -66,7 +66,7 @@
     <div class="input-container"></div>
     <div class="row">
         <div class="col-md-6 col-md-offset-3">
-            <button type="submit" name="new_grade_btn" class="btn btn-sm" data-background-color="main">
+            <button type="submit" name="{{ submit_type }}" class="btn btn-sm" data-background-color="main">
                 Выставить оценки
             </button>
             <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">

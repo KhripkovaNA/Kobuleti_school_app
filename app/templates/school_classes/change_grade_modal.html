@@ -1,0 +1,46 @@
+{% extends "modal_template.html" %}
+
+{% block modal_body %}
+<form class="change-grade-form" action="{{ url_for('school_classes.school_subject', subject_classes=subject_classes, month_index=month_index) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <input type="hidden" name="final_grade" value="{{ 1 if lesson_id < 0 else 0 }}">
+    <input type="hidden" name="grade_date_topic" value="{{ date }}-|-{{ topic }}">
+    <input type="hidden" name="grade_id" value="{{ subject_records[student][(date, topic, lesson_id)].id if subject_records[student].get((date, topic, lesson_id)) else 0 }}">
+    <input type="hidden" name="student" value="{{ subject_records[student].student_id }}-{{ subject_records[student].class_id }}">                                                                    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Ученик:</label>
+        <div class="col-md-7">
+            <div class="form-control">{{ student }}</div>
+        </div>
+    </div>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Оценка:</label>
+        <div class="col-md-3">
+            {% if subject_records[student].get((date, topic, lesson_id)) %}
+                <input type="number" name="grade" min="0" max="5" value="{{ subject_records[student][(date, topic, lesson_id)].grade if subject_records[student][(date, topic, lesson_id)].grade is not none }}">
+            {% else %}
+                <input type="number" name="grade" min="0" max="5">
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Комментарий:</label>
+        <div class="col-md-7">
+            {% if subject_records[student].get((date, topic, lesson_id)) %}
+                <input type="text" name="comment" value="{{ subject_records[student][(date, topic, lesson_id)].comment if subject_records[student][(date, topic, lesson_id)].comment }}">
+            {% else %}
+                <input type="text" name="comment">
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <button type="submit" name="change_grade_btn" class="btn btn-sm" data-background-color="main">
+                Изменить
+            </button>
+            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                Отмена
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

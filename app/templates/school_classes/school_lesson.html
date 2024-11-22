@@ -76,7 +76,7 @@
                                                                 {% endif %}
                                                             {% endif %}
                                                         </td>
-                                                        <td>{% if student.grade %}<b>{% if student.grade == 0 %}Долг{% else %}{{ student.grade }}{% endif %}</b>{% else %}б/о{% endif %}</td>
+                                                        <td>{% if student.grade is not none %}<b>{% if student.grade == 0 %}Долг{% else %}{{ student.grade }}{% endif %}</b>{% else %}б/о{% endif %}</td>
                                                         <td>{{ student.lesson_comment if student.lesson_comment }}</td>
                                                     </tr>
                                                 {% endif %}
@@ -179,7 +179,7 @@
 
                         <!-- *-*-*-*-*-*-*-*-*-* Grade modal *-*-*-*-*-*-*-*-*-* -->
 
-                            {% with modal_id='subject-journal-modal', modal_class='modal-lg', modal_title=school_lesson.subject.name ~ '. ' ~ school_lesson.classes ~ '. Оценки' %}
+                            {% with modal_id='grade-modal', modal_class='modal-lg', modal_title=school_lesson.subject.name ~ '. ' ~ school_lesson.classes ~ '. Оценки', lesson_date = school_lesson.date.strftime('%d.%m.%Y'), students = school_lesson.lesson_students, submit_type = 'new_grade_btn' %}
                                 {% include 'school_classes/grade_modal.html' %}
                             {% endwith %}
 
