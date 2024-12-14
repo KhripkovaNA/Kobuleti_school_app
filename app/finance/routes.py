@@ -11,9 +11,9 @@ from app.common_servicies.excel_generators import download_finance_report
 from app.common_servicies.service import MONTHS, OPERATION_CATEGORIES, OPERATION_TYPES, get_today_date, get_period
 from app.school.models import Person
 from app.school.subjects.models import Subject, SubjectType
-from app.school.subjects.service import subscription_subjects_data
-from ..after_school.service import get_after_school_prices
-from ..app_settings.models import SubscriptionType
+from app.caching.service import get_cache_subscription_subjects
+from app.after_school.service import get_after_school_prices
+from app.app_settings.models import SubscriptionType
 
 finance = Blueprint('finance', __name__)
 
@@ -65,7 +65,7 @@ def finances():
 
             return redirect(url_for('finance.finances'))
 
-        subscription_subjects = subscription_subjects_data()
+        subscription_subjects = get_cache_subscription_subjects()
         periods = [get_period(0), get_period(1)]
         months = [(f"{period[0]}-{period[1]}", MONTHS[period[0] - 1].capitalize()) for period in periods]
         after_school_prices_objects = SubscriptionType.query.filter(SubscriptionType.period != '').all()

@@ -1,6 +1,7 @@
 from sqlalchemy import or_
-from app import db, cache
+from app import db
 from app.app_settings.service import user_action
+from app.caching.service import delete_cache, get_cache_school_class_info
 from app.common_servicies.service import get_today_date, conjugate_lessons, CHILD
 from app.finance.models import Finance
 from app.finance.service import finance_operation
@@ -19,9 +20,9 @@ def del_record(form, record_type, user):
         if student:
             student_name = f"{student.last_name} {student.first_name}"
             if student.person_type == CHILD and student.school_class_id is not None:
-                cache.delete_many('school_attending_students', f'class_{student.school_class_id}_students')
+                delete_cache(['school_attending_students', f'class_{student.school_class_id}_students'])
             elif student.person_type == CHILD:
-                cache.delete('possible_students')
+                delete_cache(['possible_students'])
             if student.parents.all():
                 for parent in student.parents:
                     if len(parent.children.all()) == 1 and not parent.status and not parent.roles:
@@ -68,7 +69,7 @@ def del_record(form, record_type, user):
                 if employee.teacher:
                     keys_to_delete = (['teachers'] +
                                       [f'class_{sc_cl.id}_subjects' for sc_cl in employee.teaching_classes])
-                    cache.delete_many(keys_to_delete)
+                    delete_cache(keys_to_delete)
 
                 for role in employee.roles:
                     db.session.delete(role)
@@ -162,7 +163,7 @@ def del_record(form, record_type, user):
         ).first()
         if subject:
             school_class_id = int(form.get('school_class_id'))
-            school_class_info = cache.get(f'class_info_{school_class_id}')
+            school_class_info = get_cache_school_class_info(school_class_id)
             school_class = school_class_info['school_class'] if school_class_info \
                 else SchoolClass.query.filter_by(id=school_class_id).first()
             subject.school_classes.remove(school_class)
@@ -179,7 +180,7 @@ def del_record(form, record_type, user):
                 message = (f"Школьный предмет {subject_name} удален из класса", 'success')
 
             db.session.flush()
-            cache.delete_many("school_subjects", f'class_{school_class_id}_subjects')
+            delete_cache(["school_subjects", f'class_{school_class_id}_subjects'])
 
         else:
             message = ("Такого предмета нет", 'error')
@@ -243,7 +244,7 @@ def del_record(form, record_type, user):
             db.session.flush()
             user_action(user, f"Удаление ученика {student_name} из класса '{school_class_name}'")
             message = (f"Ученик {student_name} удален из класса", "success")
-            cache.delete_many('school_attending_students', 'possible_students', f'class_{school_class_id}_students')
+            delete_cache(['school_attending_students', 'possible_students', f'class_{school_class_id}_students'])
         else:
             message = ("Такого ученика нет", 'error')
 

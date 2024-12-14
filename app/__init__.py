@@ -6,7 +6,6 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from flask_caching import Cache
-from app.service import get_sidebar_data_dict
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -28,7 +27,7 @@ login.login_view = 'auth.login'
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    app.config['CACHE_TYPE'] = 'simple'
+    app.config['CACHE_TYPE'] = 'SimpleCache'
     app.config['CACHE_DEFAULT_TIMEOUT'] = 86400
 
     db.init_app(app)
@@ -39,7 +38,13 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_sidebar_data():
-        return get_sidebar_data_dict(cache)
+        from app.caching.service import get_cache_school_subjects, get_cache_school_classes, \
+            get_cache_school_attending_students
+        return dict(
+            school_subjects=get_cache_school_subjects(),
+            classes_school=get_cache_school_classes(),
+            school_attending_students=get_cache_school_attending_students()
+        )
 
     from app.auth.routes import auth
     app.register_blueprint(auth)

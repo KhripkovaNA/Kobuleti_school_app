@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
-from .models import Room, SubscriptionType
-from .service import user_action
+from app.app_settings.models import Room, SubscriptionType
+from app.app_settings.service import user_action
 from app import db
 from app.auth.models import User
 from app.school.models import Person
 from app.school_classes.models import SchoolClass
-
+from app.caching.service import get_cache_rooms, get_cache_subscription_types, get_cache_school_attending_students, \
+    get_cache_after_school_prices, get_cache_parent_users, get_cache_school_classes, delete_cache
 
 app_settings = Blueprint('settings', __name__)
 
@@ -15,14 +16,13 @@ app_settings = Blueprint('settings', __name__)
 @login_required
 def settings():
     if current_user.rights in ['admin', 'user']:
-        rooms = Room.query.all()
-        school_classes = SchoolClass.query.order_by(SchoolClass.school_class, SchoolClass.school_name).all()
-        subscription_types = SubscriptionType.query.filter(SubscriptionType.lessons.isnot(None)).all()
-        after_school_prices = SubscriptionType.query.filter(SubscriptionType.period != '').all()
-        school_children = Person.query.filter(
-            Person.school_class_id.is_not(None)
-        ).order_by(Person.last_name, Person.first_name).all()
-        parent_users = User.query.filter_by(rights="parent").all()
+
+        rooms = get_cache_rooms()
+        school_classes = get_cache_school_classes()
+        subscription_types = get_cache_subscription_types()
+        after_school_prices = get_cache_after_school_prices()
+        school_children = get_cache_school_attending_students()
+        parent_users = get_cache_parent_users()
 
         return render_template('app_settings/settings.html', rooms=rooms, parents=parent_users,
                                children=school_children, school_classes=school_classes,
@@ -53,6 +53,7 @@ def change_parent():
                         parent.user_persons = [child for child in children]
                         user_action(current_user, f"Изменение списка детей у родителя {parent.username}")
                         db.session.commit()
+                        delete_cache(['parent_users'])
                         flash("Изменения внесены", 'success')
 
                 elif parent and not children_ids:
@@ -67,6 +68,7 @@ def change_parent():
                 db.session.delete(parent)
                 user_action(current_user, f"Удаление родителя {parent.username}")
                 db.session.commit()
+                delete_cache(['parent_users'])
                 flash(f"Родитель {parent.username} удален", 'success')
 
         else:
@@ -95,6 +97,7 @@ def change_add_room():
                     room.color = new_color
                     user_action(current_user, f"Внесение изменений в кабинет '{room.name}'")
                     db.session.commit()
+                    delete_cache(['rooms'])
                     flash(f"Кабинет '{room.name}' изменен", 'success')
 
             if 'delete_room_btn' in request.form:
@@ -105,6 +108,7 @@ def change_add_room():
                     db.session.delete(room)
                     user_action(current_user, f"Удаление кабинета '{room.name}'")
                     db.session.commit()
+                    delete_cache(['rooms'])
                     flash(f"Кабинет '{room.name}' удален", 'success')
 
             if 'add_room' in request.form:
@@ -114,6 +118,7 @@ def change_add_room():
                 db.session.add(new_room)
                 user_action(current_user, f"Добавление кабинета '{new_room.name}'")
                 db.session.commit()
+                delete_cache(['rooms'])
                 flash(f"Новый кабинет '{new_room.name}' добавлен в систему", 'success')
 
         else:
@@ -143,6 +148,7 @@ def change_add_class():
                     school_class.school_name = new_school_name
                     user_action(current_user, f"Внесение изменений в класс '{school_class.school_name}'")
                     db.session.commit()
+                    delete_cache(['classes_school', f'class_info_{school_class.id}'])
                     flash(f"Класс '{school_class.school_name}' изменен", 'success')
 
             if 'delete_class_btn' in request.form:
@@ -153,6 +159,7 @@ def change_add_class():
                     db.session.delete(school_class)
                     user_action(current_user, f"Удаление класса '{school_class.school_name}'")
                     db.session.commit()
+                    delete_cache(['classes_school', f'class_info_{school_class.id}'])
                     flash(f"Класс '{school_class.school_name}' удален", 'success')
 
             if 'add_class' in request.form:
@@ -163,6 +170,7 @@ def change_add_class():
                 db.session.add(new_class)
                 user_action(current_user, f"Добавление класса '{new_class.school_name}'")
                 db.session.commit()
+                delete_cache(['classes_school'])
                 flash(f"Новый класс '{new_class.school_name}' добавлен в систему", 'success')
 
         else:

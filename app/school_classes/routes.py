@@ -1,18 +1,19 @@
 from flask import Blueprint, flash, redirect, url_for, request, render_template
 from flask_login import login_required, current_user
 from sqlalchemy import distinct
-from .models import SchoolClass, SchoolLessonJournal
-from .service import (
+from app.school_classes.models import SchoolClass, SchoolLessonJournal
+from app.school_classes.service import (
     get_school_class, format_school_class_subjects, show_school_lesson, handle_school_lesson,
     school_subject_record, add_new_grade, change_grade, student_record, format_school_class_students
 )
-from app import db, cache
+from app import db
 from app.app_settings.service import user_action
 from app.common_servicies.service import DAYS_OF_WEEK, get_today_date, get_date_range, calc_month_index, calculate_week
 from app.school.models import Person
 from app.school.subjects.models import Subject, SubjectType
 from app.school.subjects.service import add_new_subject
 from app.timetable.service import day_school_lessons_dict
+from app.caching.service import get_cache_possible_students, get_cache_teachers, get_cache_school_subjects, delete_cache
 
 school_classes = Blueprint('school_classes', __name__)
 
@@ -50,9 +51,9 @@ def school_students(school_class):
                                           f"{new_school_student.first_name} в класс '{school.school_name}'"
                             user_action(current_user, description)
                             db.session.commit()
-                            cache.delete_many('school_attending_students',
-                                              'possible_students',
-                                              f'class_{school.id}_students')
+                            delete_cache(['school_attending_students',
+                                          'possible_students',
+                                          f'class_{school.id}_students'])
                             flash(f'Новый ученик добавлен в класс', 'success')
                         else:
                             flash('Ученик не выбран', 'error')
@@ -72,7 +73,7 @@ def school_students(school_class):
                         description = f"Изменение классного руководителя класса '{school.school_name}'"
                         user_action(current_user, description)
                         db.session.commit()
-                        cache.delete(f'class_info_{school.id}')
+                        delete_cache([f'class_info_{school.id}'])
                         flash('Классный руководитель изменен', 'success')
 
                     else:
@@ -84,19 +85,8 @@ def school_students(school_class):
 
             return redirect(request.referrer)
 
-        possible_students = cache.get('possible_students')
-        if not possible_students:
-            possible_students = Person.query.filter(
-                Person.person_type == 'Ребенок',
-                Person.status == 'Клиент',
-                Person.school_class_id.is_(None)
-            ).order_by(Person.last_name, Person.first_name).all()
-            cache.set('possible_students', possible_students)
-
-        teachers = cache.get('teachers')
-        if not teachers:
-            teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
-            cache.set('teachers', teachers)
+        possible_students = get_cache_possible_students()
+        teachers = get_cache_teachers()
 
         return render_template(
             'school_classes/school.html', school_classes=classes_school, school_class=school,
@@ -134,9 +124,9 @@ def school_subjects(school_class):
                             description = f"Добавление нового школьного предмета {new_subject.name}"
                             user_action(current_user, description)
                             db.session.commit()
-                            cache.delete('school_subjects')
+                            delete_cache(['school_subjects'])
                             for class_id in classes:
-                                cache.delete(f'class_{class_id}_subjects')
+                                delete_cache([f'class_{class_id}_subjects'])
 
                             flash('Новый предмет добавлен в систему', 'success')
 
@@ -165,7 +155,7 @@ def school_subjects(school_class):
                                            f"в класс '{school.school_name}'")
                             user_action(current_user, description)
                             db.session.commit()
-                            cache.delete_many('school_subjects', f'class_{school.id}_subjects')
+                            delete_cache(['school_subjects', f'class_{school.id}_subjects'])
                             flash('Предмет добавлен классу', 'success')
 
                         else:
@@ -202,14 +192,8 @@ def edit_school_subject(subject_id):
     try:
         if current_user.rights in ["admin", "user"]:
             subject_id = int(subject_id) if str(subject_id).isdigit() else None
-            school_subjects = cache.get('school_subjects')
-            if school_subjects:
-                school_subject = next((subject for subject in school_subjects if subject.id == subject_id), None)
-            else:
-                school_subject = Subject.query.filter(
-                    Subject.id == subject_id,
-                    Subject.subject_type.has(SubjectType.name == 'school')
-                ).first()
+            school_subjects = get_cache_school_subjects()
+            school_subject = next((subject for subject in school_subjects if subject.id == subject_id), None)
             if school_subject:
                 subject_new_name = request.form.get('subject_name')
                 subject_new_short_name = request.form.get('subject_short_name')
@@ -217,9 +201,9 @@ def edit_school_subject(subject_id):
                 school_subject.short_name = subject_new_short_name
                 user_action(current_user, f'Внесение изменений в школьный предмет {school_subject.name}')
                 db.session.commit()
-                cache.delete('school_subjects')
+                delete_cache(['school_subjects'])
                 for school_class in school_subject.school_classes:
-                    cache.delete(f'class_{school_class.id}_subjects')
+                    delete_cache([f'class_{school_class.id}_subjects'])
                 flash('Школьный предмет изменен', 'success')
 
             else:

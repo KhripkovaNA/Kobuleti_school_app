@@ -1,47 +1,11 @@
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, or_
-from app import cache
 from app.app_settings.models import SubscriptionType
-from app.common_servicies.service import (
-    MONTHS, DAYS_OF_WEEK, LOCAL_TZ, conjugate_lessons, conjugate_days, get_today_date
-)
+from app.common_servicies.service import DAYS_OF_WEEK, LOCAL_TZ, get_today_date
 from app.school.models import Person
 from app.school.subjects.models import Subject, SubjectType
 from app.school_classes.models import SchoolClass
-from app.timetable.models import Lesson, StudentAttendance
-
-
-def subscription_subjects_data():
-    subscription_subjects = cache.get(subscription_subjects_data)
-    if subscription_subjects:
-        return subscription_subjects
-
-    filtered_subjects = Subject.query.filter(
-        Subject.subject_type.has(SubjectType.name != 'after_school'),
-        Subject.subscription_types.any(SubscriptionType.id.isnot(None))
-    ).order_by(Subject.name).all()
-
-    subscription_subjects = []
-    for subject in filtered_subjects:
-        subject_data = {
-            "id": subject.id,
-            "name": subject.name,
-            "price_info": {subscription_type.id: f"{subscription_type.price:.0f} Лари"
-                           for subscription_type in subject.subscription_types},
-            "subscription_types_info": {
-                subscription_type.id: f"{conjugate_lessons(subscription_type.lessons)} " +
-                                      f"на {conjugate_days(subscription_type.duration)} " +
-                                      f"({subscription_type.price:.0f} Лари)"
-
-                for subscription_type in subject.subscription_types
-            }
-        }
-        subscription_subjects.append(subject_data)
-
-        cache.set('subscription_subjects_data', subscription_subjects_data)
-
-    return subscription_subjects
+from app.timetable.models import Lesson
 
 
 def lesson_subjects_data():
@@ -185,49 +149,3 @@ def handle_subject_edit(subject, form):
     subscription_type_ids = [int(st) for st in form.getlist('subscription_types')]
     subscription_types = SubscriptionType.query.filter(SubscriptionType.id.in_(subscription_type_ids)).all()
     subject.subscription_types = [subscription_type for subscription_type in subscription_types]
-
-
-def subject_record(subject_id, month_index):
-    subject_record_dict = cache.get(f'subject_record_{subject_id}_{month_index}')
-    if subject_record_dict is None:
-        result_date = get_today_date() + relativedelta(months=month_index)
-        first_date = datetime(result_date.year, result_date.month, 1).date()
-        last_date = first_date + relativedelta(months=+1, days=-1)
-
-        subject_records = StudentAttendance.query.filter(
-            StudentAttendance.date >= first_date,
-            StudentAttendance.date <= last_date,
-            StudentAttendance.subject_id == subject_id
-        ).order_by(StudentAttendance.date, StudentAttendance.lesson_time).all()
-
-        subject_students = []
-        lesson_datetimes = []
-        record_dict = {}
-        for record in subject_records:
-            date_time_string = f"{record.date:%d.%m} {record.lesson_time:%H:%M}"
-            lesson_date_time = (date_time_string, record.lesson_id)
-            subject_student = (f"{record.student.last_name} {record.student.first_name}", record.student_id)
-            if record.payment_method:
-                student_payment_method = record.payment_method
-                student_subscription_info = f"({record.subscription_lessons})" \
-                    if record.subscription_lessons is not None else ''
-                student_payment = student_payment_method + student_subscription_info
-            else:
-                student_payment = "?"
-            if subject_student not in subject_students:
-                subject_students.append(subject_student)
-                record_dict[subject_student] = {lesson_date_time: student_payment}
-            else:
-                record_dict[subject_student][lesson_date_time] = student_payment
-            if lesson_date_time not in lesson_datetimes:
-                lesson_datetimes.append(lesson_date_time)
-
-        subject_record_dict = {
-            'record_dict': record_dict,
-            'lesson_datetimes': lesson_datetimes,
-            'sorted_subject_students': sorted(subject_students, key=lambda x: x[0]),
-            'month': MONTHS[first_date.month - 1]
-        }
-        cache.set(f'subject_record_{subject_id}_{month_index}', subject_record_dict)
-
-    return subject_record_dict.values()

@@ -1,14 +1,15 @@
 from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_required, current_user
-from .service import (
+from app.caching.service import get_cache_subscription_subjects
+from app.school.students.service import (
     basic_student_info, clients_data, add_child, add_adult,
     extensive_student_info, potential_client_subjects, handle_student_edit
 )
 from app.school.models import Person
 from app.common_servicies.service import get_today_date, MONTHS, get_period
-from app.school.subjects.service import subscription_subjects_data, lesson_subjects_data
+from app.school.subjects.service import lesson_subjects_data
 from app.school.subjects.models import Subject
-from app import db, cache
+from app import db
 from app.app_settings.service import user_action
 from app.school.forms import (
     ChildForm, AdultForm, NewContactPersonForm, AddContForm, EditAddContPersonForm,
@@ -35,7 +36,7 @@ def students():
 
         for student in all_students:
             basic_student_info(student)
-        subscription_subjects = subscription_subjects_data()
+        subscription_subjects = get_cache_subscription_subjects()
         lesson_subjects = lesson_subjects_data()
 
         return render_template(
@@ -152,7 +153,7 @@ def show_edit_student(student_id):
         clients = clients_data('child')
         lesson_subjects = lesson_subjects_data()
         potential_subjects = potential_client_subjects()
-        subscription_subjects = subscription_subjects_data()
+        subscription_subjects = get_cache_subscription_subjects()
         periods = [get_period(0), get_period(1)]
         months = [(f"{period[0]}-{period[1]}", MONTHS[period[0]-1].capitalize()) for period in periods]
         after_school_prices_objects = SubscriptionType.query.filter(SubscriptionType.period != '').all()
