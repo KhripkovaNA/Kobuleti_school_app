@@ -814,8 +814,9 @@ $(document).ready(function(){
         }
     });
 
-    // Validate subscription, copy-lessons, change-lessons and finance-report
-    $('form.subscription-form, form.copy-lessons-form, form.change-lessons-form, form.finance-report-form').submit(function(event) {
+    // Validate forms with required date input
+    $('form.subscription-form, form.copy-lessons-form, form.change-lessons-form, form.finance-report-form, ' +
+      'form.change-semester-form, form.add-semester-form').submit(function(event) {
         var currentForm = $(this);
         validateDateInput(currentForm);
 
@@ -1127,20 +1128,9 @@ $(document).ready(function(){
 
         var lessonSection = $(this).closest('.lesson-section');
         var schoolClassRow = lessonSection.find('.school-class-row');
-        var classesSelector = lessonSection.find('.classes-select');
         var schoolType = $('#school-type').val();
 
         if (subjectTypeId === schoolType) {
-            classesSelector[0].selectize.clear();
-            classesSelector[0].selectize.clearOptions();
-            if (!$.isEmptyObject(selectedSubject[0].school_classes)) {
-                $.each(selectedSubject[0].school_classes, function (index, school_class) {
-                    classesSelector[0].selectize.addOption({value:index,text:school_class});
-                });
-                lessonSection.find('.add-classes-btn').show();
-            } else {
-                lessonSection.find('.add-classes-btn').trigger("click");
-            }
             schoolClassRow.show();
         } else {
             schoolClassRow.hide();
@@ -1159,18 +1149,6 @@ $(document).ready(function(){
             lessonSection.find('.add-teachers-btn').trigger("click");
         }
 
-    });
-
-    $("#lesson-sections").on("click", ".add-classes-btn", function() {
-        var lessonSection = $(this).closest('.lesson-section');
-        var classesSelector = lessonSection.find('.classes-select');
-        classesSelector[0].selectize.clear();
-        classesSelector[0].selectize.clearOptions();
-        $.each(classesData, function (index, schoolClass) {
-            var optionValue = Object.keys(schoolClass)[0]
-            classesSelector[0].selectize.addOption({value:optionValue,text:schoolClass[optionValue]});
-        });
-        $(this).hide();
     });
 
     $("#lesson-sections").on("click", ".add-teachers-btn", function() {

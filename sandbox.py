@@ -3,12 +3,11 @@ from sqlalchemy.orm import class_mapper
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta
 from app.app_settings.models import Room
-from app.auth.models import User
 from app.school.employees.models import Employee
 from app.school.models import Contact, Person
 from app.school.subjects.models import Subject, SubjectType
 from app.school.subscriptions.models import Subscription
-from app.school_classes.models import SchoolClass, SchoolLessonJournal
+from app.school_classes.models import SchoolClass
 from app.timetable.models import Lesson
 
 app = create_app()
@@ -814,24 +813,6 @@ def print_employees():
     print(*existing_employees, sep='\n')
 
 
-lesson_dict = {
-    'lesson_date': '10.01.2024',
-    'lesson_count': 1,
-    'lesson_start_time_1': '13:40',
-    'lesson_end_time_1': '14:40',
-    'subject_1': '14-1',
-    'room_1': '8',
-    'school_classes_1': ['1'],
-    'teacher_1': '23',
-    'lesson_start_time_2': '12:40',
-    'lesson_end_time_2': '13:40',
-    'subject_2': '14-1',
-    'room_2': '4',
-    'school_classes_2': ['1'],
-    'teacher_2': '23'
-}
-
-
 def print_data(table_model, table_rows):
     mapper = class_mapper(table_model)
     fields = [column.key for column in mapper.columns]
@@ -850,18 +831,6 @@ OPERATION_CATEGORIES = {'after_school': 'Продленка', 'del_after_school'
                         'assessment': 'Аттестация'}
 fields = ["Категория", "Занятие", "Приход", "Расход"]
 
-categories = ['Продленка', 'Депозит, пополнение', 'Зарплата', 'Инкассация', 'Хозрасходы'
-                                                                            'Питание', 'Школа', 'Канцелярия', 'Аренда',
-              'Аттестация']
+categories = ['Продленка', 'Депозит, пополнение', 'Зарплата', 'Инкассация', 'Хозрасходы',
+              'Питание', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация']
 
-# subscriptions = Subscription.query.all()
-# after_school = Subject.query.filter(Subject.subject_type.has(SubjectType.name == 'after_school')).first()
-# for subscription in subscriptions:
-#     if subscription.subject_id == after_school.id:
-#         subscription.is_after_school = True
-#     else:
-#         subscription.is_after_school = False
-#
-# db.session.commit()
-
-# print_table(User)

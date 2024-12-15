@@ -1,0 +1,60 @@
+<div class="row" style="margin-left:30px;">
+    <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
+        <a href="#" data-toggle="collapse" data-target="#school_classes">
+            <i class="material-icons">school</i> Классы
+        </a>
+    </button>
+</div>
+<div  class="collapse" id="school_classes">
+    <form class="change-class-form" method="post" action="{{ url_for('settings.change_add_class') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <div class="form-group">
+                {% for school_class in school_classes %}
+                    <div class="row">
+                        <label class="control-label col-md-2">Класс:</label>
+                        <div class="col-md-2 field-div">
+                            <input type="number" name="class_{{ school_class.id }}" min="1" max="11" value="{{ school_class.school_class }}" class="form-control field-input required">
+                        </div>
+                        <label class="control-label col-md-2">Название:</label>
+                        <div class="col-md-2 field-div">
+                            <input type="text" name="name_{{ school_class.id }}" value="{{ school_class.school_name }}" class="form-control field-input required">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" name="change_class_btn" value="{{ school_class.id }}" class="btn btn-xs" style="margin:0;" data-background-color="main"><i class="material-icons">done</i></button>
+                            {% if not school_class.class_lessons %}
+                                <button type="submit" name="delete_class_btn" value="{{ school_class.id }}" class="btn btn-xs" style="margin:0;" data-background-color="red"><i class="material-icons">delete</i></button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+    <form class="add-class-form" method="post" action="{{ url_for('settings.change_add_class') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <h4 class="title" style="margin-left: 27px;">Добавить класс</h4>
+            <div class="form-group">
+                <div class="row">
+                    <label class="control-label col-md-2">Класс:</label>
+                    <div class="col-md-2 field-div">
+                        <input type="number" name="new_school_class" min="1" max="11" class="form-control field-input required">
+                    </div>
+                    <label class="control-label col-md-2">Название:</label>
+                    <div class="col-md-3 field-div">
+                        <input type="text" name="new_school_name" class="form-control field-input required">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="row" style="margin-left:30px;">
+                <div class="col-md-6">
+                    <button type="submit" name="add_class" class="btn btn-sm" data-background-color="main">Добавить</button>
+                    <button type="button" class="btn btn-sm" data-background-color="red" data-toggle="collapse" data-target="#school_classes">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

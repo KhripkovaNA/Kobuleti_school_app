@@ -1,0 +1,91 @@
+<div class="row" style="margin-left:30px;">
+    <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
+        <a href="#" data-toggle="collapse" data-target="#after-school">
+            <i class="material-icons">diversity_2</i> Цены на продленку
+        </a>
+    </button>
+</div>
+<div  class="collapse" id="after-school">
+    <form class="change-after-school-form" method="post" action="{{ url_for('settings.change_add_after_school') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                        <table class="table table-hover" style="table-layout: fixed;">
+                            <thead class="text-success">
+                                <th width="50%">Период</th>
+                                <th>Цена</th>
+                                <th></th>
+                            </thead>
+                            <tbody>
+                                {% for after_school_price in after_school_prices %}
+                                    <tr>
+                                        <td style="vertical-align:top;" class="field-div">
+                                            <select name="period_{{ after_school_price.id }}" class="form-control">
+                                                {% for period in ["месяц", "неделя", "день", "час"] %}
+                                                    {% if period == after_school_price.period %}
+                                                        <option value="{{ period }}" selected>{{ period }}</option>
+                                                    {% else %}
+                                                        <option value="{{ period }}">{{ period }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td style="vertical-align:top;" class="field-div">
+                                            <input type="number" name="price_{{ after_school_price.id }}" min="1" value="{{ after_school_price.price }}" class="form-control float-field field-input required">
+                                        </td>
+                                        <td style="vertical-align:top;">
+                                            <button type="submit" name="change_after_school_btn" value="{{ after_school_price.id }}" class="btn btn-xs" style="margin:5px 0;" data-background-color="main"><i class="material-icons">done</i></button>
+                                            {% if not after_school_price.subscriptions %}
+                                                <button type="submit" name="delete_after_school_btn" value="{{ after_school_price.id }}" class="btn btn-xs" style="margin:5px 0;" data-background-color="red"><i class="material-icons">delete</i></button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <form class="add-after-school-form" method="post" action="{{ url_for('settings.change_add_after_school') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <h4 class="title" style="margin-left: 27px;">Добавить цену на продленку</h4>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="row">
+                            <label class="control-label">Период:</label>
+                        </div>
+                        <div class="row field-div" style="padding: 0 20px 0 44px; margin-top:0;">
+                            <select name="new_period" class="form-control">
+                                {% for period in ["месяц", "неделя", "день", "час"] %}
+                                    <option value="{{ period }}">{{ period }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <label class="control-label">Цена:</label>
+                        </div>
+                        <div class="row field-div" style="padding: 0 20px 0 44px; margin-top:0;">
+                            <input type="number" name="new_price" min="1" value="200.0" class="form-control float-field field-input required">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer" style="margin-top:-30px;">
+            <div class="row" style="margin-left:30px;">
+                <div class="col-md-6">
+                    <button type="submit" name="add_after_school" class="btn btn-sm" data-background-color="main">Добавить</button>
+                    <button type="button" class="btn btn-sm" data-background-color="red" data-toggle="collapse" data-target="#after-school">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

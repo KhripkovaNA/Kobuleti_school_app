@@ -2,7 +2,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_
 from app import cache
-from app.app_settings.models import Room, SubscriptionType
+from app.app_settings.models import Room, SubscriptionType, SchoolSemester
 from app.auth.models import User
 from app.common_servicies.service import conjugate_lessons, conjugate_days, get_today_date, MONTHS
 from app.school.subscriptions.service import format_subscription_types
@@ -267,7 +267,16 @@ def get_cache_parent_users():
     if not parent_users:
         parent_users = User.query.filter_by(rights="parent").all()
         for parent in parent_users:
-            parent.user_persons = parent.user_persons
+            parent.children = parent.user_persons.all()
         cache.set('parent_users', parent_users)
 
     return parent_users
+
+
+def get_cache_semesters():
+    semesters = cache.get('semesters')
+    if semesters is None:
+        semesters = SchoolSemester.query.order_by(SchoolSemester.start_date).all()
+        cache.set('semesters', semesters)
+
+    return semesters

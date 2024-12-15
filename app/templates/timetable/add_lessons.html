@@ -62,7 +62,6 @@
                                             <div class="col-md-6">
                                                 {{ lesson_form.school_classes(class="form-control classes-select select-search", placeholder="Выбрать классы") }}
                                             </div>
-                                            <button type="button" class="btn btn-success btn-xs add-classes-btn" style="margin: 4px 0;">Все классы</button>
                                         </div>
                                         <div class="row school-class-row" style="display: none;">
                                             <div class="col-md-6 col-md-offset-3 checkbox-option">
@@ -120,6 +119,5 @@
 <script type="text/javascript">
     var subjectsData = {{ subjects | tojson | safe }};
     var teachersData = {{ teachers | tojson | safe }};
-    var classesData = {{ school_classes | tojson | safe }};
 </script>
 {% endblock %}

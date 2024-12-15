@@ -1,0 +1,82 @@
+<div class="row" style="margin-left:30px;">
+    <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
+        <a href="#" data-toggle="collapse" data-target="#semesters">
+            <i class="material-icons">event</i> Школьные четверти
+        </a>
+    </button>
+</div>
+<div  class="collapse" id="semesters">
+    {% if semesters %}
+        <form class="change-semester-form" method="post" action="{{ url_for('settings.change_add_semester') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="row">
+                <div class="form-group">
+                    <div class="row">
+                        <label class="control-label col-md-3">Название:</label>
+                        <label class="control-label col-md-2" style="padding-left:15px;">Начало:</label>
+                        <label class="control-label col-md-2" style="padding-left:15px;">Конец:</label>
+                        <label class="control-label col-md-2" style="padding-left:15px;">Учебный год:</label>
+                    </div>
+                    {% for semester in semesters %}
+                        <div class="row">
+                            <div class="col-md-3" style="padding-left:44px;">
+                                <div class="form-control">{{ semester.name }}</div>
+                            </div>
+                            <div class="col-md-2 date-div">
+                                <input type="text" name="semester_{{ semester.id }}_start" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ semester.start_date.strftime('%d.%m.%Y') }}">
+                            </div>
+                            <div class="col-md-2 date-div">
+                                <input type="text" name="semester_{{ semester.id }}_end" class="form-control date-input required datepicker" placeholder="дд.мм.гггг" value="{{ semester.end_date.strftime('%d.%m.%Y') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-control">{{ semester.school_year }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" name="change_semester_btn" value="{{ semester.id }}" class="btn btn-xs" style="margin:0;" data-background-color="main"><i class="material-icons">done</i></button>
+                                <button type="submit" name="delete_semester_btn" value="{{ semester.id }}" class="btn btn-xs" style="margin:0;" data-background-color="red"><i class="material-icons">delete</i></button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+    {% endif %}
+    <form class="add-semester-form" method="post" action="{{ url_for('settings.change_add_semester') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <h4 class="title" style="margin-left: 27px;">Добавить четверть</h4>
+            <div class="form-group">
+                <div class="row">
+                    <label class="control-label col-md-3">Название:</label>
+                    <div class="col-md-4">
+                        <select name="semester_name" class="form-control">
+                            {% for semester_name in semester_names %}
+                                <option value="{{ semester_name }}">{{ semester_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Начало:</label>
+                    <div class="col-md-4 date-div">
+                        <input type="text" name="semester_start_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг">
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="control-label col-md-3">Конец:</label>
+                    <div class="col-md-4 date-div">
+                        <input type="text" name="semester_end_date" class="form-control date-input required datepicker" placeholder="дд.мм.гггг">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="row" style="margin-left:30px;">
+                <div class="col-md-6">
+                    <button type="submit" name="add_semester" class="btn btn-sm" data-background-color="main">Добавить</button>
+                    <button type="button" class="btn btn-sm" data-background-color="red" data-toggle="collapse" data-target="#semesters">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,91 @@
+<div class="row" style="margin-left:30px;">
+    <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
+        <a href="#" data-toggle="collapse" data-target="#subscriptions">
+            <i class="material-icons">ballot</i> Абонементы
+        </a>
+    </button>
+</div>
+<div  class="collapse" id="subscriptions">
+    <form class="change-subscription-form" method="post" action="{{ url_for('settings.change_add_subscription') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-8 table-responsive" style="padding-left:44px;">
+                        <table class="table table-hover" style="table-layout: fixed;">
+                            <thead class="text-success">
+                                <th>Занятия</th>
+                                <th>Срок действия</th>
+                                <th>Цена</th>
+                                <th></th>
+                            </thead>
+                            <tbody>
+                                {% for subscription_type in subscription_types %}
+                                    <tr>
+                                        <td style="vertical-align:top;" class="field-div">
+                                            <input type="number" name="lessons_{{ subscription_type.id }}" min="1" value="{{ subscription_type.lessons }}" class="form-control field-input required">
+                                        </td>
+                                        <td style="vertical-align:top;" class="field-div">
+                                            <input type="number" name="duration_{{ subscription_type.id }}" min="1" value="{{ subscription_type.duration }}" class="form-control field-input required">
+                                        </td>
+                                        <td style="vertical-align:top;" class="field-div">
+                                            <input type="number" name="price_{{ subscription_type.id }}" min="1" value="{{ subscription_type.price }}" class="form-control float-field field-input required">
+                                        </td>
+                                        <td style="vertical-align:top;">
+                                            <button type="submit" name="change_subscription_btn" value="{{ subscription_type.id }}" class="btn btn-xs" style="margin:5px 0;" data-background-color="main"><i class="material-icons">done</i></button>
+                                            {% if not subscription_type.subscriptions %}
+                                                <button type="submit" name="delete_subscription_btn" value="{{ subscription_type.id }}" class="btn btn-xs" style="margin:5px 0;" data-background-color="red"><i class="material-icons">delete</i></button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <form class="add-subscription-form" method="post" action="{{ url_for('settings.change_add_subscription') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <h4 class="title" style="margin-left: 27px;">Добавить абонемент</h4>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="row">
+                            <label class="control-label">Занятия:</label>
+                        </div>
+                        <div class="row field-div" style="padding: 0 20px 0 44px; margin-top:0;">
+                            <input type="number" name="new_subscription_lessons" min="1" value="8" class="form-control field-input required">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <label class="control-label">Срок действия:</label>
+                        </div>
+                        <div class="row field-div" style="padding: 0 20px 0 44px; margin-top:0;">
+                            <input type="number" name="new_subscription_duration" min="1" value="40" class="form-control field-input required">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <label class="control-label">Цена:</label>
+                        </div>
+                        <div class="row field-div" style="padding: 0 20px 0 44px; margin-top:0;">
+                            <input type="number" name="new_subscription_price" min="1" value="90.0" class="form-control float-field field-input required">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer" style="margin-top:-30px;">
+            <div class="row" style="margin-left:30px;">
+                <div class="col-md-6">
+                    <button type="submit" name="add_subscription" class="btn btn-sm" data-background-color="main">Добавить</button>
+                    <button type="button" class="btn btn-sm" data-background-color="red" data-toggle="collapse" data-target="#subscriptions">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

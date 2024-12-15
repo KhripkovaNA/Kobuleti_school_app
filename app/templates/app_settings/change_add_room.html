@@ -1,0 +1,60 @@
+<div class="row" style="margin-left:30px;">
+    <button class="btn btn-sm" data-background-color="orange" style="width:200px;">
+        <a href="#" data-toggle="collapse" data-target="#rooms">
+            <i class="material-icons">meeting_room</i> Кабинеты
+        </a>
+    </button>
+</div>
+<div  class="collapse" id="rooms">
+    <form class="change-room-form" method="post" action="{{ url_for('settings.change_add_room') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <div class="form-group">
+                {% for room in rooms %}
+                    <div class="row">
+                        <label class="control-label col-md-2">Название:</label>
+                        <div class="col-md-3 field-div">
+                            <input type="text" name="name_{{ room.id }}" value="{{ room.name }}" class="form-control field-input required">
+                        </div>
+                        <label class="control-label col-md-2">Цвет:</label>
+                        <div class="col-md-1">
+                            <input type="color" name="color_{{ room.id }}" value="{{ room.color }}">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" name="change_room_btn" value="{{ room.id }}" class="btn btn-xs" style="margin:0;" data-background-color="main"><i class="material-icons">done</i></button>
+                            {% if not room.lessons %}
+                                <button type="submit" name="delete_room_btn" value="{{ room.id }}" class="btn btn-xs" style="margin:0;" data-background-color="red"><i class="material-icons">delete</i></button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+    <form class="add-room-form" method="post" action="{{ url_for('settings.change_add_room') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="row">
+            <h4 class="title" style="margin-left: 27px;">Добавить кабинет</h4>
+            <div class="form-group">
+                <div class="row">
+                    <label class="control-label col-md-2">Название:</label>
+                    <div class="col-md-3 field-div">
+                        <input type="text" name="room_name" class="form-control field-input required">
+                    </div>
+                    <label class="control-label col-md-2">Цвет:</label>
+                    <div class="col-md-1">
+                        <input type="color" name="room_color" value="#D9D9D9">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="row" style="margin-left:30px;">
+                <div class="col-md-6">
+                    <button type="submit" name="add_room" class="btn btn-sm" data-background-color="main">Добавить</button>
+                    <button type="button" class="btn btn-sm" data-background-color="red" data-toggle="collapse" data-target="#rooms">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

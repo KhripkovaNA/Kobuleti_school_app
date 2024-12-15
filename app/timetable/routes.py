@@ -234,12 +234,16 @@ def add_lessons():
     if current_user.rights in ["admin", "user"]:
         all_subjects = subjects_data()
         rooms = Room.query.all()
+        school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
         school_type = SubjectType.query.filter_by(name='school').first().id
         form = AddLessonsForm()
         form.lessons[0].subject.choices = [(f"{subject['id']}-{subject['subject_type']}",
                                             f"{subject['name']} ({subject['description']})")
                                            for subject in all_subjects]
         form.lessons[0].room.choices = [(room.id, room.name) for room in rooms]
+        form.lessons[0].school_classes.choices = [
+            (school_class.id, school_class.school_name) for school_class in school_classes
+        ]
         if request.method == 'POST':
             try:
                 if form.validate_on_submit():
@@ -266,12 +270,10 @@ def add_lessons():
                 flash(f'Ошибка при добавлении новых занятий: {str(e)}', 'error')
                 return redirect(url_for('timetable.add_lessons'))
 
-        school_classes = SchoolClass.query.order_by(SchoolClass.school_class).all()
-        school_classes_data = [{school_class.id: school_class.school_name} for school_class in school_classes]
         all_teachers = Person.query.filter_by(teacher=True).order_by(Person.last_name, Person.first_name).all()
         teachers_data = [{teacher.id: f"{teacher.last_name} {teacher.first_name}"} for teacher in all_teachers]
 
-        return render_template('timetable/add_lessons.html', subjects=all_subjects, school_classes=school_classes_data,
+        return render_template('timetable/add_lessons.html', subjects=all_subjects,
                                form=form, teachers=teachers_data, school_type=school_type)
 
     else:

@@ -43,3 +43,13 @@ class UserAction(db.Model):
     user = db.relationship('User', backref='actions')
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(LOCAL_TZ))
     description = db.Column(db.String(120))
+
+
+class SchoolSemester(db.Model):
+    __tablename__ = 'school_semesters'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    school_year = db.Column(db.String(20))

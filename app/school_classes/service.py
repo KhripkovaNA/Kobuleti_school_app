@@ -2,7 +2,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, or_
 from app import db
-from app.app_settings.service import user_action
+from app.app_settings.service import user_action, calculate_school_year
 from app.common_servicies.service import get_today_date, MONTHS
 from app.school.models import Person
 from app.school.subjects.models import Subject, SubjectType
@@ -286,7 +286,7 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
 
     dates_topic = sorted(list(dates_topic_set))
 
-    school_start_year = first_date.year if 9 <= first_date.month <= 12 else first_date.year - 1
+    school_start_year = calculate_school_year(first_date)
     final_grades = SchoolLessonJournal.query.filter(
         SchoolLessonJournal.date >= datetime(school_start_year, 9, 1).date(),
         SchoolLessonJournal.date <= datetime(school_start_year + 1, 7, 1).date(),
@@ -449,7 +449,7 @@ def student_record(student, month_index):
 
     dates_grade_type = sorted(list(dates_grade_type_set))
 
-    school_start_year = first_date.year if 9 <= first_date.month <= 12 else first_date.year - 1
+    school_start_year = calculate_school_year(first_date)
     final_grades = SchoolLessonJournal.query.filter(
         SchoolLessonJournal.date >= datetime(school_start_year, 9, 1).date(),
         SchoolLessonJournal.date <= datetime(school_start_year + 1, 7, 1).date(),
