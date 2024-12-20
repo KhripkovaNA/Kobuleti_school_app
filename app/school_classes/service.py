@@ -37,9 +37,10 @@ def format_school_class_subjects(school_class):
 
 
 def prev_next_school_lessons(lesson):
-    query = Lesson.query.filter(Lesson.subject_id == lesson.subject_id)
-    for school_class in lesson.school_classes:
-        query = query.filter(Lesson.school_classes.any(SchoolClass.id == school_class.id))
+    query = Lesson.query.filter(
+        Lesson.lesson_type_id == lesson.lesson_type_id,
+        Lesson.teacher_id == lesson.teacher_id
+    )
     previous_lesson = query.filter(
         or_(
             and_(
@@ -417,55 +418,93 @@ def change_grade(form, subject, classes_ids, user):
     return 'Изменения внесены', 'success'
 
 
-def student_record(student, month_index):
-    result_date = get_today_date() + relativedelta(months=month_index)
-    first_date = datetime(result_date.year, result_date.month, 1).date()
-    last_date = first_date + relativedelta(months=+1, days=-1)
-    month = MONTHS[first_date.month - 1]
-
-    student_records = SchoolLessonJournal.query.filter(
-        SchoolLessonJournal.date >= first_date,
-        SchoolLessonJournal.date <= last_date,
-        SchoolLessonJournal.student_id == student.id,
-        ~SchoolLessonJournal.final_grade
-    ).all()
-
+def get_student_school_subjects(student_id):
     student_subjects = Subject.query.filter(
         Subject.subject_type.has(SubjectType.name == "school"),
-        Subject.students.any(Person.id == student.id)
+        Subject.students.any(Person.id == student_id)
     ).order_by(Subject.name).all()
-    subjects_dict = {subject.name: {} for subject in student_subjects}
+    return {subject.name: {} for subject in student_subjects}
+
+
+def get_student_records(student, first_date, last_date, final_grade=False):
+    query = SchoolLessonJournal.query.filter(
+        SchoolLessonJournal.date >= first_date,
+        SchoolLessonJournal.date <= last_date,
+        SchoolLessonJournal.student_id == student.id
+    )
+    if final_grade:
+        student_records = query.filter(SchoolLessonJournal.final_grade).all()
+    else:
+        student_records = query.filter(
+            ~SchoolLessonJournal.final_grade
+        ).order_by(SchoolLessonJournal.date).all()
+    return student_records
+
+
+def format_student_record(student, first_date, last_date, subjects):
+    subjects_dict = subjects.copy()
+    student_records = get_student_records(student, first_date, last_date)
     dates_grade_type_set = set()
     for record in student_records:
         date_str = f'{record.date:%d.%m}'
         grade_type = record.grade_type if record.grade_type else record.lesson.lesson_topic if record.lesson_id else '-'
         dates_grade_type_set.add((date_str, grade_type))
         if record.subject.name in subjects_dict.keys():
-            subjects_dict[record.subject.name][(date_str, grade_type)] = {"grade": record.grade,
-                                                                          "comment": record.lesson_comment}
+            subjects_dict[record.subject.name][(date_str, grade_type)] = {
+                "grade": record.grade,
+                "comment": record.lesson_comment
+            }
         else:
-            subjects_dict[record.subject.name] = {(date_str, grade_type): {"grade": record.grade,
-                                                                           "comment": record.lesson_comment}}
+            subjects_dict[record.subject.name] = {
+                (date_str, grade_type): {
+                    "grade": record.grade,
+                    "comment": record.lesson_comment
+                }
+            }
 
     dates_grade_type = sorted(list(dates_grade_type_set))
 
-    school_start_year = calculate_school_year(first_date)
-    final_grades = SchoolLessonJournal.query.filter(
-        SchoolLessonJournal.date >= datetime(school_start_year, 9, 1).date(),
-        SchoolLessonJournal.date <= datetime(school_start_year + 1, 7, 1).date(),
-        SchoolLessonJournal.student_id == student.id,
-        SchoolLessonJournal.final_grade
-    ).order_by(SchoolLessonJournal.date).all()
+    return dates_grade_type, subjects_dict
+
+
+def format_student_final_record(student, school_start_year, subjects):
+    subjects_dict = subjects.copy()
+    first_date = datetime(school_start_year, 9, 1).date()
+    last_date = datetime(school_start_year + 1, 7, 1).date()
+    final_grades = get_student_records(student, first_date, last_date, final_grade=True)
 
     final_grade_types = []
     for final_grade in final_grades:
         if final_grade.grade_type not in final_grade_types:
             final_grade_types.append(final_grade.grade_type)
         if final_grade.subject.name in subjects_dict.keys():
-            subjects_dict[final_grade.subject.name][final_grade.grade_type] = {"grade": final_grade.grade,
-                                                                               "comment": final_grade.lesson_comment}
+            subjects_dict[final_grade.subject.name][final_grade.grade_type] = {
+                "grade": final_grade.grade,
+                "comment": final_grade.lesson_comment
+            }
         else:
-            subjects_dict[final_grade.subject.name] = {final_grade.grade_type: {"grade": final_grade.grade,
-                                                                                "comment": final_grade.lesson_comment}}
+            subjects_dict[final_grade.subject.name] = {
+                final_grade.grade_type: {
+                    "grade": final_grade.grade,
+                    "comment": final_grade.lesson_comment
+                }
+            }
 
-    return subjects_dict, dates_grade_type, final_grade_types, month
+    return final_grade_types, subjects_dict
+
+
+def student_record(student, month_index):
+    result_date = get_today_date() + relativedelta(months=month_index)
+    first_date = datetime(result_date.year, result_date.month, 1).date()
+    last_date = first_date + relativedelta(months=+1, days=-1)
+    month = MONTHS[first_date.month - 1]
+
+    subjects_dict = get_student_school_subjects(student.id)
+
+    dates_grade_type, subjects_records_dict = format_student_record(student, first_date, last_date, subjects_dict)
+
+    school_start_year = calculate_school_year(first_date)
+
+    final_grade_types, records_dict = format_student_final_record(student, school_start_year, subjects_records_dict)
+
+    return records_dict, dates_grade_type, final_grade_types, month

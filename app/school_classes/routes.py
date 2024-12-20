@@ -1,6 +1,9 @@
-from flask import Blueprint, flash, redirect, url_for, request, render_template
+from io import BytesIO
+from flask import Blueprint, flash, redirect, url_for, request, render_template, send_file
 from flask_login import login_required, current_user
 from sqlalchemy import distinct
+from app.app_settings.models import SchoolSemester
+from app.common_servicies.excel_generators import download_school_report
 from app.school_classes.models import SchoolClass, SchoolLessonJournal
 from app.school_classes.service import (
     get_school_class, format_school_class_subjects, show_school_lesson, handle_school_lesson,
@@ -13,7 +16,8 @@ from app.school.models import Person
 from app.school.subjects.models import Subject, SubjectType
 from app.school.subjects.service import add_new_subject
 from app.timetable.service import day_school_lessons_dict
-from app.caching.service import get_cache_possible_students, get_cache_teachers, get_cache_school_subjects, delete_cache
+from app.caching.service import get_cache_possible_students, get_cache_teachers, get_cache_school_subjects, \
+    delete_cache, get_cache_semesters
 
 school_classes = Blueprint('school_classes', __name__)
 
@@ -87,10 +91,22 @@ def school_students(school_class):
 
         possible_students = get_cache_possible_students()
         teachers = get_cache_teachers()
+        semesters = get_cache_semesters()
+        today = get_today_date()
+        current_or_next_semester = next(
+            (semester for semester in semesters if semester.start_date <= today <= semester.end_date),
+            None
+        )
+        if not current_or_next_semester:
+            current_or_next_semester = next(
+                (semester for semester in reversed(semesters) if semester.end_date < today),
+                None
+            )
 
         return render_template(
             'school_classes/school.html', school_classes=classes_school, school_class=school,
-            possible_students=possible_students, teachers=teachers, render_type="students"
+            possible_students=possible_students, teachers=teachers, semesters=semesters,
+            current_semester=current_or_next_semester, render_type="students"
         )
 
     else:
@@ -465,3 +481,42 @@ def school_journal(option):
 
     flash(message, 'error')
     return redirect(request.referrer)
+
+
+@school_classes.route('/generate-school-report/<string:school_class_id>/<string:student_id>', methods=['POST'])
+@login_required
+def generate_school_report(school_class_id, student_id):
+    if current_user.rights in ["admin", "user", "teacher"]:
+        try:
+            semester_id = request.form.get('report_semester')
+            if not semester_id:
+                flash('Четверть не выбрана', 'error')
+                return redirect(request.referrer)
+
+            report_semester = SchoolSemester.query.filter_by(id=semester_id).first()
+            school_class = SchoolClass.query.filter_by(id=int(school_class_id)).first()
+            report_date = get_today_date()
+
+            report_string = (f"{report_semester.name.replace(' ', '_')}_" +
+                             '_'.join([s[-2:] for s in report_semester.school_year.split('-')]) +
+                             f"_{report_date:%d_%m_%y}")
+
+            if int(student_id) == 0:
+                workbook = download_school_report(school_class.id, report_semester, report_date)
+                filename = f"{school_class.school_name.replace(' ', '_')}_{report_string}.xlsx"
+            else:
+                school_student = Person.query.filter_by(id=int(student_id)).first()
+                workbook = download_school_report(school_class.id, report_semester, report_date, school_student)
+                filename = f"{school_student.last_name}_{school_student.first_name}_{report_string}.xlsx"
+            excel_buffer = BytesIO()
+            workbook.save(excel_buffer)
+            excel_buffer.seek(0)
+            return send_file(excel_buffer, download_name=filename, as_attachment=True)
+
+        except Exception as e:
+            flash(f'Ошибка при скачивании файла: {str(e)}', 'error')
+            return redirect(request.referrer)
+
+    else:
+        flash('Нет прав на скачивание файла', 'error')
+        return redirect(url_for('main.index'))

@@ -1,0 +1,28 @@
+{% extends "modal_template.html" %}
+
+{% block modal_body %}
+<form class="school-report-form" action="{{ url_for('school_classes.generate_school_report', school_class_id=school_class.id, student_id=student.id) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Четверть:</label>
+        <div class="col-md-7 date-div">
+            <select name="report_semester" class="form-control">
+                {% for semester in semesters %}
+                    {% if current_semester is not none and semester.id==current_semester.id %}
+                        <option value="{{ semester.id }}" selected>{{ semester.name }} {{ semester.school_year }}</option>
+                    {% else %}
+                        <option value="{{ semester.id }}">{{ semester.name }} {{ semester.school_year }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button type="button" class="btn btn-sm submit-and-close" data-background-color="main">
+                Сформировать
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

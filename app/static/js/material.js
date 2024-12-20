@@ -893,12 +893,12 @@ $(document).ready(function(){
         }
     });
 
-    // Close finance-report form after submission
-    $('#submit-and-close').click(function() {
-        // Submit the form
-        $('form.finance-report-form').submit();
-        if ($('form.finance-report-form').data('submitted') === true) {
-            $('#finance-report-modal').modal('hide');
+    $('.submit-and-close').click(function() {
+        var submitBtn = $(this);
+        var submittedForm = submitBtn.closest('form');
+        if (submittedForm.is(':visible')) {
+            submittedForm.submit();
+            submittedForm.closest('.modal').modal('hide');
             $('#spinner').hide();
         }
     });

@@ -113,6 +113,11 @@
                                                                         <i class="material-icons" style="color: purple;">newspaper</i>Табель
                                                                     </a>
                                                                 </li>
+                                                                <li>
+                                                                    <a href="#" data-toggle="modal" data-target="#school-student-{{ student.id }}-report-modal">
+                                                                        <i class="material-icons" style="color: purple;">summarize</i>Отчет успеваемости
+                                                                    </a>
+                                                                </li>
                                                                 <li class="divider"></li>
 
                                                                 <li>
@@ -128,38 +133,17 @@
                                                                 </li>
                                                             </ul>
                                                         </div>
+                                            <!-- *-*-*-*-*-*-*-*-*-* Student school report modal *-*-*-*-*-*-*-*-*-* -->
+
+                                                        {% with modal_id='school-student-' ~ student.id ~ '-report-modal', modal_title='Отчет успеваемости. ' ~ student.last_name ~ ' ' ~ student.first_name %}
+                                                            {% include 'school_classes/school_student_report_modal.html' %}
+                                                        {% endwith %}
 
                                             <!-- *-*-*-*-*-*-*-*-*-* Student delete conformation *-*-*-*-*-*-*-*-*-* -->
 
-                                                        <div class="modal fade" id="delete-{{ student.id }}-modal" role="dialog">
-                                                            <div class="modal-dialog modal-sm">
-                                                                <div class="modal-content">
-                                                                    <div class="modal-header">
-                                                                        <h4 class="modal-title alert alert-danger" style="text-align:center;">Удаление клиента</h4>
-                                                                    </div>
-                                                                    <div class="modal-body" style="padding-top:10px;">
-                                                                        <p class="control-label">
-                                                                            Вы уверены, что хотите удалить ученика {{ student.last_name }} {{ student.first_name }} из класса?
-                                                                        </p>
-                                                                        <form class="login-form" action="{{ url_for('main.delete_record') }}" method="post">
-                                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                                            <input type="hidden" name="record_type" value="school_student">
-                                                                            <input type="hidden" name="student_id" value="{{ student.id }}">
-                                                                            <div class="row">
-                                                                                <div class="col-md-10 col-md-offset-1">
-                                                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                                                        Да
-                                                                                    </button>
-                                                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                                                        Нет
-                                                                                    </button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </form>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                        {% with modal_id='delete-' ~ student.id ~ '-modal', modal_title='Удаление клиента' %}
+                                                            {% include 'school_classes/delete_sc_student_modal.html' %}
+                                                        {% endwith %}
 
                                                     </td>
                                                 </tr>
@@ -172,7 +156,7 @@
                             <p style="height: 120px; padding-top:20px;">Учеников пока нет</p>
                         {% endif %}
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 {% if current_user.rights not in ["admin", "user"] %}
                                     <button class="btn btn-sm" data-background-color="orange" title="Нет прав администратора" disabled>Добавить ученика</button>
                                 {% else %}
@@ -189,6 +173,16 @@
                                     </form>
                                 {% endif %}
                             </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-sm pull-right" data-background-color="purple">
+                                    <a href="#" data-toggle="modal" data-target="#school-report-modal">
+                                        <i class="material-icons">summarize</i> Отчет успеваемости
+                                    </a>
+                                </button>
+                            </div>
+                            {% with modal_id='school-report-modal', modal_title='Отчет успеваемости. ' ~ school_class.school_name %}
+                                {% include 'school_classes/school_report_modal.html' %}
+                            {% endwith %}
                         </div>
                     </div>
                 {% elif render_type=="subjects" %}
