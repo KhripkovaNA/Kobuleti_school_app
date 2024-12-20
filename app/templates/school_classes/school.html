@@ -113,11 +113,13 @@
                                                                         <i class="material-icons" style="color: purple;">newspaper</i>Табель
                                                                     </a>
                                                                 </li>
-                                                                <li>
-                                                                    <a href="#" data-toggle="modal" data-target="#school-student-{{ student.id }}-report-modal">
-                                                                        <i class="material-icons" style="color: purple;">summarize</i>Отчет успеваемости
-                                                                    </a>
-                                                                </li>
+                                                                {% if semesters %}
+                                                                    <li>
+                                                                        <a href="#" data-toggle="modal" data-target="#school-student-{{ student.id }}-report-modal">
+                                                                            <i class="material-icons" style="color: purple;">summarize</i>Отчет успеваемости
+                                                                        </a>
+                                                                    </li>
+                                                                {% endif %}
                                                                 <li class="divider"></li>
 
                                                                 <li>
@@ -134,10 +136,11 @@
                                                             </ul>
                                                         </div>
                                             <!-- *-*-*-*-*-*-*-*-*-* Student school report modal *-*-*-*-*-*-*-*-*-* -->
-
-                                                        {% with modal_id='school-student-' ~ student.id ~ '-report-modal', modal_title='Отчет успеваемости. ' ~ student.last_name ~ ' ' ~ student.first_name %}
-                                                            {% include 'school_classes/school_student_report_modal.html' %}
-                                                        {% endwith %}
+                                                        {% if semesters %}
+                                                            {% with modal_id='school-student-' ~ student.id ~ '-report-modal', modal_title='Отчет успеваемости. ' ~ student.last_name ~ ' ' ~ student.first_name %}
+                                                                {% include 'school_classes/school_student_report_modal.html' %}
+                                                            {% endwith %}
+                                                        {% endif %}
 
                                             <!-- *-*-*-*-*-*-*-*-*-* Student delete conformation *-*-*-*-*-*-*-*-*-* -->
 
@@ -173,16 +176,18 @@
                                     </form>
                                 {% endif %}
                             </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-sm pull-right" data-background-color="purple">
-                                    <a href="#" data-toggle="modal" data-target="#school-report-modal">
-                                        <i class="material-icons">summarize</i> Отчет успеваемости
-                                    </a>
-                                </button>
-                            </div>
-                            {% with modal_id='school-report-modal', modal_title='Отчет успеваемости. ' ~ school_class.school_name %}
-                                {% include 'school_classes/school_report_modal.html' %}
-                            {% endwith %}
+                            {% if semesters %}
+                                <div class="col-md-6">
+                                    <button class="btn btn-sm pull-right" data-background-color="purple">
+                                        <a href="#" data-toggle="modal" data-target="#school-report-modal">
+                                            <i class="material-icons">summarize</i> Отчет успеваемости
+                                        </a>
+                                    </button>
+                                </div>
+                                {% with modal_id='school-report-modal', modal_title='Отчет успеваемости. ' ~ school_class.school_name %}
+                                    {% include 'school_classes/school_report_modal.html' %}
+                                {% endwith %}
+                            {% endif %}
                         </div>
                     </div>
                 {% elif render_type=="subjects" %}
