@@ -1,6 +1,7 @@
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Side, Font, GradientFill, PatternFill, NamedStyle
 from openpyxl.utils import get_column_letter
+from openpyxl.comments import Comment
 from app.common_servicies.service import OPERATION_TYPES, get_date, get_date_range, OPERATION_CATEGORIES, DAYS_OF_WEEK
 from app.finance.models import Finance
 from app.school.models import Person
@@ -331,9 +332,16 @@ def download_school_report(school_class_id, semester, report_date, student=None)
             if len(subject) > max_length:
                 max_length = len(subject)
             for grade in grades_list.values():
-                if grade.get("grade"):
-                    sheet.cell(last_row_ind, last_col_ind).value = grade["grade"]
+                student_grade = int(grade.get("grade")) if str(grade.get("grade")).isdigit() else None
+                if student_grade is not None:
+                    comment = None
+                    if student_grade <= 2:
+                        comment = grade.get("comment")
+                    sheet.cell(last_row_ind, last_col_ind).value = student_grade if student_grade != 0 else ''
                     sheet.cell(last_row_ind, last_col_ind).alignment = ALIGN_CENTRAL
+                    if comment:
+                        cell_comment = Comment(comment, 'Комментарий учителя')
+                        sheet.cell(last_row_ind, last_col_ind).comment = cell_comment
                     last_col_ind += 1
         sheet.cell(1, 2).value = "Оценки"
         sheet.cell(1, 2).font = BOLD_FONT
