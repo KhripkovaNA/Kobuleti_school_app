@@ -148,7 +148,8 @@ def handle_after_school_adding(student_id, form, period):
         end_date = purchase_date
         period_text = f"{purchase_date:%d.%m.%Y}"
         if term == "hour":
-            hours = int(form.get("hours"))
+            hours_str = form.get("hours")
+            hours = int(hours_str) if hours_str.isdigit() else float(hours_str.replace(",", "."))
             term = conjugate_hours(hours)
             period_text = f"{term} {period_text}"
 

@@ -98,19 +98,10 @@ def show_school_lesson(lesson_str):
         sc_lesson.classes_ids = classes
         sc_lesson.classes = ', '.join([cl.school_name for cl in sorted(sc_lesson.school_classes,
                                                                        key=lambda x: x.school_class)])
-
-        if sc_lesson.students_registered.all():
-            lesson_students = Person.query.filter(
-                Person.lessons_registered.any(Lesson.id == sc_lesson.id),
-                Person.status == "Клиент"
-            ).order_by(Person.last_name, Person.first_name).all()
-
-        else:
-            lesson_students = Person.query.filter(
-                Person.school_class_id.in_(classes),
-                Person.subjects.any(Subject.id == sc_lesson.subject_id),
-                Person.status == "Клиент"
-            ).order_by(Person.last_name, Person.first_name).all()
+        lesson_students = Person.query.filter(
+            Person.lessons_registered.any(Lesson.id == sc_lesson.id),
+            Person.status == "Клиент"
+        ).order_by(Person.last_name, Person.first_name).all()
 
         for student in lesson_students:
             journal_record = SchoolLessonJournal.query.filter_by(
@@ -252,7 +243,7 @@ def school_subject_record(subject_id, school_classes_ids, month_index):
         SchoolLessonJournal.date <= last_date,
         SchoolLessonJournal.subject_id == subject_id,
         SchoolLessonJournal.school_class_id.in_(school_classes_ids),
-        ~SchoolLessonJournal.final_grade
+        ~SchoolLessonJournal.final_grade,
     ).all()
     dates_topic_set = set()
     record_dict = {

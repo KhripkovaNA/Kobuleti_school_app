@@ -7,7 +7,7 @@ from app.school.employees.models import Employee
 from app.school.models import Contact, Person
 from app.school.subjects.models import Subject, SubjectType
 from app.school.subscriptions.models import Subscription
-from app.school_classes.models import SchoolClass
+from app.school_classes.models import SchoolClass, SchoolLessonJournal
 from app.timetable.models import Lesson
 
 app = create_app()
@@ -834,3 +834,5 @@ fields = ["Категория", "Занятие", "Приход", "Расход"
 categories = ['Продленка', 'Депозит, пополнение', 'Зарплата', 'Инкассация', 'Хозрасходы',
               'Питание', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация']
 
+
+print_table(SchoolLessonJournal)

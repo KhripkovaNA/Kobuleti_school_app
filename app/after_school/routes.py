@@ -1,4 +1,5 @@
 from datetime import datetime
+import decimal
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
@@ -94,7 +95,7 @@ def after_school_purchase():
                 db.session.flush()
                 price = new_after_school.subscription_type.price
                 if new_after_school.period not in ["month", "week", "day"]:
-                    hours = int(new_after_school.period.split()[0])
+                    hours = decimal.Decimal(new_after_school.period.split()[0])
                     price *= hours
                 operation_type = request.form.get('operation_type')
                 description = f"Оплата продленки ({period_text})"

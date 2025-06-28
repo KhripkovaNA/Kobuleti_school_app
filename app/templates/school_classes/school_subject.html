@@ -71,11 +71,11 @@
                                                         {% set grade = subject_records[student][(date, topic, lesson_id)].grade %}
                                                         {% set comment = subject_records[student][(date, topic, lesson_id)].comment %}
                                                         <p style="display:inline-block;">
-                                                            {% if grade is not none %}
+                                                            {% if grade %}
                                                                 {% if lesson_id < 0 %}
-                                                                    <b>{{ 'Долг' if grade == 0 else grade }}</b>
+                                                                    <b>{{ grade }}</b>
                                                                 {% else %}
-                                                                    {{ 'Долг' if grade == 0 else grade }}
+                                                                    {{ grade }}
                                                                 {% endif %}
                                                             {% endif %}
                                                         </p>

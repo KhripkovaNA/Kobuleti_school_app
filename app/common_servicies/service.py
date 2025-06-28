@@ -98,6 +98,9 @@ def conjugate_years(number):
 
 
 def conjugate_hours(number):
+    if isinstance(number, float):
+        return f"{number} часа"
+
     last_digit = number % 10
     last_two_digits = number % 100
 
