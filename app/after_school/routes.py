@@ -94,7 +94,7 @@ def after_school_purchase():
                 db.session.add(new_after_school)
                 db.session.flush()
                 price = new_after_school.subscription_type.price
-                if new_after_school.period not in ["month", "week", "day"]:
+                if new_after_school.period not in ["month", "odd_month", "week", "day"]:
                     hours = decimal.Decimal(new_after_school.period.split()[0])
                     price *= hours
                 operation_type = request.form.get('operation_type')

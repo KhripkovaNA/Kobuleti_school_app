@@ -619,6 +619,39 @@ $(document).ready(function(){
         });
     }
 
+    // Function to validate after school input
+    function validateAfterSchoolDate(validatedForm) {
+        var dateInput = validatedForm.find('.month-date-input');
+        var dateDiv = dateInput.closest('.month-date-div');
+        var errorDiv = dateInput.closest('.row');
+
+        if (dateInput.hasClass('required')) {
+            var periodValue = validatedForm.find('.period').val();
+            var dateValue = dateInput.val();
+            var periodParts = periodValue.split('-');
+            var dateParts = dateValue.split('.');
+            var isWithinPeriod = (
+                parseInt(dateParts[1]) === parseInt(periodParts[0]) &&
+                parseInt(dateParts[2]) === parseInt(periodParts[1])
+            );
+            if (!isWithinPeriod) {
+                errorDiv.addClass("has-error");
+                var errorSpan = `<span class="error-span" style="color:red;">Выберете дату в выбранном месяце</span>`;
+                var existingErrorSpan = dateDiv.find('.error-span');
+
+                if (existingErrorSpan.length === 0) {
+                    dateDiv.append(errorSpan);
+                }
+            } else {
+                errorDiv.removeClass("has-error");
+                dateDiv.find('.error-span').remove();
+            }
+        } else {
+            errorDiv.removeClass("has-error");
+            dateDiv.find('.error-span').remove();
+        }
+    }
+
     // Function to validate date input range
     function validateDateInputRange(validatedForm) {
         var dateInput = validatedForm.find('.date-input');
@@ -885,6 +918,7 @@ $(document).ready(function(){
         validateDateInput(currentForm);
         validateFieldInput(currentForm);
         validateDateInputRange(currentForm);
+        validateAfterSchoolDate(currentForm);
 
         if ($(this).find('.has-error').length > 0) {
             event.preventDefault();
@@ -1323,20 +1357,31 @@ $(document).ready(function(){
         term = $(this).val();
         if (term === "month") {
             $(".shift-row").show();
+            $(".month-day-row, .hours-row, .day-row, .week-range-div").hide();
+            $(".day-row").find(".date-input").removeClass("required");
+            $(".month-day-row").find(".month-date-input").removeClass("required");
+        } else if (term === "odd_month") {
+            $(".shift-row, .month-day-row").show();
             $(".hours-row, .day-row, .week-range-div").hide();
+            $(".month-day-row").find(".month-date-input").addClass("required");
             $(".day-row").find(".date-input").removeClass("required");
         } else if ((term === "week") || (term === "day")) {
             $(".shift-row, .day-row").show();
-            $(".hours-row").hide();
+            $(".month-day-row, .hours-row").hide();
             $(".day-row").find(".date-input").addClass("required").trigger("change");
+            $(".month-day-row").find(".month-date-input").removeClass("required");
         } else {
-            $(".shift-row, .week-range-div").hide();
+            $(".month-day-row, .shift-row, .week-range-div").hide();
             $(".hours-row, .day-row").show();
             $(".hour-number").val(1);
             $(".hours-row").find(".field-input").addClass("required");
             $(".day-row").find(".date-input").addClass("required");
+            $(".month-day-row").find(".month-date-input").removeClass("required");
         }
         var prices = afterSchoolPrices.filter(function(price) {
+            if (term === "odd_month") {
+                return price.period === "month";
+            }
             return price.period === term;
         });
         $(".price-selector").empty();
@@ -1369,7 +1414,7 @@ $(document).ready(function(){
     // Recount price by changing number of hours
     $(".hour-number").on("input", function() {
         factor = Number($(this).val());
-        if (factor >= 1 && factor <= 4) {
+        if (factor >= 1 && factor <= 10) {
             var prices = afterSchoolPrices.filter(function(price) {
                 return price.period === term;
             });

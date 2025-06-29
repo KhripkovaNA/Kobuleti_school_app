@@ -1,0 +1,103 @@
+{% extends "modal_template.html" %}
+
+{% block modal_body %}
+<form class="after-school-form" action="{{ url_for('after_school.after_school_purchase') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
+        <div class="col-md-7">
+            <select name="selected_client" class="form-control select-search">
+                <option disabled selected></option>
+                {% for person in all_persons %}
+                    {% if person.person_type == "Ребенок" and person.status == "Клиент" %}
+                        <option value="{{ person.id }}">{{ person.last_name }} {{ person.first_name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Месяц:</label>
+        <div class="col-md-7">
+            <select name="period" class="form-control period">
+                {% for month in months %}
+                    <option value="{{ month[0] }}">{{ month[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Срок:</label>
+        <div class="col-md-7">
+            <select name="term" class="form-control term-selector">
+                <option value="month">Месяц</option>
+                <option value="odd_month">Произвольный месяц</option>
+                <option value="week">Неделя</option>
+                <option value="day">День</option>
+                <option value="hour">Часы</option>
+            </select>
+        </div>
+    </div>
+    <div class="row shift-row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Смена:</label>
+        <div class="col-md-7">
+            <select name="shift" class="form-control">
+                <option value="0">Нет</option>
+                <option value="1">1 смена</option>
+                <option value="2">2 смена</option>
+            </select>
+        </div>
+    </div>
+    <div class="row month-day-row" style="display:none;">
+        <label class="control-label col-md-4" style="padding-left:44px;">Дата начала:</label>
+        <div class="col-md-7 month-date-div">
+            <input type="text" name="start_attendance_date" class="form-control month-date-input datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+        </div>
+    </div>
+    <div class="row hours-row" style="display:none;">
+        <label class="control-label col-md-4" style="padding-left:44px;">Часы:</label>
+        <div class="col-md-7 field-div">
+            <input type="number" name="hours" class="form-control field-input hour-number" min="1" max="10" step="0.5" value="1">
+        </div>
+    </div>
+    <div class="row day-row" style="display:none;">
+        <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
+        <div class="col-md-7 date-div">
+            <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ today }}">
+        </div>
+    </div>
+    <div class="row week-range-div" style="display: none;">
+        <label class="control-label col-md-4" style="padding-left:44px;">Выбранная неделя:</label>
+        <div class="col-md-7">
+            <div class="form-control week-range"></div>
+        </div>
+    </div>
+    <div class="row">
+        <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
+        <div class="col-md-7">
+            <select name="operation_type" class="form-control">
+                <option value="cash">Оплата наличными</option>
+                <option value="bank">Оплата на счет</option>
+                <option value="balance">Оплата с депозита</option>
+            </select>
+        </div>
+    </div>
+    <div class="row price-row">
+        <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
+        <div class="col-md-7">
+            <select name="subscription_type" class="form-control price-selector">
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <button type="submit" class="btn btn-sm" data-background-color="main">
+                Оплатить
+            </button>
+            <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
+                Отмена
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

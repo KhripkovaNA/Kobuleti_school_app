@@ -30,12 +30,12 @@ def check_subscription(student, lesson, subject_id):
         if subscription.is_after_school:
             cond11 = subscription.purchase_date.month == date.month
             cond12 = subscription.period == "month"
-            if subscription.period == "week":
+            if subscription.period in ["week", "odd_month"]:
                 cond2 = subscription.purchase_date <= date <= subscription.end_date
             else:
                 cond2 = False
             cond31 = subscription.purchase_date > date
-            cond32 = subscription.period in ["month", "week"]
+            cond32 = subscription.period in ["month", "odd_month", "week"]
             subscription.active = True if (
                     ((cond11 and cond12) or cond2)
                     or (cond31 and cond32 and cond)

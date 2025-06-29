@@ -79,98 +79,11 @@
                                 <i class="material-icons">add_box</i> Добавить клиента
                             </button>
                         {% endif %}
-                        <div class="modal fade" id="after-school-modal" role="dialog">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h4 class="modal-title">{{ months[period[0] - 1].capitalize() }}. Добавить клиента</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="after-school-form" action="{{ url_for('after_school.after_school_purchase') }}" method="post">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                            <input type="hidden" class="period" name="period" value="{{ period[0] }}-{{ period[1] }}">
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Клиент:</label>
-                                                <div class="col-md-7">
-                                                    <select name="selected_client" class="form-control select-search">
-                                                        <option disabled selected></option>
-                                                        {% for client in possible_clients %}
-                                                            <option value="{{ client.id }}">{{ client.last_name }} {{ client.first_name }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Срок:</label>
-                                                <div class="col-md-7">
-                                                    <select name="term" class="form-control term-selector">
-                                                        <option value="month">Месяц</option>
-                                                        <option value="week">Неделя</option>
-                                                        <option value="day">День</option>
-                                                        <option value="hour">Часы</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row shift-row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Смена:</label>
-                                                <div class="col-md-7">
-                                                    <select name="shift" class="form-control">
-                                                        <option value="0">Нет</option>
-                                                        <option value="1">1 смена</option>
-                                                        <option value="2">2 смена</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row hours-row" style="display:none;">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Часы:</label>
-                                                <div class="col-md-7 field-div">
-                                                    <input type="number" name="hours" class="form-control field-input hour-number" min="1" max="4" step="0.5" value="1">
-                                                </div>
-                                            </div>
-                                            <div class="row day-row" style="display:none;">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">День:</label>
-                                                <div class="col-md-7 date-div">
-                                                    <input type="text" name="attendance_date" class="form-control date-input datepicker" placeholder="дд.мм.гггг" value="{{ date }}">
-                                                </div>
-                                            </div>
-                                            <div class="row week-range-div" style="display: none;">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Выбранная неделя:</label>
-                                                <div class="col-md-7">
-                                                    <div class="form-control week-range"></div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">Оплата:</label>
-                                                <div class="col-md-7">
-                                                    <select name="operation_type" class="form-control">
-                                                        <option value="cash">Оплата наличными</option>
-                                                        <option value="bank">Оплата на счет</option>
-                                                        <option value="balance">Оплата с депозита</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row price-row">
-                                                <label class="control-label col-md-4" style="padding-left:44px;">К оплате:</label>
-                                                <div class="col-md-7">
-                                                    <select name="subscription_type" class="form-control price-selector"></select>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 col-md-offset-3">
-                                                    <button type="submit" class="btn btn-sm" data-background-color="main">
-                                                        Оплатить
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm pull-right" data-dismiss="modal" data-background-color="red">
-                                                        Отмена
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
+                        {% with modal_id='after-school-modal', modal_title=months[period[0] - 1].capitalize() ~ '. Добавить клиента', period=period, client=client, months=months, date=date %}
+                            {% include 'after_school/after_school_modal.html' %}
+                        {% endwith %}
+
                     </div>
                 {% endif %}
 

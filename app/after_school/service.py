@@ -54,22 +54,12 @@ def get_after_school_students(period_index, period_type):
             Subscription.is_after_school,
             or_(
                 and_(
-                    Subscription.period != "week",
                     Subscription.purchase_date >= first_date,
                     Subscription.purchase_date <= last_date
                 ),
                 and_(
-                    Subscription.period == "week",
-                    or_(
-                        and_(
-                            Subscription.purchase_date >= first_date,
-                            Subscription.purchase_date <= last_date
-                        ),
-                        and_(
-                            Subscription.end_date >= first_date,
-                            Subscription.end_date <= last_date
-                        )
-                    )
+                    Subscription.end_date >= first_date,
+                    Subscription.end_date <= last_date
                 )
             )
         ).all()
@@ -103,8 +93,10 @@ def get_after_school_students(period_index, period_type):
                 activities = sorted([subject.name for subject in after_school_student.subjects
                                      if subject.subject_type.name not in ["school", "after_school"]])
                 after_school_student.activities = activities
-            if subscription.period == "month":
-                after_school_student.attendance = ["месяц"]
+            if subscription.period in ["month", "odd_month"]:
+                after_school_student.attendance = [
+                    f"месяц ({subscription.purchase_date:%d.%m}-{subscription.end_date:%d.%m})"
+                ]
             elif subscription.period == "week":
                 after_school_student.attendance = [
                     f"неделя ({subscription.purchase_date:%d.%m}-{subscription.end_date:%d.%m})"
@@ -132,12 +124,16 @@ def get_after_school_students(period_index, period_type):
 
 def handle_after_school_adding(student_id, form, period):
     term = form.get("term")
-    shift = int(form.get("shift")) if term in ["month", "day", "week"] and form.get("shift") != "0" else None
+    shift = int(form.get("shift")) if term in ["month", "odd_month", "day", "week"] and form.get("shift") != "0" else None
     if term == "month":
         purchase_month, purchase_year = period.split("-")
         purchase_date = datetime(int(purchase_year), int(purchase_month), 1).date()
         end_date = purchase_date + relativedelta(months=+1, days=-1)
         period_text = f"{MONTHS[int(purchase_month) - 1]}"
+    elif term == "odd_month":
+        purchase_date = datetime.strptime(form.get("start_attendance_date"), '%d.%m.%Y').date()
+        end_date = purchase_date + relativedelta(months=+1, days=-1)
+        period_text = f"месяц {purchase_date:%d.%m}-{end_date:%d.%m.%Y}"
     elif term == "week":
         selected_date = datetime.strptime(form.get("attendance_date"), '%d.%m.%Y').date()
         purchase_date = get_weekday_date(0, selected_date)
