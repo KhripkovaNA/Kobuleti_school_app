@@ -109,7 +109,11 @@ def get_after_school_students(period_index, period_type):
         else:
             student_ind = after_school_students.index(after_school_student)
             after_school_student = after_school_students[student_ind]
-            if subscription.period == "week":
+            if subscription.period in ["month", "odd_month"]:
+                after_school_student.attendance = [
+                    f"месяц ({subscription.purchase_date:%d.%m}-{subscription.end_date:%d.%m})"
+                ]
+            elif subscription.period == "week":
                 after_school_student.attendance.append(
                     f"неделя ({subscription.purchase_date:%d.%m}-{subscription.end_date:%d.%m})"
                 )

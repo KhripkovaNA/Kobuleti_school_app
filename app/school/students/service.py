@@ -138,6 +138,10 @@ def format_subjects_and_subscriptions(student):
                 if subscription.period == "month":
                     subscription_dict['period'] = "месяц"
                     subscription_dict['validity'] = MONTHS[subscription.purchase_date.month - 1]
+                elif subscription.period == "odd_month":
+                    subscription_dict['period'] = "месяц"
+                    subscription_dict['validity'] = f'{subscription.purchase_date:%d.%m}-' \
+                                                    f'{subscription.end_date:%d.%m.%y}'
                 elif subscription.period == "week":
                     subscription_dict['period'] = "неделя"
                     subscription_dict['validity'] = f'{subscription.purchase_date:%d.%m}-' \

@@ -835,4 +835,4 @@ categories = ['Продленка', 'Депозит, пополнение', 'З�
               'Питание', 'Школа', 'Канцелярия', 'Аренда', 'Аттестация']
 
 
-print_table(SchoolLessonJournal)
+print_table(Subscription)
